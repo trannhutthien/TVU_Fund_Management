@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import pool from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import roleRoutes from "./routes/roleRoutes.js";
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/roles", roleRoutes);
 
 // Test route
 app.get("/", (req, res) => {
