@@ -34,4 +34,23 @@ const getUserById = async (userId) => {
   return rows[0] || null;
 };
 
-export default { checkEmailExists, createUser, getUserById };
+// Lấy danh sách tất cả người dùng (JOIN với bảng vai trò)
+const getAllUsers = async () => {
+  const [rows] = await pool.query(
+    `SELECT 
+      n.ma_so_dinh_danh,
+      n.ho_ten,
+      n.email,
+      n.role_id,
+      n.trang_thai,
+      n.khoa_phong,
+      n.created_at,
+      v.ten_vai_tro
+     FROM nguoidung n
+     LEFT JOIN vaitro v ON n.role_id = v.role_id
+     ORDER BY n.created_at DESC`
+  );
+  return rows;
+};
+
+export default { checkEmailExists, createUser, getUserById, getAllUsers };

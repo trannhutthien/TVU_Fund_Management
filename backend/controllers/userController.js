@@ -92,3 +92,36 @@ export const createUser = async (req, res) => {
     });
   }
 };
+
+// ─── GET /api/users ───────────────────────────────────────────────────────────
+// Yêu cầu: phải có access token hợp lệ và quyền admin/giáo vụ (role_id: 1 hoặc 3)
+// Trả về danh sách tất cả người dùng trong hệ thống
+export const getUsers = async (req, res) => {
+  try {
+    // Lấy danh sách người dùng từ database
+    const users = await UserModel.getAllUsers();
+
+    return res.status(200).json({
+      success: true,
+      total: users.length,
+      users: users.map(user => ({
+        id: user.ma_so_dinh_danh,
+        hoTen: user.ho_ten,
+        email: user.email,
+        vaiTro: {
+          id: user.role_id,
+          ten: user.ten_vai_tro
+        },
+        trangThai: user.trang_thai,
+        khoaPhong: user.khoa_phong,
+        createdAt: user.created_at
+      }))
+    });
+  } catch (error) {
+    console.error("Lỗi getUsers:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
