@@ -34,6 +34,28 @@ const getUserById = async (userId) => {
   return rows[0] || null;
 };
 
+// Lấy thông tin chi tiết user theo ID (JOIN với bảng vai trò)
+const getUserByIdWithRole = async (userId) => {
+  const [rows] = await pool.query(
+    `SELECT 
+      n.ma_so_dinh_danh,
+      n.ho_ten,
+      n.email,
+      n.role_id,
+      n.trang_thai,
+      n.khoa_phong,
+      n.created_at,
+      v.ten_vai_tro,
+      v.mo_ta as mo_ta_vai_tro
+     FROM nguoidung n
+     LEFT JOIN vaitro v ON n.role_id = v.role_id
+     WHERE n.ma_so_dinh_danh = ?
+     LIMIT 1`,
+    [userId]
+  );
+  return rows[0] || null;
+};
+
 // Lấy danh sách tất cả người dùng (JOIN với bảng vai trò)
 const getAllUsers = async () => {
   const [rows] = await pool.query(
@@ -53,4 +75,4 @@ const getAllUsers = async () => {
   return rows;
 };
 
-export default { checkEmailExists, createUser, getUserById, getAllUsers };
+export default { checkEmailExists, createUser, getUserById, getUserByIdWithRole, getAllUsers };

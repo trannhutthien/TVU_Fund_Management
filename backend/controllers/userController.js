@@ -125,3 +125,55 @@ export const getUsers = async (req, res) => {
     });
   }
 };
+
+// ─── GET /api/users/:id ───────────────────────────────────────────────────────
+// Yêu cầu: phải có access token hợp lệ và quyền admin/giáo vụ (role_id: 1 hoặc 3)
+// Trả về thông tin chi tiết của một người dùng cụ thể
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Validate ID
+    if (!id || id.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng cung cấp ID người dùng",
+      });
+    }
+
+    // 2. Lấy thông tin user từ database
+    const user = await UserModel.getUserByIdWithRole(id.trim());
+
+    // 3. Kiểm tra user có tồn tại không
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    // 4. Trả về thông tin user (không bao gồm mật khẩu)
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user.ma_so_dinh_danh,
+        hoTen: user.ho_ten,
+        email: user.email,
+        vaiTro: {
+          id: user.role_id,
+          ten: user.ten_vai_tro,
+          moTa: user.mo_ta_vai_tro
+        },
+        trangThai: user.trang_thai,
+        khoaPhong: user.khoa_phong,
+        createdAt: user.created_at
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getUserById:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
