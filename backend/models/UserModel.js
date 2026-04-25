@@ -75,4 +75,15 @@ const getAllUsers = async () => {
   return rows;
 };
 
-export default { checkEmailExists, createUser, getUserById, getUserByIdWithRole, getAllUsers };
+// Cập nhật trạng thái người dùng
+const updateUserStatus = async (userId, trangThai) => {
+  const [result] = await pool.query(
+    `UPDATE nguoidung 
+     SET trang_thai = ?
+     WHERE ma_so_dinh_danh = ?`,
+    [trangThai, userId]
+  );
+  return result;
+};
+
+export default { checkEmailExists, createUser, getUserById, getUserByIdWithRole, getAllUsers, updateUserStatus };

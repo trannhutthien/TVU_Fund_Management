@@ -42,7 +42,7 @@ export const login = async (req, res) => {
     }
 
     // 3. Kiểm tra tài khoản có bị khoá không
-    if (user.trang_thai === "khoa") {
+    if (user.trang_thai === "KHOA") {
       return res.status(403).json({
         success: false,
         message: "Tài khoản đã bị khoá, vui lòng liên hệ quản trị viên",

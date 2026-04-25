@@ -177,3 +177,84 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
+// ─── PUT /api/users/:id/status ────────────────────────────────────────────────
+// Yêu cầu: phải có access token hợp lệ và quyền admin (role_id: 1)
+// Cập nhật trạng thái người dùng (kích hoạt/khóa tài khoản)
+export const updateUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { trangThai } = req.body;
+
+    // 1. Validate ID
+    if (!id || id.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng cung cấp ID người dùng",
+      });
+    }
+
+    // 2. Validate trạng thái
+    if (!trangThai) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng cung cấp trạng thái",
+      });
+    }
+
+    // 3. Kiểm tra giá trị trạng thái hợp lệ
+    const validStatuses = ["HOAT_DONG", "KHOA"];
+    if (!validStatuses.includes(trangThai)) {
+      return res.status(400).json({
+        success: false,
+        message: "Trạng thái không hợp lệ. Chỉ chấp nhận: HOAT_DONG, KHOA",
+      });
+    }
+
+    // 4. Kiểm tra user có tồn tại không
+    const existingUser = await UserModel.getUserById(id.trim());
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    // 5. Không cho phép tự khóa tài khoản của chính mình
+    if (req.user.id === id.trim() && trangThai === "KHOA") {
+      return res.status(400).json({
+        success: false,
+        message: "Bạn không thể khóa tài khoản của chính mình",
+      });
+    }
+
+    // 6. Cập nhật trạng thái
+    await UserModel.updateUserStatus(id.trim(), trangThai);
+
+    // 7. Lấy thông tin user sau khi cập nhật
+    const updatedUser = await UserModel.getUserByIdWithRole(id.trim());
+
+    return res.status(200).json({
+      success: true,
+      message: `${trangThai === "KHOA" ? "Khóa" : "Kích hoạt"} tài khoản thành công`,
+      user: {
+        id: updatedUser.ma_so_dinh_danh,
+        hoTen: updatedUser.ho_ten,
+        email: updatedUser.email,
+        vaiTro: {
+          id: updatedUser.role_id,
+          ten: updatedUser.ten_vai_tro
+        },
+        trangThai: updatedUser.trang_thai,
+        khoaPhong: updatedUser.khoa_phong,
+        createdAt: updatedUser.created_at
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi updateUserStatus:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
