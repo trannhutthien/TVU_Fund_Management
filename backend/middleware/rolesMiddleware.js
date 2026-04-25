@@ -12,7 +12,7 @@ export const authorizeRoles = (...allowedRoleIds) => {
 
     // 2. Kiểm tra role_id của user có nằm trong danh sách được phép không
     // Ví dụ: allowedRoleIds sẽ là [1, 3]
-    const userRoleId = req.user.roleId; 
+    const userRoleId = req.user.vai_tro; // giả sử req.user có trường vai_tro chứa role_id
 
     if (!allowedRoleIds.includes(userRoleId)) {
       return res.status(403).json({
@@ -42,7 +42,7 @@ export const isAdmin = (id = 1) => {
     }
 
     // 2. So sánh ID truyền vào với ID của người dùng
-    if (req.user.roleId !== id) {
+    if (req.user.vai_tro !== id) {
       return res.status(403).json({
         success: false,
         message: "Bạn không phải Admin, không được vào đây!"
