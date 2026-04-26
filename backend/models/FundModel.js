@@ -59,8 +59,27 @@ const getFundById = async (quyId) => {
   return rows[0] || null;
 };
 
+// Lấy danh sách tất cả quỹ
+const getAllFunds = async () => {
+  const [rows] = await pool.query(
+    `SELECT 
+      quy_id,
+      ten_quy,
+      loai_quy,
+      mo_ta,
+      so_du,
+      ngay_tao,
+      ngay_cap_nhat,
+      trang_thai
+     FROM Quy
+     ORDER BY ngay_tao DESC`
+  );
+  return rows;
+};
+
 export default {
   checkFundNameExists,
   createFund,
-  getFundById
+  getFundById,
+  getAllFunds
 };

@@ -111,3 +111,35 @@ export const createFund = async (req, res) => {
     });
   }
 };
+
+
+// ─── GET /api/funds ───────────────────────────────────────────────────────────
+// Yêu cầu: phải có access token hợp lệ và quyền admin/giáo vụ (role_id: 1 hoặc 3)
+// Trả về danh sách tất cả quỹ trong hệ thống
+export const getFunds = async (req, res) => {
+  try {
+    // Lấy danh sách quỹ từ database
+    const funds = await FundModel.getAllFunds();
+
+    return res.status(200).json({
+      success: true,
+      total: funds.length,
+      funds: funds.map(fund => ({
+        quyId: fund.quy_id,
+        tenQuy: fund.ten_quy,
+        loaiQuy: fund.loai_quy,
+        moTa: fund.mo_ta,
+        soDu: fund.so_du,
+        ngayTao: fund.ngay_tao,
+        ngayCapNhat: fund.ngay_cap_nhat,
+        trangThai: fund.trang_thai
+      }))
+    });
+  } catch (error) {
+    console.error("Lỗi getFunds:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
