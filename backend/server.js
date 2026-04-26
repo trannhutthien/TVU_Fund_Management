@@ -5,6 +5,7 @@ import pool from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import roleRoutes from "./routes/roleRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import fundRoutes from "./routes/fundRoutes.js";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/funds", fundRoutes);
 
 // Test route
 app.get("/", (req, res) => {
