@@ -34,7 +34,7 @@
 
 PUT/api/users/:idCập nhật thông tin userAdmin
 
-DELETE/api/users/:idXóa userAdmin 
+DELETE/api/users/:idXóa userAdmin
 
 PUT/api/users/:id/roleGán / thay đổi roleAdmin
 
@@ -110,7 +110,7 @@ GET/api/programs/:id/applicantsDanh sách sinh viên đã đăng kýAdmin, Giáo
 
 &#x20;6. Quỹ \& Tài chính (Fund / Finance)
 
-GET/api/fundsTổng quan tất cả quỹAdmin, Kế toán
+**GET/api/funds Tổng quan tất cả quỹ Admin, Kế toán**
 
 **POST/api/funds Tạo quỹ mới Admin**
 
