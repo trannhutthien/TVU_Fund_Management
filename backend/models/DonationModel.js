@@ -250,23 +250,25 @@ const approveDonation = async (khoanTaiTroId, nguoiDuyetId) => {
     // ─────────────────────────────────────────────────────────────────────────
     // Ghi nhận giao dịch THU (nhận tiền từ nhà tài trợ)
     // LƯU Ý: Theo schema thực tế, các cột là:
-    // - giao_dich_id (AUTO_INCREMENT)
-    // - quy_id, khoan_tai_tro_id, request_id
-    // - loai (không phải loai_giao_dich), so_tien, trang_thai
-    // - minh_chung, ghi_chu
-    // - ngay_tao, ngay_cap_nhat (AUTO)
+    // - transaction_id (AUTO_INCREMENT)
+    // - quy_id, khoan_tai_tro_id, request_id, nguoi_tao_id
+    // - loai, so_tien, trang_thai
+    // - minh_chung_chuyen_khoan, ghi_chu
+    // - ngay_giao_dich, ngay_cap_nhat (AUTO)
     await connection.execute(
       `INSERT INTO GiaoDich (
         quy_id,
         khoan_tai_tro_id,
+        nguoi_tao_id,
         loai,
         so_tien,
         trang_thai,
         ghi_chu
-      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         donation.quy_id,
         khoanTaiTroId,
+        nguoiDuyetId,
         'Thu',
         donation.so_tien,
         'Cho xu ly',

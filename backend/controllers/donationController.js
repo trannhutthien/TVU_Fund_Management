@@ -97,8 +97,8 @@ export const createPublicDonation = async (req, res) => {
 
     // 2.2. Kiểm tra quỹ có đang hoạt động không
     // Chỉ cho phép quyên góp vào quỹ đang hoạt động
-    // LƯU Ý: Schema dùng 'DANG_HOAT_DONG' (gạch dưới, chữ hoa)
-    if (fund.trang_thai !== 'DANG_HOAT_DONG') {
+    // LƯU Ý: Giá trị thực tế trong DB là 'Dang hoat dong' (chữ thường, có dấu cách)
+    if (fund.trang_thai !== 'Dang hoat dong') {
       return res.status(400).json({
         success: false,
         message: "Quỹ hiện không nhận đóng góp",
