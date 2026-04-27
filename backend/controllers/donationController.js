@@ -97,7 +97,8 @@ export const createPublicDonation = async (req, res) => {
 
     // 2.2. Kiểm tra quỹ có đang hoạt động không
     // Chỉ cho phép quyên góp vào quỹ đang hoạt động
-    if (fund.trang_thai !== 'Dang hoat dong') {
+    // LƯU Ý: Schema dùng 'DANG_HOAT_DONG' (gạch dưới, chữ hoa)
+    if (fund.trang_thai !== 'DANG_HOAT_DONG') {
       return res.status(400).json({
         success: false,
         message: "Quỹ hiện không nhận đóng góp",
@@ -168,6 +169,244 @@ export const createPublicDonation = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi createPublicDonation:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PUT /api/donations/:id/approve (CHO KẾ TOÁN/ADMIN) ───────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// 
+// MỤC ĐÍCH: Kế toán/Admin duyệt khoản tài trợ sau khi xác nhận đã nhận tiền
+// 
+// LUỒNG HOẠT ĐỘNG (SỬ DỤNG DATABASE TRANSACTION):
+// 1. Kiểm tra token và quyền (Kế toán hoặc Admin)
+// 2. Kiểm tra khoản tài trợ có tồn tại không
+// 3. Kiểm tra trạng thái hiện tại (phải là "Chờ duyệt")
+// 4. BEGIN TRANSACTION
+//    ├─ Cập nhật trang_thai từ "Chờ duyệt" → "Đã nhận"
+//    ├─ Cộng so_tien vào so_du của bảng Quy
+//    └─ Tạo bản ghi trong GiaoDich với loai_giao_dich = "Thu"
+// 5. COMMIT
+// 6. Trả về thông tin khoản tài trợ đã duyệt
+//
+export const approveDonation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const nguoiDuyetId = req.user.id; // Lấy từ middleware protect
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 1: VALIDATE ID
+    // ─────────────────────────────────────────────────────────────────────────
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID khoản tài trợ không hợp lệ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 2: KIỂM TRA KHOẢN TÀI TRỢ CÓ TỒN TẠI KHÔNG
+    // ─────────────────────────────────────────────────────────────────────────
+    const donation = await DonationModel.getDonationById(id);
+    
+    if (!donation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy khoản tài trợ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    // Chỉ cho phép duyệt khoản tài trợ đang ở trạng thái "Chờ duyệt"
+    if (donation.trang_thai === 'Da nhan') {
+      return res.status(400).json({
+        success: false,
+        message: "Khoản tài trợ này đã được duyệt trước đó",
+      });
+    }
+
+    if (donation.trang_thai === 'Tu choi') {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể duyệt khoản tài trợ đã bị từ chối",
+      });
+    }
+
+    if (donation.trang_thai !== 'Cho duyet') {
+      return res.status(400).json({
+        success: false,
+        message: "Chỉ có thể duyệt khoản tài trợ đang ở trạng thái 'Chờ duyệt'",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 4: THỰC HIỆN DUYỆT VỚI TRANSACTION
+    // ─────────────────────────────────────────────────────────────────────────
+    // Model sẽ xử lý:
+    // - Cập nhật trạng thái khoản tài trợ
+    // - Cộng tiền vào quỹ
+    // - Tạo giao dịch
+    const result = await DonationModel.approveDonation(id, nguoiDuyetId);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: TRẢ VỀ KẾT QUẢ
+    // ─────────────────────────────────────────────────────────────────────────
+    return res.status(200).json({
+      success: true,
+      message: "Duyệt khoản tài trợ thành công",
+      donation: {
+        khoanTaiTroId: donation.khoan_tai_tro_id,
+        nhaTaiTro: {
+          id: donation.nha_tai_tro_id,
+          ten: donation.ten_nha_tai_tro,
+          email: donation.email,
+          soDienThoai: donation.so_dien_thoai
+        },
+        quy: {
+          id: donation.quy_id,
+          tenQuy: donation.ten_quy,
+          loaiQuy: donation.loai_quy
+        },
+        soTien: donation.so_tien,
+        trangThaiCu: 'Cho duyet',
+        trangThaiMoi: 'Da nhan',
+        ngayTaiTro: donation.ngay_tai_tro,
+        ngayDuyet: new Date(),
+        nguoiDuyet: nguoiDuyetId,
+        ghiChu: donation.ghi_chu
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi approveDonation:", error);
+    
+    // Xử lý lỗi đặc biệt
+    if (error.message === 'DONATION_NOT_FOUND_OR_ALREADY_APPROVED') {
+      return res.status(400).json({
+        success: false,
+        message: "Khoản tài trợ không tồn tại hoặc đã được duyệt",
+      });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PUT /api/donations/:id/reject (CHO KẾ TOÁN/ADMIN) ────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// 
+// MỤC ĐÍCH: Kế toán/Admin từ chối khoản tài trợ
+// 
+// LUỒNG HOẠT ĐỘNG:
+// 1. Kiểm tra token và quyền (Kế toán hoặc Admin)
+// 2. Kiểm tra khoản tài trợ có tồn tại không
+// 3. Kiểm tra trạng thái hiện tại (phải là "Chờ duyệt")
+// 4. Cập nhật trạng thái từ "Chờ duyệt" → "Từ chối"
+// 5. Lưu lý do từ chối
+// 6. KHÔNG cộng tiền vào quỹ
+// 7. KHÔNG tạo giao dịch
+//
+export const rejectDonation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { lyDoTuChoi } = req.body;
+    const nguoiTuChoiId = req.user.id;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 1: VALIDATE
+    // ─────────────────────────────────────────────────────────────────────────
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID khoản tài trợ không hợp lệ",
+      });
+    }
+
+    if (!lyDoTuChoi || lyDoTuChoi.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập lý do từ chối",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 2: KIỂM TRA KHOẢN TÀI TRỢ
+    // ─────────────────────────────────────────────────────────────────────────
+    const donation = await DonationModel.getDonationById(id);
+    
+    if (!donation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy khoản tài trợ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 3: KIỂM TRA TRẠNG THÁI
+    // ─────────────────────────────────────────────────────────────────────────
+    if (donation.trang_thai === 'Da nhan') {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể từ chối khoản tài trợ đã được duyệt",
+      });
+    }
+
+    if (donation.trang_thai === 'Tu choi') {
+      return res.status(400).json({
+        success: false,
+        message: "Khoản tài trợ này đã bị từ chối trước đó",
+      });
+    }
+
+    if (donation.trang_thai !== 'Cho duyet') {
+      return res.status(400).json({
+        success: false,
+        message: "Chỉ có thể từ chối khoản tài trợ đang ở trạng thái 'Chờ duyệt'",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 4: TỪ CHỐI KHOẢN TÀI TRỢ
+    // ─────────────────────────────────────────────────────────────────────────
+    await DonationModel.rejectDonation(id, lyDoTuChoi.trim());
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: TRẢ VỀ KẾT QUẢ
+    // ─────────────────────────────────────────────────────────────────────────
+    return res.status(200).json({
+      success: true,
+      message: "Từ chối khoản tài trợ thành công",
+      donation: {
+        khoanTaiTroId: donation.khoan_tai_tro_id,
+        nhaTaiTro: {
+          id: donation.nha_tai_tro_id,
+          ten: donation.ten_nha_tai_tro,
+          email: donation.email,
+          soDienThoai: donation.so_dien_thoai
+        },
+        quy: {
+          id: donation.quy_id,
+          tenQuy: donation.ten_quy
+        },
+        soTien: donation.so_tien,
+        trangThaiCu: 'Cho duyet',
+        trangThaiMoi: 'Tu choi',
+        lyDoTuChoi: lyDoTuChoi.trim(),
+        ngayTuChoi: new Date(),
+        nguoiTuChoi: nguoiTuChoiId
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi rejectDonation:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",

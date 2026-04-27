@@ -32,7 +32,7 @@ const createFund = async (fundData) => {
       loaiQuy,
       moTa || null,
       soDu || 0.00,
-      trangThai || 'Dang hoat dong'
+      trangThai || 'DANG_HOAT_DONG'  // Schema dùng DANG_HOAT_DONG (gạch dưới, chữ hoa)
     ]
   );
 

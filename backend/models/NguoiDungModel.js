@@ -1,10 +1,15 @@
 import pool from "../config/db.js";
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── NGUOI DUNG MODEL ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// LƯU Ý: Schema database dùng "user_id" là PRIMARY KEY, không phải "id"
+
 // Tìm người dùng theo email (dùng khi đăng nhập)
 const getUserForLogin = async (email) => {
   const [rows] = await pool.query(
-    `SELECT ma_so_dinh_danh, ho_ten, mat_khau, role_id, trang_thai
-     FROM nguoidung
+    `SELECT user_id, ma_so_dinh_danh, ho_ten, mat_khau, role_id, trang_thai
+     FROM NguoiDung
      WHERE email = ?
      LIMIT 1`,
     [email]
@@ -12,33 +17,33 @@ const getUserForLogin = async (email) => {
   return rows[0] || null;
 };
 
-// Tìm người dùng theo ID (dùng cho GET /api/auth/me)
+// Tìm người dùng theo user_id (dùng cho GET /api/auth/me)
 // Không SELECT mat_khau vì không cần thiết và bảo mật hơn
-const getUserForProfile = async (id) => {
+const getUserForProfile = async (userId) => {
   const [rows] = await pool.query(
-    `SELECT ma_so_dinh_danh, ho_ten, email, role_id, trang_thai
-     FROM nguoidung
-     WHERE ma_so_dinh_danh = ?
+    `SELECT user_id, ma_so_dinh_danh, ho_ten, email, role_id, trang_thai
+     FROM NguoiDung
+     WHERE user_id = ?
      LIMIT 1`,
-    [id]
+    [userId]
   );
   return rows[0] || null;
 };
 
 // Lấy mật khẩu hiện tại của user (dùng để verify old password)
-const getUserPassword = async (id) => {
+const getUserPassword = async (userId) => {
   const [rows] = await pool.query(
-    `SELECT mat_khau FROM nguoidung WHERE ma_so_dinh_danh = ? LIMIT 1`,
-    [id]
+    `SELECT mat_khau FROM NguoiDung WHERE user_id = ? LIMIT 1`,
+    [userId]
   );
   return rows[0] || null;
 };
 
 // Cập nhật mật khẩu người dùng
-const updatePassword = async (id, hashedPassword) => {
+const updatePassword = async (userId, hashedPassword) => {
   const [result] = await pool.query(
-    "UPDATE nguoidung SET mat_khau = ? WHERE ma_so_dinh_danh = ?",
-    [hashedPassword, id]
+    "UPDATE NguoiDung SET mat_khau = ? WHERE user_id = ?",
+    [hashedPassword, userId]
   );
   return result;
 };

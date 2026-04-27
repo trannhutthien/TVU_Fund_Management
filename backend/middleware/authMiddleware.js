@@ -19,9 +19,11 @@ export const protect = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Gán thông tin user vào request để các route sau dùng
+    // LƯU Ý: Schema database dùng "user_id" không phải "id"
     req.user = {
-      id: decoded.id,
+      id: decoded.user_id,  // Sửa từ decoded.id → decoded.user_id
       vai_tro: decoded.vai_tro,
+      roleId: decoded.vai_tro  // Thêm roleId để dùng cho authorizeRoles
     };
 
     next();

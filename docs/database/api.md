@@ -106,6 +106,36 @@ GET/api/programs/:id/applicantsDanh sách sinh viên đã đăng kýAdmin, Giáo
 
 
 
+&#x20;6.Nhà tài trợ (Donor)
+
+GET /api/donors Danh sách tất cả nhà tài trợAdmin, Kế toán
+
+**POST /api/donors Thêm nhà tài trợ mới thủ côngAdmin, Kế toán**
+
+GET /api/donors/:idChi tiết thông tin một nhà tài trợAdmin, Kế toán
+
+PUT /api/donors/:idCập nhật thông tin liên hệ nhà tài trợAdmin, Kế toán
+
+GET /api/donors/:id/historyLịch sử các lần tặng tiền của nhà tài trợ nàyAdmin, Kế toán
+
+
+
+&#x20;7.Khoản tài trợ (Donation)
+
+&#x20;	
+
+GET /api/donations	Danh sách tất cả các khoản tài trợ	Admin, Kế toán
+
+GET /api/donations/filter	Lọc đơn tài trợ theo trạng thái (Chờ duyệt, Đã nhận, Từ chối)	Admin, Kế toán
+
+GET /api/donations/:id	Chi tiết một khoản tài trợ cụ thể	Admin, Kế toán
+
+PUT /api/donations/:id/approve	Duyệt tài trợ - Xác nhận tiền đã vào quỹ \& Tạo giao dịch	Admin, Kế toán
+
+PUT /api/donations/:id/reject	Từ chối khoản tài trợ (Thông tin sai, không nhận được tiền)	Admin, Kế toán
+
+POST /api/donations/:id/receipt	Gửi biên nhận/thư cảm ơn cho nhà tài trợ	Admin
+
 
 
 &#x20;6. Quỹ \& Tài chính (Fund / Finance)
@@ -114,15 +144,15 @@ GET/api/programs/:id/applicantsDanh sách sinh viên đã đăng kýAdmin, Giáo
 
 **POST/api/funds Tạo quỹ mới Admin**
 
-GET/api/funds/:idChi tiết một quỹAdmin, Kế toán
+GET/api/funds/:id Chi tiết một quỹAdmin, Kế toán
 
 PUT/api/funds/:idCập nhật thông tin quỹAdmin, Kế toán
 
-GET/api/funds/:id/transactionsLịch sử giao dịch của quỹAdmin, Kế toán
+GET/api/funds/:id/transactions Lịch sử giao dịch của quỹAdmin, Kế toán
 
-POST/api/funds/:id/allocatePhân bổ quỹ cho chương trìnhAdmin, Kế toán
+POST/api/funds/:id/allocate Phân bổ quỹ cho chương trìnhAdmin, Kế toán
 
-GET/api/funds/summaryTổng hợp số dư, đã chi, còn lạiAdmin, Kế toán
+GET/api/funds/summary Tổng hợp số dư, đã chi, còn lạiAdmin, Kế toán
 
 
 

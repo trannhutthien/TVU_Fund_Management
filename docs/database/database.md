@@ -1,210 +1,240 @@
-1\. Authentication
+\-- ========================================================
 
-**POST/api/auth/loginĐăng nhập, trả về JWT tokenAll**
+\-- DATABASE: TVU FUND MANAGEMENT SYSTEM
 
-**POST/api/auth/logout Đăng xuất, invalidate tokenAl**
+\-- ========================================================
 
-**lPOST/api/auth/refresh-token Làm mới access tokenAll**
 
-**GET/api/auth/me Lấy thông tin user đang đăng nhậpAll**
 
-**PUT/api/auth/change-password Đổi mật khẩuAll**
+\-- 1. Bảng Vai Trò (Roles)
 
+CREATE TABLE VaiTro (
 
+&#x20;   role\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
-**2. Roles Management (Quản lý Vai trò)**
+&#x20;   ten\_vai\_tro NVARCHAR(100) NOT NULL UNIQUE,
 
-**GET/api/rolesLấy danh sách tất cả vai trò trong hệ thống.Admin (1),**  **Giao vụ (3)**
+&#x20;   mo\_ta NVARCHAR(255) NULL,
 
-**GET/api/roles/:idXem thông tin chi tiết (tên, mô tả, trạng thái) của một vai trò.Admin (1),Giao vụ (3)**
+&#x20;   trang\_thai NVARCHAR(50) DEFAULT 'HOAT\_DONG'
 
-**PATCH/api/roles/:idCập nhật một phần thông tin (mô tả hoặc trạng thái khóa/mở). Admin (1)**
+);
 
-**GET/api/roles/:id/usersLiệt kê danh sách tất cả người dùng thuộc một vai trò cụ thể.Admin (1), Giao vụ (3)**
 
 
+\-- 2. Bảng Người Dùng (Users)
 
-2\. User Management
+CREATE TABLE NguoiDung (
 
-**GET/api/users Danh sách tất cả user Admin**
+&#x20;   user\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
-**POST/api/users Tạo user mới Admin**
+&#x20;   ma\_so\_dinh\_danh VARCHAR(20) NOT NULL UNIQUE, -- MSSV hoặc Mã cán bộ
 
-**GET/api/users/:idChi tiết một userAdmin**
+&#x20;   ho\_ten NVARCHAR(150) NOT NULL,
 
-PUT/api/users/:idCập nhật thông tin userAdmin
+&#x20;   email VARCHAR(150) NOT NULL UNIQUE,
 
-DELETE/api/users/:idXóa userAdmin
+&#x20;   mat\_khau VARCHAR(255) NOT NULL,
 
-PUT/api/users/:id/roleGán / thay đổi roleAdmin
+&#x20;   avatar NVARCHAR(500) NULL,
 
-**PUT/api/users/:id/statusKích hoạt / khóa tài khoảnAdmin**
+&#x20;   so\_tai\_khoan VARCHAR(50) NULL,
 
+&#x20;   ten\_ngan\_hang NVARCHAR(150) NULL,
 
+&#x20;   chu\_tai\_khoan NVARCHAR(150) NULL,
 
-&#x20;3. Sinh viên (Student)
+&#x20;   role\_id INT NOT NULL,
 
-GET/api/studentsDanh sách sinh viênAdmin, Giáo vụ
+&#x20;   khoa\_phong NVARCHAR(100) NULL,
 
-POST/api/studentsThêm sinh viên mớiAdmin, Giáo vụ
+&#x20;   trang\_thai NVARCHAR(50) DEFAULT 'HOAT\_DONG',
 
-GET/api/students/:idChi tiết một sinh viênAdmin, Giáo vụ
+&#x20;   created\_at DATETIME DEFAULT CURRENT\_TIMESTAMP,
 
-PUT/api/students/:idCập nhật thông tin sinh viênAdmin, Giáo vụ
+&#x20;   updated\_at DATETIME DEFAULT CURRENT\_TIMESTAMP ON UPDATE CURRENT\_TIMESTAMP,
 
-DELETE/api/students/:idXóa sinh viênAdmin
+&#x20;   FOREIGN KEY (role\_id) REFERENCES VaiTro(role\_id)
 
-GET/api/students/:id/applicationsLịch sử đơn đã nộp của sinh viênAdmin, Giáo vụ
+);
 
-GET/api/students/searchTìm kiếm sinh viên (MSSV, tên, khoa)Admin, Giáo vụ
 
 
+\-- 3. Bảng Quỹ (Funds)
 
+CREATE TABLE Quy (
 
+&#x20;   quy\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
-4\. Đơn đăng ký (Application)
+&#x20;   ten\_quy NVARCHAR(200) NOT NULL,
 
-GET/api/applicationsDanh sách tất cả đơn đăng kýAdmin, Giáo vụ
+&#x20;   mo\_ta NVARCHAR(500) NULL,
 
-POST/api/applicationsNộp đơn mới (sinh viên / cổng đăng ký)Public/Student
+&#x20;   so\_du DECIMAL(18, 2) DEFAULT 0.00,
 
-GET/api/applications/:idChi tiết một đơnAdmin, Giáo vụ
+&#x20;   loai\_quy NVARCHAR(100) NOT NULL, -- Ví dụ: Học bổng, Hỗ trợ khẩn cấp...
 
-PUT/api/applications/:idCập nhật thông tin đơnAdmin, Giáo vụ
+&#x20;   trang\_thai NVARCHAR(50) DEFAULT 'DANG\_HOAT\_DONG',
 
-DELETE/api/applications/:idXóa đơnAdmin
+&#x20;   ngay\_tao DATETIME DEFAULT CURRENT\_TIMESTAMP,
 
-PUT/api/applications/:id/statusDuyệt / từ chối / yêu cầu bổ sungAdmin, Giáo vụ
+&#x20;   ngay\_cap\_nhat DATETIME DEFAULT CURRENT\_TIMESTAMP ON UPDATE CURRENT\_TIMESTAMP
 
-GET/api/applications/filterLọc đơn theo trạng thái, loại, kỳAdmin, Giáo vụ
+);
 
-POST/api/applications/:id/documentsUpload hồ sơ đính kèmStudent, Giáo vụ
 
-GET/api/applications/:id/documentsLấy danh sách hồ sơ đính kèmAdmin, Giáo vụ
 
+\-- 4. Bảng Nhà Tài Trợ (Donors)
 
+CREATE TABLE NhaTaiTro (
 
+&#x20;   nha\_tai\_tro\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
+&#x20;   ten\_nha\_tai\_tro NVARCHAR(200) NOT NULL,
 
+&#x20;   loai NVARCHAR(50) DEFAULT 'CA\_NHAN', -- Ca nhan hoặc To chuc
 
+&#x20;   email VARCHAR(150) NULL,
 
-&#x20;5. Học bổng / Chương trình hỗ trợ (Fund Program)
+&#x20;   so\_dien\_thoai VARCHAR(20) NULL,
 
-GET/api/programsDanh sách tất cả chương trìnhAll
+&#x20;   dia\_chi NVARCHAR(255) NULL,
 
-POST/api/programsTạo chương trình mớiAdmin
+&#x20;   ghi\_chu NVARCHAR(500) NULL,
 
-GET/api/programs/:idChi tiết chương trìnhAll
+&#x20;   ngay\_tao DATETIME DEFAULT CURRENT\_TIMESTAMP
 
-PUT/api/programs/:idCập nhật chương trìnhAdmin
+);
 
-DELETE/api/programs/:idXóa chương trìnhAdmin
 
-PUT/api/programs/:id/statusMở / đóng đăng kýAdmin
 
-GET/api/programs/:id/applicantsDanh sách sinh viên đã đăng kýAdmin, Giáo vụ
+\-- 5. Bảng Khoản Tài Trợ (Donations)
 
+CREATE TABLE KhoanTaiTro (
 
+&#x20;   khoan\_tai\_tro\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
+&#x20;   nha\_tai\_tro\_id INT NOT NULL,
 
+&#x20;   quy\_id INT NOT NULL,
 
-&#x20;6. Quỹ \& Tài chính (Fund / Finance)
+&#x20;   so\_tien DECIMAL(18, 2) NOT NULL,
 
-**GET/api/funds Tổng quan tất cả quỹ Admin, Kế toán**
+&#x20;   hinh\_thuc\_thanh\_toan NVARCHAR(100) DEFAULT 'Chuyen khoan',
 
-**POST/api/funds Tạo quỹ mới Admin**
+&#x20;   trang\_thai NVARCHAR(50) DEFAULT 'Cho duyet', -- Cho duyet, Da nhan, Tu choi
 
-GET/api/funds/:idChi tiết một quỹAdmin, Kế toán
+&#x20;   ngay\_tai\_tro DATETIME DEFAULT CURRENT\_TIMESTAMP,
 
-PUT/api/funds/:idCập nhật thông tin quỹAdmin, Kế toán
+&#x20;   minh\_chung\_anh VARCHAR(500) NULL,
 
-GET/api/funds/:id/transactionsLịch sử giao dịch của quỹAdmin, Kế toán
+&#x20;   FOREIGN KEY (nha\_tai\_tro\_id) REFERENCES NhaTaiTro(nha\_tai\_tro\_id),
 
-POST/api/funds/:id/allocatePhân bổ quỹ cho chương trìnhAdmin, Kế toán
+&#x20;   FOREIGN KEY (quy\_id) REFERENCES Quy(quy\_id)
 
-GET/api/funds/summaryTổng hợp số dư, đã chi, còn lạiAdmin, Kế toán
+);
 
 
 
+\-- 6. Bảng Yêu Cầu Hỗ Trợ (Applications/Requests)
 
+CREATE TABLE YeuCauHoTro (
 
-7\. Giao dịch (Transaction)
+&#x20;   request\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
-GET/api/transactionsDanh sách tất cả giao dịchAdmin, Kế toán
+&#x20;   user\_id INT NOT NULL, -- Người nộp đơn (Sinh viên)
 
-POST/api/transactionsTạo giao dịch mới (thu/chi)Admin, Kế toán
+&#x20;   quy\_id INT NOT NULL,
 
-GET/api/transactions/:idChi tiết giao dịchAdmin, Kế toán
+&#x20;   tieu\_de NVARCHAR(255) NOT NULL,
 
-PUT/api/transactions/:idChỉnh sửa giao dịchAdmin, Kế toán
+&#x20;   noi\_dung\_chi\_tiet TEXT NOT NULL,
 
-DELETE/api/transactions/:idXóa giao dịchAdmin
+&#x20;   so\_tien\_de\_xuat DECIMAL(18, 2) NOT NULL,
 
-GET/api/transactions/filterLọc theo thời gian, loại, trạng tháiAdmin, Kế toán
+&#x20;   trang\_thai NVARCHAR(50) DEFAULT 'Cho xet duyet', -- Cho xet duyet, Da duyet, Tu choi, Da giai ngan
 
-POST/api/transactions/:id/confirmXác nhận đã thanh toánKế toán
+&#x20;   minh\_chung\_dinh\_kem VARCHAR(500) NULL,
 
+&#x20;   ngay\_nop DATETIME DEFAULT CURRENT\_TIMESTAMP,
 
+&#x20;   ngay\_cap\_nhat DATETIME DEFAULT CURRENT\_TIMESTAMP ON UPDATE CURRENT\_TIMESTAMP,
 
+&#x20;   FOREIGN KEY (user\_id) REFERENCES NguoiDung(user\_id),
 
+&#x20;   FOREIGN KEY (quy\_id) REFERENCES Quy(quy\_id)
 
-&#x20;8. Dashboard \& Thống kê (Analytics)
+);
 
-GET/api/dashboard/overviewKPI tổng quan (tổng quỹ, đơn, SV)Admin
 
-GET/api/dashboard/fund-allocationDữ liệu Donut chart phân bổ quỹAdmin, Kế toán
 
-GET/api/dashboard/cashflowDữ liệu Area chart dòng tiềnAdmin, Kế toán
+\-- 7. Bảng Phê Duyệt (Approvals) - Lưu lịch sử duyệt nhiều cấp
 
-GET/api/dashboard/applications-statsThống kê đơn theo trạng thái / kỳAdmin, Giáo vụ
+CREATE TABLE PheDuyet (
 
-GET/api/dashboard/recent-activitiesHoạt động gần đâyAdmin
+&#x20;   phe\_duyet\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
+&#x20;   request\_id INT NOT NULL,
 
+&#x20;   nguoi\_duyet\_id INT NOT NULL,
 
+&#x20;   cap\_do\_duyet INT DEFAULT 1,
 
+&#x20;   trang\_thai\_duyet NVARCHAR(50),
 
-&#x20;9. AI Assistant (Cổng đăng ký sinh viên)
+&#x20;   y\_kien\_phand\_hoi NVARCHAR(500),
 
-POST/api/ai/chatGửi tin nhắn đến AI assistantPublic
+&#x20;   ngay\_duyet DATETIME DEFAULT CURRENT\_TIMESTAMP,
 
-GET/api/ai/suggested-programsGợi ý chương trình phù hợp với SVPublic
+&#x20;   FOREIGN KEY (request\_id) REFERENCES YeuCauHoTro(request\_id),
 
-POST/api/ai/validate-applicationAI kiểm tra đơn trước khi nộpPublic
+&#x20;   FOREIGN KEY (nguoi\_duyet\_id) REFERENCES NguoiDung(user\_id)
 
+);
 
 
 
+\-- 8. Bảng Giao Dịch (Transactions) - Lưu vết dòng tiền Thu/Chi thực tế
 
-10\. Thông báo (Notification)
+CREATE TABLE GiaoDich (
 
-GET/api/notificationsDanh sách thông báo của userAll
+&#x20;   giao\_dich\_id INT AUTO\_INCREMENT PRIMARY KEY,
 
-PUT/api/notifications/:id/readĐánh dấu đã đọcAll
+&#x20;   quy\_id INT NOT NULL,
 
-PUT/api/notifications/read-allĐánh dấu tất cả đã đọcAll
+&#x20;   khoan\_tai\_tro\_id INT NULL, -- Nếu là giao dịch Thu từ nhà tài trợ
 
-DELETE/api/notifications/:idXóa thông báoAll
+&#x20;   request\_id INT NULL,        -- Nếu là giao dịch Chi cho sinh viên
 
-POST/api/notifications/sendGửi thông báo thủ côngAdmin
+&#x20;   loai\_giao\_dich NVARCHAR(50) NOT NULL, -- 'Thu' hoặc 'Chi'
 
+&#x20;   so\_tien DECIMAL(18, 2) NOT NULL,
 
+&#x20;   trang\_thai\_giao\_dich NVARCHAR(50) DEFAULT 'Cho xu ly',
 
+&#x20;   minh\_chung\_chuyen\_khoan VARCHAR(500) NULL,
 
+&#x20;   ghi\_chu NVARCHAR(255) NULL,
 
-11\. File / Upload
+&#x20;   ngay\_giao\_dich DATETIME DEFAULT CURRENT\_TIMESTAMP,
 
-POST/api/uploadsUpload file (ảnh, PDF hồ sơ)All
+&#x20;   ngay\_cap\_nhat DATETIME DEFAULT CURRENT\_TIMESTAMP ON UPDATE CURRENT\_TIMESTAMP,
 
-DELETE/api/uploads/:idXóa file đã uploadAdmin
+&#x20;   
 
+&#x20;   -- Ràng buộc logic: Phải liên kết với tài trợ hoặc yêu cầu hỗ trợ
 
+&#x20;   CONSTRAINT chk\_nguon\_giao\_dich 
 
+&#x20;       CHECK (khoan\_tai\_tro\_id IS NOT NULL OR request\_id IS NOT NULL),
 
+&#x20;   
 
-&#x20;12. Audit Log
+&#x20;   FOREIGN KEY (quy\_id) REFERENCES Quy(quy\_id) ON DELETE RESTRICT ON UPDATE CASCADE,
 
-GET/api/audit-logsLịch sử thao tác toàn hệ thốngAdmin
+&#x20;   FOREIGN KEY (khoan\_tai\_tro\_id) REFERENCES KhoanTaiTro(khoan\_tai\_tro\_id),
 
-GET/api/audit-logs/filterLọc theo user, action, thời gianAdmin
+&#x20;   FOREIGN KEY (request\_id) REFERENCES YeuCauHoTro(request\_id)
+
+);
 

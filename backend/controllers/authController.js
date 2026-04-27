@@ -59,8 +59,9 @@ export const login = async (req, res) => {
     }
 
     // 5. Tạo cặp token (access + refresh)
+    // LƯU Ý: Dùng user_id (PRIMARY KEY) thay vì ma_so_dinh_danh
     const payload = {
-      id: user.ma_so_dinh_danh,
+      user_id: user.user_id,  // Sửa từ ma_so_dinh_danh → user_id
       vai_tro: user.role_id,
     };
     const { accessToken, refreshToken } = generateTokens(payload);
@@ -72,9 +73,10 @@ export const login = async (req, res) => {
       accessToken,
       refreshToken,
       user: {
-        id: user.ma_so_dinh_danh,
+        id: user.user_id,  // Sửa từ ma_so_dinh_danh → user_id
+        maSoDinhDanh: user.ma_so_dinh_danh,
         hoTen: user.ho_ten,
-        email: user.email,
+        email: email,
         vaiTro: user.role_id,
       },
     });
@@ -104,7 +106,8 @@ export const getMe = async (req, res) => {
     return res.status(200).json({
       success: true,
       user: {
-        id: user.ma_so_dinh_danh,
+        id: user.user_id,  // Sửa từ ma_so_dinh_danh → user_id
+        maSoDinhDanh: user.ma_so_dinh_danh,
         hoTen: user.ho_ten,
         email: user.email,
         vaiTro: user.role_id,
@@ -149,14 +152,15 @@ export const refreshToken = async (req, res) => {
 
     // 3. Kiểm tra user vẫn còn tồn tại và không bị khoá trong DB
     // (trường hợp tài khoản bị xoá hoặc khoá sau khi token được cấp)
-    const user = await NguoiDungModel.getUserForProfile(decoded.id);
+    // LƯU Ý: decoded.user_id (không phải decoded.id)
+    const user = await NguoiDungModel.getUserForProfile(decoded.user_id);
     if (!user) {
       return res.status(401).json({
         success: false,
         message: "Tài khoản không còn tồn tại",
       });
     }
-    if (user.trang_thai === "khoa") {
+    if (user.trang_thai === "KHOA") {  // Sửa từ "khoa" → "KHOA"
       return res.status(403).json({
         success: false,
         message: "Tài khoản đã bị khoá, vui lòng liên hệ quản trị viên",
@@ -165,7 +169,7 @@ export const refreshToken = async (req, res) => {
 
     // 4. Cấp cặp token mới (xoay vòng cả refresh token — tăng bảo mật)
     const payload = {
-      id: user.ma_so_dinh_danh,
+      user_id: user.user_id,  // Sửa từ ma_so_dinh_danh → user_id
       vai_tro: user.role_id,
     };
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } =

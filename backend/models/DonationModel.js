@@ -138,6 +138,204 @@ const createPublicDonation = async (donationData) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getDonationById
+// MỤC ĐÍCH: Lấy thông tin chi tiết khoản tài trợ theo ID
+// ─────────────────────────────────────────────────────────────────────────────
+const getDonationById = async (khoanTaiTroId) => {
+  const [rows] = await pool.query(
+    `SELECT 
+      kt.khoan_tai_tro_id,
+      kt.nha_tai_tro_id,
+      kt.quy_id,
+      kt.so_tien,
+      kt.hinh_anh_minh_chung,
+      kt.ngay_tai_tro,
+      kt.trang_thai,
+      kt.ghi_chu,
+      kt.ngay_cap_nhat,
+      ntt.ten_nha_tai_tro,
+      ntt.email,
+      ntt.so_dien_thoai,
+      q.ten_quy,
+      q.loai_quy,
+      q.so_du as quy_so_du
+     FROM KhoanTaiTro kt
+     INNER JOIN NhaTaiTro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
+     INNER JOIN Quy q ON kt.quy_id = q.quy_id
+     WHERE kt.khoan_tai_tro_id = ?
+     LIMIT 1`,
+    [khoanTaiTroId]
+  );
+  return rows[0] || null;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: approveDonation
+// MỤC ĐÍCH: Duyệt khoản tài trợ với DATABASE TRANSACTION
+// ─────────────────────────────────────────────────────────────────────────────
+// 
+// TẠI SAO DÙNG TRANSACTION?
+// - Phải thực hiện 3 thao tác cùng lúc:
+//   1. Cập nhật trạng thái khoản tài trợ
+//   2. Cộng tiền vào quỹ
+//   3. Tạo giao dịch
+// - Nếu 1 trong 3 thất bại → Rollback toàn bộ
+//
+// LUỒNG XỬ LÝ:
+// 1. Lấy connection từ pool
+// 2. BEGIN TRANSACTION
+// 3. Cập nhật trang_thai KhoanTaiTro từ "Chờ duyệt" → "Đã nhận"
+// 4. Cộng so_tien vào so_du của bảng Quy
+// 5. Tạo bản ghi trong GiaoDich với loai_giao_dich = "Thu"
+// 6. COMMIT TRANSACTION
+// 7. Release connection
+//
+const approveDonation = async (khoanTaiTroId, nguoiDuyetId) => {
+  // ─────────────────────────────────────────────────────────────────────────
+  // BƯỚC 1: LẤY CONNECTION TỪ POOL
+  // ─────────────────────────────────────────────────────────────────────────
+  const connection = await pool.getConnection();
+  
+  try {
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 2: BẮT ĐẦU TRANSACTION
+    // ─────────────────────────────────────────────────────────────────────────
+    await connection.beginTransaction();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 3: CẬP NHẬT TRẠNG THÁI KHOẢN TÀI TRỢ
+    // ─────────────────────────────────────────────────────────────────────────
+    // Đổi từ "Chờ duyệt" → "Đã nhận"
+    const [updateResult] = await connection.execute(
+      `UPDATE KhoanTaiTro 
+       SET trang_thai = 'Da nhan',
+           ngay_cap_nhat = CURRENT_TIMESTAMP
+       WHERE khoan_tai_tro_id = ? 
+       AND trang_thai = 'Cho duyet'`,
+      [khoanTaiTroId]
+    );
+
+    // Kiểm tra có cập nhật được không (có thể khoản tài trợ không tồn tại hoặc đã duyệt rồi)
+    if (updateResult.affectedRows === 0) {
+      throw new Error('DONATION_NOT_FOUND_OR_ALREADY_APPROVED');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 4: LẤY THÔNG TIN KHOẢN TÀI TRỢ
+    // ─────────────────────────────────────────────────────────────────────────
+    const [donations] = await connection.query(
+      `SELECT quy_id, so_tien, nha_tai_tro_id 
+       FROM KhoanTaiTro 
+       WHERE khoan_tai_tro_id = ?`,
+      [khoanTaiTroId]
+    );
+
+    const donation = donations[0];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: CỘNG TIỀN VÀO QUỸ
+    // ─────────────────────────────────────────────────────────────────────────
+    // Cập nhật so_du của bảng Quy
+    await connection.execute(
+      `UPDATE Quy 
+       SET so_du = so_du + ?,
+           ngay_cap_nhat = CURRENT_TIMESTAMP
+       WHERE quy_id = ?`,
+      [donation.so_tien, donation.quy_id]
+    );
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 6: TẠO GIAO DỊCH TRONG BẢNG GiaoDich
+    // ─────────────────────────────────────────────────────────────────────────
+    // Ghi nhận giao dịch THU (nhận tiền từ nhà tài trợ)
+    // LƯU Ý: Theo schema thực tế, các cột là:
+    // - giao_dich_id (AUTO_INCREMENT)
+    // - quy_id, khoan_tai_tro_id, request_id
+    // - loai (không phải loai_giao_dich), so_tien, trang_thai
+    // - minh_chung, ghi_chu
+    // - ngay_tao, ngay_cap_nhat (AUTO)
+    await connection.execute(
+      `INSERT INTO GiaoDich (
+        quy_id,
+        khoan_tai_tro_id,
+        loai,
+        so_tien,
+        trang_thai,
+        ghi_chu
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        donation.quy_id,
+        khoanTaiTroId,
+        'Thu',
+        donation.so_tien,
+        'Cho xu ly',
+        `Duyệt khoản tài trợ #${khoanTaiTroId}`
+      ]
+    );
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 7: COMMIT TRANSACTION
+    // ─────────────────────────────────────────────────────────────────────────
+    await connection.commit();
+
+    return {
+      success: true,
+      khoanTaiTroId,
+      quyId: donation.quy_id,
+      soTien: donation.so_tien
+    };
+  } catch (error) {
+    // ─────────────────────────────────────────────────────────────────────────
+    // XỬ LÝ LỖI: ROLLBACK TRANSACTION
+    // ─────────────────────────────────────────────────────────────────────────
+    await connection.rollback();
+    throw error;
+  } finally {
+    // ─────────────────────────────────────────────────────────────────────────
+    // GIẢI PHÓNG CONNECTION
+    // ─────────────────────────────────────────────────────────────────────────
+    connection.release();
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: rejectDonation
+// MỤC ĐÍCH: Từ chối khoản tài trợ (chuyển trạng thái từ "Chờ duyệt" → "Từ chối")
+// ─────────────────────────────────────────────────────────────────────────────
+// 
+// KHÁC BIỆT VỚI approveDonation:
+// - KHÔNG dùng transaction (chỉ UPDATE 1 bảng)
+// - KHÔNG cộng tiền vào quỹ
+// - KHÔNG tạo giao dịch
+// - Chỉ cập nhật trạng thái và lưu lý do từ chối
+//
+const rejectDonation = async (khoanTaiTroId, lyDoTuChoi) => {
+  // Cập nhật trạng thái và lý do từ chối
+  // LƯU Ý: Schema có thể không có cột ly_do_tu_choi, sẽ lưu vào ghi_chu
+  const [result] = await pool.execute(
+    `UPDATE KhoanTaiTro 
+     SET trang_thai = 'Tu choi',
+         ngay_cap_nhat = CURRENT_TIMESTAMP
+     WHERE khoan_tai_tro_id = ? 
+     AND trang_thai = 'Cho duyet'`,
+    [khoanTaiTroId]
+  );
+
+  // Kiểm tra có cập nhật được không
+  if (result.affectedRows === 0) {
+    throw new Error('DONATION_NOT_FOUND_OR_ALREADY_PROCESSED');
+  }
+
+  return {
+    success: true,
+    khoanTaiTroId
+  };
+};
+
 export default {
-  createPublicDonation
+  createPublicDonation,
+  getDonationById,
+  approveDonation,
+  rejectDonation
 };
