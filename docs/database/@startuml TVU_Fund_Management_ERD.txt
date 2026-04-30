@@ -1,0 +1,146 @@
+@startuml TVU_Fund_Management
+
+skinparam linetype ortho
+skinparam entity {
+  BackgroundColor #FEFEFE
+  BorderColor #4A4A8A
+  FontColor #1A1A2E
+  FontSize 12
+}
+skinparam arrow {
+  Color #4A4A8A
+  FontSize 10
+}
+
+title TVU Fund Management - ERD
+
+entity "vaitro" as VT {
+  * role_id : INT (PK, AI)
+  --
+  * ten_vai_tro : VARCHAR(100) <<UQ>>
+  mo_ta : VARCHAR(255)
+  trang_thai : VARCHAR(50)
+}
+
+entity "nguoidung" as ND {
+  * user_id : INT (PK, AI)
+  --
+  * ma_so_dinh_danh : VARCHAR(20) <<UQ>>
+  * ho_ten : VARCHAR(150)
+  * email : VARCHAR(150) <<UQ>>
+  * mat_khau : VARCHAR(255)
+  avatar : VARCHAR(500)
+  so_tai_khoan : VARCHAR(50)
+  ten_ngan_hang : VARCHAR(150)
+  chu_tai_khoan : VARCHAR(150)
+  * role_id : INT <<FK>>
+  khoa_phong : VARCHAR(100)
+  * trang_thai : VARCHAR(50)
+  created_at : DATETIME
+}
+
+entity "quy" as QY {
+  * quy_id : INT (PK, AI)
+  --
+  * ten_quy : VARCHAR(150)
+  * loai_quy : ENUM
+  mo_ta : VARCHAR(255)
+  * so_du : DECIMAL(18,2)
+  ngay_tao : DATETIME
+  ngay_cap_nhat : DATETIME
+  * trang_thai : ENUM
+}
+
+entity "nhataitro" as NTT {
+  * nha_tai_tro_id : INT (PK, AI)
+  --
+  * ten_nha_tai_tro : VARCHAR(150)
+  * loai : VARCHAR(50)
+  email : VARCHAR(150) <<UQ>>
+  so_dien_thoai : VARCHAR(20) <<UQ>>
+  dia_chi : VARCHAR(255)
+  created_at : DATETIME
+}
+
+entity "khoantaitro" as KTT {
+  * khoan_tai_tro_id : INT (PK, AI)
+  --
+  * nha_tai_tro_id : INT <<FK>>
+  * quy_id : INT <<FK>>
+  * so_tien : DECIMAL(18,2)
+  hinh_anh_minh_chung : VARCHAR(500)
+  ngay_tai_tro : DATETIME
+  * trang_thai : ENUM
+  ghi_chu : VARCHAR(255)
+  ngay_cap_nhat : DATETIME
+}
+
+entity "yeucauhotro" as YCHT {
+  * request_id : INT (PK, AI)
+  --
+  * user_id : INT <<FK>>
+  * quy_id : INT <<FK>>
+  * tieu_de : VARCHAR(200)
+  mo_ta : TEXT
+  * so_tien_yeu_cau : DECIMAL(18,2)
+  file_dinh_kem : VARCHAR(500)
+  * trang_thai : ENUM
+  nguoi_duyet_id : INT <<FK, Nullable>>
+  ngay_duyet : DATETIME
+  ly_do_tu_choi : VARCHAR(255)
+  ngay_tao : DATETIME
+  ngay_cap_nhat : DATETIME
+}
+
+entity "giaodich" as GD {
+  * transaction_id : INT (PK, AI)
+  --
+  * quy_id : INT <<FK>>
+  khoan_tai_tro_id : INT <<FK, Nullable>>
+  request_id : INT <<FK, Nullable>>
+  nguoi_tao_id : INT <<FK, Nullable>>
+  * so_tien : DECIMAL(18,2)
+  * loai : ENUM
+  * trang_thai : ENUM
+  minh_chung_chuyen_khoan : VARCHAR(500)
+  ghi_chu : VARCHAR(255)
+  ngay_giao_dich : DATETIME
+  ngay_cap_nhat : DATETIME
+}
+
+entity "pheduyet" as PD {
+  * phe_duyet_id : INT (PK, AI)
+  --
+  * request_id : INT <<FK>>
+  * nguoi_duyet_id : INT <<FK>>
+  * cap_do_duyet : INT (1-5)
+  * ket_qua : ENUM
+  ghi_chu : VARCHAR(255)
+  ly_do_tu_choi : VARCHAR(255)
+  ngay_tao : DATETIME
+  ngay_duyet : DATETIME
+  ngay_cap_nhat : DATETIME
+}
+
+' ── Relationships ──────────────────────────────────────────
+
+VT   ||--o{ ND   : "1 vai trò\n→ nhiều người dùng"
+
+ND   ||--o{ YCHT : "user_id\n(người gửi yêu cầu)"
+ND   |o--o{ YCHT : "nguoi_duyet_id\n(người duyệt)"
+
+QY   ||--o{ KTT  : "quy_id"
+QY   ||--o{ YCHT : "quy_id"
+QY   ||--o{ GD   : "quy_id"
+
+NTT  ||--o{ KTT  : "nha_tai_tro_id"
+
+KTT  |o--o{ GD   : "khoan_tai_tro_id"
+
+YCHT ||--o{ GD   : "request_id"
+YCHT ||--o{ PD   : "request_id"
+
+ND   |o--o{ GD   : "nguoi_tao_id"
+ND   ||--o{ PD   : "nguoi_duyet_id"
+
+@enduml
