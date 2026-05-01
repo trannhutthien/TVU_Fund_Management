@@ -137,54 +137,24 @@ CREATE TABLE `khoantaitro` (
 
 
 
-
-
-
 CREATE TABLE `yeucauhotro` (
-
-&#x20; `request\_id` int(11) NOT NULL AUTO\_INCREMENT,
-
-&#x20; `user\_id` int(11) NOT NULL,
-
-&#x20; `quy\_id` int(11) NOT NULL,
-
-&#x20; `tieu\_de` varchar(200) CHARACTER SET utf8 COLLATE utf8\_general\_ci NOT NULL,
-
-&#x20; `mo\_ta` text DEFAULT NULL,
-
-&#x20; `so\_tien\_yeu\_cau` decimal(18,2) NOT NULL CHECK (`so\_tien\_yeu\_cau` > 0),
-
-&#x20; `file\_dinh\_kem` varchar(500) DEFAULT NULL,
-
-&#x20; `trang\_thai` enum('Cho duyet','Dang xu ly','Da duyet','Tu choi') NOT NULL DEFAULT 'Cho duyet',
-
-&#x20; `nguoi\_duyet\_id` int(11) DEFAULT NULL,
-
-&#x20; `ngay\_duyet` datetime DEFAULT NULL,
-
-&#x20; `ly\_do\_tu\_choi` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
-
-&#x20; `ngay\_tao` datetime DEFAULT current\_timestamp(),
-
-&#x20; `ngay\_cap\_nhat` datetime DEFAULT current\_timestamp() ON UPDATE current\_timestamp(),
-
-&#x20; PRIMARY KEY (`request\_id`),
-
-&#x20; KEY `user\_id` (`user\_id`),
-
-&#x20; KEY `quy\_id` (`quy\_id`),
-
-&#x20; KEY `nguoi\_duyet\_id` (`nguoi\_duyet\_id`),
-
-&#x20; CONSTRAINT `yeucauhotro\_ibfk\_1` FOREIGN KEY (`user\_id`) REFERENCES `nguoidung` (`user\_id`) ON UPDATE CASCADE,
-
-&#x20; CONSTRAINT `yeucauhotro\_ibfk\_2` FOREIGN KEY (`quy\_id`) REFERENCES `quy` (`quy\_id`) ON UPDATE CASCADE,
-
-&#x20; CONSTRAINT `yeucauhotro\_ibfk\_3` FOREIGN KEY (`nguoi\_duyet\_id`) REFERENCES `nguoidung` (`user\_id`) ON DELETE SET NULL ON UPDATE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
-
-
+  `request_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `quy_id` int(11) NOT NULL,
+  `tieu_de` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `mo_ta` text DEFAULT NULL,
+  `so_tien_yeu_cau` decimal(18,2) NOT NULL CHECK (`so_tien_yeu_cau` > 0),
+  `file_dinh_kem` varchar(500) DEFAULT NULL,
+  `trang_thai` enum('Cho duyet','Dang xu ly','Cho giai ngan','Da giai ngan','Tu choi') NOT NULL DEFAULT 'Cho duyet',
+  `ly_do_tu_choi` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `ngay_tao` datetime DEFAULT current_timestamp(),
+  `ngay_cap_nhat` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`request_id`),
+  KEY `user_id` (`user_id`),
+  KEY `quy_id` (`quy_id`),
+  CONSTRAINT `yeucauhotro_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `nguoidung` (`user_id`) ON UPDATE CASCADE,
+  CONSTRAINT `yeucauhotro_ibfk_2` FOREIGN KEY (`quy_id`) REFERENCES `quy` (`quy_id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
 
 
 

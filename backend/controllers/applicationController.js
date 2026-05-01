@@ -1,6 +1,6 @@
 import ApplicationModel from "../models/ApplicationModel.js";
 import FundModel from "../models/FundModel.js";
-import TransactionModel from "../models/TransactionModel.js";
+import PheDuyetModel from "../models/PheDuyetModel.js";
 import pool from "../config/db.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -148,12 +148,18 @@ export const createApplication = async (req, res) => {
     const result = await ApplicationModel.createApplication(applicationData);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 4: TRẢ VỀ KẾT QUẢ
+    // BƯỚC 4: TẠO 3 DÒNG PHÊ DUYỆT (Cấp 1, Cấp 2, Cấp 3)
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await PheDuyetModel.createPheDuyet(result.requestId);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: TRẢ VỀ KẾT QUẢ
     // ─────────────────────────────────────────────────────────────────────────
     
     return res.status(201).json({
       success: true,
-      message: "Nộp đơn xin hỗ trợ thành công. Đơn của bạn đang chờ xét duyệt.",
+      message: "Nộp đơn xin hỗ trợ thành công. Đơn của bạn đang chờ duyệt.",
       data: {
         requestId: result.requestId,
         tieuDe: applicationData.tieuDe,
@@ -165,7 +171,7 @@ export const createApplication = async (req, res) => {
         },
         trangThai: 'Cho duyet',
         ngayNop: new Date(),
-        thongBao: "Bạn sẽ nhận được thông báo qua email khi đơn được xét duyệt"
+        thongBao: "Đơn của bạn đã được tạo thành công và đang chờ Giáo vụ xét duyệt. Bạn sẽ nhận được thông báo qua email khi đơn được xử lý."
       }
     });
   } catch (error) {
@@ -372,34 +378,28 @@ export const getAllApplications = async (req, res) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ─── PUT /api/applications/:id/status (ADMIN/GIÁO VỤ CHUYỂN TRẠNG THÁI) ──────
+// ─── PUT /api/applications/:id/reject (TỪ CHỐI ĐƠN) ──────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 //
-// CÔNG DỤNG: Admin/Giáo vụ chuyển trạng thái đơn xin hỗ trợ
+// CÔNG DỤNG: Admin/Giáo vụ từ chối đơn xin hỗ trợ tại bất kỳ cấp nào
 // 
 // LUỒNG HOẠT ĐỘNG:
-// 1. Validate trạng thái mới
+// 1. Validate lý do từ chối (bắt buộc)
 // 2. Kiểm tra đơn tồn tại
-// 3. Kiểm tra trạng thái hiện tại có hợp lệ để chuyển không
-// 4. Nếu duyệt (Da duyet):
-//    - Kiểm tra số dư quỹ
-//    - Tạo giao dịch CHI
-//    - Trừ tiền quỹ
-//    - Cập nhật trạng thái đơn
-// 5. Nếu từ chối (Tu choi):
-//    - Cập nhật trạng thái + lý do từ chối
-// 6. Nếu chuyển sang "Đang xử lý":
-//    - Chỉ cập nhật trạng thái
+// 3. Kiểm tra trạng thái hiện tại (chỉ từ chối đơn đang chờ duyệt hoặc đang xử lý)
+// 4. Lấy cấp độ duyệt hiện tại
+// 5. Cập nhật PheDuyet: cấp hiện tại → ket_qua = 'Tu choi'
+// 6. Cập nhật YeuCauHoTro: trang_thai = 'Tu choi', ly_do_tu_choi
+// 7. Trả về kết quả
 //
-export const updateApplicationStatus = async (req, res) => {
-  // Bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
+export const rejectApplication = async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
 
     const { id } = req.params;
-    const { trangThai, lyDoTuChoi } = req.body;
+    const { lyDoTuChoi, ghiChu } = req.body;
     const nguoiDuyetId = req.user.id;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -414,30 +414,21 @@ export const updateApplicationStatus = async (req, res) => {
       });
     }
 
-    if (!trangThai) {
-      await connection.rollback();
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng cung cấp trạng thái mới",
-      });
-    }
-
-    // Các trạng thái hợp lệ
-    const validStatuses = ['Cho duyet', 'Dang xu ly', 'Da duyet', 'Tu choi'];
-    if (!validStatuses.includes(trangThai)) {
-      await connection.rollback();
-      return res.status(400).json({
-        success: false,
-        message: `Trạng thái không hợp lệ. Chỉ chấp nhận: ${validStatuses.join(', ')}`,
-      });
-    }
-
-    // Nếu từ chối, bắt buộc phải có lý do
-    if (trangThai === 'Tu choi' && (!lyDoTuChoi || lyDoTuChoi.trim() === '')) {
+    // Bắt buộc phải có lý do từ chối
+    if (!lyDoTuChoi || lyDoTuChoi.trim() === '') {
       await connection.rollback();
       return res.status(400).json({
         success: false,
         message: "Vui lòng cung cấp lý do từ chối",
+      });
+    }
+
+    // Validate độ dài lý do từ chối
+    if (lyDoTuChoi.trim().length < 10) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Lý do từ chối phải có ít nhất 10 ký tự",
       });
     }
 
@@ -461,202 +452,106 @@ export const updateApplicationStatus = async (req, res) => {
     
     const currentStatus = application.trang_thai;
 
-    // Không cho phép thay đổi đơn đã duyệt hoặc đã từ chối
-    if (currentStatus === 'Da duyet') {
+    // Không cho phép từ chối đơn đã giải ngân
+    if (currentStatus === 'Da giai ngan') {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: "Không thể thay đổi trạng thái đơn đã được duyệt",
+        message: "Không thể từ chối đơn đã được giải ngân",
       });
     }
 
+    // Không cho phép từ chối đơn đã bị từ chối trước đó
     if (currentStatus === 'Tu choi') {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: "Không thể thay đổi trạng thái đơn đã bị từ chối",
+        message: "Đơn này đã bị từ chối trước đó",
       });
     }
 
-    // Không cho phép chuyển về trạng thái cũ
-    if (currentStatus === trangThai) {
+    // Chỉ cho phép từ chối đơn ở trạng thái "Cho duyet", "Dang xu ly", hoặc "Cho giai ngan"
+    if (!['Cho duyet', 'Dang xu ly', 'Cho giai ngan'].includes(currentStatus)) {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Đơn đang ở trạng thái "${trangThai}"`,
+        message: `Không thể từ chối đơn ở trạng thái "${currentStatus}"`,
       });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 4: XỬ LÝ THEO TRẠNG THÁI MỚI
+    // BƯỚC 4: LẤY CẤP ĐỘ DUYỆT HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
+    
+    // Nếu không tìm thấy cấp đang chờ duyệt, có thể đơn đã duyệt đủ 3 cấp và đang chờ giải ngân
+    // Trong trường hợp này, vẫn cho phép từ chối (ví dụ: phát hiện gian lận sau khi duyệt)
+    let capDuyet = 0;
+    if (capHienTai) {
+      capDuyet = capHienTai.cap_do_duyet;
+    } else {
+      // Nếu không có cấp nào đang chờ, tìm cấp cuối cùng đã duyệt
+      const danhSachPheDuyet = await PheDuyetModel.getPheDuyetByRequestId(id);
+      const capDaDuyet = danhSachPheDuyet.filter(pd => pd.ket_qua === 'Da duyet');
+      if (capDaDuyet.length > 0) {
+        // Lấy cấp cao nhất đã duyệt
+        capDuyet = Math.max(...capDaDuyet.map(pd => pd.cap_do_duyet));
+      } else {
+        capDuyet = 1; // Mặc định là cấp 1 nếu chưa có cấp nào duyệt
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: CẬP NHẬT PHÊ DUYỆT CẤP HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await PheDuyetModel.updatePheDuyet(
+      id,
+      capDuyet,
+      nguoiDuyetId,
+      'Tu choi',
+      ghiChu || null,
+      lyDoTuChoi.trim(),
+      connection
+    );
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 6: CẬP NHẬT TRẠNG THÁI ĐƠN
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await ApplicationModel.updateTuChoi(id, lyDoTuChoi.trim(), connection);
+
+    await connection.commit();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 7: TRẢ VỀ KẾT QUẢ
     // ─────────────────────────────────────────────────────────────────────────
 
-    // ─── TRƯỜNG HỢP 1: DUYỆT ĐƠN (Da duyet) ───
-    if (trangThai === 'Da duyet') {
-      // Kiểm tra số dư quỹ
-      const fund = await FundModel.getFundById(application.quy_id);
-      
-      if (!fund) {
-        await connection.rollback();
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy quỹ",
-        });
+    return res.status(200).json({
+      success: true,
+      message: `Từ chối đơn xin hỗ trợ tại cấp ${capDuyet} thành công`,
+      data: {
+        requestId: parseInt(id),
+        tieuDe: application.tieu_de,
+        soTienYeuCau: parseFloat(application.so_tien_yeu_cau),
+        capDuyet: capDuyet,
+        trangThaiCu: currentStatus,
+        trangThaiMoi: 'Tu choi',
+        lyDoTuChoi: lyDoTuChoi.trim(),
+        nguoiTuChoi: {
+          id: nguoiDuyetId,
+          hoTen: req.user.hoTen,
+          email: req.user.email
+        },
+        ngayTuChoi: new Date(),
+        thongBao: "Đơn đã bị từ chối. Sinh viên sẽ nhận được thông báo qua email."
       }
-
-      if (fund.so_du < application.so_tien_yeu_cau) {
-        await connection.rollback();
-        return res.status(400).json({
-          success: false,
-          message: `Quỹ không đủ số dư. Số dư hiện tại: ${fund.so_du.toLocaleString('vi-VN')} VNĐ, Số tiền yêu cầu: ${application.so_tien_yeu_cau.toLocaleString('vi-VN')} VNĐ`,
-        });
-      }
-
-      // Tạo giao dịch CHI
-      const transactionData = {
-        quyId: application.quy_id,
-        requestId: id,
-        nguoiTaoId: nguoiDuyetId,
-        loai: 'Chi',
-        soTien: application.so_tien_yeu_cau,
-        trangThai: 'Thanh cong',
-        ghiChu: `Duyệt đơn xin hỗ trợ #${id} - ${application.tieu_de}`
-      };
-
-      await TransactionModel.createTransaction(transactionData, connection);
-
-      // Trừ tiền quỹ
-      await connection.execute(
-        `UPDATE Quy SET so_du = so_du - ? WHERE quy_id = ?`,
-        [application.so_tien_yeu_cau, application.quy_id]
-      );
-
-      // Cập nhật trạng thái đơn
-      await connection.execute(
-        `UPDATE YeuCauHoTro 
-         SET trang_thai = ?, 
-             nguoi_duyet_id = ?, 
-             ngay_duyet = NOW(),
-             ngay_cap_nhat = NOW()
-         WHERE request_id = ?`,
-        [trangThai, nguoiDuyetId, id]
-      );
-
-      await connection.commit();
-
-      return res.status(200).json({
-        success: true,
-        message: "Duyệt đơn xin hỗ trợ thành công",
-        data: {
-          requestId: parseInt(id),
-          tieuDe: application.tieu_de,
-          soTienYeuCau: parseFloat(application.so_tien_yeu_cau),
-          trangThaiCu: currentStatus,
-          trangThaiMoi: trangThai,
-          nguoiDuyet: {
-            id: nguoiDuyetId,
-            hoTen: req.user.hoTen,
-            email: req.user.email
-          },
-          quy: {
-            id: fund.quy_id,
-            tenQuy: fund.ten_quy,
-            soDuCu: parseFloat(fund.so_du),
-            soDuMoi: parseFloat(fund.so_du) - parseFloat(application.so_tien_yeu_cau)
-          },
-          ngayDuyet: new Date(),
-          thongBao: "Giao dịch CHI đã được tạo và số dư quỹ đã được cập nhật"
-        }
-      });
-    }
-
-    // ─── TRƯỜNG HỢP 2: TỪ CHỐI ĐƠN (Tu choi) ───
-    if (trangThai === 'Tu choi') {
-      await connection.execute(
-        `UPDATE YeuCauHoTro 
-         SET trang_thai = ?, 
-             nguoi_duyet_id = ?, 
-             ngay_duyet = NOW(),
-             ly_do_tu_choi = ?,
-             ngay_cap_nhat = NOW()
-         WHERE request_id = ?`,
-        [trangThai, nguoiDuyetId, lyDoTuChoi.trim(), id]
-      );
-
-      await connection.commit();
-
-      return res.status(200).json({
-        success: true,
-        message: "Từ chối đơn xin hỗ trợ thành công",
-        data: {
-          requestId: parseInt(id),
-          tieuDe: application.tieu_de,
-          trangThaiCu: currentStatus,
-          trangThaiMoi: trangThai,
-          lyDoTuChoi: lyDoTuChoi.trim(),
-          nguoiDuyet: {
-            id: nguoiDuyetId,
-            hoTen: req.user.hoTen,
-            email: req.user.email
-          },
-          ngayDuyet: new Date()
-        }
-      });
-    }
-
-    // ─── TRƯỜNG HỢP 3: CHUYỂN SANG "ĐANG XỬ LÝ" (Dang xu ly) ───
-    if (trangThai === 'Dang xu ly') {
-      await connection.execute(
-        `UPDATE YeuCauHoTro 
-         SET trang_thai = ?,
-             ngay_cap_nhat = NOW()
-         WHERE request_id = ?`,
-        [trangThai, id]
-      );
-
-      await connection.commit();
-
-      return res.status(200).json({
-        success: true,
-        message: "Chuyển đơn sang trạng thái 'Đang xử lý' thành công",
-        data: {
-          requestId: parseInt(id),
-          tieuDe: application.tieu_de,
-          trangThaiCu: currentStatus,
-          trangThaiMoi: trangThai,
-          ngayCapNhat: new Date()
-        }
-      });
-    }
-
-    // ─── TRƯỜNG HỢP 4: CHUYỂN VỀ "CHỜ DUYỆT" (Cho duyet) ───
-    if (trangThai === 'Cho duyet') {
-      await connection.execute(
-        `UPDATE YeuCauHoTro 
-         SET trang_thai = ?,
-             ngay_cap_nhat = NOW()
-         WHERE request_id = ?`,
-        [trangThai, id]
-      );
-
-      await connection.commit();
-
-      return res.status(200).json({
-        success: true,
-        message: "Chuyển đơn về trạng thái 'Chờ duyệt' thành công",
-        data: {
-          requestId: parseInt(id),
-          tieuDe: application.tieu_de,
-          trangThaiCu: currentStatus,
-          trangThaiMoi: trangThai,
-          ngayCapNhat: new Date()
-        }
-      });
-    }
+    });
 
   } catch (error) {
     await connection.rollback();
-    console.error("Lỗi updateApplicationStatus:", error);
+    console.error("Lỗi rejectApplication:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",
@@ -671,5 +566,5 @@ export default {
   getMyApplications,
   getApplicationById,
   getAllApplications,
-  updateApplicationStatus
+  rejectApplication
 };

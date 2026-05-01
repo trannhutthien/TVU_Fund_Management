@@ -35,7 +35,7 @@ const createApplication = async (applicationData) => {
       moTa,
       soTienYeuCau,
       fileDinhKem || null,
-      'Cho duyet' // Trạng thái mặc định
+      'Cho duyet' // Trạng thái mặc định: Chờ duyệt
     ]
   );
 
@@ -64,8 +64,6 @@ const getApplicationById = async (requestId) => {
       yc.so_tien_yeu_cau,
       yc.file_dinh_kem,
       yc.trang_thai,
-      yc.nguoi_duyet_id,
-      yc.ngay_duyet,
       yc.ly_do_tu_choi,
       yc.ngay_tao,
       yc.ngay_cap_nhat,
@@ -73,13 +71,10 @@ const getApplicationById = async (requestId) => {
       nd.email as nguoi_nop_email,
       nd.ma_so_dinh_danh,
       q.ten_quy,
-      q.loai_quy,
-      duyet.ho_ten as nguoi_duyet_ho_ten,
-      duyet.email as nguoi_duyet_email
+      q.loai_quy
      FROM YeuCauHoTro yc
      INNER JOIN NguoiDung nd ON yc.user_id = nd.user_id
      INNER JOIN Quy q ON yc.quy_id = q.quy_id
-     LEFT JOIN NguoiDung duyet ON yc.nguoi_duyet_id = duyet.user_id
      WHERE yc.request_id = ?
      LIMIT 1`,
     [requestId]
@@ -187,9 +182,48 @@ const getAllApplications = async (filters, limit, offset) => {
   };
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: updateApplicationStatus
+// CÔNG DỤNG: Cập nhật trạng thái đơn xin hỗ trợ
+// ─────────────────────────────────────────────────────────────────────────────
+const updateApplicationStatus = async (requestId, trangThai, connection = null) => {
+  const executor = connection || pool;
+
+  await executor.execute(
+    `UPDATE YeuCauHoTro 
+     SET trang_thai = ?,
+         ngay_cap_nhat = NOW()
+     WHERE request_id = ?`,
+    [trangThai, requestId]
+  );
+
+  return true;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: updateTuChoi
+// CÔNG DỤNG: Cập nhật trạng thái từ chối
+// ─────────────────────────────────────────────────────────────────────────────
+const updateTuChoi = async (requestId, lyDoTuChoi, connection = null) => {
+  const executor = connection || pool;
+
+  await executor.execute(
+    `UPDATE YeuCauHoTro 
+     SET trang_thai = 'Tu choi',
+         ly_do_tu_choi = ?,
+         ngay_cap_nhat = NOW()
+     WHERE request_id = ?`,
+    [lyDoTuChoi, requestId]
+  );
+
+  return true;
+};
+
 export default {
   createApplication,
   getApplicationById,
   getApplicationsByUser,
-  getAllApplications
+  getAllApplications,
+  updateApplicationStatus,
+  updateTuChoi
 };
