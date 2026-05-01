@@ -5,7 +5,9 @@ import {
   getApplicationById,
   getAllApplications,
   rejectApplication,
-  staffApprove
+  staffApprove,
+  adminApprove,
+  disburseApplication
 } from "../controllers/applicationController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/rolesMiddleware.js";
@@ -85,5 +87,42 @@ router.put("/:id/reject", protect, authorizeRoles(1, 3), rejectApplication);
 // 5. Trả về kết quả
 //
 router.put("/:id/staff-approve", protect, authorizeRoles(3), staffApprove);
+
+// PUT /api/applications/:id/admin-approve — Admin duyệt cấp 2
+// Middleware:
+// - protect: Kiểm tra token hợp lệ
+// - authorizeRoles(1): Chỉ Admin (role_id = 1)
+// Luồng:
+// 1. Kiểm tra đơn tồn tại và trạng thái = 'Dang xu ly'
+// 2. Kiểm tra cấp 1 đã duyệt (PheDuyet cấp 1 phải là 'Da duyet')
+// 3. Kiểm tra cấp độ duyệt hiện tại phải là cấp 2
+// 4. Cập nhật PheDuyet cấp 2: ket_qua = 'Da duyet', nguoi_duyet_id, ngay_duyet
+// 5. YeuCauHoTro vẫn giữ: trang_thai = 'Dang xu ly'
+// 6. Trả về kết quả
+//
+router.put("/:id/admin-approve", protect, authorizeRoles(1), adminApprove);
+
+// POST /api/applications/:id/disburse — Kế toán duyệt cấp 3 và giải ngân
+// Middleware:
+// - protect: Kiểm tra token hợp lệ
+// - authorizeRoles(2): Chỉ Kế toán (role_id = 2)
+// Luồng:
+// 1. Kiểm tra đơn tồn tại và trạng thái = 'Dang xu ly'
+// 2. Kiểm tra cấp 1 và cấp 2 đã duyệt
+// 3. Kiểm tra cấp độ duyệt hiện tại phải là cấp 3
+// 4. Lấy số dư quỹ và số tiền yêu cầu
+// 5. Kiểm tra số dư quỹ:
+//    A. Đủ tiền:
+//       - Trừ tiền quỹ
+//       - Tạo giao dịch CHI
+//       - Cập nhật PheDuyet cấp 3: ket_qua = 'Da duyet'
+//       - Cập nhật YeuCauHoTro: trang_thai = 'Da giai ngan'
+//    B. Thiếu tiền:
+//       - Cập nhật PheDuyet cấp 3: ket_qua = 'Da duyet'
+//       - Cập nhật YeuCauHoTro: trang_thai = 'Cho giai ngan'
+// 6. Commit transaction
+// 7. Trả về kết quả
+//
+router.post("/:id/disburse", protect, authorizeRoles(2), disburseApplication);
 
 export default router;

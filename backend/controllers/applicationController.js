@@ -1,6 +1,7 @@
 import ApplicationModel from "../models/ApplicationModel.js";
 import FundModel from "../models/FundModel.js";
 import PheDuyetModel from "../models/PheDuyetModel.js";
+import TransactionModel from "../models/TransactionModel.js";
 import pool from "../config/db.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -708,11 +709,440 @@ export const staffApprove = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PUT /api/applications/:id/admin-approve (ADMIN DUYỆT CẤP 2) ─────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// CÔNG DỤNG: Admin duyệt đơn xin hỗ trợ ở cấp 2
+// 
+// LUỒNG HOẠT ĐỘNG:
+// 1. Kiểm tra đơn tồn tại
+// 2. Kiểm tra trạng thái đơn = 'Dang xu ly' (đã qua cấp 1)
+// 3. Kiểm tra cấp 1 đã duyệt (PheDuyet cấp 1 phải là 'Da duyet')
+// 4. Kiểm tra cấp độ duyệt hiện tại phải là cấp 2
+// 5. Cập nhật PheDuyet cấp 2: ket_qua = 'Da duyet', nguoi_duyet_id, ngay_duyet
+// 6. YeuCauHoTro vẫn giữ: trang_thai = 'Dang xu ly'
+// 7. Trả về kết quả
+//
+export const adminApprove = async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.beginTransaction();
+
+    const { id } = req.params;
+    const { ghiChu } = req.body;
+    const nguoiDuyetId = req.user.id;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 1: VALIDATE DỮ LIỆU ĐẦU VÀO
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    if (!id || isNaN(id)) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "ID đơn không hợp lệ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 2: KIỂM TRA ĐƠN TỒN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const application = await ApplicationModel.getApplicationById(id);
+    
+    if (!application) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn xin hỗ trợ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const currentStatus = application.trang_thai;
+
+    // Chỉ cho phép duyệt đơn ở trạng thái "Dang xu ly" (đã qua cấp 1)
+    if (currentStatus !== 'Dang xu ly') {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". Admin chỉ duyệt được đơn ở trạng thái "Dang xu ly" (đã qua cấp 1).`,
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 4: KIỂM TRA CẤP 1 ĐÃ DUYỆT
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const danhSachPheDuyet = await PheDuyetModel.getPheDuyetByRequestId(id);
+    const cap1 = danhSachPheDuyet.find(pd => pd.cap_do_duyet === 1);
+    
+    if (!cap1 || cap1.ket_qua !== 'Da duyet') {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Cấp 1 chưa duyệt. Admin chỉ duyệt được sau khi Giáo vụ duyệt cấp 1.",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
+    
+    if (!capHienTai) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
+      });
+    }
+
+    // Admin chỉ duyệt cấp 2
+    if (capHienTai.cap_do_duyet !== 2) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Đơn này đang ở cấp ${capHienTai.cap_do_duyet}. Admin chỉ duyệt được cấp 2.`,
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 6: CẬP NHẬT PHÊ DUYỆT CẤP 2
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await PheDuyetModel.updatePheDuyet(
+      id,
+      2, // cấp 2
+      nguoiDuyetId,
+      'Da duyet',
+      ghiChu || null,
+      null, // không có lý do từ chối
+      connection
+    );
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 7: YeuCauHoTro VẪN GIỮ TRẠNG THÁI "Dang xu ly"
+    // ─────────────────────────────────────────────────────────────────────────
+    // Không cần cập nhật trạng thái YeuCauHoTro vì vẫn giữ "Dang xu ly"
+    // Chỉ cập nhật khi duyệt cấp 3 (cuối cùng)
+
+    await connection.commit();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 8: TRẢ VỀ KẾT QUẢ
+    // ─────────────────────────────────────────────────────────────────────────
+
+    return res.status(200).json({
+      success: true,
+      message: "Duyệt đơn xin hỗ trợ cấp 2 thành công",
+      data: {
+        requestId: parseInt(id),
+        tieuDe: application.tieu_de,
+        soTienYeuCau: parseFloat(application.so_tien_yeu_cau),
+        capDuyet: 2,
+        trangThai: 'Dang xu ly',
+        nguoiDuyet: {
+          id: nguoiDuyetId,
+          hoTen: req.user.hoTen,
+          email: req.user.email,
+          vaiTro: 'Admin'
+        },
+        ngayDuyet: new Date(),
+        thongBao: "Đơn đã được Admin duyệt cấp 2. Đơn bây giờ xuất hiện trên màn hình Kế toán để duyệt cấp 3."
+      }
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error("Lỗi adminApprove:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  } finally {
+    connection.release();
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── POST /api/applications/:id/disburse (KẾ TOÁN DUYỆT CẤP 3 & GIẢI NGÂN) ───
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// CÔNG DỤNG: Kế toán duyệt đơn xin hỗ trợ ở cấp 3 (cấp cuối) và giải ngân
+// 
+// LUỒNG HOẠT ĐỘNG:
+// 1. Kiểm tra đơn tồn tại
+// 2. Kiểm tra trạng thái đơn = 'Dang xu ly' (đã qua cấp 1 và 2)
+// 3. Kiểm tra cấp 1 và cấp 2 đã duyệt
+// 4. Kiểm tra cấp độ duyệt hiện tại phải là cấp 3
+// 5. Lấy số dư quỹ và số tiền yêu cầu
+// 6. Kiểm tra số dư quỹ:
+//    A. Đủ tiền:
+//       - Trừ tiền quỹ
+//       - Tạo giao dịch CHI
+//       - Cập nhật PheDuyet cấp 3: ket_qua = 'Da duyet'
+//       - Cập nhật YeuCauHoTro: trang_thai = 'Da giai ngan'
+//    B. Thiếu tiền:
+//       - Cập nhật PheDuyet cấp 3: ket_qua = 'Da duyet'
+//       - Cập nhật YeuCauHoTro: trang_thai = 'Cho giai ngan'
+// 7. Commit transaction
+// 8. Trả về kết quả
+//
+export const disburseApplication = async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.beginTransaction();
+
+    const { id } = req.params;
+    const { ghiChu } = req.body;
+    const nguoiDuyetId = req.user.id;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 1: VALIDATE DỮ LIỆU ĐẦU VÀO
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    if (!id || isNaN(id)) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "ID đơn không hợp lệ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 2: KIỂM TRA ĐƠN TỒN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const application = await ApplicationModel.getApplicationById(id);
+    
+    if (!application) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn xin hỗ trợ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const currentStatus = application.trang_thai;
+
+    // Chỉ cho phép duyệt đơn ở trạng thái "Dang xu ly" (đã qua cấp 1 và 2)
+    if (currentStatus !== 'Dang xu ly') {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". Kế toán chỉ duyệt được đơn ở trạng thái "Dang xu ly" (đã qua cấp 1 và 2).`,
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 4: KIỂM TRA CẤP 1 VÀ CẤP 2 ĐÃ DUYỆT
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const danhSachPheDuyet = await PheDuyetModel.getPheDuyetByRequestId(id);
+    const cap1 = danhSachPheDuyet.find(pd => pd.cap_do_duyet === 1);
+    const cap2 = danhSachPheDuyet.find(pd => pd.cap_do_duyet === 2);
+    
+    if (!cap1 || cap1.ket_qua !== 'Da duyet') {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Cấp 1 chưa duyệt. Kế toán chỉ duyệt được sau khi Giáo vụ duyệt cấp 1.",
+      });
+    }
+
+    if (!cap2 || cap2.ket_qua !== 'Da duyet') {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Cấp 2 chưa duyệt. Kế toán chỉ duyệt được sau khi Admin duyệt cấp 2.",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
+    
+    if (!capHienTai) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
+      });
+    }
+
+    // Kế toán chỉ duyệt cấp 3
+    if (capHienTai.cap_do_duyet !== 3) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Đơn này đang ở cấp ${capHienTai.cap_do_duyet}. Kế toán chỉ duyệt được cấp 3.`,
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 6: LẤY THÔNG TIN QUỸ VÀ SỐ TIỀN YÊU CẦU
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const fund = await FundModel.getFundById(application.quy_id);
+    
+    if (!fund) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy quỹ",
+      });
+    }
+
+    const soDuQuy = parseFloat(fund.so_du);
+    const soTienYeuCau = parseFloat(application.so_tien_yeu_cau);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 7: KIỂM TRA SỐ DƯ QUỸ VÀ XỬ LÝ
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    let trangThaiMoi;
+    let transactionId = null;
+    let isDisbursed = false;
+
+    if (soDuQuy >= soTienYeuCau) {
+      // ═══════════════════════════════════════════════════════════════════════
+      // TRƯỜNG HỢP A: ĐỦ TIỀN GIẢI NGÂN
+      // ═══════════════════════════════════════════════════════════════════════
+      
+      // A1. Trừ tiền quỹ
+      await connection.execute(
+        `UPDATE Quy 
+         SET so_du = so_du - ?,
+             ngay_cap_nhat = NOW()
+         WHERE quy_id = ?`,
+        [soTienYeuCau, application.quy_id]
+      );
+
+      // A2. Tạo giao dịch CHI
+      const transactionResult = await TransactionModel.createTransaction({
+        quyId: application.quy_id,
+        khoanTaiTroId: null,
+        requestId: parseInt(id),
+        nguoiTaoId: nguoiDuyetId,
+        loai: 'Chi',
+        soTien: soTienYeuCau,
+        trangThai: 'Thanh cong',
+        minhChungChuyenKhoan: null,
+        ghiChu: ghiChu || `Giải ngân đơn xin hỗ trợ #${id}`
+      }, connection);
+
+      transactionId = transactionResult.insertId;
+
+      // A3. Cập nhật trạng thái đơn
+      trangThaiMoi = 'Da giai ngan';
+      isDisbursed = true;
+
+    } else {
+      // ═══════════════════════════════════════════════════════════════════════
+      // TRƯỜNG HỢP B: THIẾU TIỀN, CHỜ GIẢI NGÂN
+      // ═══════════════════════════════════════════════════════════════════════
+      
+      trangThaiMoi = 'Cho giai ngan';
+      isDisbursed = false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 8: CẬP NHẬT PHÊ DUYỆT CẤP 3
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await PheDuyetModel.updatePheDuyet(
+      id,
+      3, // cấp 3
+      nguoiDuyetId,
+      'Da duyet',
+      ghiChu || null,
+      null, // không có lý do từ chối
+      connection
+    );
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 9: CẬP NHẬT TRẠNG THÁI ĐƠN
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await ApplicationModel.updateApplicationStatus(id, trangThaiMoi, connection);
+
+    await connection.commit();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 10: TRẢ VỀ KẾT QUẢ
+    // ─────────────────────────────────────────────────────────────────────────
+
+    return res.status(200).json({
+      success: true,
+      message: isDisbursed 
+        ? "Duyệt đơn xin hỗ trợ cấp 3 và giải ngân thành công"
+        : "Duyệt đơn xin hỗ trợ cấp 3 thành công. Đơn chờ giải ngân khi quỹ có đủ tiền.",
+      data: {
+        requestId: parseInt(id),
+        tieuDe: application.tieu_de,
+        soTienYeuCau: soTienYeuCau,
+        capDuyet: 3,
+        trangThaiCu: 'Dang xu ly',
+        trangThaiMoi: trangThaiMoi,
+        isDisbursed: isDisbursed,
+        quy: {
+          id: fund.quy_id,
+          tenQuy: fund.ten_quy,
+          soDuCu: soDuQuy,
+          soDuMoi: isDisbursed ? soDuQuy - soTienYeuCau : soDuQuy
+        },
+        giaoDich: isDisbursed ? {
+          transactionId: transactionId,
+          loai: 'Chi',
+          soTien: soTienYeuCau,
+          trangThai: 'Thanh cong'
+        } : null,
+        nguoiDuyet: {
+          id: nguoiDuyetId,
+          hoTen: req.user.hoTen,
+          email: req.user.email,
+          vaiTro: 'Ke toan'
+        },
+        ngayDuyet: new Date(),
+        thongBao: isDisbursed
+          ? "Đơn đã được duyệt đủ 3 cấp và giải ngân thành công. Giao dịch CHI đã được tạo và số dư quỹ đã được cập nhật."
+          : `Đơn đã được duyệt đủ 3 cấp nhưng quỹ thiếu ${(soTienYeuCau - soDuQuy).toLocaleString('vi-VN')} VNĐ. Đơn sẽ được giải ngân tự động khi quỹ có đủ tiền.`
+      }
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error("Lỗi disburseApplication:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  } finally {
+    connection.release();
+  }
+};
+
 export default {
   createApplication,
   getMyApplications,
   getApplicationById,
   getAllApplications,
   rejectApplication,
-  staffApprove
+  staffApprove,
+  adminApprove,
+  disburseApplication
 };

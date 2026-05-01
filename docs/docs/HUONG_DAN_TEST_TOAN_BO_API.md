@@ -1553,26 +1553,37 @@ Headers: Authorization: Bearer token_sinh_vien
 
 ---
 
-#### **Bước 8: Cấp 2 duyệt (Chưa implement)**
+#### **Bước 8: Admin duyệt cấp 2** ✅ (Mới implement)
 ```
-PUT /api/applications/10/level2-approve
-Headers: Authorization: Bearer token_cap2
+PUT /api/applications/10/admin-approve
+Headers: Authorization: Bearer token_admin
+Body: {
+  "ghiChu": "Đơn hợp lệ, chuyển lên Kế toán duyệt cấp 3"
+}
 ```
-→ PheDuyet cấp 2: `ket_qua = 'Da duyet'`
+→ PheDuyet cấp 2: `ket_qua = 'Da duyet'`, `nguoi_duyet_id = 1`
 → Trạng thái vẫn: `Dang xu ly`
-→ Đơn chuyển sang cấp 3
+→ Đơn chuyển sang cấp 3, xuất hiện trên màn hình Kế toán
 
 ---
 
-#### **Bước 9: Cấp 3 duyệt (Chưa implement)**
+#### **Bước 9: Kế toán duyệt cấp 3 và giải ngân** ✅ (Mới implement)
 ```
-PUT /api/applications/10/level3-approve
-Headers: Authorization: Bearer token_cap3
+POST /api/applications/10/disburse
+Headers: Authorization: Bearer token_ketoan
+Body: {
+  "ghiChu": "Đơn hợp lệ, giải ngân cho sinh viên"
+}
 ```
-→ PheDuyet cấp 3: `ket_qua = 'Da duyet'`
+→ PheDuyet cấp 3: `ket_qua = 'Da duyet'`, `nguoi_duyet_id = 2`
 → Kiểm tra số dư quỹ:
-   - Đủ tiền → `Da giai ngan` (tạo giao dịch CHI + trừ tiền)
-   - Thiếu tiền → `Cho giai ngan` (chờ giải ngân)
+   - **Đủ tiền:** 
+     * Trừ tiền quỹ
+     * Tạo giao dịch CHI
+     * trang_thai: `'Dang xu ly'` → `'Da giai ngan'`
+   - **Thiếu tiền:**
+     * trang_thai: `'Dang xu ly'` → `'Cho giai ngan'`
+     * Chờ quỹ có tiền để giải ngân
 
 ---
 
@@ -1587,7 +1598,422 @@ Headers: Authorization: Bearer token_admin
 
 ---
 
-### 🔄 **8.7. Admin/Giáo vụ chuyển trạng thái đơn (API CŨ - ĐÃ XÓA)**
+### ✅ **8.7. Admin duyệt cấp 2**
+
+**Endpoint:** `PUT /api/applications/:id/admin-approve`
+
+**Quyền:** Chỉ Admin (role_id = 1)
+
+**Ví dụ:** `PUT /api/applications/10/admin-approve`
+
+**Headers:**
+```
+Authorization: Bearer YOUR_TOKEN
+Content-Type: application/json
+```
+
+---
+
+#### **📋 MÔ TẢ LUỒNG HOẠT ĐỘNG - ADMIN DUYỆT CẤP 2:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LUỒNG PHÊ DUYỆT 3 CẤP - CẤP 2 (ADMIN)                         │
+└─────────────────────────────────────────────────────────────────┘
+
+ĐIỀU KIỆN ĐẦU VÀO:
+┌─────────────────────────────────────────────────────────────────┐
+│ ✓ Đơn đã được Giáo vụ duyệt cấp 1                               │
+│ ✓ Trạng thái đơn: 'Dang xu ly'                                  │
+│ ✓ PheDuyet cấp 1: ket_qua = 'Da duyet'                          │
+│ ✓ PheDuyet cấp 2: ket_qua = 'Cho duyet' (đang chờ)              │
+└─────────────────────────────────────────────────────────────────┘
+                        ↓
+1. Admin đăng nhập → Lấy token
+                        ↓
+2. Gửi request PUT /api/applications/:id/admin-approve
+   - Có thể truyền ghi chú (ghiChu) - TÙY CHỌN
+                        ↓
+3. Hệ thống validate:
+   ✓ Kiểm tra đơn tồn tại
+   ✓ Kiểm tra trạng thái = 'Dang xu ly' (đã qua cấp 1)
+   ✓ Kiểm tra cấp 1 đã duyệt (PheDuyet cấp 1 = 'Da duyet')
+   ✓ Kiểm tra cấp độ duyệt hiện tại phải là cấp 2
+                        ↓
+4. Xử lý duyệt cấp 2:
+   ┌─────────────────────────────────────────────────────────┐
+   │ 1. Cập nhật PheDuyet cấp 2:                             │
+   │    - ket_qua = 'Da duyet'                               │
+   │    - nguoi_duyet_id = Admin hiện tại                    │
+   │    - ngay_duyet = thời gian hiện tại                    │
+   │    - ghi_chu = ghi chú (nếu có)                         │
+   │                                                         │
+   │ 2. YeuCauHoTro VẪN GIỮ:                                 │
+   │    - trang_thai = 'Dang xu ly'                          │
+   │    (Chỉ thay đổi khi duyệt cấp 3)                       │
+   │                                                         │
+   │ 3. Commit transaction                                   │
+   └─────────────────────────────────────────────────────────┘
+                        ↓
+5. Trả về kết quả cho Admin
+                        ↓
+6. Đơn xuất hiện trên màn hình Kế toán để duyệt cấp 3
+```
+
+---
+
+#### **Body (Tùy chọn):**
+```json
+{
+  "ghiChu": "Đơn hợp lệ, chuyển lên Kế toán duyệt cấp 3"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Duyệt đơn xin hỗ trợ cấp 2 thành công",
+  "data": {
+    "requestId": 10,
+    "tieuDe": "Xin hỗ trợ học phí học kỳ 1 năm 2026",
+    "soTienYeuCau": 5000000,
+    "capDuyet": 2,
+    "trangThai": "Dang xu ly",
+    "nguoiDuyet": {
+      "id": 1,
+      "hoTen": "Nguyễn Văn Admin",
+      "email": "admin@tvu.edu.vn",
+      "vaiTro": "Admin"
+    },
+    "ngayDuyet": "2026-05-01T11:00:00.000Z",
+    "thongBao": "Đơn đã được Admin duyệt cấp 2. Đơn bây giờ xuất hiện trên màn hình Kế toán để duyệt cấp 3."
+  }
+}
+```
+
+---
+
+#### **❌ CÁC TRƯỜNG HỢP LỖI - ADMIN DUYỆT CẤP 2**
+
+**Lỗi 1: ID đơn không hợp lệ**
+```json
+{
+  "success": false,
+  "message": "ID đơn không hợp lệ"
+}
+```
+
+**Lỗi 2: Đơn không tồn tại**
+```json
+{
+  "success": false,
+  "message": "Không tìm thấy đơn xin hỗ trợ"
+}
+```
+
+**Lỗi 3: Đơn không phải trạng thái "Dang xu ly"**
+```json
+{
+  "success": false,
+  "message": "Không thể duyệt đơn ở trạng thái \"Cho duyet\". Admin chỉ duyệt được đơn ở trạng thái \"Dang xu ly\" (đã qua cấp 1)."
+}
+```
+
+**Lỗi 4: Cấp 1 chưa duyệt**
+```json
+{
+  "success": false,
+  "message": "Cấp 1 chưa duyệt. Admin chỉ duyệt được sau khi Giáo vụ duyệt cấp 1."
+}
+```
+
+**Lỗi 5: Đơn không phải cấp 2**
+```json
+{
+  "success": false,
+  "message": "Đơn này đang ở cấp 3. Admin chỉ duyệt được cấp 2."
+}
+```
+
+**Lỗi 6: Không tìm thấy thông tin phê duyệt**
+```json
+{
+  "success": false,
+  "message": "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết"
+}
+```
+
+**Lỗi 7: Role không phải Admin**
+```json
+{
+  "success": false,
+  "message": "Bạn không có quyền truy cập"
+}
+```
+
+---
+
+### ✅ **8.8. Kế toán duyệt cấp 3 và giải ngân**
+
+**Endpoint:** `POST /api/applications/:id/disburse`
+
+**Quyền:** Chỉ Kế toán (role_id = 2)
+
+**Ví dụ:** `POST /api/applications/10/disburse`
+
+**Headers:**
+```
+Authorization: Bearer YOUR_TOKEN
+Content-Type: application/json
+```
+
+---
+
+#### **📋 MÔ TẢ LUỒNG HOẠT ĐỘNG - KẾ TOÁN DUYỆT CẤP 3 & GIẢI NGÂN:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  LUỒNG PHÊ DUYỆT 3 CẤP - CẤP 3 (KẾ TOÁN) & GIẢI NGÂN          │
+└─────────────────────────────────────────────────────────────────┘
+
+ĐIỀU KIỆN ĐẦU VÀO:
+┌─────────────────────────────────────────────────────────────────┐
+│ ✓ Đơn đã được Giáo vụ duyệt cấp 1                               │
+│ ✓ Đơn đã được Admin duyệt cấp 2                                 │
+│ ✓ Trạng thái đơn: 'Dang xu ly'                                  │
+│ ✓ PheDuyet cấp 1: ket_qua = 'Da duyet'                          │
+│ ✓ PheDuyet cấp 2: ket_qua = 'Da duyet'                          │
+│ ✓ PheDuyet cấp 3: ket_qua = 'Cho duyet' (đang chờ)              │
+└─────────────────────────────────────────────────────────────────┘
+                        ↓
+1. Kế toán đăng nhập → Lấy token
+                        ↓
+2. Gửi request POST /api/applications/:id/disburse
+   - Có thể truyền ghi chú (ghiChu) - TÙY CHỌN
+                        ↓
+3. Hệ thống validate:
+   ✓ Kiểm tra đơn tồn tại
+   ✓ Kiểm tra trạng thái = 'Dang xu ly' (đã qua cấp 1 và 2)
+   ✓ Kiểm tra cấp 1 đã duyệt (PheDuyet cấp 1 = 'Da duyet')
+   ✓ Kiểm tra cấp 2 đã duyệt (PheDuyet cấp 2 = 'Da duyet')
+   ✓ Kiểm tra cấp độ duyệt hiện tại phải là cấp 3
+                        ↓
+4. Lấy thông tin quỹ và số tiền yêu cầu
+   - Số dư quỹ hiện tại
+   - Số tiền sinh viên yêu cầu
+                        ↓
+5. Kiểm tra số dư quỹ và xử lý:
+
+   ┌─────────────────────────────────────────────────────────┐
+   │ TRƯỜNG HỢP A: QUỸ ĐỦ TIỀN (so_du >= so_tien_yeu_cau)   │
+   ├─────────────────────────────────────────────────────────┤
+   │ BEGIN TRANSACTION;                                      │
+   │                                                         │
+   │ A1. Trừ tiền quỹ:                                       │
+   │     UPDATE Quy                                          │
+   │     SET so_du = so_du - so_tien_yeu_cau                 │
+   │     WHERE quy_id = ?                                    │
+   │                                                         │
+   │ A2. Tạo giao dịch CHI:                                  │
+   │     INSERT INTO GiaoDich (                              │
+   │       quy_id, request_id, nguoi_tao_id,                 │
+   │       loai = 'Chi',                                     │
+   │       so_tien = so_tien_yeu_cau,                        │
+   │       trang_thai = 'Thanh cong'                         │
+   │     )                                                   │
+   │                                                         │
+   │ A3. Cập nhật PheDuyet cấp 3:                            │
+   │     ket_qua = 'Da duyet'                                │
+   │     nguoi_duyet_id = Kế toán                            │
+   │     ngay_duyet = NOW()                                  │
+   │                                                         │
+   │ A4. Cập nhật YeuCauHoTro:                               │
+   │     trang_thai = 'Da giai ngan'                         │
+   │                                                         │
+   │ COMMIT TRANSACTION;                                     │
+   │                                                         │
+   │ Kết quả: Đơn hoàn tất, tiền đã chuyển cho sinh viên    │
+   └─────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────┐
+   │ TRƯỜNG HỢP B: QUỸ THIẾU TIỀN (so_du < so_tien_yeu_cau) │
+   ├─────────────────────────────────────────────────────────┤
+   │ BEGIN TRANSACTION;                                      │
+   │                                                         │
+   │ B1. KHÔNG trừ tiền quỹ                                  │
+   │ B2. KHÔNG tạo giao dịch                                 │
+   │                                                         │
+   │ B3. Cập nhật PheDuyet cấp 3:                            │
+   │     ket_qua = 'Da duyet'                                │
+   │     nguoi_duyet_id = Kế toán                            │
+   │     ngay_duyet = NOW()                                  │
+   │                                                         │
+   │ B4. Cập nhật YeuCauHoTro:                               │
+   │     trang_thai = 'Cho giai ngan'                        │
+   │                                                         │
+   │ COMMIT TRANSACTION;                                     │
+   │                                                         │
+   │ Kết quả: Đơn chờ giải ngân khi quỹ có đủ tiền          │
+   └─────────────────────────────────────────────────────────┘
+
+                        ↓
+6. Trả về kết quả cho Kế toán
+```
+
+---
+
+#### **Body (Tùy chọn):**
+```json
+{
+  "ghiChu": "Đơn hợp lệ, giải ngân cho sinh viên"
+}
+```
+
+---
+
+#### **Response (200) - TRƯỜNG HỢP A: ĐỦ TIỀN GIẢI NGÂN:**
+```json
+{
+  "success": true,
+  "message": "Duyệt đơn xin hỗ trợ cấp 3 và giải ngân thành công",
+  "data": {
+    "requestId": 10,
+    "tieuDe": "Xin hỗ trợ học phí học kỳ 1 năm 2026",
+    "soTienYeuCau": 5000000,
+    "capDuyet": 3,
+    "trangThaiCu": "Dang xu ly",
+    "trangThaiMoi": "Da giai ngan",
+    "isDisbursed": true,
+    "quy": {
+      "id": 1,
+      "tenQuy": "Quỹ Học Bổng 2024",
+      "soDuCu": 30000000,
+      "soDuMoi": 25000000
+    },
+    "giaoDich": {
+      "transactionId": 25,
+      "loai": "Chi",
+      "soTien": 5000000,
+      "trangThai": "Thanh cong"
+    },
+    "nguoiDuyet": {
+      "id": 2,
+      "hoTen": "Trần Thị Kế Toán",
+      "email": "ketoan@tvu.edu.vn",
+      "vaiTro": "Ke toan"
+    },
+    "ngayDuyet": "2026-05-01T12:00:00.000Z",
+    "thongBao": "Đơn đã được duyệt đủ 3 cấp và giải ngân thành công. Giao dịch CHI đã được tạo và số dư quỹ đã được cập nhật."
+  }
+}
+```
+
+---
+
+#### **Response (200) - TRƯỜNG HỢP B: THIẾU TIỀN, CHỜ GIẢI NGÂN:**
+```json
+{
+  "success": true,
+  "message": "Duyệt đơn xin hỗ trợ cấp 3 thành công. Đơn chờ giải ngân khi quỹ có đủ tiền.",
+  "data": {
+    "requestId": 10,
+    "tieuDe": "Xin hỗ trợ học phí học kỳ 1 năm 2026",
+    "soTienYeuCau": 5000000,
+    "capDuyet": 3,
+    "trangThaiCu": "Dang xu ly",
+    "trangThaiMoi": "Cho giai ngan",
+    "isDisbursed": false,
+    "quy": {
+      "id": 1,
+      "tenQuy": "Quỹ Học Bổng 2024",
+      "soDuCu": 3000000,
+      "soDuMoi": 3000000
+    },
+    "giaoDich": null,
+    "nguoiDuyet": {
+      "id": 2,
+      "hoTen": "Trần Thị Kế Toán",
+      "email": "ketoan@tvu.edu.vn",
+      "vaiTro": "Ke toan"
+    },
+    "ngayDuyet": "2026-05-01T12:00:00.000Z",
+    "thongBao": "Đơn đã được duyệt đủ 3 cấp nhưng quỹ thiếu 2,000,000 VNĐ. Đơn sẽ được giải ngân tự động khi quỹ có đủ tiền."
+  }
+}
+```
+
+---
+
+#### **❌ CÁC TRƯỜNG HỢP LỖI - KẾ TOÁN DUYỆT CẤP 3**
+
+**Lỗi 1: ID đơn không hợp lệ**
+```json
+{
+  "success": false,
+  "message": "ID đơn không hợp lệ"
+}
+```
+
+**Lỗi 2: Đơn không tồn tại**
+```json
+{
+  "success": false,
+  "message": "Không tìm thấy đơn xin hỗ trợ"
+}
+```
+
+**Lỗi 3: Đơn không phải trạng thái "Dang xu ly"**
+```json
+{
+  "success": false,
+  "message": "Không thể duyệt đơn ở trạng thái \"Cho duyet\". Kế toán chỉ duyệt được đơn ở trạng thái \"Dang xu ly\" (đã qua cấp 1 và 2)."
+}
+```
+
+**Lỗi 4: Cấp 1 chưa duyệt**
+```json
+{
+  "success": false,
+  "message": "Cấp 1 chưa duyệt. Kế toán chỉ duyệt được sau khi Giáo vụ duyệt cấp 1."
+}
+```
+
+**Lỗi 5: Cấp 2 chưa duyệt**
+```json
+{
+  "success": false,
+  "message": "Cấp 2 chưa duyệt. Kế toán chỉ duyệt được sau khi Admin duyệt cấp 2."
+}
+```
+
+**Lỗi 6: Đơn không phải cấp 3**
+```json
+{
+  "success": false,
+  "message": "Đơn này đang ở cấp 1. Kế toán chỉ duyệt được cấp 3."
+}
+```
+
+**Lỗi 7: Không tìm thấy quỹ**
+```json
+{
+  "success": false,
+  "message": "Không tìm thấy quỹ"
+}
+```
+
+**Lỗi 8: Role không phải Kế toán**
+```json
+{
+  "success": false,
+  "message": "Bạn không có quyền truy cập"
+}
+```
+
+---
+
+### 🔄 **8.9. Admin/Giáo vụ chuyển trạng thái đơn (API CŨ - ĐÃ XÓA)**
 
 **Lưu ý:** API `PUT /api/applications/:id/status` đã bị xóa và thay thế bằng:
 - `PUT /api/applications/:id/staff-approve` - Giáo vụ duyệt cấp 1
@@ -1679,6 +2105,18 @@ Headers: Authorization: Bearer token_admin
 - [ ] Test Giáo vụ duyệt đơn không phải cấp 1 → 400
 - [ ] Test Giáo vụ duyệt đơn không phải trạng thái "Cho duyet" → 400
 - [ ] Test role khác (Admin, Sinh viên) duyệt cấp 1 → 403
+- [ ] Admin duyệt cấp 2 → API /admin-approve
+- [ ] Test Admin duyệt cấp 2 thành công → Vẫn "Dang xu ly", chuyển sang cấp 3
+- [ ] Test Admin duyệt đơn chưa qua cấp 1 → 400
+- [ ] Test Admin duyệt đơn không phải cấp 2 → 400
+- [ ] Test Admin duyệt đơn không phải trạng thái "Dang xu ly" → 400
+- [ ] Test role khác (Giáo vụ, Sinh viên) duyệt cấp 2 → 403
+- [ ] Kế toán duyệt cấp 3 và giải ngân → API /disburse
+- [ ] Test Kế toán duyệt cấp 3 - Quỹ đủ tiền → "Da giai ngan" + Tạo giao dịch CHI
+- [ ] Test Kế toán duyệt cấp 3 - Quỹ thiếu tiền → "Cho giai ngan" + Không tạo giao dịch
+- [ ] Test Kế toán duyệt đơn chưa qua cấp 1 hoặc cấp 2 → 400
+- [ ] Test Kế toán duyệt đơn không phải cấp 3 → 400
+- [ ] Test role khác (Admin, Sinh viên) duyệt cấp 3 → 403
 
 ---
 
