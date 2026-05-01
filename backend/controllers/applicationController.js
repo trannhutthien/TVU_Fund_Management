@@ -561,10 +561,158 @@ export const rejectApplication = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PUT /api/applications/:id/staff-approve (GIÁO VỤ DUYỆT CẤP 1) ───────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// CÔNG DỤNG: Giáo vụ duyệt đơn xin hỗ trợ ở cấp 1
+// 
+// LUỒNG HOẠT ĐỘNG:
+// 1. Kiểm tra đơn tồn tại
+// 2. Kiểm tra trạng thái đơn = 'Cho duyet' (chỉ duyệt đơn mới)
+// 3. Kiểm tra cấp độ duyệt hiện tại phải là cấp 1
+// 4. Cập nhật PheDuyet cấp 1: ket_qua = 'Da duyet', nguoi_duyet_id, ngay_duyet
+// 5. Cập nhật YeuCauHoTro: trang_thai = 'Dang xu ly'
+// 6. Trả về kết quả
+//
+export const staffApprove = async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.beginTransaction();
+
+    const { id } = req.params;
+    const { ghiChu } = req.body;
+    const nguoiDuyetId = req.user.id;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 1: VALIDATE DỮ LIỆU ĐẦU VÀO
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    if (!id || isNaN(id)) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "ID đơn không hợp lệ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 2: KIỂM TRA ĐƠN TỒN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const application = await ApplicationModel.getApplicationById(id);
+    
+    if (!application) {
+      await connection.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn xin hỗ trợ",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const currentStatus = application.trang_thai;
+
+    // Chỉ cho phép duyệt đơn ở trạng thái "Cho duyet"
+    if (currentStatus !== 'Cho duyet') {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". Chỉ duyệt được đơn ở trạng thái "Cho duyet".`,
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 4: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    const capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
+    
+    if (!capHienTai) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
+      });
+    }
+
+    // Giáo vụ chỉ duyệt cấp 1
+    if (capHienTai.cap_do_duyet !== 1) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Đơn này đang ở cấp ${capHienTai.cap_do_duyet}. Giáo vụ chỉ duyệt được cấp 1.`,
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 5: CẬP NHẬT PHÊ DUYỆT CẤP 1
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await PheDuyetModel.updatePheDuyet(
+      id,
+      1, // cấp 1
+      nguoiDuyetId,
+      'Da duyet',
+      ghiChu || null,
+      null, // không có lý do từ chối
+      connection
+    );
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 6: CẬP NHẬT TRẠNG THÁI ĐƠN
+    // ─────────────────────────────────────────────────────────────────────────
+    
+    await ApplicationModel.updateApplicationStatus(id, 'Dang xu ly', connection);
+
+    await connection.commit();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 7: TRẢ VỀ KẾT QUẢ
+    // ─────────────────────────────────────────────────────────────────────────
+
+    return res.status(200).json({
+      success: true,
+      message: "Duyệt đơn xin hỗ trợ cấp 1 thành công",
+      data: {
+        requestId: parseInt(id),
+        tieuDe: application.tieu_de,
+        soTienYeuCau: parseFloat(application.so_tien_yeu_cau),
+        capDuyet: 1,
+        trangThaiCu: 'Cho duyet',
+        trangThaiMoi: 'Dang xu ly',
+        nguoiDuyet: {
+          id: nguoiDuyetId,
+          hoTen: req.user.hoTen,
+          email: req.user.email,
+          vaiTro: 'Giáo vụ'
+        },
+        ngayDuyet: new Date(),
+        thongBao: "Đơn đã được Giáo vụ duyệt cấp 1. Chờ cấp 2 duyệt tiếp."
+      }
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error("Lỗi staffApprove:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  } finally {
+    connection.release();
+  }
+};
+
 export default {
   createApplication,
   getMyApplications,
   getApplicationById,
   getAllApplications,
-  rejectApplication
+  rejectApplication,
+  staffApprove
 };

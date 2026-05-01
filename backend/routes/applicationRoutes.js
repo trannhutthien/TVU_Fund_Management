@@ -4,7 +4,8 @@ import {
   getMyApplications,
   getApplicationById,
   getAllApplications,
-  rejectApplication
+  rejectApplication,
+  staffApprove
 } from "../controllers/applicationController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/rolesMiddleware.js";
@@ -71,5 +72,18 @@ router.get("/:id", protect, authorizeRoles(1, 3, 4), getApplicationById);
 // 6. Trả về kết quả
 //
 router.put("/:id/reject", protect, authorizeRoles(1, 3), rejectApplication);
+
+// PUT /api/applications/:id/staff-approve — Giáo vụ duyệt cấp 1
+// Middleware:
+// - protect: Kiểm tra token hợp lệ
+// - authorizeRoles(3): Chỉ Giáo vụ (role_id = 3)
+// Luồng:
+// 1. Kiểm tra đơn tồn tại và trạng thái = 'Cho duyet'
+// 2. Kiểm tra cấp độ duyệt hiện tại phải là cấp 1
+// 3. Cập nhật PheDuyet cấp 1: ket_qua = 'Da duyet', nguoi_duyet_id, ngay_duyet
+// 4. Cập nhật YeuCauHoTro: trang_thai = 'Dang xu ly'
+// 5. Trả về kết quả
+//
+router.put("/:id/staff-approve", protect, authorizeRoles(3), staffApprove);
 
 export default router;
