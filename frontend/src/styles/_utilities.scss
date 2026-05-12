@@ -1,0 +1,49 @@
+// ============================================
+// UTILITY CLASSES
+// Công dụng: Các class tiện ích để styling nhanh
+// trong JSX mà không cần viết CSS riêng
+// ============================================
+@use './variables' as *;
+
+// ── FLEXBOX ─────────────────────────────────
+// Dùng để layout nhanh với flexbox
+
+// Display flex - Bật flexbox
+// Dùng: <div class="flex">...</div>
+.flex        { display: flex; }
+
+// Flex column - Xếp dọc
+// Dùng: <div class="flex flex-col">...</div>
+.flex-col    { display: flex; flex-direction: column; }
+
+// Align center - Căn giữa theo trục dọc
+// Dùng: <div class="flex items-center">...</div>
+.items-center{ align-items: center; }
+
+// Justify between - Căn 2 đầu
+// Dùng: <div class="flex justify-between">...</div>
+.justify-between { justify-content: space-between; }
+
+// Flex 1 - Chiếm hết không gian còn lại
+// Dùng: <div class="flex-1">...</div>
+.flex-1      { flex: 1; }
+
+// ── GAP ─────────────────────────────────────
+// Khoảng cách giữa các items trong flex/grid
+
+// Gap 8px - Khoảng cách nhỏ
+.gap-2  { gap: $space-2; }
+
+// Gap 12px - Khoảng cách trung bình nhỏ
+.gap-3  { gap: $space-3; }
+
+// Gap 16px - Khoảng cách trung bình
+.gap-4  { gap: $space-4; }
+
+// Gap 24px - Khoảng cách lớn
+.gap-6  { gap: $space-6; }
+
+// ── WIDTH ───────────────────────────────────
+// Full width - Chiếm 100% width
+// Dùng: <div class="w-full">...</div>
+.w-full { width: 100%; }

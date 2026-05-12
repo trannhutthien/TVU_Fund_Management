@@ -1,0 +1,35 @@
+// ============================================
+// SIDEBAR LAYOUT
+// Công dụng: Styles cho sidebar navigation
+// ============================================
+@use '../variables' as *;
+
+// ── NAV ITEM ────────────────────────────────
+// Navigation item trong sidebar
+// Dùng: <a class="nav-item active">Dashboard</a>
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: 10px $space-4;
+  border-radius: $radius-md;
+  font-size: $text-base;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: $transition-fast;
+  text-decoration: none;
+
+  // Hover - Nền xanh nhạt
+  &:hover {
+    background: $bg-sidebar-hover;
+    color: $text-body;
+  }
+
+  // Active - Item đang được chọn
+  &.active {
+    background: $bg-sidebar-active;
+    color: $color-primary;
+    font-weight: $font-semibold;
+  }
+}

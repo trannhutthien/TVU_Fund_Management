@@ -1,0 +1,380 @@
+// ============================================
+// CSS VARIABLES - TVU COLORS
+// ============================================
+:root {
+  --color-navy-blue: #1a2f5e;
+  --color-navy-blue-dark: #2a4a8f;
+  --color-gold: #f0a500;
+  --color-gold-dark: #d4af37;
+  --color-white: #ffffff;
+  --header-height: 72px;
+}
+
+// ============================================
+// PUBLIC HEADER
+// ============================================
+.header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: var(--header-height);
+  z-index: 1000;
+  
+  // Gradient background
+  background: linear-gradient(
+    135deg,
+    var(--color-navy-blue) 0%,
+    var(--color-navy-blue-dark) 100%
+  );
+  
+  // Glassmorphism effect
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  // Gold border bottom
+  border-bottom: 2px solid rgba(240, 165, 0, 0.3);
+  
+  // Shadow
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  
+  // Smooth transition
+  transition: all 0.3s ease;
+}
+
+// Scrolled state (thêm shadow đậm hơn)
+.headerScrolled {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  border-bottom-color: rgba(240, 165, 0, 0.5);
+}
+
+// ============================================
+// HEADER CONTAINER
+// ============================================
+.container {
+  max-width: 1280px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+// ============================================
+// LOGO SECTION (Left)
+// ============================================
+.logoSection {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  
+  > div {
+    transition: opacity 0.3s ease;
+    
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+.logoText {
+  color: var(--color-white);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+  
+  @media (max-width: 768px) {
+    display: none; // Ẩn text trên mobile, chỉ giữ logo
+  }
+}
+
+// ============================================
+// NAVIGATION MENU (Center)
+// ============================================
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex: 1;
+  justify-content: center;
+  
+  @media (max-width: 768px) {
+    display: none; // Ẩn trên mobile
+  }
+}
+
+.navLink {
+  position: relative;
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 8px 4px;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+  
+  // Underline animation
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--color-gold);
+    transition: width 0.3s ease;
+  }
+  
+  // Hover state
+  &:hover {
+    color: var(--color-gold);
+    
+    &::after {
+      width: 100%;
+    }
+  }
+  
+  // Active state
+  &.active {
+    color: var(--color-gold);
+    
+    &::after {
+      width: 100%;
+    }
+  }
+}
+
+// ============================================
+// ACTION BUTTONS (Right)
+// ============================================
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
+}
+
+// Custom styles cho Button component
+.btnRegister {
+  background: transparent !important;
+  color: var(--color-gold) !important;
+  border: 2px solid var(--color-gold) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  padding: 10px 24px !important;
+  
+  &:hover {
+    background: var(--color-gold) !important;
+    color: var(--color-navy-blue) !important;
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.3) !important;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+}
+
+.btnLogin {
+  background: var(--color-gold) !important;
+  color: var(--color-navy-blue) !important;
+  border: 2px solid var(--color-gold) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  padding: 10px 24px !important;
+  
+  &:hover {
+    background: var(--color-gold-dark) !important;
+    border-color: var(--color-gold-dark) !important;
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.4) !important;
+    transform: translateY(-2px) !important;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+  }
+}
+
+// ============================================
+// HAMBURGER MENU (Mobile)
+// ============================================
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10;
+  
+  @media (max-width: 768px) {
+    display: flex;
+  }
+  
+  &:focus {
+    outline: none;
+  }
+}
+
+.hamburgerLine {
+  width: 28px;
+  height: 3px;
+  background: var(--color-white);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+// Hamburger open state
+.hamburgerOpen {
+  .hamburgerLine:nth-child(1) {
+    transform: rotate(45deg) translateY(9px);
+  }
+  
+  .hamburgerLine:nth-child(2) {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  
+  .hamburgerLine:nth-child(3) {
+    transform: rotate(-45deg) translateY(-9px);
+  }
+}
+
+// ============================================
+// MOBILE MENU (Dropdown)
+// ============================================
+.mobileMenu {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    180deg,
+    var(--color-navy-blue) 0%,
+    var(--color-navy-blue-dark) 100%
+  );
+  border-bottom: 2px solid rgba(240, 165, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  
+  // Animation
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+  
+  &.mobileMenuOpen {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+.mobileNavLink {
+  color: var(--color-white);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-align: center;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-gold);
+  }
+  
+  &.active {
+    background: rgba(240, 165, 0, 0.2);
+    color: var(--color-gold);
+    border: 1px solid var(--color-gold);
+  }
+}
+
+.mobileDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 8px 0;
+}
+
+.mobileActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  
+  // Button trong mobile menu full width
+  button {
+    width: 100%;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.header {
+  animation: slideDown 0.4s ease-out;
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 1024px) {
+  .nav {
+    gap: 24px;
+  }
+  
+  .navLink {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+    gap: 16px;
+  }
+  
+  :root {
+    --header-height: 64px;
+  }
+  
+  .header {
+    height: 64px;
+  }
+}

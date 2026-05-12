@@ -1,0 +1,420 @@
+@use '@styles/variables' as *;
+
+.heroBanner {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 120px 0 80px;
+
+  @media (max-width: 768px) {
+    min-height: auto;
+    padding: 100px 0 60px;
+  }
+}
+
+// Background Image
+.backgroundImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
+// Dark overlay để text dễ đọc
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(26, 47, 94, 0.80) 0%,
+    rgba(42, 74, 143, 0.50) 100%
+  );
+  backdrop-filter: blur(2px);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+
+  @media (max-width: 968px) {
+    grid-template-columns: 1fr;
+    gap: 60px;
+    text-align: center;
+  }
+}
+
+// Left Content
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  @media (max-width: 968px) {
+    align-items: center;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(240, 165, 0, 0.15);
+  border: 1px solid rgba(240, 165, 0, 0.3);
+  border-radius: 100px;
+  width: fit-content;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.badgeIcon {
+  font-size: 16px;
+}
+
+.badgeText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gold);
+  letter-spacing: 0.5px;
+}
+
+.heading {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-white);
+  margin: 0;
+  animation: fadeInUp 0.6s ease-out 0.1s backwards;
+
+  @media (max-width: 968px) {
+    font-size: 42px;
+  }
+
+  @media (max-width: 576px) {
+    font-size: 36px;
+  }
+}
+
+.highlight {
+  color: var(--color-gold);
+  position: relative;
+  display: inline-block;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    height: 12px;
+    background: rgba(240, 165, 0, 0.2);
+    z-index: -1;
+    border-radius: 4px;
+  }
+}
+
+.description {
+  font-size: 18px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  max-width: 540px;
+  animation: fadeInUp 0.6s ease-out 0.2s backwards;
+
+  @media (max-width: 968px) {
+    font-size: 16px;
+    max-width: 100%;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  animation: fadeInUp 0.6s ease-out 0.3s backwards;
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    width: 100%;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-top: 24px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  animation: fadeInUp 0.6s ease-out 0.4s backwards;
+
+  @media (max-width: 968px) {
+    justify-content: center;
+  }
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    gap: 24px;
+  }
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statValue {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-gold);
+  line-height: 1;
+
+  @media (max-width: 576px) {
+    font-size: 28px;
+  }
+}
+
+.statLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.statDivider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+
+  @media (max-width: 576px) {
+    display: none;
+  }
+}
+
+// Right Image
+.imageWrapper {
+  position: relative;
+  animation: fadeInRight 0.8s ease-out 0.2s backwards;
+
+  @media (max-width: 968px) {
+    display: none;
+  }
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.mainImage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.placeholderIcon {
+  font-size: 80px;
+  opacity: 0.3;
+}
+
+.placeholderText {
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+
+// Decorative Circles
+.decorCircle1,
+.decorCircle2,
+.decorCircle3 {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(240, 165, 0, 0.1);
+  border: 1px solid rgba(240, 165, 0, 0.2);
+  animation: float 6s ease-in-out infinite;
+}
+
+.decorCircle1 {
+  width: 120px;
+  height: 120px;
+  top: -20px;
+  right: -20px;
+  animation-delay: 0s;
+}
+
+.decorCircle2 {
+  width: 80px;
+  height: 80px;
+  bottom: 40px;
+  left: -20px;
+  animation-delay: 2s;
+}
+
+.decorCircle3 {
+  width: 60px;
+  height: 60px;
+  top: 50%;
+  left: -30px;
+  animation-delay: 4s;
+}
+
+// Floating Cards
+.floatingCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  animation: floatCard 4s ease-in-out infinite;
+}
+
+.card1 {
+  top: 20%;
+  right: -40px;
+  animation-delay: 0s;
+}
+
+.card2 {
+  bottom: 15%;
+  left: -40px;
+  animation-delay: 2s;
+}
+
+.cardIcon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cardTitle {
+  font-size: 12px;
+  color: rgba(26, 47, 94, 0.7);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cardValue {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+// Background Decorations
+.bgDecor1,
+.bgDecor2 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  z-index: 1;
+}
+
+.bgDecor1 {
+  width: 600px;
+  height: 600px;
+  background: var(--color-gold);
+  top: -200px;
+  right: -200px;
+}
+
+.bgDecor2 {
+  width: 500px;
+  height: 500px;
+  background: var(--color-primary);
+  bottom: -150px;
+  left: -150px;
+}
+
+// Animations
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+@keyframes floatCard {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

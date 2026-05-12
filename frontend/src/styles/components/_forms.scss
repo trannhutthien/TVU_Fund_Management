@@ -1,0 +1,51 @@
+// ============================================
+// FORM COMPONENTS
+// Công dụng: Styles cho input và form elements
+// ============================================
+@use '../variables' as *;
+
+// ── INPUT ───────────────────────────────────
+// Input field với focus effect và shadow
+// Dùng: <input class="input" type="text" placeholder="Enter..." />
+.input {
+  width: 100%;
+  padding: 10px $space-4;
+  font-family: $font-family;
+  font-size: $text-base;
+  font-weight: $font-regular;
+  color: $text-body;
+  background: $bg-input;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  outline: none;
+  transition: $transition-fast;
+  box-shadow: $shadow-xs;
+
+  // Placeholder text - Màu xám mờ
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  // Hover - Border đậm hơn
+  &:hover {
+    border-color: $text-secondary;
+  }
+
+  // Focus - Đổi background, border xanh, shadow xanh
+  &:focus {
+    background: $bg-card;
+    border-color: $border-focus;
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.12);
+  }
+}
+
+// ── INPUT LABEL ─────────────────────────────
+// Label cho input field
+// Dùng: <label class="input-label">Email</label>
+.input-label {
+  display: block;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  margin-bottom: $space-2;
+}

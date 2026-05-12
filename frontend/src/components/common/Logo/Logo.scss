@@ -1,0 +1,351 @@
+@use '@styles/variables' as *;
+
+// ============================================
+// LOGO COMPONENT
+// ============================================
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-3;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all $transition-base;
+  user-select: none;
+
+  &:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Clickable logo
+.logo-clickable {
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+// ============================================
+// LOGO IMAGE
+// ============================================
+.logo-image {
+  flex-shrink: 0;
+  object-fit: cover;
+  transition: all $transition-base;
+}
+
+// Circular variant
+.logo-image-circular {
+  border-radius: $radius-full;
+  box-shadow: $shadow-sm;
+  border: 2px solid $bg-card;
+  outline: 2px solid $color-primary-light;
+}
+
+// Rounded variant
+.logo-image-rounded {
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+}
+
+// Square variant
+.logo-image-square {
+  border-radius: $radius-xs;
+}
+
+// ============================================
+// LOGO TEXT
+// ============================================
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo-title {
+  font-family: $font-family;
+  font-weight: $font-bold;
+  color: $text-heading;
+  line-height: $leading-tight;
+  letter-spacing: $tracking-tight;
+  margin: 0;
+}
+
+.logo-subtitle {
+  font-family: $font-family;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  line-height: $leading-tight;
+  margin: 0;
+}
+
+// ============================================
+// SIZES
+// ============================================
+
+// Extra Small (xs) - Cho favicon, avatar nhỏ
+.logo-xs {
+  .logo-image {
+    width: 24px;
+    height: 24px;
+  }
+
+  .logo-title {
+    font-size: $text-xs;
+  }
+
+  .logo-subtitle {
+    font-size: 0.625rem; // 10px
+  }
+}
+
+// Small (sm) - Cho header collapsed, mobile
+.logo-sm {
+  gap: $space-2;
+
+  .logo-image {
+    width: 32px;
+    height: 32px;
+  }
+
+  .logo-title {
+    font-size: $text-sm;
+  }
+
+  .logo-subtitle {
+    font-size: $text-xs;
+  }
+}
+
+// Medium (md) - Default, cho header, card
+.logo-md {
+  gap: $space-3;
+
+  .logo-image {
+    width: 40px;
+    height: 40px;
+  }
+
+  .logo-title {
+    font-size: $text-base;
+  }
+
+  .logo-subtitle {
+    font-size: $text-sm;
+  }
+}
+
+// Large (lg) - Cho login page, profile
+.logo-lg {
+  gap: $space-3;
+
+  .logo-image {
+    width: 64px;
+    height: 64px;
+  }
+
+  .logo-title {
+    font-size: $text-xl;
+  }
+
+  .logo-subtitle {
+    font-size: $text-base;
+  }
+}
+
+// Extra Large (xl) - Cho splash screen, hero
+.logo-xl {
+  gap: $space-4;
+
+  .logo-image {
+    width: 100px;
+    height: 100px;
+  }
+
+  .logo-title {
+    font-size: $text-2xl;
+  }
+
+  .logo-subtitle {
+    font-size: $text-lg;
+  }
+}
+
+// 2XL - Cho landing page hero
+.logo-2xl {
+  gap: $space-4;
+
+  .logo-image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .logo-title {
+    font-size: $text-3xl;
+  }
+
+  .logo-subtitle {
+    font-size: $text-xl;
+  }
+}
+
+// ============================================
+// VARIANTS
+// ============================================
+
+// Icon only (chỉ logo, không text)
+.logo-icon-only {
+  .logo-text {
+    display: none;
+  }
+}
+
+// Text only (chỉ text, không logo)
+.logo-text-only {
+  .logo-image {
+    display: none;
+  }
+}
+
+// Vertical layout (logo trên, text dưới)
+.logo-vertical {
+  flex-direction: column;
+  text-align: center;
+
+  .logo-text {
+    align-items: center;
+  }
+}
+
+// ============================================
+// COLOR THEMES
+// ============================================
+
+// Light theme (default)
+.logo-light {
+  .logo-title {
+    color: $text-heading;
+  }
+
+  .logo-subtitle {
+    color: $text-secondary;
+  }
+}
+
+// Dark theme
+.logo-dark {
+  .logo-title {
+    color: $bg-card;
+  }
+
+  .logo-subtitle {
+    color: rgba($bg-card, 0.8);
+  }
+}
+
+// Primary theme
+.logo-primary {
+  .logo-title {
+    color: $color-primary;
+  }
+
+  .logo-subtitle {
+    color: $color-primary-dark;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+
+// Fade in animation
+.logo-animated {
+  animation: logoFadeIn 0.6s ease-out;
+}
+
+@keyframes logoFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Pulse animation (for loading states)
+.logo-pulse {
+  animation: logoPulse 2s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+// Spin animation (for loading)
+.logo-spin {
+  .logo-image {
+    animation: logoSpin 2s linear infinite;
+  }
+}
+
+@keyframes logoSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 768px) {
+  // Auto scale down on mobile
+  .logo-xl {
+    gap: $space-3;
+
+    .logo-image {
+      width: 80px;
+      height: 80px;
+    }
+
+    .logo-title {
+      font-size: $text-xl;
+    }
+
+    .logo-subtitle {
+      font-size: $text-base;
+    }
+  }
+
+  .logo-2xl {
+    gap: $space-4;
+
+    .logo-image {
+      width: 100px;
+      height: 100px;
+    }
+
+    .logo-title {
+      font-size: $text-2xl;
+    }
+
+    .logo-subtitle {
+      font-size: $text-lg;
+    }
+  }
+}

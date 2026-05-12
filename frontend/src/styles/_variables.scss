@@ -1,0 +1,168 @@
+// ============================================
+// DESIGN TOKENS - TVU Fund Management
+// VibeDash-inspired Design System
+// ============================================
+
+// Font Import
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+// ── COLOR: Backgrounds ──────────────────────
+$bg-page:          #EEF0F5;   // Nền toàn trang
+$bg-card:          #FFFFFF;   // Nền card/panel
+$bg-sidebar:       #FFFFFF;   // Nền sidebar
+$bg-sidebar-hover: #F0F4FF;   // Hover item sidebar
+$bg-sidebar-active:#E8EEFF;   // Active item sidebar
+$bg-input:         #F5F7FA;   // Nền input/search
+$bg-tag:           #F0F4FF;   // Badge/tag nền nhạt
+
+// ── COLOR: Brand/Primary ────────────────────
+$color-primary:        #3B6FF5;   // Xanh chủ đạo
+$color-primary-hover:  #2C5CE6;   // Hover state
+$color-primary-light:  #EBF0FF;   // Nền nhạt primary
+$color-primary-dark:   #1A40C2;   // Darker accent
+
+// ── COLOR: Semantic ─────────────────────────
+$color-success:        #16A34A;   // Xanh lá - tăng trưởng
+$color-success-bg:     #DCFCE7;
+$color-success-text:   #15803D;
+
+$color-danger:         #DC2626;   // Đỏ - giảm/lỗi
+$color-danger-bg:      #FEE2E2;
+$color-danger-text:    #B91C1C;
+
+$color-warning:        #D97706;   // Vàng cam - cảnh báo
+$color-warning-bg:     #FEF3C7;
+$color-warning-text:   #92400E;
+
+$color-info:           #0891B2;   // Xanh dương info
+$color-info-bg:        #E0F2FE;
+$color-info-text:      #0369A1;
+
+// ── COLOR: Icon Accent ──────────────────────
+$icon-bg-blue:     #EBF0FF;
+$icon-bg-purple:   #F3EEFF;
+$icon-bg-yellow:   #FEF9C3;
+$icon-bg-teal:     #E0FFF8;
+
+$icon-color-blue:    #3B6FF5;
+$icon-color-purple:  #9333EA;
+$icon-color-yellow:  #D97706;
+$icon-color-teal:    #0D9488;
+
+// ── COLOR: Text ─────────────────────────────
+$text-heading:     #0F172A;   // Tiêu đề chính
+$text-body:        #334155;   // Nội dung chính
+$text-secondary:   #64748B;   // Phụ/mô tả
+$text-muted:       #94A3B8;   // Mờ/placeholder
+$text-disabled:    #CBD5E1;
+$text-on-primary:  #FFFFFF;   // Text trên nền primary
+$text-link:        #3B6FF5;
+
+// ── COLOR: Border ───────────────────────────
+$border-default:   #E2E8F0;   // Border chuẩn
+$border-light:     #F1F5F9;   // Border mờ
+$border-focus:     #3B6FF5;   // Border khi focus
+$border-card:      #EAEEF5;
+
+// ── COLOR: Status Badge ─────────────────────
+$status-on-track-bg:   #DCFCE7;
+$status-on-track-text: #16A34A;
+$status-delayed-bg:    #FEF3C7;
+$status-delayed-text:  #D97706;
+$status-at-risk-bg:    #FEE2E2;
+$status-at-risk-text:  #DC2626;
+$status-completed-bg:  #E0F2FE;
+$status-completed-text:#0891B2;
+
+// ── TYPOGRAPHY ──────────────────────────────
+$font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+// Font Size - T-shirt sizing
+$text-xs:    0.70rem;   // 11.2px - label nhỏ, timestamp
+$text-sm:    0.80rem;   // 12.8px - caption/badge
+$text-base:  0.875rem;  // 14px - body mặc định
+$text-md:    0.9375rem; // 15px - body nổi
+$text-lg:    1rem;      // 16px - sub-heading nhỏ
+$text-xl:    1.125rem;  // 18px - heading nhỏ
+$text-2xl:   1.375rem;  // 22px - heading card
+$text-3xl:   1.75rem;   // 28px - số liệu lớn
+$text-4xl:   2.25rem;   // 36px - display heading
+
+// Font Weight
+$font-light:     300;
+$font-regular:   400;
+$font-medium:    500;
+$font-semibold:  600;
+$font-bold:      700;
+$font-extrabold: 800;
+
+// Line Height
+$leading-tight:  1.2;
+$leading-snug:   1.375;
+$leading-normal: 1.5;
+$leading-relaxed:1.625;
+
+// Letter Spacing
+$tracking-tight:  -0.02em;
+$tracking-normal:  0em;
+$tracking-wide:    0.04em;
+$tracking-widest:  0.08em;  // dùng cho label ALL CAPS
+
+// ── SPACING (8px base grid) ─────────────────
+$space-1:   4px;
+$space-2:   8px;
+$space-3:  12px;
+$space-4:  16px;
+$space-5:  20px;
+$space-6:  24px;
+$space-8:  32px;
+$space-10: 40px;
+$space-12: 48px;
+$space-16: 64px;
+
+// ── BORDER RADIUS ───────────────────────────
+$radius-xs:   4px;    // Input nhỏ, tag
+$radius-sm:   6px;    // Badge, chip
+$radius-md:   8px;    // Button, dropdown
+$radius-lg:  12px;    // Card nhỏ
+$radius-xl:  16px;    // Card chính
+$radius-2xl: 20px;    // Card lớn/panel
+$radius-full: 9999px; // Pill/avatar/toggle
+
+// ── SHADOWS ─────────────────────────────────
+$shadow-none: none;
+$shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+$shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+$shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.05);
+$shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.10), 0 3px 8px rgba(15, 23, 42, 0.06);
+$shadow-xl: 0 16px 40px rgba(15, 23, 42, 0.14), 0 6px 16px rgba(15, 23, 42, 0.08);
+$shadow-primary: 0 4px 14px rgba(59, 111, 245, 0.35);
+$shadow-sidebar: 4px 0 24px rgba(15, 23, 42, 0.08);
+
+// ── TRANSITIONS & ANIMATIONS ────────────────
+$duration-fast:   150ms;
+$duration-base:   220ms;
+$duration-slow:   380ms;
+$ease-default:    cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$ease-bounce:     cubic-bezier(0.34, 1.56, 0.64, 1);
+$ease-in-out:     cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: all $duration-base $ease-default;
+$transition-fast: all $duration-fast $ease-default;
+
+// ── LAYOUT ──────────────────────────────────
+$sidebar-width:         220px;
+$sidebar-collapsed-w:    64px;
+$topbar-height:          64px;
+$content-max-width:    1280px;
+$card-padding:           24px;
+$card-padding-sm:        16px;
+
+// ── Z-INDEX LAYERS ──────────────────────────
+$z-base:     0;
+$z-card:    10;
+$z-dropdown:200;
+$z-sticky:  300;
+$z-overlay: 400;
+$z-modal:   500;
+$z-toast:   600;
+$z-tooltip: 700;

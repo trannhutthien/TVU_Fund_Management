@@ -1,0 +1,171 @@
+// ============================================
+// BUTTON COMPONENTS
+// Công dụng: Styles cho tất cả loại button
+// (primary, secondary, ghost, danger, icon, toggle)
+// ============================================
+@use '../variables' as *;
+
+// ── BASE BUTTON ─────────────────────────────
+// Button cơ bản với flex layout và transition
+// Dùng: <button class="btn">Click me</button>
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  font-family: $font-family;
+  font-size: $text-base;
+  font-weight: $font-semibold;
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: $transition-base;
+  text-decoration: none;
+  border-radius: $radius-md;
+  padding: 10px $space-5;
+
+  // Focus visible - Accessibility
+  &:focus-visible {
+    outline: 3px solid $border-focus;
+    outline-offset: 2px;
+  }
+}
+
+// ── SIZES ───────────────────────────────────
+// Small button - Dùng cho actions phụ
+// Dùng: <button class="btn btn-sm">Small</button>
+.btn-sm {
+  font-size: $text-sm;
+  padding: 7px $space-4;
+  border-radius: $radius-sm;
+}
+
+// Medium button - Size mặc định
+.btn-md {
+  font-size: $text-base;
+  padding: 10px $space-5;
+}
+
+// Large button - Dùng cho CTA chính
+// Dùng: <button class="btn btn-lg">Large CTA</button>
+.btn-lg {
+  font-size: $text-lg;
+  padding: 13px $space-8;
+  border-radius: $radius-lg;
+}
+
+// ── VARIANTS ────────────────────────────────
+// Primary - Button chính với shadow màu xanh
+// Dùng: <button class="btn btn-primary">Submit</button>
+.btn-primary {
+  background: $color-primary;
+  color: $text-on-primary;
+  box-shadow: $shadow-primary;
+
+  &:hover {
+    background: $color-primary-hover;
+    box-shadow: 0 6px 20px rgba(59, 111, 245, 0.45);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: $shadow-primary;
+  }
+}
+
+// Secondary - Button phụ với nền trắng viền mờ
+// Dùng: <button class="btn btn-secondary">Cancel</button>
+.btn-secondary {
+  background: $bg-card;
+  color: $text-body;
+  border: 1px solid $border-default;
+  box-shadow: $shadow-xs;
+
+  &:hover {
+    background: $bg-sidebar-hover;
+    border-color: $border-focus;
+    color: $color-primary;
+  }
+}
+
+// Ghost - Button trong suốt, không viền
+// Dùng: <button class="btn btn-ghost">More</button>
+.btn-ghost {
+  background: transparent;
+  color: $text-secondary;
+
+  &:hover {
+    background: $bg-sidebar-hover;
+    color: $color-primary;
+  }
+}
+
+// Danger - Button xóa/hủy với màu đỏ
+// Dùng: <button class="btn btn-danger">Delete</button>
+.btn-danger {
+  background: $color-danger;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.30);
+
+  &:hover {
+    background: #B91C1C;
+    transform: translateY(-1px);
+  }
+}
+
+// ── ICON-ONLY BUTTON ────────────────────────
+// Button chỉ có icon (36x36px, vuông)
+// Dùng: <button class="btn-icon"><Icon /></button>
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: $radius-md;
+  background: $bg-card;
+  border: 1px solid $border-default;
+  color: $text-secondary;
+  box-shadow: $shadow-xs;
+
+  &:hover {
+    background: $bg-sidebar-hover;
+    color: $color-primary;
+    border-color: $border-focus;
+  }
+}
+
+// ── TOGGLE GROUP ────────────────────────────
+// Segmented control (Weekly | Monthly)
+// Dùng: <div class="toggle-group">...</div>
+.toggle-group {
+  display: flex;
+  align-items: center;
+  background: $bg-page;
+  border-radius: $radius-md;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid $border-default;
+}
+
+// Toggle button - Button trong toggle group
+// Dùng: <button class="toggle-btn active">Weekly</button>
+.toggle-btn {
+  padding: 6px $space-4;
+  border-radius: calc($radius-md - 2px);
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  // Active state - Button được chọn
+  &.active {
+    background: $color-primary;
+    color: $text-on-primary;
+    box-shadow: $shadow-xs;
+    font-weight: $font-semibold;
+  }
+}

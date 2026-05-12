@@ -1,0 +1,18 @@
+// ============================================
+// GRID LAYOUTS
+// Công dụng: Grid systems cho layout
+// ============================================
+@use '../variables' as *;
+
+// ── STAT CARDS GRID ─────────────────────────
+// Grid responsive cho stat cards (4 ô trên dashboard)
+// Tự động fit, min 200px, max 1fr
+// Dùng: <div class="grid-stats">
+//         <div class="stat-card">...</div>
+//         <div class="stat-card">...</div>
+//       </div>
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $space-5;
+}

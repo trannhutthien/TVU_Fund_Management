@@ -1,0 +1,476 @@
+// ============================================
+// INPUT COMPONENT STYLES
+// Input field với floating label, animation đẹp
+// ============================================
+
+@use '../../../styles/variables' as *;
+
+// ── CONTAINER ───────────────────────────────
+.input-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: $space-4; // 16px
+}
+
+// ── INPUT WRAPPER ───────────────────────────
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+// ── INPUT FIELD ─────────────────────────────
+.input-field {
+  width: 100%;
+  padding: $space-4 $space-3; // 16px 12px
+  padding-top: $space-5; // 20px (space for floating label)
+  font-family: $font-family;
+  font-size: $text-base; // 14px
+  font-weight: $font-regular;
+  color: $text-body;
+  background: $bg-input;
+  border: 2px solid transparent;
+  border-radius: $radius-md; // 8px
+  outline: none;
+  transition: all $duration-base $ease-default;
+
+  // Placeholder
+  &::placeholder {
+    color: $text-muted;
+    opacity: 0;
+    transition: opacity $duration-fast $ease-default;
+  }
+
+  // Focus state
+  &:focus {
+    background: $bg-card;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 4px rgba(59, 111, 245, 0.1);
+
+    &::placeholder {
+      opacity: 1;
+    }
+  }
+
+  // Disabled state
+  &:disabled {
+    background: $border-light;
+    color: $text-disabled;
+    cursor: not-allowed;
+  }
+
+  // Autofill styles
+  &:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px $bg-input inset;
+    -webkit-text-fill-color: $text-body;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
+
+// ── LABEL (FLOATING) ────────────────────────
+.input-label {
+  position: absolute;
+  left: $space-3; // 12px
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: $text-base; // 14px
+  font-weight: $font-medium;
+  color: $text-secondary;
+  pointer-events: none;
+  transition: all $duration-base $ease-default;
+  background: transparent;
+  padding: 0 4px;
+  z-index: 1;
+}
+
+// Label floating (khi focus hoặc có value)
+.input-label-floating {
+  top: 8px;
+  transform: translateY(0);
+  font-size: $text-xs; // 11.2px
+  color: $color-primary;
+  font-weight: $font-semibold;
+}
+
+// Required mark
+.input-label-required {
+  .input-required-mark {
+    color: $color-danger;
+    margin-left: 2px;
+  }
+}
+
+// ── ICONS ───────────────────────────────────
+.input-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-muted;
+  transition: color $duration-base $ease-default;
+  z-index: 2;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.input-icon-left {
+  left: $space-3; // 12px
+}
+
+.input-icon-right {
+  right: $space-3; // 12px
+}
+
+// Input với left icon - padding left lớn hơn
+.input-has-left-icon {
+  .input-field {
+    padding-left: 40px;
+  }
+
+  .input-label {
+    left: 40px;
+  }
+}
+
+// Input với right icon - padding right lớn hơn
+.input-has-right-icon {
+  .input-field {
+    padding-right: 40px;
+  }
+}
+
+// ── PASSWORD TOGGLE ─────────────────────────
+.input-password-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  transition: color $duration-base $ease-default;
+
+  &:hover {
+    color: $color-primary;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ── STATUS ICONS ────────────────────────────
+.input-status-icon {
+  position: absolute;
+  right: $space-3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+  animation: statusIconFadeIn 0.3s $ease-default;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.input-status-success {
+  color: $color-success;
+}
+
+.input-status-error {
+  color: $color-danger;
+}
+
+@keyframes statusIconFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// ── FOCUS BORDER ANIMATION ──────────────────
+.input-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: $color-primary;
+  transition: width $duration-base $ease-default;
+  pointer-events: none;
+}
+
+.input-focused .input-border {
+  width: 100%;
+}
+
+// ── STATES ──────────────────────────────────
+
+// Focused state
+.input-focused {
+  .input-icon {
+    color: $color-primary;
+  }
+}
+
+// Error state
+.input-error {
+  .input-field {
+    border-color: $color-danger;
+    background: $color-danger-bg;
+
+    &:focus {
+      border-color: $color-danger;
+      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+    }
+  }
+
+  .input-label-floating {
+    color: $color-danger;
+  }
+
+  .input-border {
+    background: $color-danger;
+  }
+}
+
+// Success state
+.input-success {
+  .input-field {
+    border-color: $color-success;
+    background: $color-success-bg;
+
+    &:focus {
+      border-color: $color-success;
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1);
+    }
+  }
+
+  .input-label-floating {
+    color: $color-success;
+  }
+
+  .input-border {
+    background: $color-success;
+  }
+}
+
+// Disabled state
+.input-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+
+  .input-field {
+    cursor: not-allowed;
+  }
+}
+
+// ── BOTTOM SECTION ──────────────────────────
+.input-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $space-2;
+  margin-top: $space-1; // 4px
+  min-height: 20px;
+}
+
+.input-messages {
+  flex: 1;
+}
+
+// ── MESSAGES ────────────────────────────────
+.input-message {
+  display: block;
+  font-size: $text-xs; // 11.2px
+  font-weight: $font-medium;
+  line-height: $leading-snug;
+  animation: messageFadeIn 0.3s $ease-default;
+}
+
+.input-message-error {
+  color: $color-danger-text;
+}
+
+.input-message-success {
+  color: $color-success-text;
+}
+
+.input-message-helper {
+  color: $text-muted;
+}
+
+@keyframes messageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ── CHARACTER COUNTER ───────────────────────
+.input-counter {
+  flex-shrink: 0;
+  font-size: $text-xs;
+  font-weight: $font-medium;
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+// ── SIZES ───────────────────────────────────
+
+// Small
+.input-sm {
+  .input-field {
+    padding: $space-2 $space-3; // 8px 12px
+    padding-top: $space-4; // 16px
+    font-size: $text-sm; // 12.8px
+  }
+
+  .input-label {
+    font-size: $text-sm;
+  }
+
+  .input-label-floating {
+    top: 6px;
+    font-size: 10px;
+  }
+
+  .input-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Large
+.input-lg {
+  .input-field {
+    padding: $space-5 $space-4; // 20px 16px
+    padding-top: $space-6; // 24px
+    font-size: $text-lg; // 16px
+  }
+
+  .input-label {
+    font-size: $text-lg;
+  }
+
+  .input-label-floating {
+    top: 10px;
+    font-size: $text-sm;
+  }
+
+  .input-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// ── HOVER EFFECTS ───────────────────────────
+.input-field:not(:disabled):hover {
+  background: $bg-card;
+  border-color: $border-default;
+}
+
+.input-error .input-field:not(:disabled):hover {
+  border-color: $color-danger;
+}
+
+.input-success .input-field:not(:disabled):hover {
+  border-color: $color-success;
+}
+
+// ── RESPONSIVE ──────────────────────────────
+@media (max-width: 768px) {
+  .input-field {
+    font-size: 16px; // Prevent zoom on iOS
+  }
+}
+
+// ── SPECIAL VARIANTS ────────────────────────
+
+// Borderless variant
+.input-borderless {
+  .input-field {
+    border: none;
+    border-bottom: 2px solid $border-default;
+    border-radius: 0;
+    background: transparent;
+    padding-left: 0;
+    padding-right: 0;
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  .input-label {
+    left: 0;
+  }
+
+  .input-icon-left {
+    left: 0;
+  }
+
+  .input-icon-right {
+    right: 0;
+  }
+}
+
+// Filled variant
+.input-filled {
+  .input-field {
+    background: $bg-sidebar-hover;
+    border: none;
+
+    &:focus {
+      background: $bg-card;
+      box-shadow: 0 0 0 2px $color-primary;
+    }
+  }
+}
+
+// Rounded variant
+.input-rounded {
+  .input-field {
+    border-radius: $radius-full;
+  }
+}
+
+// ── ANIMATION ENHANCEMENTS ──────────────────
+
+// Shake animation for errors
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.input-error.input-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+// Pulse animation for success
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+
+.input-success .input-field:focus {
+  animation: pulse 1s ease-in-out;
+}

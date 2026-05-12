@@ -1,0 +1,21 @@
+// ============================================
+// TOAST / NOTIFICATION COMPONENTS
+// Công dụng: Thông báo popup (success, error, info)
+// ============================================
+@use '../variables' as *;
+
+// Toast - Notification box
+// Dùng với React Toastify hoặc custom toast
+// Dùng: <div class="toast">...</div>
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  background: $bg-card;
+  border: 1px solid $border-default;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg; // Shadow lớn để nổi bật
+  padding: $space-4;
+  min-width: 280px;
+  max-width: 400px;
+}

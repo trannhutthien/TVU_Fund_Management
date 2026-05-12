@@ -1,0 +1,401 @@
+// ============================================
+// STATUS BADGE COMPONENT STYLES
+// Badge trạng thái với animation đẹp
+// ============================================
+
+@use '../../../styles/variables' as *;
+
+// ── BASE BADGE ──────────────────────────────
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: $font-family;
+  font-size: $text-xs; // 11.2px
+  font-weight: $font-semibold;
+  line-height: 1;
+  border-radius: $radius-full;
+  white-space: nowrap;
+  transition: all $duration-base $ease-default;
+  animation: badgeFadeIn 0.3s $ease-default;
+  user-select: none;
+}
+
+// Fade in animation
+@keyframes badgeFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// ── ICON ────────────────────────────────────
+.status-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// ── LABEL ───────────────────────────────────
+.status-badge-label {
+  display: inline-block;
+}
+
+// ── VARIANTS ────────────────────────────────
+
+// Success - Xanh lá
+.status-badge-success {
+  background: $color-success-bg;
+  color: $color-success-text;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: darken($color-success-bg, 3%);
+    transform: translateY(-1px);
+  }
+}
+
+// Warning - Vàng cam
+.status-badge-warning {
+  background: $color-warning-bg;
+  color: $color-warning-text;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: darken($color-warning-bg, 3%);
+    transform: translateY(-1px);
+  }
+}
+
+// Danger - Đỏ
+.status-badge-danger {
+  background: $color-danger-bg;
+  color: $color-danger-text;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: darken($color-danger-bg, 3%);
+    transform: translateY(-1px);
+  }
+}
+
+// Info - Xanh dương
+.status-badge-info {
+  background: $color-info-bg;
+  color: $color-info-text;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: darken($color-info-bg, 3%);
+    transform: translateY(-1px);
+  }
+}
+
+// Default - Xám
+.status-badge-default {
+  background: $bg-tag;
+  color: $text-secondary;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: darken($bg-tag, 3%);
+    transform: translateY(-1px);
+  }
+}
+
+// ── OUTLINED VARIANT ────────────────────────
+.status-badge-outlined {
+  background: transparent !important;
+
+  &.status-badge-success {
+    border-color: $color-success;
+    color: $color-success;
+
+    &:hover {
+      background: $color-success-bg !important;
+    }
+  }
+
+  &.status-badge-warning {
+    border-color: $color-warning;
+    color: $color-warning;
+
+    &:hover {
+      background: $color-warning-bg !important;
+    }
+  }
+
+  &.status-badge-danger {
+    border-color: $color-danger;
+    color: $color-danger;
+
+    &:hover {
+      background: $color-danger-bg !important;
+    }
+  }
+
+  &.status-badge-info {
+    border-color: $color-info;
+    color: $color-info;
+
+    &:hover {
+      background: $color-info-bg !important;
+    }
+  }
+
+  &.status-badge-default {
+    border-color: $border-default;
+    color: $text-secondary;
+
+    &:hover {
+      background: $bg-tag !important;
+    }
+  }
+}
+
+// ── SIZES ───────────────────────────────────
+
+// Small
+.status-badge-sm {
+  padding: 4px 8px;
+  font-size: 10px;
+  gap: 4px;
+
+  .status-badge-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+// Large
+.status-badge-lg {
+  padding: 8px 16px;
+  font-size: $text-sm; // 12.8px
+  gap: 8px;
+
+  .status-badge-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// ── PULSE ANIMATION ─────────────────────────
+.status-badge-pulse {
+  position: relative;
+  animation: badgeFadeIn 0.3s $ease-default, badgePulse 2s ease-in-out infinite;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: $radius-full;
+    opacity: 0;
+    animation: pulseRing 2s ease-in-out infinite;
+  }
+
+  &.status-badge-success::before {
+    background: $color-success;
+  }
+
+  &.status-badge-warning::before {
+    background: $color-warning;
+  }
+
+  &.status-badge-danger::before {
+    background: $color-danger;
+  }
+
+  &.status-badge-info::before {
+    background: $color-info;
+  }
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes pulseRing {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+// ── GLOW EFFECT ─────────────────────────────
+.status-badge-glow {
+  &.status-badge-success {
+    box-shadow: 0 0 12px rgba(22, 163, 74, 0.4);
+
+    &:hover {
+      box-shadow: 0 0 16px rgba(22, 163, 74, 0.6);
+    }
+  }
+
+  &.status-badge-warning {
+    box-shadow: 0 0 12px rgba(217, 119, 6, 0.4);
+
+    &:hover {
+      box-shadow: 0 0 16px rgba(217, 119, 6, 0.6);
+    }
+  }
+
+  &.status-badge-danger {
+    box-shadow: 0 0 12px rgba(220, 38, 38, 0.4);
+
+    &:hover {
+      box-shadow: 0 0 16px rgba(220, 38, 38, 0.6);
+    }
+  }
+
+  &.status-badge-info {
+    box-shadow: 0 0 12px rgba(8, 145, 178, 0.4);
+
+    &:hover {
+      box-shadow: 0 0 16px rgba(8, 145, 178, 0.6);
+    }
+  }
+}
+
+// ── CLICKABLE ───────────────────────────────
+.status-badge-clickable {
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// ── SPECIAL ANIMATIONS ──────────────────────
+
+// Bounce animation (khi mới xuất hiện)
+.status-badge-bounce {
+  animation: badgeBounce 0.5s $ease-bounce;
+}
+
+@keyframes badgeBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+// Shake animation (cho error/rejected)
+.status-badge-shake {
+  animation: badgeShake 0.5s ease-in-out;
+}
+
+@keyframes badgeShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+// Spin icon animation (cho processing)
+.status-badge-spin-icon {
+  .status-badge-icon {
+    animation: iconSpin 2s linear infinite;
+  }
+}
+
+@keyframes iconSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ── RESPONSIVE ──────────────────────────────
+@media (max-width: 768px) {
+  .status-badge {
+    font-size: 10px;
+    padding: 4px 10px;
+  }
+
+  .status-badge-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+// ── GROUP BADGES ────────────────────────────
+// Khi có nhiều badges cạnh nhau
+.status-badge-group {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+}
+
+// ── DOT VARIANT ─────────────────────────────
+// Badge chỉ có dot + text (không có icon)
+.status-badge-dot {
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  &.status-badge-success::before {
+    background: $color-success;
+  }
+
+  &.status-badge-warning::before {
+    background: $color-warning;
+  }
+
+  &.status-badge-danger::before {
+    background: $color-danger;
+  }
+
+  &.status-badge-info::before {
+    background: $color-info;
+  }
+
+  &.status-badge-default::before {
+    background: $text-muted;
+  }
+}

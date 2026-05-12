@@ -1,0 +1,50 @@
+// ============================================
+// BADGE / STATUS TAG COMPONENTS
+// Công dụng: Hiển thị trạng thái, tags, labels
+// ============================================
+@use '../variables' as *;
+
+// Base badge - Pill-shaped tag
+// Dùng: <span class="badge badge-success">Approved</span>
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  letter-spacing: $tracking-wide;
+  text-transform: uppercase;
+}
+
+// ── VARIANTS ────────────────────────────────
+// Success - Xanh lá (Approved, Active, On Track)
+.badge-success {
+  background: $status-on-track-bg;
+  color: $status-on-track-text;
+}
+
+// Warning - Vàng (Pending, Delayed, In Progress)
+.badge-warning {
+  background: $status-delayed-bg;
+  color: $status-delayed-text;
+}
+
+// Danger - Đỏ (Rejected, Failed, At Risk)
+.badge-danger {
+  background: $status-at-risk-bg;
+  color: $status-at-risk-text;
+}
+
+// Info - Xanh dương (Info, Completed)
+.badge-info {
+  background: $color-info-bg;
+  color: $color-info-text;
+}
+
+// Primary - Xanh chủ đạo (New, Featured)
+.badge-primary {
+  background: $color-primary-light;
+  color: $color-primary;
+}

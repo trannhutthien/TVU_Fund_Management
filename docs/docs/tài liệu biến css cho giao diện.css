@@ -1,13 +1,4 @@
-/* ============================================================
-   DESIGN TOKENS — VibeDash Style
-   Phân tích từ UI mẫu, sẵn sàng áp dụng cho dự án TVU
-   Tác giả: Thiên | TVU Fund Management System
-   ============================================================ */
 
-/* ─────────────────────────────────────────
-   1. GOOGLE FONTS IMPORT
-   Font chính: Plus Jakarta Sans (giống VibeDash)
-   ───────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 /* ─────────────────────────────────────────

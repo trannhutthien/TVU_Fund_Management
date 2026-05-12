@@ -1,0 +1,31 @@
+// ============================================
+// CSS RESET
+// Công dụng: Reset CSS mặc định của browser
+// và custom scrollbar
+// ============================================
+
+// Reset box-sizing, margin, padding cho tất cả elements
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// HTML base - Font size 16px, font smoothing
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ── CUSTOM SCROLLBAR ────────────────────────
+// Scrollbar mỏng, đẹp (5px)
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { 
+  background: var(--border-default, #E2E8F0); 
+  border-radius: 9999px; 
+}
+::-webkit-scrollbar-thumb:hover { 
+  background: var(--text-muted, #94A3B8); 
+}

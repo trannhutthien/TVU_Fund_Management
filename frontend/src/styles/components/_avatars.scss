@@ -1,0 +1,44 @@
+// ============================================
+// AVATAR COMPONENTS
+// Công dụng: Hiển thị avatar người dùng
+// ============================================
+@use '../variables' as *;
+
+// Avatar - Hình tròn 36x36px
+// Dùng: <img class="avatar" src="..." alt="User" />
+// Hoặc: <div class="avatar">AB</div> (initials)
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  object-fit: cover;
+  background: $color-primary-light;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  color: $color-primary;
+  flex-shrink: 0;
+  border: 2px solid $bg-card;
+  box-shadow: $shadow-xs;
+}
+
+// ── AVATAR GROUP ────────────────────────────
+// Stacked avatars - Xếp chồng lên nhau
+// Dùng: <div class="avatar-group">
+//         <img class="avatar" ... />
+//         <img class="avatar" ... />
+//       </div>
+.avatar-group {
+  display: flex;
+  align-items: center;
+
+  .avatar {
+    margin-left: -8px; // Overlap 8px
+
+    &:first-child {
+      margin-left: 0; // Avatar đầu không overlap
+    }
+  }
+}

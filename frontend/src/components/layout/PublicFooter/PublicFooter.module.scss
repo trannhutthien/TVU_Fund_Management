@@ -1,0 +1,248 @@
+// ============================================
+// CSS VARIABLES - TVU FOOTER COLORS
+// ============================================
+:root {
+  --footer-bg: #0f1f3d;
+  --footer-text: rgba(255, 255, 255, 0.75);
+  --footer-text-bright: #ffffff;
+  --footer-gold: #f0a500;
+  --footer-gold-muted: rgba(240, 165, 0, 0.3);
+  --footer-border: rgba(255, 255, 255, 0.15);
+}
+
+// ============================================
+// FOOTER
+// ============================================
+.footer {
+  background: var(--footer-bg);
+  color: var(--footer-text);
+  border-top: 2px solid var(--footer-gold-muted);
+  padding: 60px 0 0;
+  
+  @media (max-width: 768px) {
+    padding: 40px 0 0;
+  }
+}
+
+// ============================================
+// CONTAINER
+// ============================================
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  
+  @media (max-width: 768px) {
+    padding: 0 16px;
+  }
+}
+
+// ============================================
+// MAIN CONTENT (3 Columns)
+// ============================================
+.content {
+  display: grid;
+  grid-template-columns: 35% 30% 35%;
+  gap: 48px;
+  margin-bottom: 48px;
+  
+  @media (max-width: 1023px) {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    
+    // Tablet: Column 2 & 3 side by side
+    .column:nth-child(2),
+    .column:nth-child(3) {
+      display: inline-block;
+      width: calc(50% - 20px);
+      vertical-align: top;
+    }
+    
+    .column:nth-child(2) {
+      margin-right: 40px;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    gap: 32px;
+    
+    // Mobile: All columns full width
+    .column:nth-child(2),
+    .column:nth-child(3) {
+      display: block;
+      width: 100%;
+      margin-right: 0;
+    }
+  }
+}
+
+// ============================================
+// COLUMN
+// ============================================
+.column {
+  display: flex;
+  flex-direction: column;
+  
+  @media (max-width: 767px) {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.columnTitle {
+  color: var(--footer-gold);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 24px 0;
+  
+  @media (max-width: 767px) {
+    margin-bottom: 20px;
+  }
+}
+
+// ============================================
+// COLUMN 1 - ORGANIZATION INFO
+// ============================================
+.logoSection {
+  margin-bottom: 24px;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  
+  @media (max-width: 767px) {
+    justify-content: center;
+    text-align: left;
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--footer-text);
+  margin-top: 2px;
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+.text {
+  color: var(--footer-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.link {
+  color: var(--footer-text);
+  font-size: 14px;
+  line-height: 1.6;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: var(--footer-gold);
+  }
+}
+
+// ============================================
+// COLUMN 2 - NAVIGATION
+// ============================================
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.navLink {
+  color: var(--footer-text);
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+  width: fit-content;
+  
+  &:hover {
+    color: var(--footer-gold);
+    transform: translateX(4px);
+  }
+  
+  @media (max-width: 767px) {
+    margin: 0 auto;
+  }
+}
+
+// ============================================
+// COLUMN 3 - SOCIAL CONNECT
+// ============================================
+.socialSection {
+  margin-bottom: 16px;
+  
+  @media (max-width: 767px) {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.socialDescription {
+  color: var(--footer-text);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 280px;
+  
+  @media (max-width: 767px) {
+    max-width: 100%;
+  }
+}
+
+// ============================================
+// COPYRIGHT BAR
+// ============================================
+.copyright {
+  border-top: 1px solid var(--footer-border);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.copyrightText {
+  color: var(--footer-text);
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.6;
+  
+  @media (max-width: 767px) {
+    font-size: 11px;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.footer {
+  animation: fadeInUp 0.6s ease-out;
+}

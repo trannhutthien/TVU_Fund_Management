@@ -1,0 +1,140 @@
+// ============================================
+// CARD COMPONENTS
+// Công dụng: Styles cho các loại card trong app
+// (card thường, stat card, icon wrapper, progress bar)
+// ============================================
+@use '../variables' as *;
+
+// ── BASE CARD ───────────────────────────────
+// Card cơ bản với shadow và hover effect
+// Dùng: <div class="card">...</div>
+.card {
+  background: $bg-card;
+  border-radius: $radius-xl;
+  border: 1px solid $border-card;
+  box-shadow: $shadow-sm;
+  padding: $card-padding;
+  transition: $transition-base;
+
+  // Hover: Nổi lên nhẹ
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-1px);
+  }
+}
+
+// Card nhỏ - Padding ít hơn
+// Dùng: <div class="card card-sm">...</div>
+.card-sm {
+  border-radius: $radius-lg;
+  padding: $card-padding-sm;
+}
+
+// ── STAT CARD ───────────────────────────────
+// Card hiển thị số liệu (4 ô trên dashboard)
+// Dùng: <div class="stat-card">...</div>
+.stat-card {
+  background: $bg-card;
+  border-radius: $radius-xl;
+  border: 1px solid $border-card;
+  box-shadow: $shadow-sm;
+  padding: $space-6;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  transition: $transition-base;
+
+  // Hover: Nổi lên nhiều hơn card thường
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+// ── ICON WRAPPER ────────────────────────────
+// Wrapper cho icon trong stat card (40x40px, bo tròn)
+// Dùng: <div class="icon-wrap icon-wrap--blue">...</div>
+.icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  // Variant xanh - Dùng cho revenue, money
+  &--blue {
+    background: $icon-bg-blue;
+    color: $icon-color-blue;
+  }
+
+  // Variant tím - Dùng cho users, people
+  &--purple {
+    background: $icon-bg-purple;
+    color: $icon-color-purple;
+  }
+
+  // Variant vàng - Dùng cho lightning, energy
+  &--yellow {
+    background: $icon-bg-yellow;
+    color: $icon-color-yellow;
+  }
+
+  // Variant xanh lá - Dùng cho check, done
+  &--teal {
+    background: $icon-bg-teal;
+    color: $icon-color-teal;
+  }
+}
+
+// ── DELTA INDICATOR ─────────────────────────
+// Hiển thị % thay đổi (tăng/giảm)
+// Dùng: <div class="delta delta--up">+12.5%</div>
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+
+  // Tăng - Màu xanh lá
+  &--up   { color: $color-success-text; }
+  
+  // Giảm - Màu đỏ
+  &--down { color: $color-danger-text; }
+  
+  // Không đổi - Màu xám
+  &--flat { color: $text-muted; }
+}
+
+// ── PROGRESS BAR ────────────────────────────
+// Thanh progress bar (track + fill)
+
+// Track - Nền của progress bar
+// Dùng: <div class="progress-track">...</div>
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: $border-light;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+// Fill - Phần đã hoàn thành
+// Dùng: <div class="progress-fill" style="width: 75%"></div>
+.progress-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  background: $color-primary;
+  transition: width 0.6s $ease-in-out;
+
+  // Variant success - Màu xanh lá
+  &--success { background: $color-success; }
+  
+  // Variant warning - Màu vàng
+  &--warning { background: $color-warning; }
+  
+  // Variant danger - Màu đỏ
+  &--danger  { background: $color-danger; }
+}

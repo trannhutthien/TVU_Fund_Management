@@ -1,0 +1,32 @@
+// ============================================
+// MAIN SCSS - TVU Fund Management
+// Design System: VibeDash-inspired
+// ============================================
+
+// 1. Variables & Tokens
+@use './variables' as *;
+
+// 2. Mixins & Functions
+@use './mixins' as *;
+
+// 3. Base & Reset
+@use './reset';
+@use './base';
+
+// 4. Components
+@use './components/buttons';
+@use './components/cards';
+@use './components/forms';
+@use './components/badges';
+@use './components/avatars';
+@use './components/tables';
+@use './components/modals';
+@use './components/toasts';
+
+// 5. Layout
+@use './layouts/sidebar';
+@use './layouts/grid';
+
+// 6. Utilities
+@use './utilities';
+

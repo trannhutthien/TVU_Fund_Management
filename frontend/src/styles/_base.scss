@@ -1,0 +1,101 @@
+// ============================================
+// BASE STYLES
+// Công dụng: Định nghĩa styles cơ bản cho toàn trang
+// và các typography utilities để format text
+// ============================================
+@use './variables' as *;
+
+// ── BODY STYLES ─────────────────────────────
+// Áp dụng font, màu, background cho toàn trang
+body {
+  font-family: $font-family;
+  font-size: $text-base;
+  font-weight: $font-regular;
+  line-height: $leading-normal;
+  color: $text-body;
+  background-color: $bg-page;
+}
+
+// ── TYPOGRAPHY UTILITIES ────────────────────
+// Các class để format text nhanh, dùng trong JSX
+
+// Display heading - Tiêu đề lớn nhất (36px, bold)
+// Dùng cho: Page title, hero heading
+.text-heading {
+  font-size: $text-4xl;
+  font-weight: $font-bold;
+  color: $text-heading;
+  letter-spacing: $tracking-tight;
+}
+
+// Card/Section title - Tiêu đề card (22px, semibold)
+// Dùng cho: Card header, section title
+.text-title {
+  font-size: $text-2xl;
+  font-weight: $font-semibold;
+  color: $text-heading;
+}
+
+// Sub-heading - Tiêu đề phụ (18px, semibold)
+// Dùng cho: Sub-section title
+.text-subtitle {
+  font-size: $text-xl;
+  font-weight: $font-semibold;
+  color: $text-heading;
+}
+
+// Body text - Text chính (14px, regular)
+// Dùng cho: Paragraph, description
+.text-body {
+  font-size: $text-base;
+  font-weight: $font-regular;
+  color: $text-body;
+}
+
+// Secondary text - Text phụ (12.8px, regular)
+// Dùng cho: Helper text, meta info
+.text-secondary {
+  font-size: $text-sm;
+  font-weight: $font-regular;
+  color: $text-secondary;
+}
+
+// Caption - Text nhỏ (11.2px, medium)
+// Dùng cho: Timestamp, footnote
+.text-caption {
+  font-size: $text-xs;
+  font-weight: $font-medium;
+  color: $text-muted;
+  letter-spacing: $tracking-wide;
+}
+
+// Label - Text ALL CAPS (11.2px, semibold)
+// Dùng cho: Form label, section label
+.text-label {
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  color: $text-secondary;
+  letter-spacing: $tracking-widest;
+  text-transform: uppercase;
+}
+
+// Stat number - Số liệu lớn (28px, bold)
+// Dùng cho: Số liệu trong stat card, metrics
+.text-stat {
+  font-size: $text-3xl;
+  font-weight: $font-bold;
+  color: $text-heading;
+  letter-spacing: $tracking-tight;
+  line-height: $leading-tight;
+}
+
+// ── DIVIDER ─────────────────────────────────
+// Đường kẻ ngang phân cách sections
+// Dùng: <hr class="divider" />
+.divider {
+  width: 100%;
+  height: 1px;
+  background: $border-light;
+  border: none;
+  margin: $space-4 0;
+}

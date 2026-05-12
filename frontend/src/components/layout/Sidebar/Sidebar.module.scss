@@ -1,0 +1,381 @@
+@use '@styles/variables' as *;
+
+// ============================================
+// CSS VARIABLES - SIDEBAR COLORS
+// ============================================
+:root {
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
+  --sidebar-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-text: rgba(255, 255, 255, 0.75);
+  --sidebar-text-bright: #ffffff;
+  --sidebar-gold: #f0a500;
+  --sidebar-navy: #1a2f5e;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-divider: rgba(255, 255, 255, 0.1);
+}
+
+// ============================================
+// SIDEBAR CONTAINER
+// ============================================
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease, transform 0.3s ease;
+  z-index: 900;
+  
+  // Collapsed state
+  &.sidebarCollapsed {
+    width: var(--sidebar-collapsed-width);
+  }
+  
+  // Mobile: hidden by default
+  @media (max-width: 767px) {
+    transform: translateX(-100%);
+    
+    &.sidebarMobileOpen {
+      transform: translateX(0);
+    }
+  }
+}
+
+// ============================================
+// MOBILE BACKDROP
+// ============================================
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 899;
+  animation: fadeIn 0.3s ease;
+  
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// ============================================
+// TOGGLE BUTTON
+// ============================================
+.toggleButton {
+  position: absolute;
+  top: 16px;
+  right: -16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sidebar-gold);
+  border: none;
+  color: var(--sidebar-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 10;
+  
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.3);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+// ============================================
+// SIDEBAR CONTENT (Scrollable)
+// ============================================
+.sidebarContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 60px 0 16px;
+  
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+// ============================================
+// NAVIGATION
+// ============================================
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// ============================================
+// NAV GROUP
+// ============================================
+.navGroup {
+  margin-bottom: 8px;
+}
+
+.navGroupTitle {
+  color: rgba(var(--sidebar-gold), 0.6);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 16px 16px 6px;
+  margin: 0;
+}
+
+.navGroupDivider {
+  height: 1px;
+  background: var(--sidebar-divider);
+  margin: 12px 16px;
+}
+
+.navGroupItems {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+// ============================================
+// NAV ITEM
+// ============================================
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin: 0 8px;
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+  
+  &:hover {
+    background: var(--sidebar-hover-bg);
+    color: var(--sidebar-text-bright);
+    
+    .navIcon {
+      color: var(--sidebar-text-bright);
+    }
+  }
+  
+  // Active state
+  &.navItemActive {
+    background: var(--sidebar-gold);
+    color: var(--sidebar-navy);
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.3);
+    
+    .navIcon {
+      color: var(--sidebar-navy);
+    }
+    
+    .navBadge {
+      background: var(--sidebar-navy);
+      color: var(--sidebar-gold);
+    }
+  }
+  
+  // Collapsed state
+  &.navItemCollapsed {
+    justify-content: center;
+    padding: 12px;
+    
+    .navIcon {
+      margin: 0;
+    }
+  }
+}
+
+.navIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--sidebar-text);
+  transition: color 0.2s ease;
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+.navLabel {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navBadge {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+// ============================================
+// SIDEBAR FOOTER (Fixed at bottom)
+// ============================================
+.sidebarFooter {
+  flex-shrink: 0;
+  border-top: 1px solid var(--sidebar-divider);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--sidebar-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  
+  &:hover {
+    background: var(--sidebar-hover-bg);
+    color: var(--sidebar-text-bright);
+    
+    .footerIcon {
+      color: var(--sidebar-text-bright);
+    }
+  }
+  
+  // Logout button (red theme)
+  &.footerItemLogout {
+    color: #fca5a5;
+    
+    .footerIcon {
+      color: #fca5a5;
+    }
+    
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      
+      .footerIcon {
+        color: #ef4444;
+      }
+    }
+  }
+}
+
+.footerIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--sidebar-text);
+  transition: color 0.2s ease;
+  
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+.footerLabel {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 767px) {
+  .sidebar {
+    width: 280px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+  }
+  
+  .sidebarContent {
+    padding-top: 24px;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sidebar {
+  animation: slideInLeft 0.3s ease-out;
+}

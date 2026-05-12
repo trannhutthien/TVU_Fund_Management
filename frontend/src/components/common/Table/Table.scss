@@ -1,0 +1,594 @@
+// ============================================
+// TABLE COMPONENT STYLES
+// Table với sorting, pagination, hover effects
+// ============================================
+
+@use '../../../styles/variables' as *;
+
+// ── CONTAINER ───────────────────────────────
+.table-container {
+  width: 100%;
+  background: $bg-card;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+  animation: tableFadeIn 0.4s $ease-default;
+}
+
+@keyframes tableFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ── TABLE WRAPPER ───────────────────────────
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-input;
+    border-radius: $radius-sm;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-default;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+// ── TABLE ───────────────────────────────────
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: $font-family;
+  font-size: $text-base;
+  color: $text-body;
+}
+
+// ── TABLE HEAD ──────────────────────────────
+.table-head {
+  background: $bg-sidebar-hover;
+  border-bottom: 2px solid $border-default;
+}
+
+// ── TABLE BODY ──────────────────────────────
+.table-body {
+  background: $bg-card;
+}
+
+// ── TABLE ROW ───────────────────────────────
+.table-row {
+  border-bottom: 1px solid $border-light;
+  transition: all $duration-fast $ease-default;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// ── TABLE CELL ──────────────────────────────
+.table-cell {
+  padding: $space-4 $space-4; // 16px
+  text-align: left;
+  vertical-align: middle;
+  transition: all $duration-fast $ease-default;
+}
+
+// Head cell
+.table-cell-head {
+  font-weight: $font-semibold;
+  color: $text-heading;
+  text-transform: uppercase;
+  font-size: $text-xs;
+  letter-spacing: $tracking-wide;
+  white-space: nowrap;
+  user-select: none;
+}
+
+// Cell content wrapper
+.table-cell-content {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+}
+
+// ── SORTABLE CELLS ──────────────────────────
+.table-cell-sortable {
+  cursor: pointer;
+
+  &:hover {
+    background: $bg-sidebar-active;
+    color: $color-primary;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.table-cell-sorted {
+  color: $color-primary;
+  background: $color-primary-light;
+}
+
+// Sort icon
+.table-sort-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: $text-muted;
+  transition: color $duration-fast $ease-default;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .table-cell-sortable:hover & {
+    color: $color-primary;
+  }
+
+  .table-cell-sorted & {
+    color: $color-primary;
+  }
+}
+
+// ── CHECKBOX ────────────────────────────────
+.table-cell-checkbox {
+  width: 48px;
+  padding: $space-4 $space-3;
+}
+
+.table-checkbox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+.table-checkbox-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid $border-default;
+  border-radius: $radius-xs;
+  background: $bg-card;
+  transition: all $duration-fast $ease-default;
+
+  // Checkmark
+  &::after {
+    content: '';
+    display: none;
+    width: 5px;
+    height: 9px;
+    border: solid $text-on-primary;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  // Hover
+  .table-checkbox:hover & {
+    border-color: $color-primary;
+  }
+
+  // Checked
+  input[type="checkbox"]:checked ~ & {
+    background: $color-primary;
+    border-color: $color-primary;
+
+    &::after {
+      display: block;
+    }
+  }
+
+  // Indeterminate
+  input[type="checkbox"]:indeterminate ~ & {
+    background: $color-primary;
+    border-color: $color-primary;
+
+    &::after {
+      display: block;
+      width: 10px;
+      height: 2px;
+      border: none;
+      background: $text-on-primary;
+      transform: none;
+    }
+  }
+}
+
+// ── HOVER EFFECTS ───────────────────────────
+.table-hoverable {
+  .table-row:hover {
+    background: $bg-sidebar-hover;
+    transform: scale(1.001);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+}
+
+// ── CLICKABLE ROWS ──────────────────────────
+.table-row-clickable {
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.998);
+  }
+}
+
+// ── SELECTED ROWS ───────────────────────────
+.table-row-selected {
+  background: $color-primary-light !important;
+  border-color: $color-primary-light;
+
+  &:hover {
+    background: $color-primary-light !important;
+  }
+}
+
+// ── STRIPED ROWS ────────────────────────────
+.table-striped {
+  .table-row:nth-child(even) {
+    background: $bg-input;
+  }
+}
+
+// ── BORDERED TABLE ──────────────────────────
+.table-bordered {
+  .table-cell {
+    border-right: 1px solid $border-light;
+
+    &:last-child {
+      border-right: none;
+    }
+  }
+}
+
+// ── SIZES ───────────────────────────────────
+
+// Small
+.table-sm {
+  font-size: $text-sm;
+
+  .table-cell {
+    padding: $space-2 $space-3; // 8px 12px
+  }
+}
+
+// Large
+.table-lg {
+  font-size: $text-md;
+
+  .table-cell {
+    padding: $space-5 $space-5; // 20px
+  }
+}
+
+// ── LOADING STATE ───────────────────────────
+.table-cell-loading {
+  padding: $space-12 !important;
+  text-align: center;
+}
+
+.table-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-3;
+  color: $text-muted;
+  font-size: $text-sm;
+}
+
+.table-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $border-light;
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ── EMPTY STATE ─────────────────────────────
+.table-cell-empty {
+  padding: $space-12 !important;
+  text-align: center;
+}
+
+.table-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-3;
+  color: $text-muted;
+
+  svg {
+    width: 48px;
+    height: 48px;
+    opacity: 0.5;
+  }
+
+  span {
+    font-size: $text-base;
+    font-weight: $font-medium;
+  }
+}
+
+// ── PAGINATION ──────────────────────────────
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-4 $space-5;
+  border-top: 1px solid $border-light;
+  background: $bg-input;
+}
+
+.table-pagination-info {
+  font-size: $text-sm;
+  color: $text-secondary;
+  font-weight: $font-medium;
+}
+
+.table-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+}
+
+.table-pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 $space-2;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-body;
+  background: $bg-card;
+  border: 1px solid $border-default;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $duration-fast $ease-default;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    background: $bg-sidebar-hover;
+    border-color: $color-primary;
+    color: $color-primary;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.table-pagination-btn-active {
+  background: $color-primary;
+  border-color: $color-primary;
+  color: $text-on-primary;
+  font-weight: $font-semibold;
+
+  &:hover {
+    background: $color-primary-hover;
+    border-color: $color-primary-hover;
+    color: $text-on-primary;
+  }
+}
+
+.table-pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  color: $text-muted;
+  font-weight: $font-semibold;
+}
+
+// ── RESPONSIVE ──────────────────────────────
+@media (max-width: 768px) {
+  .table-pagination {
+    flex-direction: column;
+    gap: $space-3;
+    align-items: stretch;
+  }
+
+  .table-pagination-info {
+    text-align: center;
+  }
+
+  .table-pagination-controls {
+    justify-content: center;
+  }
+
+  .table-cell {
+    padding: $space-3 $space-2;
+    font-size: $text-sm;
+  }
+
+  .table-cell-head {
+    font-size: 10px;
+  }
+}
+
+// ── UTILITY CLASSES ─────────────────────────
+
+// Text alignment
+.table-cell-center {
+  text-align: center;
+}
+
+.table-cell-right {
+  text-align: right;
+}
+
+// Status badges (dùng trong render)
+.table-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+.table-badge-success {
+  background: $color-success-bg;
+  color: $color-success-text;
+}
+
+.table-badge-warning {
+  background: $color-warning-bg;
+  color: $color-warning-text;
+}
+
+.table-badge-danger {
+  background: $color-danger-bg;
+  color: $color-danger-text;
+}
+
+.table-badge-info {
+  background: $color-info-bg;
+  color: $color-info-text;
+}
+
+.table-badge-default {
+  background: $bg-tag;
+  color: $text-secondary;
+}
+
+// Action buttons (dùng trong render)
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.table-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid $border-default;
+  border-radius: $radius-sm;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $duration-fast $ease-default;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: $bg-sidebar-hover;
+    border-color: $color-primary;
+    color: $color-primary;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.table-action-btn-danger {
+  &:hover {
+    background: $color-danger-bg;
+    border-color: $color-danger;
+    color: $color-danger;
+  }
+}
+
+// Avatar (dùng trong render)
+.table-avatar {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.table-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid $border-light;
+}
+
+.table-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: $bg-tag;
+  color: $color-primary;
+  font-weight: $font-semibold;
+  font-size: $text-sm;
+}
+
+.table-avatar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.table-avatar-name {
+  font-weight: $font-semibold;
+  color: $text-heading;
+  line-height: 1.2;
+}
+
+.table-avatar-email {
+  font-size: $text-xs;
+  color: $text-muted;
+  line-height: 1.2;
+}

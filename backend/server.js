@@ -10,6 +10,7 @@ import donorRoutes from "./routes/donorRoutes.js";
 import donationRoutes from "./routes/donationRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
+import statisticsRoutes from "./routes/statisticsRoutes.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use("/api/donors", donorRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/applications", applicationRoutes);
+app.use("/api/statistics", statisticsRoutes);
 
 // Test route
 app.get("/", (req, res) => {

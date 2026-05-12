@@ -1,0 +1,48 @@
+// ============================================
+// TABLE COMPONENTS
+// Công dụng: Styles cho bảng dữ liệu
+// ============================================
+@use '../variables' as *;
+
+// Table - Bảng với header uppercase và hover effect
+// Dùng: <table class="table">...</table>
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $text-base;
+
+  // Table header - Chữ nhỏ, uppercase, bold
+  th {
+    font-size: $text-xs;
+    font-weight: $font-semibold;
+    color: $text-secondary;
+    letter-spacing: $tracking-widest;
+    text-transform: uppercase;
+    padding: $space-3 $space-4;
+    border-bottom: 1px solid $border-default;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  // Table cell - Padding đều, border mờ
+  td {
+    padding: $space-4;
+    border-bottom: 1px solid $border-light;
+    color: $text-body;
+    vertical-align: middle;
+  }
+
+  // Row cuối - Không có border
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  // Body rows - Hover effect
+  tbody tr {
+    transition: $transition-fast;
+
+    &:hover {
+      background: $bg-page; // Nền xám nhạt khi hover
+    }
+  }
+}

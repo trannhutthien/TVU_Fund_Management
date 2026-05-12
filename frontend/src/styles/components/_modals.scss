@@ -1,0 +1,31 @@
+// ============================================
+// MODAL / OVERLAY COMPONENTS
+// Công dụng: Popup modal với overlay blur
+// ============================================
+@use '../variables' as *;
+
+// Modal overlay - Nền tối với blur effect
+// Dùng: <div class="modal-overlay">...</div>
+.modal-overlay {
+  position: fixed;
+  inset: 0; // top, right, bottom, left = 0
+  background: rgba(15, 23, 42, 0.40); // Nền tối 40%
+  backdrop-filter: blur(4px); // Blur nền phía sau
+  z-index: $z-overlay;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-4;
+}
+
+// Modal box - Content box của modal
+// Dùng: <div class="modal-box">...</div>
+.modal-box {
+  background: $bg-card;
+  border-radius: $radius-2xl;
+  box-shadow: $shadow-xl; // Shadow lớn
+  padding: $space-8;
+  max-width: 520px;
+  width: 100%;
+  border: 1px solid $border-card;
+}
