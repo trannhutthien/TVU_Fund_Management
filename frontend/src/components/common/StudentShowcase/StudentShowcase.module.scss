@@ -1,0 +1,260 @@
+@use '@styles/variables' as *;
+
+.studentShowcase {
+  position: relative;
+  animation: fadeInRight 0.8s ease-out 0.2s backwards;
+
+  @media (max-width: 968px) {
+    display: none;
+  }
+}
+
+.imageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+// ============================================
+// MAIN IMAGE
+// ============================================
+.mainImage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.imageContent {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.3s ease;
+
+  &.transitioning {
+    opacity: 0;
+  }
+}
+
+.studentImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+// Image overlay with student info
+.imageOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px;
+  background: linear-gradient(
+    to top,
+    rgba(26, 47, 94, 0.95) 0%,
+    rgba(26, 47, 94, 0.7) 50%,
+    transparent 100%
+  );
+  backdrop-filter: blur(8px);
+}
+
+.studentName {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-white);
+  margin: 0 0 4px 0;
+}
+
+.studentMajor {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+// Placeholder khi chưa có ảnh
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.placeholderIcon {
+  font-size: 80px;
+  opacity: 0.3;
+}
+
+.placeholderText {
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+
+// ============================================
+// IMAGE INDICATORS (Dots)
+// ============================================
+.imageIndicators {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(1.2);
+  }
+
+  &.active {
+    width: 24px;
+    border-radius: 4px;
+    background: var(--color-gold);
+  }
+}
+
+// ============================================
+// DECORATIVE CIRCLES
+// ============================================
+.decorCircle1,
+.decorCircle2,
+.decorCircle3 {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(240, 165, 0, 0.1);
+  border: 1px solid rgba(240, 165, 0, 0.2);
+  animation: float 6s ease-in-out infinite;
+}
+
+.decorCircle1 {
+  width: 120px;
+  height: 120px;
+  top: -20px;
+  right: -20px;
+  animation-delay: 0s;
+}
+
+.decorCircle2 {
+  width: 80px;
+  height: 80px;
+  bottom: 40px;
+  left: -20px;
+  animation-delay: 2s;
+}
+
+.decorCircle3 {
+  width: 60px;
+  height: 60px;
+  top: 50%;
+  left: -30px;
+  animation-delay: 4s;
+}
+
+// ============================================
+// FLOATING CARDS
+// ============================================
+.floatingCard {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  animation: floatCard 4s ease-in-out infinite;
+  z-index: 3;
+}
+
+.card1 {
+  top: 20%;
+  right: -40px;
+  animation-delay: 0s;
+}
+
+.card2 {
+  bottom: 15%;
+  left: -40px;
+  animation-delay: 2s;
+}
+
+.cardIcon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cardTitle {
+  font-size: 12px;
+  color: rgba(26, 47, 94, 0.7);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cardValue {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+@keyframes floatCard {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

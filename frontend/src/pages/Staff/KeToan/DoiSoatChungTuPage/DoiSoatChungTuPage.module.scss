@@ -1,0 +1,53 @@
+@use '../../../../styles/variables' as *;
+
+.page {
+  min-height: 100vh;
+  background: #f0f4ff;
+  padding: 24px;
+}
+
+// ─── PAGE HEADER ───────────────────────────────────────────────────────────────
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.headerLeft {
+  flex: 1;
+}
+
+.pageTitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 4px 0;
+}
+
+.pageSubtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    
+    button {
+      flex: 1;
+    }
+  }
+}

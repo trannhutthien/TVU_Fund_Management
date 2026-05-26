@@ -1,0 +1,329 @@
+@use '@styles/variables' as *;
+
+// ============================================
+// REGISTER FORM WRAPPER
+// ============================================
+.register-form-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-4;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+// Background overlay
+.register-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba($color-primary, 0.1) 0%,
+    rgba($color-primary-dark, 0.15) 100%
+  );
+  backdrop-filter: blur(8px);
+  z-index: -1;
+}
+
+// ============================================
+// REGISTER CARD - SAME SIZE AS LOGIN
+// ============================================
+.register-form-card {
+  position: relative;
+  background: $bg-card;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-xl;
+  padding: $space-6;
+  width: 100%;
+  max-width: 420px; // Same as LoginForm
+  animation: fadeInUp 0.4s ease-out;
+
+  @media (max-width: 640px) {
+    padding: $space-5;
+    max-width: 100%;
+  }
+}
+
+// ============================================
+// LOGO
+// ============================================
+.register-form-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: $space-4;
+}
+
+// ============================================
+// TITLE & SUBTITLE
+// ============================================
+.register-form-title {
+  font-size: $text-xl;
+  font-weight: $font-bold;
+  color: $color-primary-dark;
+  text-align: center;
+  margin-bottom: $space-1;
+  letter-spacing: 0.5px;
+
+  @media (max-width: 640px) {
+    font-size: $text-lg;
+  }
+}
+
+.register-form-subtitle {
+  font-size: $text-xs;
+  color: $text-secondary;
+  text-align: center;
+  margin-bottom: $space-4;
+  line-height: 1.5;
+}
+
+// ============================================
+// TABS
+// ============================================
+.register-form-tabs {
+  display: flex;
+  gap: 0;
+  background: #f1f5f9;
+  border-radius: $radius-md;
+  padding: 4px;
+  margin-bottom: $space-4;
+}
+
+.register-form-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover {
+    color: $color-primary;
+  }
+
+  &.register-form-tab-active {
+    background: $color-primary;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba($color-primary, 0.3);
+  }
+}
+
+// ============================================
+// FORM
+// ============================================
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  margin-bottom: $space-2;
+}
+
+// Field container
+.register-form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+// Field row (2 columns)
+.register-form-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $space-3;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Label
+.register-form-label {
+  display: block;
+  font-size: 10px;
+  font-weight: $font-semibold;
+  color: $color-primary-dark;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+// Input wrapper
+.register-form-input-wrapper {
+  position: relative;
+  border: 1.5px solid $border-default;
+  border-radius: $radius-md;
+  height: 40px;
+  transition: all $transition-base;
+
+  &:focus-within {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+
+  &.register-form-input-error {
+    border-color: $color-danger;
+  }
+}
+
+// Icon left
+.register-form-icon-left {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-muted;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+// Input field
+.register-form-input {
+  width: 100%;
+  height: 100%;
+  padding: 0 12px 0 38px;
+  border: none;
+  outline: none;
+  font-size: $text-sm;
+  color: $text-heading;
+  background: transparent;
+  border-radius: $radius-md;
+
+  &::placeholder {
+    color: $text-muted;
+    font-size: $text-xs;
+  }
+
+  &.register-form-input-password {
+    padding-right: 40px;
+  }
+}
+
+// Password toggle button
+.register-form-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+  transition: color $transition-base;
+
+  &:hover {
+    color: $color-primary;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Select wrapper
+.register-form-select-wrapper {
+  position: relative;
+}
+
+.register-form-select {
+  width: 100%;
+  height: 100%;
+  padding: 0 38px 0 12px;
+  border: none;
+  outline: none;
+  font-size: $text-sm;
+  color: $text-heading;
+  background: transparent;
+  border-radius: $radius-md;
+  cursor: pointer;
+  appearance: none;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.register-form-select-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-muted;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+// Error text
+.register-form-error-text {
+  display: block;
+  font-size: 11px;
+  color: $color-danger;
+  margin-top: 4px;
+  margin-left: 2px;
+}
+
+// Hint text (for email suggestion)
+.register-form-hint-text {
+  display: block;
+  font-size: 11px;
+  color: $color-warning-text;
+  margin-top: 4px;
+  margin-left: 2px;
+  font-style: italic;
+}
+
+// ============================================
+// SUBMIT BUTTON
+// ============================================
+.register-form-submit {
+  width: 100%;
+  margin-top: $space-2;
+  font-weight: $font-bold;
+  letter-spacing: 0.5px;
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 640px) {
+  .register-form-wrapper {
+    padding: $space-3;
+  }
+
+  .register-form-card {
+    box-shadow: $shadow-lg;
+  }
+
+  .register-form-tab {
+    font-size: $text-xs;
+    padding: 6px 10px;
+  }
+}

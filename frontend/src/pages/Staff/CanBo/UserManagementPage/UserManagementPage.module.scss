@@ -1,0 +1,142 @@
+.page {
+  min-height: 100vh;
+  background: #f0f4ff;
+  padding: 24px;
+}
+
+.inner {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.breadcrumbSep { color: #cbd5e1; }
+
+.breadcrumbActive {
+  color: var(--color-navy-blue, #1a2f5e);
+  font-weight: 600;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.tabBar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: #fff;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+  width: fit-content;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+}
+
+.tabActive {
+  background: var(--color-navy-blue, #1a2f5e);
+  color: #fff;
+
+  &:hover {
+    background: var(--color-navy-blue, #1a2f5e);
+    color: #fff;
+  }
+}
+
+.tabIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.pageBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: var(--color-navy-blue, #1a2f5e);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background: #f8f9ff;
+    border-color: var(--color-navy-blue, #1a2f5e);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: #475569;
+}
+
+.pageTotal {
+  color: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .page { padding: 16px; }
+  .tabBar { width: 100%; }
+  .tab { flex: 1; justify-content: center; }
+}

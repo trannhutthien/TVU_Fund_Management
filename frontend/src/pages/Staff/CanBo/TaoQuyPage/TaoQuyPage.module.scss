@@ -1,0 +1,382 @@
+// ============================================
+// TAO QUY PAGE — Trang form tạo quỹ
+// ============================================
+
+.page {
+  min-height: 100vh;
+  background: #f0f4ff;
+  padding: 24px;
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+// ── Breadcrumb ──────────────────────────────
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.crumbLink {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-primary, #3b6ff5);
+  }
+}
+
+.crumbSep {
+  color: #cbd5e1;
+}
+
+// ── Page header ─────────────────────────────
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.headerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-navy-blue, #1a2f5e);
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+// ── Form ────────────────────────────────────
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Section ─────────────────────────────────
+.section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+  border: 1px solid #f1f5f9;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sectionIcon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary, #3b6ff5);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.sectionDesc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+// ── Grid ────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.colFull {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  grid-column: 1 / -1;
+}
+
+// ── Label ───────────────────────────────────
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+// ── Select ──────────────────────────────────
+.select {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b6ff5);
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.15);
+  }
+}
+
+.selectError {
+  border-color: #ef4444;
+
+  &:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  }
+}
+
+// ── Textarea ────────────────────────────────
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b6ff5);
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.15);
+  }
+
+  &::placeholder {
+    color: #cbd5e1;
+  }
+}
+
+.textareaError {
+  border-color: #ef4444;
+
+  &:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  }
+}
+
+// ── Date input ──────────────────────────────
+.dateInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+  }
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b6ff5);
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.15);
+  }
+}
+
+// ── Field footer ────────────────────────────
+.fieldFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 16px;
+  gap: 8px;
+}
+
+.errorMsg {
+  font-size: 12px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.counter {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+// ── Image upload ────────────────────────────
+.imageBlock {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.imagePreview {
+  width: 240px;
+  height: 160px;
+  border-radius: 10px;
+  border: 1.5px dashed #cbd5e1;
+  overflow: hidden;
+  background: #f8f9ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.previewPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.previewIcon {
+  width: 36px;
+  height: 36px;
+}
+
+.imageActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.hiddenFile {
+  display: none;
+}
+
+// ── Footer ──────────────────────────────────
+.footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 20px;
+  box-shadow: 0 -2px 12px rgba(26, 47, 94, 0.08);
+  flex-wrap: wrap;
+}
+
+.footerRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// ── Responsive ──────────────────────────────
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px;
+  }
+
+  .section {
+    padding: 16px;
+  }
+
+  .imageBlock {
+    flex-direction: column;
+  }
+
+  .imagePreview {
+    width: 100%;
+    height: 200px;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footerRight {
+    justify-content: stretch;
+    > * {
+      flex: 1;
+    }
+  }
+}

@@ -1,5 +1,211 @@
 import DonationModel from "../models/DonationModel.js";
 import FundModel from "../models/FundModel.js";
+import DonorModel from "../models/DonorModel.js";
+import { buildDonorAvatarUrl } from "../utils/imageHelper.js";
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/donations (CHO KẾ TOÁN/ADMIN/CÁN BỘ) ─────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// Query: keyword, quy_id, loai_ntt, trang_thai, tu_ngay, den_ngay, page, page_size
+export const listDonations = async (req, res) => {
+  try {
+    const {
+      keyword = '',
+      quy_id = '',
+      loai_ntt = '',
+      trang_thai = '',
+      tu_ngay = '',
+      den_ngay = '',
+      page = 1,
+      page_size = 15,
+    } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(page_size, 10) || 15));
+
+    const { rows, total } = await DonationModel.listDonations({
+      keyword: String(keyword).trim(),
+      quy_id: String(quy_id).trim(),
+      loai_ntt: String(loai_ntt).trim(),
+      trang_thai: String(trang_thai).trim(),
+      tu_ngay: String(tu_ngay).trim(),
+      den_ngay: String(den_ngay).trim(),
+      page: pageNum,
+      page_size: pageSize,
+    });
+
+    const data = rows.map((r) => ({
+      khoan_tai_tro_id: r.khoan_tai_tro_id,
+      nha_tai_tro_id: r.nha_tai_tro_id,
+      quy_id: r.quy_id,
+      ten_nha_tai_tro: r.ten_nha_tai_tro,
+      loai_ntt: r.loai_ntt,
+      ho_ten: r.ho_ten,
+      email: r.email,
+      so_dien_thoai: r.so_dien_thoai,
+      avatar: buildDonorAvatarUrl(r.avatar),
+      ten_quy: r.ten_quy,
+      loai_quy: r.loai_quy,
+      so_tien: Number(r.so_tien) || 0,
+      hinh_anh_minh_chung: r.hinh_anh_minh_chung,
+      ngay_tai_tro: r.ngay_tai_tro,
+      trang_thai: r.trang_thai,
+      ghi_chu: r.ghi_chu,
+      ngay_cap_nhat: r.ngay_cap_nhat,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        page: pageNum,
+        page_size: pageSize,
+        total,
+        total_pages: Math.ceil(total / pageSize),
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi listDonations:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/donations/stats (CHO KẾ TOÁN) ────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getDonationStats = async (_req, res) => {
+  try {
+    const stats = await DonationModel.getDonationStatsForKeToan();
+    return res.status(200).json({ success: true, data: stats });
+  } catch (error) {
+    console.error("Lỗi getDonationStats:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/donations/:id (CHI TIẾT + LỊCH SỬ PHÊ DUYỆT) ─────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getDonationDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID không hợp lệ" });
+    }
+
+    const donation = await DonationModel.getDonationById(id);
+    if (!donation) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy khoản tài trợ" });
+    }
+
+    const lichSu = await DonationModel.getPheDuyetByKhoanTaiTro(id);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        khoan_tai_tro_id: donation.khoan_tai_tro_id,
+        nha_tai_tro_id: donation.nha_tai_tro_id,
+        quy_id: donation.quy_id,
+        ten_nha_tai_tro: donation.ten_nha_tai_tro,
+        loai_ntt: donation.loai_ntt,
+        ho_ten: donation.ho_ten,
+        email: donation.email,
+        so_dien_thoai: donation.so_dien_thoai,
+        avatar: buildDonorAvatarUrl(donation.avatar),
+        ten_quy: donation.ten_quy,
+        loai_quy: donation.loai_quy,
+        quy_so_du: Number(donation.quy_so_du) || 0,
+        so_tien: Number(donation.so_tien) || 0,
+        hinh_anh_minh_chung: donation.hinh_anh_minh_chung,
+        ngay_tai_tro: donation.ngay_tai_tro,
+        trang_thai: donation.trang_thai,
+        ghi_chu: donation.ghi_chu,
+        ngay_cap_nhat: donation.ngay_cap_nhat,
+        lich_su_phe_duyet: lichSu.map((h) => ({
+          phe_duyet_id: h.phe_duyet_id,
+          cap_do_duyet: h.cap_do_duyet,
+          ket_qua: h.ket_qua,
+          ghi_chu: h.ghi_chu,
+          ly_do_tu_choi: h.ly_do_tu_choi,
+          ngay_tao: h.ngay_tao,
+          ngay_duyet: h.ngay_duyet,
+          nguoi_duyet_id: h.nguoi_duyet_id,
+          nguoi_duyet_ten: h.nguoi_duyet_ten,
+          nguoi_duyet_avatar: buildDonorAvatarUrl(h.nguoi_duyet_avatar),
+          nguoi_duyet_vai_tro: h.nguoi_duyet_vai_tro,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi getDonationDetail:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── POST /api/donations (CHO CÁN BỘ QUỸ - YÊU CẦU TOKEN) ─────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// MỤC ĐÍCH: Cán bộ Quỹ ghi nhận 1 khoản tài trợ mới từ nhà tài trợ đã có
+//   - Khác với /public ở chỗ: có auth, nha_tai_tro_id đã biết, hỗ trợ minh chứng
+//   - Trạng thái mặc định = 'Cho duyet' (chờ Kế toán/Admin duyệt)
+//
+// BODY:
+//   nha_tai_tro_id, quy_id, so_tien (>0), ghi_chu?, hinh_anh_minh_chung?
+//
+export const createStaffDonation = async (req, res) => {
+  try {
+    const { nha_tai_tro_id, quy_id, so_tien, ghi_chu, hinh_anh_minh_chung } = req.body;
+
+    if (!nha_tai_tro_id || isNaN(nha_tai_tro_id)) {
+      return res.status(400).json({ success: false, message: "Thiếu hoặc sai nha_tai_tro_id" });
+    }
+    if (!quy_id || isNaN(quy_id)) {
+      return res.status(400).json({ success: false, message: "Thiếu hoặc sai quy_id" });
+    }
+    const amount = Number(so_tien);
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: "Số tiền phải lớn hơn 0" });
+    }
+
+    const donor = await DonorModel.getDonorById(nha_tai_tro_id);
+    if (!donor) {
+      return res.status(404).json({ success: false, message: "Nhà tài trợ không tồn tại" });
+    }
+
+    const fund = await FundModel.getFundById(quy_id);
+    if (!fund) {
+      return res.status(404).json({ success: false, message: "Quỹ không tồn tại" });
+    }
+    if (fund.trang_thai !== 'Dang hoat dong') {
+      return res.status(400).json({ success: false, message: "Quỹ hiện không nhận đóng góp" });
+    }
+
+    const result = await DonationModel.createStaffDonation({
+      nhaTaiTroId: nha_tai_tro_id,
+      quyId: quy_id,
+      soTien: amount,
+      ghiChu: ghi_chu ? String(ghi_chu).trim() : null,
+      hinhAnhMinhChung: hinh_anh_minh_chung || null,
+      nguoiDuyetId: req.user?.id || null,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Ghi nhận khoản tài trợ thành công. Chờ duyệt.",
+      data: {
+        khoan_tai_tro_id: result.khoanTaiTroId,
+        nha_tai_tro_id,
+        quy_id,
+        so_tien: amount,
+        trang_thai: 'Cho duyet',
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi createStaffDonation:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
+  }
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── POST /api/donations/public (API PUBLIC - KHÔNG CẦN TOKEN) ─────────────────
@@ -196,6 +402,7 @@ export const createPublicDonation = async (req, res) => {
 export const approveDonation = async (req, res) => {
   try {
     const { id } = req.params;
+    const { ghi_chu, minh_chung_ke_toan } = req.body || {};
     const nguoiDuyetId = req.user.id; // Lấy từ middleware protect
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -223,7 +430,7 @@ export const approveDonation = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
     // ─────────────────────────────────────────────────────────────────────────
-    // Chỉ cho phép duyệt khoản tài trợ đang ở trạng thái "Chờ duyệt"
+    // Cho phép duyệt khoản tài trợ đang ở 'Cho duyet' (public) hoặc 'Da duyet' (staff đã ghi nhận)
     if (donation.trang_thai === 'Da nhan') {
       return res.status(400).json({
         success: false,
@@ -238,7 +445,7 @@ export const approveDonation = async (req, res) => {
       });
     }
 
-    if (donation.trang_thai !== 'Cho duyet') {
+    if (donation.trang_thai !== 'Cho duyet' && donation.trang_thai !== 'Da duyet') {
       return res.status(400).json({
         success: false,
         message: "Chỉ có thể duyệt khoản tài trợ đang ở trạng thái 'Chờ duyệt'",
@@ -252,7 +459,10 @@ export const approveDonation = async (req, res) => {
     // - Cập nhật trạng thái khoản tài trợ
     // - Cộng tiền vào quỹ
     // - Tạo giao dịch
-    const result = await DonationModel.approveDonation(id, nguoiDuyetId);
+    const result = await DonationModel.approveDonation(id, nguoiDuyetId, {
+      ghiChu: ghi_chu ? String(ghi_chu).trim() : null,
+      minhChungKeToan: minh_chung_ke_toan || null,
+    });
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: TRẢ VỀ KẾT QUẢ
@@ -274,7 +484,7 @@ export const approveDonation = async (req, res) => {
           loaiQuy: donation.loai_quy
         },
         soTien: donation.so_tien,
-        trangThaiCu: 'Cho duyet',
+        trangThaiCu: donation.trang_thai,
         trangThaiMoi: 'Da nhan',
         ngayTaiTro: donation.ngay_tai_tro,
         ngayDuyet: new Date(),
@@ -367,17 +577,17 @@ export const rejectDonation = async (req, res) => {
       });
     }
 
-    if (donation.trang_thai !== 'Cho duyet') {
+    if (donation.trang_thai !== 'Cho duyet' && donation.trang_thai !== 'Da duyet') {
       return res.status(400).json({
         success: false,
-        message: "Chỉ có thể từ chối khoản tài trợ đang ở trạng thái 'Chờ duyệt'",
+        message: "Chỉ có thể từ chối khoản tài trợ đang ở trạng thái 'Chờ duyệt' hoặc 'Đã duyệt'",
       });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 4: TỪ CHỐI KHOẢN TÀI TRỢ
     // ─────────────────────────────────────────────────────────────────────────
-    await DonationModel.rejectDonation(id, lyDoTuChoi.trim());
+    await DonationModel.rejectDonation(id, lyDoTuChoi.trim(), nguoiTuChoiId);
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: TRẢ VỀ KẾT QUẢ
@@ -398,7 +608,7 @@ export const rejectDonation = async (req, res) => {
           tenQuy: donation.ten_quy
         },
         soTien: donation.so_tien,
-        trangThaiCu: 'Cho duyet',
+        trangThaiCu: donation.trang_thai,
         trangThaiMoi: 'Tu choi',
         lyDoTuChoi: lyDoTuChoi.trim(),
         ngayTuChoi: new Date(),

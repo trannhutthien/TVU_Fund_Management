@@ -1,0 +1,232 @@
+// ============================================
+// QUY DETAIL DRAWER — Drawer xem chi tiết quỹ
+// ============================================
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 480px;
+  max-width: 100vw;
+  background: #fff;
+  box-shadow: -8px 0 32px rgba(26, 47, 94, 0.12);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.25s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+// ── Header ──────────────────────────────────
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+// ── Body ────────────────────────────────────
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+// ── Cover ───────────────────────────────────
+.cover {
+  width: 100%;
+  height: 180px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a2f5e 0%, #3b6ff5 100%);
+}
+
+.coverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coverIcon {
+  width: 56px;
+  height: 56px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+// ── Title row ───────────────────────────────
+.titleRow {
+  margin-top: 16px;
+}
+
+.fundName {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  line-height: 1.3;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.loaiBadge {
+  background: var(--color-gold, #f0a500);
+  color: var(--color-navy-blue, #1a2f5e);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+// ── Info grid ───────────────────────────────
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.infoValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.balanceValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.urgent {
+  color: #ef4444;
+}
+
+// ── Điều kiện box ───────────────────────────
+.dieuKienBox {
+  margin-top: 20px;
+  background: rgba(240, 165, 0, 0.08);
+  border-left: 3px solid var(--color-gold, #f0a500);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+.dieuKienLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-gold, #f0a500);
+}
+
+.dieuKienText {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+// ── Mô tả ───────────────────────────────────
+.moTaBlock {
+  margin-top: 20px;
+}
+
+.moTaLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.moTaText {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+// ── Footer ──────────────────────────────────
+.footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
+  position: sticky;
+  bottom: 0;
+}
+
+.actionBtn {
+  width: 100%;
+  justify-content: center;
+}
+
+// ── Responsive ──────────────────────────────
+@media (max-width: 640px) {
+  .drawer {
+    width: 100vw;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

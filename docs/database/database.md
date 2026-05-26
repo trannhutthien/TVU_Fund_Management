@@ -1,304 +1,512 @@
-CREATE TABLE `nguoidung` (
+CREATE TABLE vaitro (
+    role_id INT(11) NOT NULL AUTO_INCREMENT,
+    ten_vai_tro VARCHAR(100) CHARACTER SET utf8 
+        COLLATE utf8_general_ci NOT NULL,
+    mo_ta VARCHAR(255) CHARACTER SET utf8 
+        COLLATE utf8_general_ci DEFAULT NULL,
+    trang_thai VARCHAR(50) CHARACTER SET utf8 
+        COLLATE utf8_general_ci DEFAULT 'HOAT_DONG',
+
+    PRIMARY KEY (role_id),
+    UNIQUE KEY uk_ten_vai_tro (ten_vai_tro)
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
+
+
+CREATE TABLE nguoidung (
+    user_id           INT(11)      NOT NULL AUTO_INCREMENT,
+    ma_so_dinh_danh   VARCHAR(20)  NOT NULL,
+    ho_ten            VARCHAR(150) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+    email             VARCHAR(150) NOT NULL,
+    mat_khau          VARCHAR(255) NOT NULL,
+    avatar            VARCHAR(500) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+
+    so_dien_thoai     VARCHAR(20)  DEFAULT NULL,           -- ✅ Thêm mới
+    dia_chi           VARCHAR(255) CHARACTER SET utf8 
+                      COLLATE utf8_general_ci DEFAULT NULL, -- ✅ Thêm mới
+
+    role_id           INT(11)      NOT NULL,
+
+    loai_tai_khoan    ENUM('SINH_VIEN','NHA_TAI_TRO')      -- ✅ Thêm mới
+                      DEFAULT NULL,
+                      -- NULL     → admin, giao_vu, ke_toan
+                      -- SINH_VIEN  → sinh viên TVU
+                      -- NHA_TAI_TRO → nhà tài trợ
+
+    khoa_phong        VARCHAR(100) CHARACTER SET utf8 
+                      COLLATE utf8_general_ci DEFAULT NULL,
+                      -- Chỉ SINH_VIEN mới có giá trị
+
+    trang_thai        VARCHAR(50)  CHARACTER SET utf8 
+                      COLLATE utf8_general_ci NOT NULL DEFAULT 'HOAT_DONG',
+    created_at        DATETIME     DEFAULT CURRENT_TIMESTAMP,
+
+    -- ❌ Đã xóa: so_tai_khoan, ten_ngan_hang, chu_tai_khoan
+    --    → Chuyển sang bảng taikhoannganhang
+
+    PRIMARY KEY (user_id),
+    UNIQUE KEY uk_ma_so_dinh_danh (ma_so_dinh_danh),
+    UNIQUE KEY uk_email (email),
+    UNIQUE KEY uk_so_dien_thoai (so_dien_thoai),
+    KEY idx_role_id (role_id),
+
+    CONSTRAINT fk_nguoidung_vaitro
+        FOREIGN KEY (role_id) REFERENCES vaitro(role_id)
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
+
+
+CREATE TABLE taikhoannganhang (
+    tai_khoan_id  INT(11)      NOT NULL AUTO_INCREMENT,
+    user_id       INT(11)      NOT NULL,
+    so_tai_khoan  VARCHAR(50)  NOT NULL,
+    ten_ngan_hang VARCHAR(150) CHARACTER SET utf8 
+                  COLLATE utf8_general_ci NOT NULL,
+    chu_tai_khoan VARCHAR(150) CHARACTER SET utf8 
+                  COLLATE utf8_general_ci NOT NULL,
+
+    -- Đánh dấu tài khoản mặc định nhận giải ngân
+    la_mac_dinh   TINYINT(1)   NOT NULL DEFAULT 0,
+
+    created_at    DATETIME     DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (tai_khoan_id),
+    KEY idx_user_id (user_id),
+
+    CONSTRAINT fk_tknhang_nguoidung
+        FOREIGN KEY (user_id) REFERENCES nguoidung(user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
+
+
+
+
+CREATE TABLE quy (
+    quy_id INT(11) NOT NULL AUTO_INCREMENT,
+
+    -- Tên quỹ / chương trình hỗ trợ
+    ten_quy VARCHAR(150) CHARACTER SET utf8
+        COLLATE utf8_general_ci NOT NULL,
+
+    -- Loại quỹ
+    loai_quy ENUM(
+        'Tu thien',
+        'Hoc bong',
+        'Y te',
+        'Moi truong',
+        'Khac'
+    ) NOT NULL,
+
+    -- Mô tả chi tiết về quỹ
+    mo_ta VARCHAR(255) CHARACTER SET utf8
+        COLLATE utf8_general_ci DEFAULT NULL,
+
+    -- Ảnh banner / ảnh đại diện quỹ
+    hinh_anh VARCHAR(500) DEFAULT NULL,
+
+    -- Số tiền hỗ trợ tối thiểu cho mỗi suất
+    so_tien_toi_thieu DECIMAL(18,2) DEFAULT NULL,
+
+    -- Số tiền hỗ trợ tối đa cho mỗi suất
+    so_tien_toi_da DECIMAL(18,2) DEFAULT NULL,
+
+    -- Tổng số lượng suất hỗ trợ
+    so_luong_chi_tieu INT(11) DEFAULT NULL,
+
+    -- Hạn cuối nhận hồ sơ đăng ký
+    han_nop_don DATE DEFAULT NULL,
+
+    -- Điều kiện ngắn gọn hiển thị ngoài giao diện
+    dieu_kien_tom_tat VARCHAR(200) CHARACTER SET utf8
+        COLLATE utf8_general_ci DEFAULT NULL,
+
+    -- Số dư hiện tại của quỹ
+    so_du DECIMAL(18,2) NOT NULL DEFAULT 0.00,
 
-&#x20; `user\_id` int(11) NOT NULL AUTO\_INCREMENT,
+    -- Ngày tạo quỹ
+    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Ngày cập nhật gần nhất
+    ngay_cap_nhat DATETIME DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    -- Trạng thái hoạt động của quỹ
+    trang_thai ENUM(
+        'Dang hoat dong',
+        'Tam dung',
+        'Da dong'
+    ) NOT NULL DEFAULT 'Dang hoat dong',
+
+    PRIMARY KEY (quy_id),
 
-&#x20; `ma\_so\_dinh\_danh` varchar(20) NOT NULL,
+    -- Validate số tiền tối thiểu không âm
+    CONSTRAINT chk_quy_so_tien_toi_thieu
+        CHECK (
+            so_tien_toi_thieu IS NULL
+            OR so_tien_toi_thieu >= 0
+        ),
 
-&#x20; `ho\_ten` varchar(150) CHARACTER SET utf8 COLLATE utf8\_general\_ci NOT NULL,
+    -- Validate số tiền tối đa không âm
+    CONSTRAINT chk_quy_so_tien_toi_da
+        CHECK (
+            so_tien_toi_da IS NULL
+            OR so_tien_toi_da >= 0
+        ),
 
-&#x20; `email` varchar(150) NOT NULL,
+    -- Validate số lượng chỉ tiêu > 0
+    CONSTRAINT chk_quy_so_luong_chi_tieu
+        CHECK (
+            so_luong_chi_tieu IS NULL
+            OR so_luong_chi_tieu > 0
+        ),
 
-&#x20; `mat\_khau` varchar(255) NOT NULL,
+    -- Validate tiền tối đa >= tiền tối thiểu
+    CONSTRAINT chk_quy_khoang_tien
+        CHECK (
+            so_tien_toi_thieu IS NULL
+            OR so_tien_toi_da IS NULL
+            OR so_tien_toi_da >= so_tien_toi_thieu
+        )
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
 
-&#x20; `avatar` varchar(500) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
 
-&#x20; `so\_tai\_khoan` varchar(50) DEFAULT NULL,
+CREATE TABLE nhataitro (
+    nha_tai_tro_id INT(11) NOT NULL AUTO_INCREMENT,
+
+    user_id INT(11) NOT NULL,
+    -- Liên kết với bảng nguoidung
+    -- Mỗi nhà tài trợ bắt buộc phải có tài khoản đăng nhập
 
-&#x20; `ten\_ngan\_hang` varchar(150) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
+    ten_nha_tai_tro VARCHAR(150) CHARACTER SET utf8
+        COLLATE utf8_general_ci NOT NULL,
+    -- Tên tổ chức / doanh nghiệp / cá nhân tài trợ
 
-&#x20; `chu\_tai\_khoan` varchar(150) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
+    loai VARCHAR(50) CHARACTER SET utf8
+        COLLATE utf8_general_ci NOT NULL DEFAULT 'Ca nhan',
+    -- Ca nhan | Doanh nghiep | To chuc phi loi nhuan
 
-&#x20; `role\_id` int(11) NOT NULL,
+    -- =====================================================
+    -- THỐNG KÊ TÀI TRỢ
+    -- =====================================================
 
-&#x20; `khoa\_phong` varchar(100) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
+    tong_so_tien_da_tai_tro DECIMAL(18,2)
+        NOT NULL DEFAULT 0.00,
+    -- Tổng số tiền đã tài trợ thành công
 
-&#x20; `trang\_thai` varchar(50) CHARACTER SET utf8 COLLATE utf8\_general\_ci NOT NULL DEFAULT 'HOAT\_DONG',
+    so_lan_tai_tro INT(11)
+        NOT NULL DEFAULT 0,
+    -- Tổng số lần tài trợ thành công
 
-&#x20; `created\_at` datetime DEFAULT current\_timestamp(),
+    so_quy_da_ho_tro INT(11)
+        NOT NULL DEFAULT 0,
+    -- Đã hỗ trợ bao nhiêu quỹ khác nhau
 
-&#x20; PRIMARY KEY (`user\_id`),
+    lan_tai_tro_gan_nhat DATETIME DEFAULT NULL,
+    -- Ngày tài trợ gần nhất
 
-&#x20; UNIQUE KEY `ma\_so\_dinh\_danh` (`ma\_so\_dinh\_danh`),
+    -- =====================================================
 
-&#x20; UNIQUE KEY `email` (`email`),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-&#x20; KEY `role\_id` (`role\_id`),
+    ngay_cap_nhat DATETIME DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
-&#x20; CONSTRAINT `nguoidung\_ibfk\_1` FOREIGN KEY (`role\_id`) REFERENCES `vaitro` (`role\_id`)
+    PRIMARY KEY (nha_tai_tro_id),
 
-) ENGINE=InnoDB AUTO\_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
+    UNIQUE KEY uk_nhataitro_user_id (user_id),
 
+    KEY idx_loai (loai),
 
+    CONSTRAINT fk_nhataitro_nguoidung
+        FOREIGN KEY (user_id)
+        REFERENCES nguoidung(user_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
 
 
+CREATE TABLE khoantaitro (
+    khoan_tai_tro_id INT(11) NOT NULL AUTO_INCREMENT,
 
+    nha_tai_tro_id INT(11) NOT NULL,
+    quy_id INT(11) NOT NULL,
 
+    so_tien DECIMAL(18,2) NOT NULL,
+    hinh_anh_minh_chung VARCHAR(500) DEFAULT NULL,
 
+    ngay_tai_tro DATETIME DEFAULT CURRENT_TIMESTAMP,
 
+    trang_thai ENUM(
+        'Cho duyet',
+	'Da duyet',
+        'Da nhan',
+        'Tu choi'
+    ) NOT NULL DEFAULT 'Cho duyet',
 
-CREATE TABLE `vaitro` (
+    ghi_chu VARCHAR(255) CHARACTER SET utf8 
+        COLLATE utf8_general_ci DEFAULT NULL,
 
-&#x20; `role\_id` int(11) NOT NULL AUTO\_INCREMENT,
+    ngay_cap_nhat DATETIME DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
-&#x20; `ten\_vai\_tro` varchar(100) CHARACTER SET utf8 COLLATE utf8\_general\_ci NOT NULL,
+    PRIMARY KEY (khoan_tai_tro_id),
 
-&#x20; `mo\_ta` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
+    KEY idx_nha_tai_tro_id (nha_tai_tro_id),
+    KEY idx_quy_id (quy_id),
 
-&#x20; `trang\_thai` varchar(50) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT 'HOAT\_DONG',
+    CONSTRAINT fk_khoantaitro_nhataitro
+        FOREIGN KEY (nha_tai_tro_id)
+        REFERENCES nhataitro(nha_tai_tro_id)
+        ON UPDATE CASCADE,
 
-&#x20; PRIMARY KEY (`role\_id`),
+    CONSTRAINT fk_khoantaitro_quy
+        FOREIGN KEY (quy_id)
+        REFERENCES quy(quy_id)
+        ON UPDATE CASCADE,
 
-&#x20; UNIQUE KEY `ten\_vai\_tro` (`ten\_vai\_tro`)
+    CONSTRAINT chk_khoantaitro_so_tien
+        CHECK (so_tien > 0)
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
 
-) ENGINE=InnoDB AUTO\_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
 
 
+CREATE TABLE yeucauhotro (
+    request_id INT(11) NOT NULL AUTO_INCREMENT,
 
+    user_id INT(11) NOT NULL,
+    quy_id INT(11) NOT NULL,
 
+    tieu_de VARCHAR(200) CHARACTER SET utf8 
+        COLLATE utf8_general_ci NOT NULL,
 
+    mo_ta TEXT DEFAULT NULL,
 
+    so_tien_yeu_cau DECIMAL(18,2) NOT NULL,
 
+    file_dinh_kem VARCHAR(500) DEFAULT NULL,
 
+    trang_thai ENUM(
+        'Cho duyet',
+        'Dang xu ly',
+        'Cho giai ngan',
+        'Da giai ngan',
+        'Tu choi'
+    ) NOT NULL DEFAULT 'Cho duyet',
 
-CREATE TABLE `quy` (
+    ly_do_tu_choi VARCHAR(255) CHARACTER SET utf8 
+        COLLATE utf8_general_ci DEFAULT NULL,
 
-&#x20; `quy\_id` int(11) NOT NULL AUTO\_INCREMENT,
+    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-&#x20; `ten\_quy` varchar(150) CHARACTER SET utf8 COLLATE utf8\_general\_ci NOT NULL,
+    ngay_cap_nhat DATETIME DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
-&#x20; `loai\_quy` enum('Tu thien','Hoc bong','Y te','Moi truong','Khac') NOT NULL,
+    PRIMARY KEY (request_id),
 
-&#x20; `mo\_ta` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
+    KEY idx_user_id (user_id),
+    KEY idx_quy_id (quy_id),
 
-&#x20; `so\_du` decimal(18,2) NOT NULL DEFAULT 0.00,
+    CONSTRAINT fk_yeucauhotro_nguoidung
+        FOREIGN KEY (user_id)
+        REFERENCES nguoidung(user_id)
+        ON UPDATE CASCADE,
 
-&#x20; `ngay\_tao` datetime DEFAULT current\_timestamp(),
+    CONSTRAINT fk_yeucauhotro_quy
+        FOREIGN KEY (quy_id)
+        REFERENCES quy(quy_id)
+        ON UPDATE CASCADE,
 
-&#x20; `ngay\_cap\_nhat` datetime DEFAULT current\_timestamp() ON UPDATE current\_timestamp(),
+    CONSTRAINT chk_so_tien_yeu_cau
+        CHECK (so_tien_yeu_cau > 0)
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
 
-&#x20; `trang\_thai` enum('Dang hoat dong','Tam dung','Da dong') NOT NULL DEFAULT 'Dang hoat dong',
 
-&#x20; PRIMARY KEY (`quy\_id`)
 
-) ENGINE=InnoDB AUTO\_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
+CREATE TABLE giaodich (
+    transaction_id INT(11) NOT NULL AUTO_INCREMENT,
 
+    quy_id INT(11) NOT NULL,
+    khoan_tai_tro_id INT(11) DEFAULT NULL,
+    request_id INT(11) DEFAULT NULL,
+    nguoi_tao_id INT(11) DEFAULT NULL,
 
+    so_tien DECIMAL(18,2) NOT NULL,
 
+    loai ENUM('Thu', 'Chi') NOT NULL,
 
+    trang_thai ENUM(
+        'Cho xu ly',
+        'Thanh cong',
+        'That bai',
+        'Hoan tien'
+    ) NOT NULL DEFAULT 'Cho xu ly',
 
+    minh_chung_chuyen_khoan VARCHAR(500) DEFAULT NULL,
 
+    ghi_chu VARCHAR(255) CHARACTER SET utf8 
+        COLLATE utf8_general_ci DEFAULT NULL,
 
+    ngay_giao_dich DATETIME DEFAULT CURRENT_TIMESTAMP,
 
+    ngay_cap_nhat DATETIME DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
-CREATE TABLE `khoantaitro` (
+    PRIMARY KEY (transaction_id),
 
-&#x20; `khoan\_tai\_tro\_id` int(11) NOT NULL AUTO\_INCREMENT,
+    KEY idx_quy_id (quy_id),
+    KEY idx_khoan_tai_tro_id (khoan_tai_tro_id),
+    KEY idx_request_id (request_id),
+    KEY idx_nguoi_tao_id (nguoi_tao_id),
 
-&#x20; `nha\_tai\_tro\_id` int(11) NOT NULL,
+    CONSTRAINT fk_giaodich_quy
+        FOREIGN KEY (quy_id)
+        REFERENCES quy(quy_id)
+        ON UPDATE CASCADE,
 
-&#x20; `quy\_id` int(11) NOT NULL,
+    CONSTRAINT fk_giaodich_khoantaitro
+        FOREIGN KEY (khoan_tai_tro_id)
+        REFERENCES khoantaitro(khoan_tai_tro_id)
+        ON UPDATE CASCADE,
 
-&#x20; `so\_tien` decimal(18,2) NOT NULL CHECK (`so\_tien` > 0),
+    CONSTRAINT fk_giaodich_yeucauhotro
+        FOREIGN KEY (request_id)
+        REFERENCES yeucauhotro(request_id)
+        ON UPDATE CASCADE,
 
-&#x20; `hinh\_anh\_minh\_chung` varchar(500) DEFAULT NULL,
+    CONSTRAINT fk_giaodich_nguoidung
+        FOREIGN KEY (nguoi_tao_id)
+        REFERENCES nguoidung(user_id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
 
-&#x20; `ngay\_tai\_tro` datetime DEFAULT current\_timestamp(),
+    CONSTRAINT chk_giaodich_so_tien
+        CHECK (so_tien > 0),
 
-&#x20; `trang\_thai` enum('Cho duyet','Da nhan','Tu choi') NOT NULL DEFAULT 'Cho duyet',
+    CONSTRAINT chk_nguon_giao_dich
+        CHECK (
+            khoan_tai_tro_id IS NOT NULL
+            OR request_id IS NOT NULL
+        )
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;
 
-&#x20; `ghi\_chu` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
 
-&#x20; `ngay\_cap\_nhat` datetime DEFAULT current\_timestamp() ON UPDATE current\_timestamp(),
 
-&#x20; PRIMARY KEY (`khoan\_tai\_tro\_id`),
+CREATE TABLE pheduyet (
+    phe_duyet_id INT(11) NOT NULL AUTO_INCREMENT,
 
-&#x20; KEY `nha\_tai\_tro\_id` (`nha\_tai\_tro\_id`),
+    -- =====================================================
+    -- NGUỒN CẦN PHÊ DUYỆT
+    -- =====================================================
 
-&#x20; KEY `quy\_id` (`quy\_id`),
+    request_id INT(11) DEFAULT NULL,
+    -- Phê duyệt yêu cầu hỗ trợ sinh viên
 
-&#x20; CONSTRAINT `khoantaitro\_ibfk\_1` FOREIGN KEY (`nha\_tai\_tro\_id`) REFERENCES `nhataitro` (`nha\_tai\_tro\_id`) ON UPDATE CASCADE,
+    khoan_tai_tro_id INT(11) DEFAULT NULL,
+    -- Phê duyệt khoản tài trợ từ nhà tài trợ
 
-&#x20; CONSTRAINT `khoantaitro\_ibfk\_2` FOREIGN KEY (`quy\_id`) REFERENCES `quy` (`quy\_id`) ON UPDATE CASCADE
+    -- =====================================================
 
-) ENGINE=InnoDB AUTO\_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
+    nguoi_duyet_id INT(11) DEFAULT NULL,
+    -- Người thực hiện phê duyệt
 
+    cap_do_duyet INT(11) NOT NULL,
+    -- Yêu cầu hỗ trợ:
+    --   1 = Giáo vụ
+    --   2 = Trưởng phòng
+    --   3 = Hiệu trưởng / Kế toán
+    --
+    -- Khoản tài trợ:
+    --   1 = Cán bộ quỹ xác nhận
+    --   2 = Kế toán / Admin xác nhận tiền vào quỹ
 
+    ket_qua ENUM(
+        'Cho duyet',
+        'Da duyet',
+        'Tu choi',
+        'Yeu cau bo sung'
+    ) NOT NULL DEFAULT 'Cho duyet',
 
+    ghi_chu VARCHAR(255) CHARACTER SET utf8
+        COLLATE utf8_general_ci DEFAULT NULL,
 
+    ly_do_tu_choi VARCHAR(255) CHARACTER SET utf8
+        COLLATE utf8_general_ci DEFAULT NULL,
 
+    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-CREATE TABLE `yeucauhotro` (
-  `request_id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `quy_id` int(11) NOT NULL,
-  `tieu_de` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `mo_ta` text DEFAULT NULL,
-  `so_tien_yeu_cau` decimal(18,2) NOT NULL CHECK (`so_tien_yeu_cau` > 0),
-  `file_dinh_kem` varchar(500) DEFAULT NULL,
-  `trang_thai` enum('Cho duyet','Dang xu ly','Cho giai ngan','Da giai ngan','Tu choi') NOT NULL DEFAULT 'Cho duyet',
-  `ly_do_tu_choi` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
-  `ngay_tao` datetime DEFAULT current_timestamp(),
-  `ngay_cap_nhat` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`request_id`),
-  KEY `user_id` (`user_id`),
-  KEY `quy_id` (`quy_id`),
-  CONSTRAINT `yeucauhotro_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `nguoidung` (`user_id`) ON UPDATE CASCADE,
-  CONSTRAINT `yeucauhotro_ibfk_2` FOREIGN KEY (`quy_id`) REFERENCES `quy` (`quy_id`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    ngay_duyet DATETIME DEFAULT NULL,
+    -- Thời điểm thực hiện duyệt
 
+    ngay_cap_nhat DATETIME DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
 
+    PRIMARY KEY (phe_duyet_id),
 
+    -- =====================================================
+    -- INDEX
+    -- =====================================================
 
+    KEY idx_request_id (request_id),
+    KEY idx_khoan_tai_tro_id (khoan_tai_tro_id),
+    KEY idx_nguoi_duyet_id (nguoi_duyet_id),
 
+    -- =====================================================
+    -- FOREIGN KEY
+    -- =====================================================
 
+    CONSTRAINT fk_pheduyet_yeucauhotro
+        FOREIGN KEY (request_id)
+        REFERENCES yeucauhotro(request_id)
+        ON UPDATE CASCADE,
 
+    CONSTRAINT fk_pheduyet_khoantaitro
+        FOREIGN KEY (khoan_tai_tro_id)
+        REFERENCES khoantaitro(khoan_tai_tro_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
 
+    CONSTRAINT fk_pheduyet_nguoidung
+        FOREIGN KEY (nguoi_duyet_id)
+        REFERENCES nguoidung(user_id)
+        ON UPDATE CASCADE,
 
-CREATE TABLE `nhataitro` (
+    -- =====================================================
+    -- VALIDATION
+    -- =====================================================
 
-&#x20; `nha\_tai\_tro\_id` int(11) NOT NULL AUTO\_INCREMENT,
+    CONSTRAINT chk_cap_do_duyet
+        CHECK (cap_do_duyet BETWEEN 1 AND 5),
 
-&#x20; `ten\_nha\_tai\_tro` varchar(150) CHARACTER SET utf8 COLLATE utf8\_general\_ci NOT NULL,
-
-&#x20; `loai` varchar(50) CHARACTER SET utf8 COLLATE utf8\_general\_ci NOT NULL DEFAULT 'Ca nhan',
-
-&#x20; `email` varchar(150) DEFAULT NULL,
-
-&#x20; `so\_dien\_thoai` varchar(20) DEFAULT NULL,
-
-&#x20; `dia\_chi` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
-
-&#x20; `created\_at` datetime DEFAULT current\_timestamp(),
-
-&#x20; PRIMARY KEY (`nha\_tai\_tro\_id`),
-
-&#x20; UNIQUE KEY `email` (`email`),
-
-&#x20; UNIQUE KEY `so\_dien\_thoai` (`so\_dien\_thoai`)
-
-) ENGINE=InnoDB AUTO\_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
-
-
-
-
-
-
-
-
-
-
-
-CREATE TABLE `giaodich` (
-
-&#x20; `transaction\_id` int(11) NOT NULL AUTO\_INCREMENT,
-
-&#x20; `quy\_id` int(11) NOT NULL,
-
-&#x20; `khoan\_tai\_tro\_id` int(11) DEFAULT NULL,
-
-&#x20; `request\_id` int(11) DEFAULT NULL,
-
-&#x20; `nguoi\_tao\_id` int(11) DEFAULT NULL,
-
-&#x20; `so\_tien` decimal(18,2) NOT NULL CHECK (`so\_tien` > 0),
-
-&#x20; `loai` enum('Thu','Chi') NOT NULL,
-
-&#x20; `trang\_thai` enum('Cho xu ly','Thanh cong','That bai','Hoan tien') NOT NULL DEFAULT 'Cho xu ly',
-
-&#x20; `minh\_chung\_chuyen\_khoan` varchar(500) DEFAULT NULL,
-
-&#x20; `ghi\_chu` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
-
-&#x20; `ngay\_giao\_dich` datetime DEFAULT current\_timestamp(),
-
-&#x20; `ngay\_cap\_nhat` datetime DEFAULT current\_timestamp() ON UPDATE current\_timestamp(),
-
-&#x20; PRIMARY KEY (`transaction\_id`),
-
-&#x20; KEY `quy\_id` (`quy\_id`),
-
-&#x20; KEY `khoan\_tai\_tro\_id` (`khoan\_tai\_tro\_id`),
-
-&#x20; KEY `request\_id` (`request\_id`),
-
-&#x20; KEY `nguoi\_tao\_id` (`nguoi\_tao\_id`),
-
-&#x20; CONSTRAINT `giaodich\_ibfk\_1` FOREIGN KEY (`quy\_id`) REFERENCES `quy` (`quy\_id`) ON UPDATE CASCADE,
-
-&#x20; CONSTRAINT `giaodich\_ibfk\_2` FOREIGN KEY (`khoan\_tai\_tro\_id`) REFERENCES `khoantaitro` (`khoan\_tai\_tro\_id`) ON UPDATE CASCADE,
-
-&#x20; CONSTRAINT `giaodich\_ibfk\_3` FOREIGN KEY (`request\_id`) REFERENCES `yeucauhotro` (`request\_id`) ON UPDATE CASCADE,
-
-&#x20; CONSTRAINT `giaodich\_ibfk\_4` FOREIGN KEY (`nguoi\_tao\_id`) REFERENCES `nguoidung` (`user\_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-
-&#x20; CONSTRAINT `chk\_nguon\_giao\_dich` CHECK (`khoan\_tai\_tro\_id` is not null or `request\_id` is not null)
-
-) ENGINE=InnoDB AUTO\_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
-
-
-
-
-
-
-
-
-
-
-
-CREATE TABLE `pheduyet` (
-
-&#x20; `phe\_duyet\_id` int(11) NOT NULL AUTO\_INCREMENT,
-
-&#x20; `request\_id` int(11) NOT NULL,
-
-&#x20; `nguoi\_duyet\_id` int(11) NOT NULL,
-
-&#x20; `cap\_do\_duyet` int(11) NOT NULL CHECK (`cap\_do\_duyet` between 1 and 5),
-
-&#x20; `ket\_qua` enum('Cho duyet','Da duyet','Tu choi','Yeu cau bo sung') NOT NULL DEFAULT 'Cho duyet',
-
-&#x20; `ghi\_chu` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
-
-&#x20; `ly\_do\_tu\_choi` varchar(255) CHARACTER SET utf8 COLLATE utf8\_general\_ci DEFAULT NULL,
-
-&#x20; `ngay\_tao` datetime DEFAULT current\_timestamp(),
-
-&#x20; `ngay\_duyet` datetime DEFAULT NULL,
-
-&#x20; `ngay\_cap\_nhat` datetime DEFAULT current\_timestamp() ON UPDATE current\_timestamp(),
-
-&#x20; PRIMARY KEY (`phe\_duyet\_id`),
-
-&#x20; KEY `request\_id` (`request\_id`),
-
-&#x20; KEY `nguoi\_duyet\_id` (`nguoi\_duyet\_id`),
-
-&#x20; CONSTRAINT `pheduyet\_ibfk\_1` FOREIGN KEY (`request\_id`) REFERENCES `yeucauhotro` (`request\_id`) ON UPDATE CASCADE,
-
-&#x20; CONSTRAINT `pheduyet\_ibfk\_2` FOREIGN KEY (`nguoi\_duyet\_id`) REFERENCES `nguoidung` (`user\_id`) ON UPDATE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4\_general\_ci
-
-
-
-
-
-
-
-
-
-
-
-
-
+    -- Bắt buộc phải có ít nhất 1 nguồn duyệt
+    CONSTRAINT chk_nguon_pheduyet
+        CHECK (
+            request_id IS NOT NULL
+            OR khoan_tai_tro_id IS NOT NULL
+        )
+)
+ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_general_ci;

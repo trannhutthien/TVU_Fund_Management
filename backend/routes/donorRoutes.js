@@ -1,25 +1,29 @@
-import express from "express";
-import { createDonor } from "../controllers/donorController.js";
-import { protect } from "../middleware/authMiddleware.js";
-import { authorizeRoles } from "../middleware/rolesMiddleware.js";
+import express from 'express';
+import {
+  getDonorWall,
+  getStaffDonors,
+  getDonorDetail,
+  getDonorStats,
+} from '../controllers/donorController.js';
+import { protect } from '../middleware/authMiddleware.js';
+import { authorizeRoles } from '../middleware/rolesMiddleware.js';
 
 const router = express.Router();
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ─── DONOR ROUTES (CHO ADMIN/GIÁO VỤ) ─────────────────────────────────────────
+// ─── DONOR ROUTES (NHÀ TÀI TRỢ) ───────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/donors — Tạo nhà tài trợ thủ công (Admin/Giáo vụ)
-// ─────────────────────────────────────────────────────────────────────────────
-// Middleware:
-// - protect: Kiểm tra token hợp lệ
-// - authorizeRoles(1, 3): Chỉ cho phép role_id = 1 (Admin) hoặc 3 (Giáo vụ)
-//
-// Mục đích:
-// - Nhân viên tạo nhà tài trợ trước (VD: đối tác, doanh nghiệp)
-// - Không tạo khoản tài trợ, chỉ tạo thông tin nhà tài trợ
-//
-router.post("/", protect, authorizeRoles(1, 3), createDonor);
+// GET /api/donors/wall - Public: danh sách nhà tài trợ cho DonorWallSection
+router.get('/wall', getDonorWall);
+
+// GET /api/donors/stats - Cán bộ Quỹ/Admin: thống kê 4 thẻ
+router.get('/stats', protect, authorizeRoles(1, 3), getDonorStats);
+
+// GET /api/donors - Cán bộ Quỹ/Admin: danh sách + filter + sort + phân trang
+router.get('/', protect, authorizeRoles(1, 3), getStaffDonors);
+
+// GET /api/donors/:id - Cán bộ Quỹ/Admin: chi tiết + lịch sử khoản tài trợ
+router.get('/:id', protect, authorizeRoles(1, 3), getDonorDetail);
 
 export default router;

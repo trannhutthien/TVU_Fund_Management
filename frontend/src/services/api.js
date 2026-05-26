@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import useAuthStore from '@stores/authStore'
 
-// Tạo axios instance
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api',
   timeout: 10000,
@@ -10,10 +10,21 @@ const api = axios.create({
   },
 })
 
-// Request interceptor - Thêm token vào header
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const authStorage = localStorage.getItem('auth-storage')
+    let token = null
+    if (authStorage) {
+      try {
+        const parsed = JSON.parse(authStorage)
+        token = parsed?.state?.token
+      } catch (e) {
+        token = null
+      }
+    }
+    if (!token) {
+      token = localStorage.getItem('token')
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -24,36 +35,72 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor - Xử lý lỗi chung
+const forceLogout = () => {
+  const store = useAuthStore.getState()
+  if (store.isAuthenticated) {
+    store.logout()
+    toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    window.location.href = '/'
+  }
+}
+
 api.interceptors.response.use(
   (response) => {
     return response
   },
-  (error) => {
-    // Xử lý lỗi 401 - Unauthorized
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      window.location.href = '/login'
-      toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+  async (error) => {
+    const originalRequest = error.config
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+
+      const authStorage = localStorage.getItem('auth-storage')
+      let refreshToken = null
+      if (authStorage) {
+        try {
+          const parsed = JSON.parse(authStorage)
+          refreshToken = localStorage.getItem('refreshToken')
+        } catch (e) {
+          refreshToken = null
+        }
+      }
+
+      if (refreshToken) {
+        try {
+          const response = await axios.post(
+            `${api.defaults.baseURL}/auth/refresh-token`,
+            { refreshToken }
+          )
+
+          if (response.data?.success) {
+            const { accessToken, refreshToken: newRefreshToken } = response.data
+            useAuthStore.getState().login(useAuthStore.getState().user, accessToken)
+            localStorage.setItem('refreshToken', newRefreshToken)
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`
+            return api(originalRequest)
+          } else {
+            forceLogout()
+          }
+        } catch (refreshError) {
+          forceLogout()
+        }
+      } else {
+        forceLogout()
+      }
     }
 
-    // Xử lý lỗi 403 - Forbidden
     if (error.response?.status === 403) {
       toast.error('Bạn không có quyền thực hiện thao tác này.')
     }
 
-    // Xử lý lỗi 404 - Not Found
     if (error.response?.status === 404) {
       toast.error('Không tìm thấy dữ liệu.')
     }
 
-    // Xử lý lỗi 500 - Server Error
     if (error.response?.status >= 500) {
       toast.error('Lỗi máy chủ. Vui lòng thử lại sau.')
     }
 
-    // Hiển thị message từ server nếu có
     if (error.response?.data?.message) {
       toast.error(error.response.data.message)
     }

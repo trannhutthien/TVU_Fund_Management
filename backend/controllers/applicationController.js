@@ -23,6 +23,10 @@ import pool from "../config/db.js";
 //
 export const createApplication = async (req, res) => {
   try {
+    console.log('=== CREATE APPLICATION START ===');
+    console.log('Request body:', req.body);
+    console.log('User ID:', req.user?.id);
+    
     const {
       quyId,
       tieuDe,
@@ -64,12 +68,15 @@ export const createApplication = async (req, res) => {
       });
     }
 
-    // Validate URL file (phải là URL hợp lệ)
-    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-    if (!urlRegex.test(fileDinhKem.trim())) {
+    // Validate file path (phải có định dạng hợp lệ)
+    // Chấp nhận cả URL đầy đủ hoặc đường dẫn tương đối
+    const isValidPath = fileDinhKem.trim().length > 0 && 
+                        (fileDinhKem.includes('/') || fileDinhKem.includes('\\'));
+    
+    if (!isValidPath) {
       return res.status(400).json({
         success: false,
-        message: "URL file đính kèm không hợp lệ",
+        message: "Đường dẫn file đính kèm không hợp lệ",
       });
     }
 
@@ -147,12 +154,14 @@ export const createApplication = async (req, res) => {
     };
 
     const result = await ApplicationModel.createApplication(applicationData);
+    console.log('Application created:', result);
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 4: TẠO 3 DÒNG PHÊ DUYỆT (Cấp 1, Cấp 2, Cấp 3)
     // ─────────────────────────────────────────────────────────────────────────
     
     await PheDuyetModel.createPheDuyet(result.requestId);
+    console.log('PheDuyet created for request:', result.requestId);
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: TRẢ VỀ KẾT QUẢ
@@ -176,7 +185,10 @@ export const createApplication = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Lỗi createApplication:", error);
+    console.error("=== CREATE APPLICATION ERROR ===");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    console.error("Error details:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",
@@ -205,6 +217,24 @@ export const getMyApplications = async (req, res) => {
       offset
     );
 
+    // Helper function to normalize status
+    const normalizeStatus = (status) => {
+      const statusMap = {
+        'Cho duyet': 'CHO_DUYET',
+        'Dang xu ly': 'DANG_XU_LY',
+        'Cho giai ngan': 'CHO_GIAI_NGAN',
+        'Da giai ngan': 'DA_GIAI_NGAN',
+        'Tu choi': 'TU_CHOI',
+        // Fallback for already normalized values
+        'CHO_DUYET': 'CHO_DUYET',
+        'DANG_XU_LY': 'DANG_XU_LY',
+        'CHO_GIAI_NGAN': 'CHO_GIAI_NGAN',
+        'DA_GIAI_NGAN': 'DA_GIAI_NGAN',
+        'TU_CHOI': 'TU_CHOI',
+      };
+      return statusMap[status] || 'CHO_DUYET';
+    };
+
     return res.status(200).json({
       success: true,
       message: "Lấy danh sách đơn thành công",
@@ -212,7 +242,7 @@ export const getMyApplications = async (req, res) => {
         requestId: app.request_id,
         tieuDe: app.tieu_de,
         soTienYeuCau: parseFloat(app.so_tien_yeu_cau),
-        trangThai: app.trang_thai,
+        trangThai: normalizeStatus(app.trang_thai),
         quy: {
           id: app.quy_id,
           tenQuy: app.ten_quy
@@ -328,8 +358,21 @@ export const getAllApplications = async (req, res) => {
     const limitNum = parseInt(limit);
     const offset = (pageNum - 1) * limitNum;
 
+    let trangThaiFilter = null;
+    if (trangThai) {
+      const parts = String(trangThai)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (parts.length > 1) {
+        trangThaiFilter = parts;
+      } else if (parts.length === 1) {
+        trangThaiFilter = parts[0];
+      }
+    }
+
     const filters = {
-      trangThai,
+      trangThai: trangThaiFilter,
       quyId: quyId ? parseInt(quyId) : null,
       userId: userId ? parseInt(userId) : null
     };
@@ -937,12 +980,14 @@ export const disburseApplication = async (req, res) => {
     
     const currentStatus = application.trang_thai;
 
-    // Chỉ cho phép duyệt đơn ở trạng thái "Dang xu ly" (đã qua cấp 1 và 2)
-    if (currentStatus !== 'Dang xu ly') {
+    // Cho phép kế toán xử lý đơn ở 2 trạng thái:
+    // - "Dang xu ly": đã qua cấp 1 + 2, chờ kế toán duyệt cấp 3
+    // - "Cho giai ngan": đã duyệt cấp 3 nhưng quỹ thiếu tiền, chờ quỹ có tiền để giải ngân
+    if (!['Dang xu ly', 'Cho giai ngan'].includes(currentStatus)) {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". Kế toán chỉ duyệt được đơn ở trạng thái "Dang xu ly" (đã qua cấp 1 và 2).`,
+        message: `Không thể giải ngân đơn ở trạng thái "${currentStatus}". Chỉ chấp nhận "Dang xu ly" hoặc "Cho giai ngan".`,
       });
     }
 
@@ -973,24 +1018,31 @@ export const disburseApplication = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
     // ─────────────────────────────────────────────────────────────────────────
-    
-    const capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
-    
-    if (!capHienTai) {
-      await connection.rollback();
-      return res.status(400).json({
-        success: false,
-        message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
-      });
-    }
+    // - Nếu trạng thái là "Dang xu ly": chưa có cấp 3 → cần duyệt cấp 3 mới
+    // - Nếu trạng thái là "Cho giai ngan": cấp 3 đã duyệt rồi → bỏ qua bước này
 
-    // Kế toán chỉ duyệt cấp 3
-    if (capHienTai.cap_do_duyet !== 3) {
-      await connection.rollback();
-      return res.status(400).json({
-        success: false,
-        message: `Đơn này đang ở cấp ${capHienTai.cap_do_duyet}. Kế toán chỉ duyệt được cấp 3.`,
-      });
+    const isRetryDisbursement = currentStatus === 'Cho giai ngan';
+    let capHienTai = null;
+
+    if (!isRetryDisbursement) {
+      capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
+
+      if (!capHienTai) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
+        });
+      }
+
+      // Kế toán chỉ duyệt cấp 3
+      if (capHienTai.cap_do_duyet !== 3) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Đơn này đang ở cấp ${capHienTai.cap_do_duyet}. Kế toán chỉ duyệt được cấp 3.`,
+        });
+      }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1041,7 +1093,7 @@ export const disburseApplication = async (req, res) => {
         loai: 'Chi',
         soTien: soTienYeuCau,
         trangThai: 'Thanh cong',
-        minhChungChuyenKhoan: null,
+        minhChungChuyenKhoan: minhChungChuyenKhoan || null,
         ghiChu: ghiChu || `Giải ngân đơn xin hỗ trợ #${id}`
       }, connection);
 
@@ -1061,18 +1113,22 @@ export const disburseApplication = async (req, res) => {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 8: CẬP NHẬT PHÊ DUYỆT CẤP 3
+    // BƯỚC 8: CẬP NHẬT PHÊ DUYỆT CẤP 3 (chỉ khi giải ngân lần đầu)
     // ─────────────────────────────────────────────────────────────────────────
-    
-    await PheDuyetModel.updatePheDuyet(
-      id,
-      3, // cấp 3
-      nguoiDuyetId,
-      'Da duyet',
-      ghiChu || null,
-      null, // không có lý do từ chối
-      connection
-    );
+    // Nếu đang retry giải ngân (trang_thai='Cho giai ngan'), cấp 3 đã được duyệt
+    // trong lần trước → bỏ qua để tránh ghi đè dữ liệu
+
+    if (!isRetryDisbursement) {
+      await PheDuyetModel.updatePheDuyet(
+        id,
+        3, // cấp 3
+        nguoiDuyetId,
+        'Da duyet',
+        ghiChu || null,
+        null, // không có lý do từ chối
+        connection
+      );
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 9: CẬP NHẬT TRẠNG THÁI ĐƠN

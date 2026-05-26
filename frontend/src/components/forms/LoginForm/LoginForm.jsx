@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import Logo from '@components/common/Logo/Logo';
+import CloseButton from '@components/common/CloseButton';
+import { authService } from '@services/authService';
+import useAuthStore from '@stores/authStore';
 import './LoginForm.scss';
 
 /**
@@ -11,7 +15,9 @@ import './LoginForm.scss';
  * Form đăng nhập với email/MSSV và password
  * Có logo, checkbox ghi nhớ, link quên mật khẩu, đăng nhập Google
  */
-const LoginForm = ({ onSubmit, onGoogleLogin, onSuccess, loading = false }) => {
+const LoginForm = ({ onGoogleLogin, onSuccess, onClose }) => {
+  const { login: loginStore } = useAuthStore();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     identifier: '', // Email hoặc MSSV
     password: '',
@@ -50,13 +56,46 @@ const LoginForm = ({ onSubmit, onGoogleLogin, onSuccess, loading = false }) => {
   };
 
   // Handle submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (validate()) {
-      onSubmit?.(formData);
-      // Call onSuccess callback if provided (for modal close)
-      onSuccess?.();
+    if (!validate()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Gọi API login
+      const response = await authService.login({
+        email: formData.identifier,
+        matKhau: formData.password,
+      });
+
+      if (response.success) {
+        // Lưu token và user vào store
+        loginStore(response.user, response.accessToken);
+        
+        // Lưu refresh token vào localStorage
+        localStorage.setItem('refreshToken', response.refreshToken);
+        
+        // Hiển thị thông báo thành công
+        toast.success('Đăng nhập thành công!');
+        
+        // Đóng modal
+        onSuccess?.();
+        
+        // Redirect về LandingPage
+        window.location.href = '/';
+      } else {
+        toast.error(response.message || 'Đăng nhập thất bại');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,6 +111,17 @@ const LoginForm = ({ onSubmit, onGoogleLogin, onSuccess, loading = false }) => {
 
       {/* Login card */}
       <div className="login-form-card">
+        {/* Close Button */}
+        {onClose && (
+          <CloseButton 
+            onClick={onClose} 
+            variant="light" 
+            size="md" 
+            position="top-right-inside"
+            ariaLabel="Đóng"
+          />
+        )}
+
         {/* Logo */}
         <div className="login-form-logo">
           <Logo 
@@ -204,10 +254,9 @@ const LoginForm = ({ onSubmit, onGoogleLogin, onSuccess, loading = false }) => {
 };
 
 LoginForm.propTypes = {
-  onSubmit: PropTypes.func,
   onGoogleLogin: PropTypes.func,
   onSuccess: PropTypes.func,
-  loading: PropTypes.bool,
+  onClose: PropTypes.func,
 };
 
 export default LoginForm;

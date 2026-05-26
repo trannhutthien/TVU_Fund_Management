@@ -1,0 +1,256 @@
+@use '../../../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ADMIN OPERATION SECTION STYLES ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── SECTION ───────────────────────────────────────────────────────────────────
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── SECTION TITLE PATTERN ─────────────────────────────────────────────────────
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  h2 {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+  }
+}
+
+.titleBar {
+  width: 4px;
+  height: 20px;
+  background: var(--color-gold);
+  border-radius: 2px;
+}
+
+// ─── GRID ──────────────────────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+// ─── CARD ──────────────────────────────────────────────────────────────────────
+.card {
+  background: var(--color-white);
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── CARD HEADER ───────────────────────────────────────────────────────────────
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primary);
+}
+
+.cardTitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.cardBadge {
+  padding: 4px 10px;
+  background: rgba(26, 47, 94, 0.08);
+  color: var(--color-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+.cardBadgeGreen {
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+// ─── FUNNEL ────────────────────────────────────────────────────────────────────
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.funnelItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.funnelDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.funnelLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #374151;
+  flex: 1;
+}
+
+.funnelValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-right: 8px;
+}
+
+.funnelBar {
+  width: 80px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.funnelBarFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+// ─── CARD FOOTER ───────────────────────────────────────────────────────────────
+.cardFooter {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.successRate {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+// ─── FUND LIST ─────────────────────────────────────────────────────────────────
+.fundList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.fundItem {
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.fundRow1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.fundName {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fundStatus {
+  padding: 2px 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.fundStatusActive {
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+.fundStatusInactive {
+  background: rgba(148, 163, 184, 0.1);
+  color: #64748b;
+}
+
+.fundProgressBar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.fundProgressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.fundRow3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.viewAllButton {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--color-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ─── RESPONSIVE ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .funnelBar {
+    width: 60px;
+  }
+}

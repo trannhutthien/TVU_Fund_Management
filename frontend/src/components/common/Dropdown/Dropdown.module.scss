@@ -1,0 +1,301 @@
+@use '../../../styles/variables' as *;
+
+.dropdownWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.label {
+  display: block;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-heading;
+  margin-bottom: $space-2;
+
+  .required {
+    color: $color-danger;
+    margin-left: 2px;
+  }
+}
+
+.dropdown {
+  position: relative;
+  width: 100%;
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+
+    .trigger {
+      cursor: not-allowed;
+      background: $bg-input;
+    }
+  }
+
+  &.error {
+    .trigger {
+      border-color: $color-danger;
+
+      &:focus-within {
+        border-color: $color-danger;
+        box-shadow: 0 0 0 3px rgba($color-danger, 0.1);
+      }
+    }
+  }
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  width: 100%;
+  padding: $space-3 $space-4;
+  background: $bg-card;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: $transition-fast;
+  font-size: $text-base;
+  color: $text-body;
+
+  &:hover:not(.disabled) {
+    border-color: $color-primary;
+  }
+
+  &:focus-within {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+
+  .dropdown.open & {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+}
+
+// Size variants
+.dropdown.small .trigger {
+  padding: $space-2 $space-3;
+  font-size: $text-sm;
+}
+
+.dropdown.large .trigger {
+  padding: $space-4 $space-5;
+  font-size: $text-md;
+}
+
+.value {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder {
+  color: $text-muted;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+  flex-shrink: 0;
+}
+
+.clearButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  border-radius: $radius-xs;
+  transition: $transition-fast;
+
+  &:hover {
+    color: $text-body;
+    background: $bg-input;
+  }
+}
+
+.chevron {
+  color: $text-secondary;
+  transition: transform $duration-base $ease-default;
+  flex-shrink: 0;
+
+  .dropdown.open & {
+    transform: rotate(180deg);
+  }
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: $bg-card;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+  z-index: $z-dropdown;
+  animation: slideDown $duration-fast $ease-default;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchWrapper {
+  position: relative;
+  padding: $space-3;
+  border-bottom: 1px solid $border-light;
+}
+
+.searchIcon {
+  position: absolute;
+  left: $space-5;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-muted;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: $space-2 $space-3 $space-2 $space-8;
+  background: $bg-input;
+  border: 1px solid $border-light;
+  border-radius: $radius-sm;
+  font-size: $text-sm;
+  color: $text-body;
+  outline: none;
+  transition: $transition-fast;
+
+  &:focus {
+    border-color: $color-primary;
+    background: $bg-card;
+  }
+
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+.optionsList {
+  max-height: inherit;
+  overflow-y: auto;
+  padding: $space-2;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-default;
+    border-radius: $radius-full;
+
+    &:hover {
+      background: $text-muted;
+    }
+  }
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-3;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: $transition-fast;
+  font-size: $text-base;
+  color: $text-body;
+  position: relative;
+
+  &:hover:not(.disabled) {
+    background: $bg-sidebar-hover;
+  }
+
+  &.selected {
+    background: $bg-sidebar-active;
+    color: $color-primary;
+    font-weight: $font-medium;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: $color-primary;
+  }
+}
+
+.optionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: $text-lg;
+}
+
+.optionLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionDescription {
+  font-size: $text-xs;
+  color: $text-secondary;
+  margin-left: auto;
+  padding-left: $space-2;
+}
+
+.checkIcon {
+  color: $color-primary;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.noOptions {
+  padding: $space-6 $space-4;
+  text-align: center;
+  color: $text-muted;
+  font-size: $text-sm;
+}
+
+.errorMessage {
+  margin-top: $space-2;
+  font-size: $text-sm;
+  color: $color-danger;
+}

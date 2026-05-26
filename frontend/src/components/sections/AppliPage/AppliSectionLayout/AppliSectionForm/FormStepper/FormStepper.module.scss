@@ -1,0 +1,221 @@
+// ============================================
+// FORM STEPPER — Thanh tiến trình các bước
+// TVU Fund Management — Thiết kế nổi bật với glassmorphism
+// ============================================
+
+.formStepper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: $space-6 $space-8;
+  
+  // Glassmorphism nổi bật hơn
+  background: linear-gradient(
+    135deg,
+    rgba(26, 47, 94, 0.95) 0%,
+    rgba(26, 47, 94, 0.92) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  // Border gradient Gold nổi bật
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: $radius-xl;
+    padding: 2px;
+    background: linear-gradient(
+      135deg,
+      rgba(240, 165, 0, 0.6) 0%,
+      rgba(240, 165, 0, 0.3) 50%,
+      rgba(240, 165, 0, 0.6) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  border-radius: $radius-xl;
+  
+  // Shadow mạnh hơn để nổi bật
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  box-sizing: border-box;
+  
+  // Thêm subtle glow effect
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: $radius-xl;
+    background: linear-gradient(
+      135deg,
+      rgba(240, 165, 0, 0.15) 0%,
+      transparent 50%,
+      rgba(240, 165, 0, 0.15) 100%
+    );
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+// ─── Step Item ───────────────────────────────────────────
+.stepItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+// ─── Hàng ngang: connector + circle + connector ──────────
+.stepRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+// ─── Đường kẻ nối (connector) ────────────────────────────
+.connector {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.connectorDone {
+    background: linear-gradient(90deg, $color-gold, rgba(240, 165, 0, 0.7));
+    box-shadow: 0 0 12px rgba(240, 165, 0, 0.5);
+  }
+
+  &.hidden {
+    visibility: hidden;
+  }
+}
+
+// ─── Ô số tròn (stepCircle) ──────────────────────────────
+.stepCircle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+
+  &.completed {
+    background: linear-gradient(135deg, $color-gold, #d4af37);
+    color: $color-navy-blue;
+    border: none;
+    box-shadow: 
+      0 4px 16px rgba(240, 165, 0, 0.5),
+      0 0 20px rgba(240, 165, 0, 0.3);
+    transform: scale(1);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $color-gold, #e8b800);
+    color: $color-navy-blue;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 
+      0 0 0 4px rgba(240, 165, 0, 0.3), 
+      0 4px 24px rgba(240, 165, 0, 0.5),
+      0 0 40px rgba(240, 165, 0, 0.3);
+    transform: scale(1.1);
+    animation: activePulse 2.5s ease-in-out infinite;
+  }
+
+  &.pending {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+// ─── Label tên bước ──────────────────────────────────────
+.stepLabel {
+  margin-top: 10px;
+  font-size: 13px;
+  text-align: center;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+
+  &.completed {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  &.active {
+    color: $color-gold;
+    font-weight: 700;
+    text-shadow: 
+      0 0 16px rgba(240, 165, 0, 0.5),
+      0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  &.pending {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 400;
+  }
+}
+
+// ─── Animation ──────────────────────────────────────────
+@keyframes activePulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 4px rgba(240, 165, 0, 0.3), 
+      0 4px 24px rgba(240, 165, 0, 0.5),
+      0 0 40px rgba(240, 165, 0, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 8px rgba(240, 165, 0, 0.15), 
+      0 4px 28px rgba(240, 165, 0, 0.6),
+      0 0 50px rgba(240, 165, 0, 0.4);
+  }
+}
+
+// ─── Responsive ─────────────────────────────────────────
+@media (max-width: 640px) {
+  .formStepper {
+    padding: $space-5 $space-4;
+    border-radius: $radius-lg;
+  }
+
+  .stepCircle {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .stepLabel {
+    font-size: 11px;
+
+    &.pending {
+      display: none;
+    }
+  }
+
+  .connector {
+    height: 2px;
+  }
+}

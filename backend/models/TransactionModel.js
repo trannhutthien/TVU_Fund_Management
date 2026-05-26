@@ -26,7 +26,7 @@ const createTransaction = async (transactionData, connection = null) => {
   const executor = connection || pool;
 
   const [result] = await executor.execute(
-    `INSERT INTO GiaoDich (
+    `INSERT INTO giaodich (
       quy_id,
       khoan_tai_tro_id,
       request_id,
@@ -74,8 +74,8 @@ const getTransactionById = async (transactionId) => {
       gd.ngay_cap_nhat,
       q.ten_quy,
       q.loai_quy
-     FROM GiaoDich gd
-     INNER JOIN Quy q ON gd.quy_id = q.quy_id
+     FROM giaodich gd
+     INNER JOIN quy q ON gd.quy_id = q.quy_id
      WHERE gd.transaction_id = ?
      LIMIT 1`,
     [transactionId]
@@ -102,7 +102,7 @@ const getTransactionsByFund = async (quyId, limit = 50, offset = 0) => {
       gd.ghi_chu,
       gd.ngay_giao_dich,
       gd.ngay_cap_nhat
-     FROM GiaoDich gd
+     FROM giaodich gd
      WHERE gd.quy_id = ?
      ORDER BY gd.ngay_giao_dich DESC
      LIMIT ? OFFSET ?`,
@@ -130,8 +130,8 @@ const getTransactionsByDonation = async (khoanTaiTroId) => {
       gd.ngay_giao_dich,
       gd.ngay_cap_nhat,
       q.ten_quy
-     FROM GiaoDich gd
-     INNER JOIN Quy q ON gd.quy_id = q.quy_id
+     FROM giaodich gd
+     INNER JOIN quy q ON gd.quy_id = q.quy_id
      WHERE gd.khoan_tai_tro_id = ?
      ORDER BY gd.ngay_giao_dich DESC`,
     [khoanTaiTroId]
@@ -179,16 +179,46 @@ const getAllTransactions = async (filters, limit, offset) => {
     queryParams.push(filters.denNgay);
   }
 
-  const whereClause = whereConditions.length > 0 
+  // Filter theo keyword — tìm theo mã GD, tên nhà tài trợ, tên sinh viên,
+  // tên người tạo, ghi chú
+  if (filters.keyword) {
+    whereConditions.push(`(
+      CAST(gd.transaction_id AS CHAR) LIKE ?
+      OR ntt.ten_nha_tai_tro LIKE ?
+      OR nd_sv.ho_ten LIKE ?
+      OR nd_sv.ma_so_dinh_danh LIKE ?
+      OR nd_creator.ho_ten LIKE ?
+      OR gd.ghi_chu LIKE ?
+    )`);
+    const kw = `%${filters.keyword}%`;
+    queryParams.push(kw, kw, kw, kw, kw, kw);
+  }
+
+  const whereClause = whereConditions.length > 0
     ? 'WHERE ' + whereConditions.join(' AND ')
     : '';
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // JOIN chung cho cả COUNT và DATA query — cần JOIN tất cả các bảng có thể
+  // được tham chiếu trong WHERE (keyword search)
+  // ─────────────────────────────────────────────────────────────────────────
+  const joinClause = `
+    INNER JOIN quy q ON gd.quy_id = q.quy_id
+    LEFT JOIN khoantaitro kt ON gd.khoan_tai_tro_id = kt.khoan_tai_tro_id
+    LEFT JOIN nhataitro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
+    LEFT JOIN nguoidung nd_donor ON ntt.user_id = nd_donor.user_id
+    LEFT JOIN yeucauhotro yc ON gd.request_id = yc.request_id
+    LEFT JOIN nguoidung nd_sv ON yc.user_id = nd_sv.user_id
+    LEFT JOIN nguoidung nd_creator ON gd.nguoi_tao_id = nd_creator.user_id
+  `;
 
   // ─────────────────────────────────────────────────────────────────────────
   // BƯỚC 2: ĐẾM TỔNG SỐ BẢN GHI
   // ─────────────────────────────────────────────────────────────────────────
   const countQuery = `
-    SELECT COUNT(*) as total
-    FROM GiaoDich gd
+    SELECT COUNT(DISTINCT gd.transaction_id) as total
+    FROM giaodich gd
+    ${joinClause}
     ${whereClause}
   `;
 
@@ -198,12 +228,8 @@ const getAllTransactions = async (filters, limit, offset) => {
   // ─────────────────────────────────────────────────────────────────────────
   // BƯỚC 3: LẤY DANH SÁCH GIAO DỊCH VỚI JOIN
   // ─────────────────────────────────────────────────────────────────────────
-  // JOIN với:
-  // - Quy: Lấy tên quỹ
-  // - KhoanTaiTro + NhaTaiTro: Nếu là Thu, lấy thông tin nhà tài trợ
-  // - NguoiDung: Lấy tên người tạo giao dịch (người duyệt)
   const dataQuery = `
-    SELECT 
+    SELECT
       gd.transaction_id,
       gd.quy_id,
       gd.khoan_tai_tro_id,
@@ -220,21 +246,25 @@ const getAllTransactions = async (filters, limit, offset) => {
       q.loai_quy,
       kt.so_tien as khoan_tai_tro_so_tien,
       ntt.ten_nha_tai_tro,
-      ntt.email as nha_tai_tro_email,
-      nd.ho_ten as nguoi_tao_ho_ten,
-      nd.email as nguoi_tao_email
-    FROM GiaoDich gd
-    INNER JOIN Quy q ON gd.quy_id = q.quy_id
-    LEFT JOIN KhoanTaiTro kt ON gd.khoan_tai_tro_id = kt.khoan_tai_tro_id
-    LEFT JOIN NhaTaiTro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
-    LEFT JOIN NguoiDung nd ON gd.nguoi_tao_id = nd.user_id
+      ntt.loai as nha_tai_tro_loai,
+      nd_donor.email as nha_tai_tro_email,
+      nd_donor.so_dien_thoai as nha_tai_tro_sdt,
+      nd_sv.user_id as sv_user_id,
+      nd_sv.ho_ten as sv_ho_ten,
+      nd_sv.ma_so_dinh_danh as sv_ma_so,
+      nd_sv.khoa_phong as sv_khoa_phong,
+      yc.tieu_de as yc_tieu_de,
+      nd_creator.ho_ten as nguoi_tao_ho_ten,
+      nd_creator.email as nguoi_tao_email
+    FROM giaodich gd
+    ${joinClause}
     ${whereClause}
     ORDER BY gd.ngay_giao_dich DESC
     LIMIT ? OFFSET ?
   `;
 
   const [transactions] = await pool.query(
-    dataQuery, 
+    dataQuery,
     [...queryParams, limit, offset]
   );
 
@@ -251,18 +281,24 @@ const getAllTransactions = async (filters, limit, offset) => {
       tenQuy: tx.ten_quy,
       loaiQuy: tx.loai_quy
     },
-    // Thông tin khoản tài trợ (nếu là Thu)
     khoanTaiTro: tx.khoan_tai_tro_id ? {
       id: tx.khoan_tai_tro_id,
-      soTien: parseFloat(tx.khoan_tai_tro_so_tien),
+      soTien: parseFloat(tx.khoan_tai_tro_so_tien || 0),
       nhaTaiTro: {
         ten: tx.ten_nha_tai_tro,
-        email: tx.nha_tai_tro_email
+        loai: tx.nha_tai_tro_loai,
+        email: tx.nha_tai_tro_email,
+        soDienThoai: tx.nha_tai_tro_sdt
       }
     } : null,
-    // Thông tin yêu cầu hỗ trợ (nếu là Chi)
     requestId: tx.request_id,
-    // Người tạo giao dịch (người duyệt)
+    sinhVien: tx.sv_user_id ? {
+      id: tx.sv_user_id,
+      hoTen: tx.sv_ho_ten,
+      maSoDinhDanh: tx.sv_ma_so,
+      khoaPhong: tx.sv_khoa_phong,
+      tieuDeDon: tx.yc_tieu_de
+    } : null,
     nguoiTao: tx.nguoi_tao_id ? {
       id: tx.nguoi_tao_id,
       hoTen: tx.nguoi_tao_ho_ten,
@@ -277,6 +313,84 @@ const getAllTransactions = async (filters, limit, offset) => {
   return {
     transactions: formattedTransactions,
     total
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getTransactionsSummary
+// MỤC ĐÍCH: Tính tổng thu/chi/ròng/bất thường theo filter
+// ─────────────────────────────────────────────────────────────────────────────
+const getTransactionsSummary = async (filters) => {
+  let whereConditions = [];
+  let queryParams = [];
+
+  if (filters.loai) {
+    whereConditions.push('gd.loai = ?');
+    queryParams.push(filters.loai);
+  }
+  if (filters.quyId) {
+    whereConditions.push('gd.quy_id = ?');
+    queryParams.push(filters.quyId);
+  }
+  if (filters.trangThai) {
+    whereConditions.push('gd.trang_thai = ?');
+    queryParams.push(filters.trangThai);
+  }
+  if (filters.tuNgay) {
+    whereConditions.push('DATE(gd.ngay_giao_dich) >= ?');
+    queryParams.push(filters.tuNgay);
+  }
+  if (filters.denNgay) {
+    whereConditions.push('DATE(gd.ngay_giao_dich) <= ?');
+    queryParams.push(filters.denNgay);
+  }
+  if (filters.keyword) {
+    whereConditions.push(`(
+      CAST(gd.transaction_id AS CHAR) LIKE ?
+      OR ntt.ten_nha_tai_tro LIKE ?
+      OR nd_sv.ho_ten LIKE ?
+      OR nd_sv.ma_so_dinh_danh LIKE ?
+      OR nd_creator.ho_ten LIKE ?
+      OR gd.ghi_chu LIKE ?
+    )`);
+    const kw = `%${filters.keyword}%`;
+    queryParams.push(kw, kw, kw, kw, kw, kw);
+  }
+
+  const whereClause = whereConditions.length > 0
+    ? 'WHERE ' + whereConditions.join(' AND ')
+    : '';
+
+  const joinClause = `
+    LEFT JOIN khoantaitro kt ON gd.khoan_tai_tro_id = kt.khoan_tai_tro_id
+    LEFT JOIN nhataitro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
+    LEFT JOIN yeucauhotro yc ON gd.request_id = yc.request_id
+    LEFT JOIN nguoidung nd_sv ON yc.user_id = nd_sv.user_id
+    LEFT JOIN nguoidung nd_creator ON gd.nguoi_tao_id = nd_creator.user_id
+  `;
+
+  const [rows] = await pool.query(
+    `SELECT
+       COALESCE(SUM(CASE WHEN gd.loai='Thu' AND gd.trang_thai='Thanh cong' THEN gd.so_tien ELSE 0 END), 0) AS tong_thu,
+       COALESCE(SUM(CASE WHEN gd.loai='Chi' AND gd.trang_thai='Thanh cong' THEN gd.so_tien ELSE 0 END), 0) AS tong_chi,
+       COUNT(DISTINCT gd.transaction_id) AS so_giao_dich,
+       COUNT(DISTINCT CASE WHEN gd.trang_thai IN ('That bai','Hoan tien') THEN gd.transaction_id END) AS so_bat_thuong
+     FROM giaodich gd
+     ${joinClause}
+     ${whereClause}`,
+    queryParams
+  );
+
+  const r = rows[0];
+  const tongThu = parseFloat(r.tong_thu || 0);
+  const tongChi = parseFloat(r.tong_chi || 0);
+
+  return {
+    tongThu,
+    tongChi,
+    soRong: tongThu - tongChi,
+    soGiaoDich: r.so_giao_dich,
+    soGiaoDichBatThuong: r.so_bat_thuong,
   };
 };
 
@@ -307,18 +421,19 @@ const getTransactionByIdDetailed = async (transactionId) => {
       kt.ngay_tai_tro,
       ntt.nha_tai_tro_id,
       ntt.ten_nha_tai_tro,
-      ntt.email as nha_tai_tro_email,
-      ntt.so_dien_thoai as nha_tai_tro_sdt,
-      nd.user_id,
-      nd.ho_ten as nguoi_tao_ho_ten,
-      nd.email as nguoi_tao_email,
+      nd_donor.email as nha_tai_tro_email,
+      nd_donor.so_dien_thoai as nha_tai_tro_sdt,
+      nd_creator.user_id,
+      nd_creator.ho_ten as nguoi_tao_ho_ten,
+      nd_creator.email as nguoi_tao_email,
       r.ten_vai_tro as nguoi_tao_vai_tro
-    FROM GiaoDich gd
-    INNER JOIN Quy q ON gd.quy_id = q.quy_id
-    LEFT JOIN KhoanTaiTro kt ON gd.khoan_tai_tro_id = kt.khoan_tai_tro_id
-    LEFT JOIN NhaTaiTro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
-    LEFT JOIN NguoiDung nd ON gd.nguoi_tao_id = nd.user_id
-    LEFT JOIN VaiTro r ON nd.role_id = r.role_id
+    FROM giaodich gd
+    INNER JOIN quy q ON gd.quy_id = q.quy_id
+    LEFT JOIN khoantaitro kt ON gd.khoan_tai_tro_id = kt.khoan_tai_tro_id
+    LEFT JOIN nhataitro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
+    LEFT JOIN nguoidung nd_donor ON ntt.user_id = nd_donor.user_id
+    LEFT JOIN nguoidung nd_creator ON gd.nguoi_tao_id = nd_creator.user_id
+    LEFT JOIN vaitro r ON nd_creator.role_id = r.role_id
     WHERE gd.transaction_id = ?
     LIMIT 1`,
     [transactionId]
@@ -373,5 +488,6 @@ export default {
   getTransactionsByFund,
   getTransactionsByDonation,
   getAllTransactions,
+  getTransactionsSummary,
   getTransactionByIdDetailed
 };

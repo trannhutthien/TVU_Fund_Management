@@ -19,7 +19,7 @@ const createApplication = async (applicationData) => {
   } = applicationData;
 
   const [result] = await pool.execute(
-    `INSERT INTO YeuCauHoTro (
+    `INSERT INTO yeucauhotro (
       user_id,
       quy_id,
       tieu_de,
@@ -72,9 +72,9 @@ const getApplicationById = async (requestId) => {
       nd.ma_so_dinh_danh,
       q.ten_quy,
       q.loai_quy
-     FROM YeuCauHoTro yc
-     INNER JOIN NguoiDung nd ON yc.user_id = nd.user_id
-     INNER JOIN Quy q ON yc.quy_id = q.quy_id
+     FROM yeucauhotro yc
+     INNER JOIN nguoidung nd ON yc.user_id = nd.user_id
+     INNER JOIN quy q ON yc.quy_id = q.quy_id
      WHERE yc.request_id = ?
      LIMIT 1`,
     [requestId]
@@ -97,8 +97,8 @@ const getApplicationsByUser = async (userId, limit = 20, offset = 0) => {
       yc.trang_thai,
       yc.ngay_tao,
       q.ten_quy
-     FROM YeuCauHoTro yc
-     INNER JOIN Quy q ON yc.quy_id = q.quy_id
+     FROM yeucauhotro yc
+     INNER JOIN quy q ON yc.quy_id = q.quy_id
      WHERE yc.user_id = ?
      ORDER BY yc.ngay_tao DESC
      LIMIT ? OFFSET ?`,
@@ -116,10 +116,16 @@ const getAllApplications = async (filters, limit, offset) => {
   let whereConditions = [];
   let queryParams = [];
 
-  // Filter theo trạng thái
+  // Filter theo trạng thái (single value hoặc array)
   if (filters.trangThai) {
-    whereConditions.push('yc.trang_thai = ?');
-    queryParams.push(filters.trangThai);
+    if (Array.isArray(filters.trangThai) && filters.trangThai.length > 0) {
+      const placeholders = filters.trangThai.map(() => '?').join(',');
+      whereConditions.push(`yc.trang_thai IN (${placeholders})`);
+      queryParams.push(...filters.trangThai);
+    } else if (typeof filters.trangThai === 'string') {
+      whereConditions.push('yc.trang_thai = ?');
+      queryParams.push(filters.trangThai);
+    }
   }
 
   // Filter theo quỹ
@@ -141,7 +147,7 @@ const getAllApplications = async (filters, limit, offset) => {
   // Đếm tổng số bản ghi
   const countQuery = `
     SELECT COUNT(*) as total
-    FROM YeuCauHoTro yc
+    FROM yeucauhotro yc
     ${whereClause}
   `;
   const [countResult] = await pool.query(countQuery, queryParams);
@@ -163,9 +169,9 @@ const getAllApplications = async (filters, limit, offset) => {
       nd.ma_so_dinh_danh,
       q.ten_quy,
       q.loai_quy
-    FROM YeuCauHoTro yc
-    INNER JOIN NguoiDung nd ON yc.user_id = nd.user_id
-    INNER JOIN Quy q ON yc.quy_id = q.quy_id
+    FROM yeucauhotro yc
+    INNER JOIN nguoidung nd ON yc.user_id = nd.user_id
+    INNER JOIN quy q ON yc.quy_id = q.quy_id
     ${whereClause}
     ORDER BY yc.ngay_tao DESC
     LIMIT ? OFFSET ?
@@ -190,7 +196,7 @@ const updateApplicationStatus = async (requestId, trangThai, connection = null) 
   const executor = connection || pool;
 
   await executor.execute(
-    `UPDATE YeuCauHoTro 
+    `UPDATE yeucauhotro 
      SET trang_thai = ?,
          ngay_cap_nhat = NOW()
      WHERE request_id = ?`,
@@ -208,7 +214,7 @@ const updateTuChoi = async (requestId, lyDoTuChoi, connection = null) => {
   const executor = connection || pool;
 
   await executor.execute(
-    `UPDATE YeuCauHoTro 
+    `UPDATE yeucauhotro 
      SET trang_thai = 'Tu choi',
          ly_do_tu_choi = ?,
          ngay_cap_nhat = NOW()

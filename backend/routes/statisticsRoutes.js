@@ -1,11 +1,17 @@
 import express from 'express';
 import {
   getPublicStats,
-  getSupportedRequestsCount,
-  getTotalFundAmount,
-  getTotalDonorsCount,
-  getTotalFundsCount
+  getFundBreakdown,
+  getImpactStats,
+  getKeToanSummary,
+  getKeToanCashflow,
+  getKeToanTransactionStatus,
+  getKeToanRecentTransactions,
+  getKeToanFundHealth,
+  getKeToanPendingDonations,
 } from '../controllers/statisticsController.js';
+import { protect } from '../middleware/authMiddleware.js';
+import { authorizeRoles } from '../middleware/rolesMiddleware.js';
 
 const router = express.Router();
 
@@ -13,28 +19,17 @@ const router = express.Router();
 // ─── STATISTICS ROUTES (THỐNG KÊ) ─────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PUBLIC ROUTES - Không cần authentication
-// ─────────────────────────────────────────────────────────────────────────────
-
-// GET /api/statistics/public
-// Lấy tất cả thống kê cho Landing Page (4 số liệu)
+// ─── PUBLIC ────────────────────────────────────────────────────────────────────
 router.get('/public', getPublicStats);
+router.get('/fund-breakdown', getFundBreakdown);
+router.get('/impact', getImpactStats);
 
-// GET /api/statistics/supported-requests
-// Lấy số yêu cầu đã hỗ trợ
-router.get('/supported-requests', getSupportedRequestsCount);
-
-// GET /api/statistics/total-fund-amount
-// Lấy tổng số tiền các quỹ
-router.get('/total-fund-amount', getTotalFundAmount);
-
-// GET /api/statistics/total-donors
-// Lấy tổng số nhà hỗ trợ
-router.get('/total-donors', getTotalDonorsCount);
-
-// GET /api/statistics/total-funds
-// Lấy tổng số quỹ đang hoạt động
-router.get('/total-funds', getTotalFundsCount);
+// ─── KẾ TOÁN (role 1 - admin, 2 - kế toán) ────────────────────────────────────
+router.get('/ketoan/summary', protect, authorizeRoles(1, 2), getKeToanSummary);
+router.get('/ketoan/cashflow', protect, authorizeRoles(1, 2), getKeToanCashflow);
+router.get('/ketoan/transaction-status', protect, authorizeRoles(1, 2), getKeToanTransactionStatus);
+router.get('/ketoan/recent-transactions', protect, authorizeRoles(1, 2), getKeToanRecentTransactions);
+router.get('/ketoan/fund-health', protect, authorizeRoles(1, 2), getKeToanFundHealth);
+router.get('/ketoan/pending-donations', protect, authorizeRoles(1, 2), getKeToanPendingDonations);
 
 export default router;

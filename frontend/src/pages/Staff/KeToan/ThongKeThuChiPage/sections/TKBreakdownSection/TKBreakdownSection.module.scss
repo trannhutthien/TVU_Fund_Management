@@ -1,0 +1,166 @@
+@use '../../../../../../styles/variables' as *;
+
+// ─── CARD ──────────────────────────────────────────────────────────────────────
+.card {
+  background: var(--color-white);
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 12px rgba(26, 47, 94, 0.08);
+}
+
+// ─── CARD HEADER ───────────────────────────────────────────────────────────────
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+// ─── TITLE BLOCK ───────────────────────────────────────────────────────────────
+.titleBlock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titleIcon {
+  font-size: 20px;
+}
+
+.title {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.totalAmount {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+// ─── CHART CONTAINER ───────────────────────────────────────────────────────────
+.chartContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+// ─── CENTER LABEL (SVG TEXT) ───────────────────────────────────────────────────
+.centerLabel {
+  pointer-events: none;
+}
+
+.centerValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  fill: var(--color-primary);
+}
+
+.centerText {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  fill: #94a3b8;
+}
+
+// ─── DETAIL LIST ───────────────────────────────────────────────────────────────
+.detailList {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// ─── DOT ───────────────────────────────────────────────────────────────────────
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// ─── ITEM NAME ─────────────────────────────────────────────────────────────────
+.itemName {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #374151;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ─── SPACER ────────────────────────────────────────────────────────────────────
+.spacer {
+  flex: 1;
+}
+
+// ─── ITEM VALUE ────────────────────────────────────────────────────────────────
+.itemValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+// ─── ITEM BADGE ────────────────────────────────────────────────────────────────
+.itemBadge {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+// ─── MORE ITEM ─────────────────────────────────────────────────────────────────
+.moreItem {
+  justify-content: center;
+  border-bottom: none;
+  padding-top: 12px;
+}
+
+.moreText {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  color: #94a3b8;
+}
+
+// ─── RESPONSIVE ────────────────────────────────────────────────────────────────
+@media (max-width: 480px) {
+  .card {
+    padding: 16px 18px;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .totalAmount {
+    font-size: 13px;
+  }
+
+  .itemValue {
+    font-size: 12px;
+  }
+}

@@ -1,0 +1,226 @@
+@use '@styles/variables' as *;
+
+// ============================================
+// APPLICATION STATUS STEPPER
+// Thanh tiến trình trạng thái đơn yêu cầu hỗ trợ
+// ============================================
+
+.applicationStatusStepper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: $space-5 $space-6;
+  
+  // Glassmorphism
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  // Border subtle
+  border: 1px solid rgba(26, 47, 94, 0.1);
+  border-radius: $radius-lg;
+  
+  // Shadow nhẹ
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+  
+  box-sizing: border-box;
+}
+
+// ─── Title ───────────────────────────────────────────────
+.stepperTitle {
+  font-size: 14px;
+  font-weight: $font-bold;
+  color: $color-navy-blue;
+  margin-bottom: $space-4;
+  padding-left: $space-2;
+  letter-spacing: 0.02em;
+  
+  @media (max-width: 640px) {
+    font-size: 13px;
+    margin-bottom: $space-3;
+  }
+}
+
+// ─── Steps Container ─────────────────────────────────────
+.stepsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+}
+
+// ─── Step Item ───────────────────────────────────────────
+.stepItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+// ─── Hàng ngang: connector + circle + connector ──────────
+.stepRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+// ─── Đường kẻ nối (connector) ────────────────────────────
+.connector {
+  flex: 1;
+  height: 2px;
+  background: rgba(26, 47, 94, 0.15);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+
+  &.connectorDone {
+    background: linear-gradient(90deg, $color-primary, rgba(59, 111, 245, 0.7));
+    box-shadow: 0 0 8px rgba(59, 111, 245, 0.3);
+  }
+
+  &.connectorRejected {
+    background: linear-gradient(90deg, $color-danger, rgba(220, 38, 38, 0.7));
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+  }
+
+  &.hidden {
+    visibility: hidden;
+  }
+}
+
+// ─── Ô số tròn (stepCircle) ──────────────────────────────
+.stepCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+
+  &.completed {
+    background: linear-gradient(135deg, $color-primary, #2563eb);
+    color: white;
+    border: none;
+    box-shadow: 
+      0 2px 8px rgba(59, 111, 245, 0.4),
+      0 0 12px rgba(59, 111, 245, 0.2);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $color-gold, #e8b800);
+    color: $color-navy-blue;
+    border: 2px solid rgba(240, 165, 0, 0.5);
+    box-shadow: 
+      0 0 0 3px rgba(240, 165, 0, 0.2), 
+      0 2px 12px rgba(240, 165, 0, 0.4);
+    animation: activePulse 2s ease-in-out infinite;
+  }
+
+  &.pending {
+    background: rgba(26, 47, 94, 0.08);
+    border: 2px solid rgba(26, 47, 94, 0.2);
+    color: rgba(26, 47, 94, 0.4);
+  }
+
+  &.rejected {
+    background: linear-gradient(135deg, $color-danger, #dc2626);
+    color: white;
+    border: none;
+    box-shadow: 
+      0 2px 8px rgba(220, 38, 38, 0.4),
+      0 0 12px rgba(220, 38, 38, 0.2);
+  }
+
+  &.inactive {
+    background: rgba(26, 47, 94, 0.05);
+    border: 2px solid rgba(26, 47, 94, 0.1);
+    color: rgba(26, 47, 94, 0.2);
+  }
+}
+
+// ─── Label tên bước ──────────────────────────────────────
+.stepLabel {
+  margin-top: 8px;
+  font-size: 12px;
+  text-align: center;
+  letter-spacing: 0.01em;
+  transition: all 0.3s ease;
+
+  &.completed {
+    color: $color-primary;
+    font-weight: 600;
+  }
+
+  &.active {
+    color: $color-gold;
+    font-weight: 700;
+  }
+
+  &.pending {
+    color: rgba(26, 47, 94, 0.5);
+    font-weight: 400;
+  }
+
+  &.rejected {
+    color: $color-danger;
+    font-weight: 600;
+  }
+
+  &.inactive {
+    color: rgba(26, 47, 94, 0.3);
+    font-weight: 400;
+  }
+}
+
+// ─── Animation ──────────────────────────────────────────
+@keyframes activePulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 3px rgba(240, 165, 0, 0.2), 
+      0 2px 12px rgba(240, 165, 0, 0.4);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 6px rgba(240, 165, 0, 0.1), 
+      0 2px 16px rgba(240, 165, 0, 0.5);
+  }
+}
+
+// ─── Responsive ─────────────────────────────────────────
+@media (max-width: 640px) {
+  .applicationStatusStepper {
+    padding: $space-4 $space-4;
+    border-radius: $radius-md;
+  }
+
+  .stepCircle {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .stepLabel {
+    font-size: 10px;
+    
+    &.pending,
+    &.inactive {
+      display: none;
+    }
+  }
+
+  .connector {
+    height: 2px;
+  }
+}

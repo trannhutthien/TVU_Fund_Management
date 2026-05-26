@@ -29,16 +29,16 @@ const router = express.Router();
 router.post("/", protect, authorizeRoles(2, 3, 4), createApplication);
 
 
-// GET /api/applications/my — Sinh viên xem đơn của mình
+// GET /api/applications/my-applications — Người dùng xem đơn của mình
 // Middleware:
 // - protect: Kiểm tra token hợp lệ
-// - authorizeRoles(4): Chỉ cho phép Sinh viên
+// - authorizeRoles(4): Chỉ cho phép người dùng (role_id = 4)
 //
 // Query params:
 // - page: Trang hiện tại (mặc định: 1)
 // - limit: Số bản ghi/trang (mặc định: 20)
 //
-router.get("/my", protect, authorizeRoles(4), getMyApplications);
+router.get("/my-applications", protect, authorizeRoles(4), getMyApplications);
 
 // GET /api/applications — Admin/Giáo vụ xem tất cả đơn
 // Middleware:
@@ -49,7 +49,7 @@ router.get("/my", protect, authorizeRoles(4), getMyApplications);
 // - trangThai: Lọc theo trạng thái
 // - quyId: Lọc theo quỹ
 // - userId: Lọc theo sinh viên
-router.get("/", protect, authorizeRoles(1, 3), getAllApplications);
+router.get("/", protect, authorizeRoles(1, 2, 3), getAllApplications);
 
 // GET /api/applications/:id — Xem chi tiết 1 đơn
 // Middleware:
@@ -59,7 +59,7 @@ router.get("/", protect, authorizeRoles(1, 3), getAllApplications);
 // - Sinh viên: Chỉ xem được đơn của mình
 // - Admin/Giáo vụ: Xem được tất cả
 //
-router.get("/:id", protect, authorizeRoles(1, 3, 4), getApplicationById);
+router.get("/:id", protect, authorizeRoles(1, 2, 3, 4), getApplicationById);
 
 // PUT /api/applications/:id/reject — Từ chối đơn (bất kỳ cấp nào)
 // Middleware:
@@ -73,7 +73,7 @@ router.get("/:id", protect, authorizeRoles(1, 3, 4), getApplicationById);
 // 5. Cập nhật YeuCauHoTro: trang_thai = 'Tu choi', ly_do_tu_choi
 // 6. Trả về kết quả
 //
-router.put("/:id/reject", protect, authorizeRoles(1, 3), rejectApplication);
+router.put("/:id/reject", protect, authorizeRoles(1, 2, 3), rejectApplication);
 
 // PUT /api/applications/:id/staff-approve — Giáo vụ duyệt cấp 1
 // Middleware:

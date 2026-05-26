@@ -1,4 +1,5 @@
 import TransactionModel from "../models/TransactionModel.js";
+import ExcelJS from "exceljs";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── GET /api/transactions (LỊCH SỬ DÒNG TIỀN) ────────────────────────────────
@@ -50,7 +51,8 @@ export const getAllTransactions = async (req, res) => {
       quyId,
       trangThai,
       tuNgay,
-      denNgay
+      denNgay,
+      keyword
     } = req.query;
 
     // Validate page và limit
@@ -111,7 +113,8 @@ export const getAllTransactions = async (req, res) => {
       quyId: quyId ? parseInt(quyId) : null,
       trangThai,
       tuNgay,
-      denNgay
+      denNgay,
+      keyword: keyword?.trim() || null
     };
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -206,7 +209,209 @@ export const getTransactionById = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/transactions/summary (TỔNG HỢP THU/CHI/RÒNG/BẤT THƯỜNG) ─────────
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getTransactionsSummary = async (req, res) => {
+  try {
+    const { loai, quyId, trangThai, tuNgay, denNgay, keyword } = req.query;
+    const filters = {
+      loai,
+      quyId: quyId ? parseInt(quyId) : null,
+      trangThai,
+      tuNgay,
+      denNgay,
+      keyword: keyword?.trim() || null
+    };
+
+    const data = await TransactionModel.getTransactionsSummary(filters);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy tổng hợp giao dịch thành công",
+      data
+    });
+  } catch (error) {
+    console.error("Lỗi getTransactionsSummary:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+      error: error.message
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/transactions/export (XUẤT EXCEL TOÀN BỘ GIAO DỊCH ĐANG FILTER) ─
+// ═══════════════════════════════════════════════════════════════════════════════
+export const exportTransactions = async (req, res) => {
+  try {
+    const { loai, quyId, trangThai, tuNgay, denNgay, keyword } = req.query;
+    const filters = {
+      loai,
+      quyId: quyId ? parseInt(quyId) : null,
+      trangThai,
+      tuNgay,
+      denNgay,
+      keyword: keyword?.trim() || null
+    };
+
+    // Lấy toàn bộ giao dịch (không phân trang)
+    const result = await TransactionModel.getAllTransactions(
+      filters,
+      100000, // limit lớn
+      0
+    );
+
+    const transactions = result.transactions;
+
+    // Tạo Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "TVU Fund Management";
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet("Lịch sử giao dịch");
+
+    // Tiêu đề báo cáo
+    sheet.mergeCells("A1:I1");
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = "DANH SÁCH GIAO DỊCH THU CHI";
+    titleCell.font = { size: 16, bold: true, color: { argb: "FF1A2F5E" } };
+    titleCell.alignment = { horizontal: "center", vertical: "middle" };
+    sheet.getRow(1).height = 30;
+
+    sheet.getCell("A3").value = "Ngày xuất:";
+    sheet.getCell("A3").font = { bold: true };
+    sheet.getCell("B3").value = new Date().toLocaleString("vi-VN");
+
+    sheet.getCell("A4").value = "Tổng số giao dịch:";
+    sheet.getCell("A4").font = { bold: true };
+    sheet.getCell("B4").value = transactions.length;
+
+    // Header bảng
+    const headers = [
+      "Mã GD",
+      "Loại",
+      "Đối tượng",
+      "Quỹ",
+      "Số tiền",
+      "Trạng thái",
+      "Người tạo",
+      "Ghi chú",
+      "Ngày tạo"
+    ];
+
+    const headerRow = sheet.getRow(6);
+    headerRow.values = headers;
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.height = 24;
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1A2F5E" }
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" }
+      };
+    });
+
+    // Data rows
+    transactions.forEach((tx, idx) => {
+      const doiTuong =
+        tx.loai === "Thu"
+          ? tx.khoanTaiTro?.nhaTaiTro?.ten || "—"
+          : tx.sinhVien
+            ? `${tx.sinhVien.hoTen} (${tx.sinhVien.maSoDinhDanh || "—"})`
+            : "—";
+
+      const row = sheet.getRow(7 + idx);
+      row.values = [
+        `GD${tx.transactionId}`,
+        tx.loai,
+        doiTuong,
+        tx.quy?.tenQuy || "—",
+        Number(tx.soTien || 0),
+        tx.trangThai,
+        tx.nguoiTao?.hoTen || "—",
+        tx.ghiChu || "",
+        new Date(tx.ngayGiaoDich).toLocaleString("vi-VN")
+      ];
+
+      // Format số tiền
+      row.getCell(5).numFmt = '#,##0" đ"';
+      row.getCell(5).alignment = { horizontal: "right" };
+
+      // Tô màu Thu/Chi
+      const loaiCell = row.getCell(2);
+      if (tx.loai === "Thu") {
+        loaiCell.font = { color: { argb: "FFB45309" }, bold: true };
+      } else {
+        loaiCell.font = { color: { argb: "FFDC2626" }, bold: true };
+      }
+      loaiCell.alignment = { horizontal: "center" };
+
+      // Highlight giao dịch bất thường
+      if (tx.trangThai === "That bai" || tx.trangThai === "Hoan tien") {
+        row.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFFEE2E2" }
+          };
+        });
+      }
+
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFE2E8F0" } },
+          left: { style: "thin", color: { argb: "FFE2E8F0" } },
+          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+          right: { style: "thin", color: { argb: "FFE2E8F0" } }
+        };
+      });
+    });
+
+    // Auto width
+    sheet.columns.forEach((col, idx) => {
+      let maxLength = headers[idx]?.length || 10;
+      col.eachCell?.({ includeEmpty: false }, (cell) => {
+        const v = String(cell.value ?? "");
+        if (v.length > maxLength) maxLength = v.length;
+      });
+      col.width = Math.min(maxLength + 4, 45);
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const fileName = `LichSuGiaoDich_${Date.now()}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+    res.setHeader("Content-Length", buffer.length);
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Lỗi exportTransactions:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi xuất Excel",
+      error: error.message
+    });
+  }
+};
+
 export default {
   getAllTransactions,
-  getTransactionById
+  getTransactionById,
+  getTransactionsSummary,
+  exportTransactions
 };

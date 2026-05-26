@@ -1,0 +1,391 @@
+@use '../../../../styles/variables' as *;
+
+// ============================================
+// PROFILE HEADER - Wrapper full width
+// ============================================
+.profileHeader {
+  width: 100%;
+  padding: 0 $space-4;
+
+  @media (max-width: 480px) {
+    padding: 0 $space-3;
+  }
+}
+
+// ============================================
+// CARD - Width 70% màn hình canh giữa
+// ============================================
+.card {
+  position: relative;
+  width: 70vw;
+  max-width: 1400px;
+  margin: 0 auto;
+  
+  // Glassmorphism theo design system
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  
+  // Multi-layer shadow theo design system
+  box-shadow: 
+    0 8px 32px rgba(26, 47, 94, 0.12),
+    0 2px 8px rgba(26, 47, 94, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  
+  padding: $space-10 $space-12;
+  overflow: hidden;
+  
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 
+      0 12px 40px rgba(26, 47, 94, 0.15),
+      0 4px 12px rgba(26, 47, 94, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  // Gold accent line ở trên cùng
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--color-gold, $color-gold) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  @media (max-width: 1200px) {
+    width: 80vw;
+    padding: $space-8 $space-10;
+  }
+
+  @media (max-width: 768px) {
+    width: 90vw;
+    padding: $space-6 $space-8;
+  }
+
+  @media (max-width: 480px) {
+    width: calc(100vw - 32px);
+    padding: $space-5 $space-6;
+  }
+}
+
+// ============================================
+// DECORATIVE CIRCLE - Gold gradient
+// ============================================
+.decorCircle {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(240, 165, 0, 0.2) 0%,
+    rgba(240, 165, 0, 0.05) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+
+  @media (max-width: 768px) {
+    width: 180px;
+    height: 180px;
+    top: -60px;
+    right: -60px;
+  }
+
+  @media (max-width: 480px) {
+    width: 120px;
+    height: 120px;
+    top: -40px;
+    right: -40px;
+  }
+}
+
+// ============================================
+// CONTENT LAYOUT
+// ============================================
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: $space-8;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-6;
+  }
+}
+
+// ============================================
+// AVATAR SECTION
+// ============================================
+.avatarSection {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--color-white, #ffffff);
+  box-shadow: 
+    0 8px 24px rgba(26, 47, 94, 0.15),
+    0 2px 8px rgba(26, 47, 94, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      0 12px 32px rgba(26, 47, 94, 0.2),
+      0 4px 12px rgba(26, 47, 94, 0.12);
+  }
+
+  @media (max-width: 768px) {
+    width: 100px;
+    height: 100px;
+  }
+
+  @media (max-width: 480px) {
+    width: 80px;
+    height: 80px;
+    border: 3px solid var(--color-white, #ffffff);
+  }
+}
+
+.avatarFallback {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary, $color-navy-blue) 0%,
+    rgba(26, 47, 94, 0.85) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid var(--color-white, #ffffff);
+  box-shadow: 
+    0 8px 24px rgba(26, 47, 94, 0.15),
+    0 2px 8px rgba(26, 47, 94, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      0 12px 32px rgba(26, 47, 94, 0.2),
+      0 4px 12px rgba(26, 47, 94, 0.12);
+  }
+
+  @media (max-width: 768px) {
+    width: 100px;
+    height: 100px;
+  }
+
+  @media (max-width: 480px) {
+    width: 80px;
+    height: 80px;
+    border: 3px solid var(--color-white, #ffffff);
+  }
+}
+
+.cameraBtn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-gold, $color-gold);
+  color: var(--color-primary, $color-navy-blue);
+  border: 3px solid var(--color-white, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(240, 165, 0, 0.3);
+
+  &:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(240, 165, 0, 0.5);
+    background: linear-gradient(135deg, $color-gold 0%, #e8b800 100%);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+  }
+
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--color-white, #ffffff);
+  }
+}
+
+.hiddenInput {
+  display: none;
+}
+
+// ============================================
+// INFO SECTION
+// ============================================
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  flex-wrap: wrap;
+  margin-bottom: $space-1;
+}
+
+.name {
+  font-size: 28px;
+  font-weight: $font-extrabold;
+  color: var(--color-primary, $color-navy-blue);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+
+  @media (max-width: 768px) {
+    font-size: 24px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: $font-extrabold;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border: 2px solid;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+    padding: 5px 14px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 10px;
+    padding: 4px 12px;
+  }
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  font-size: 15px;
+  color: #64748b;
+  font-weight: $font-semibold;
+  padding: $space-2 0;
+
+  svg {
+    flex-shrink: 0;
+    color: var(--color-primary, $color-navy-blue);
+    opacity: 0.7;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 13px;
+    gap: $space-2;
+  }
+}
+
+.metaRowLight {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: $font-medium;
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 11px;
+  }
+}
+
+// ============================================
+// ACTIONS SECTION
+// ============================================
+.actions {
+  display: flex;
+  gap: $space-4;
+  flex-shrink: 0;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    gap: $space-3;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: $space-2;
+
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+

@@ -1,4 +1,5 @@
 import FundModel from "../models/FundModel.js";
+import { buildFundImageUrl } from "../utils/imageHelper.js";
 
 // ─── POST /api/funds ──────────────────────────────────────────────────────────
 // Yêu cầu: phải có access token hợp lệ và quyền admin/giáo vụ (role_id: 1 hoặc 3)
@@ -129,14 +130,61 @@ export const getFunds = async (req, res) => {
         tenQuy: fund.ten_quy,
         loaiQuy: fund.loai_quy,
         moTa: fund.mo_ta,
+        hinhAnh: fund.hinh_anh,
+        soTienToiThieu: fund.so_tien_toi_thieu,
+        soTienToiDa: fund.so_tien_toi_da,
+        soLuongChiTieu: fund.so_luong_chi_tieu,
+        hanNopDon: fund.han_nop_don,
+        dieuKienTomTat: fund.dieu_kien_tom_tat,
         soDu: fund.so_du,
         ngayTao: fund.ngay_tao,
         ngayCapNhat: fund.ngay_cap_nhat,
-        trangThai: fund.trang_thai
+        trangThai: fund.trang_thai,
+        soDonDaNop: fund.so_don_da_nop,
+        phanTramDaNhan: fund.phan_tram_da_nhan
       }))
     });
   } catch (error) {
     console.error("Lỗi getFunds:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ─── GET /api/funds/public ────────────────────────────────────────────────────
+// API công khai - KHÔNG CẦN AUTHENTICATION
+// Trả về danh sách quỹ đang hoạt động hoặc tạm dừng (để hiển thị trên trang công khai)
+export const getPublicFunds = async (req, res) => {
+  try {
+    // Lấy danh sách quỹ công khai từ database
+    const funds = await FundModel.getPublicFunds();
+
+    return res.status(200).json({
+      success: true,
+      total: funds.length,
+      funds: funds.map(fund => ({
+        quyId: fund.quy_id,
+        tenQuy: fund.ten_quy,
+        loaiQuy: fund.loai_quy,
+        moTa: fund.mo_ta,
+        hinhAnh: buildFundImageUrl(fund.hinh_anh), // Build full URL
+        soTienToiThieu: fund.so_tien_toi_thieu,
+        soTienToiDa: fund.so_tien_toi_da,
+        soLuongChiTieu: fund.so_luong_chi_tieu,
+        hanNopDon: fund.han_nop_don,
+        dieuKienTomTat: fund.dieu_kien_tom_tat,
+        soDu: fund.so_du,
+        ngayTao: fund.ngay_tao,
+        ngayCapNhat: fund.ngay_cap_nhat,
+        trangThai: fund.trang_thai,
+        soDonDaNop: fund.so_don_da_nop,
+        phanTramDaNhan: fund.phan_tram_da_nhan
+      }))
+    });
+  } catch (error) {
+    console.error("Lỗi getPublicFunds:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",

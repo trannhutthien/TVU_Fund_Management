@@ -1,0 +1,348 @@
+@use '../../../../styles/variables' as *;
+
+.donorWallSection {
+  background: #f8f9ff;
+  padding: 64px 0;
+  width: 100%;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $space-4;
+}
+
+// ============================================
+// Header
+// ============================================
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  gap: $space-6;
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+    gap: $space-4;
+  }
+}
+
+.headerLeft {
+  flex: 1;
+  max-width: 560px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: $font-extrabold;
+  color: var(--color-primary, $color-navy-blue);
+  margin: 0 0 $space-2 0;
+  line-height: 1.3;
+
+  @media (max-width: 767px) {
+    font-size: 24px;
+  }
+}
+
+.description {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.headerRight {
+  flex-shrink: 0;
+}
+
+.partnerBadge {
+  font-size: 11px !important;
+  font-weight: $font-bold !important;
+  letter-spacing: 1px !important;
+  padding: 8px 16px !important;
+}
+
+// ============================================
+// Top Tier Row (Diamond + Gold)
+// ============================================
+.topTierRow {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  align-items: flex-start; // Align items to top
+
+  @media (max-width: 1023px) {
+    flex-direction: column;
+  }
+}
+
+// ============================================
+// Common Card Styles
+// ============================================
+.diamondCard,
+.goldCard,
+.silverCard {
+  position: relative;
+  background: var(--color-white, #ffffff);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(26, 47, 94, 0.08);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(26, 47, 94, 0.12);
+  }
+}
+
+// ============================================
+// Tier Badge (góc trên phải)
+// ============================================
+.tierBadge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(240, 165, 0, 0.1) 0%, rgba(240, 165, 0, 0.05) 100%);
+  border: 2px solid rgba(240, 165, 0, 0.2);
+}
+
+.tierIcon {
+  font-size: 20px;
+  color: var(--color-gold, $color-gold);
+}
+
+// ============================================
+// Avatar Wrapper
+// ============================================
+.avatarWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+// ============================================
+// Card Content
+// ============================================
+.cardContent {
+  text-align: center;
+}
+
+.tierLabel {
+  font-size: 12px;
+  font-weight: $font-semibold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-gold, $color-gold);
+  margin-bottom: 8px;
+}
+
+.donorName {
+  font-size: 18px;
+  font-weight: $font-bold;
+  color: var(--color-primary, $color-navy-blue);
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+
+.donorDesc {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+
+// ============================================
+// Stats Row
+// ============================================
+.statsRow {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin: 16px 0;
+  padding: 16px 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 11px;
+  font-weight: $font-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 14px;
+  font-weight: $font-bold;
+  color: var(--color-primary, $color-navy-blue);
+}
+
+// ============================================
+// Fund Types
+// ============================================
+.fundTypes {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.fundTypesLabel {
+  font-size: 11px;
+  font-weight: $font-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.fundTypesList {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+// ============================================
+// Diamond Tier Specific
+// ============================================
+.diamondSection {
+  // When with gold section (side by side)
+  flex: 0 0 35%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  // When alone (no gold section), use grid layout
+  &:only-child {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  @media (max-width: 1023px) {
+    flex: 1;
+    
+    &:only-child {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    &:only-child {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.diamondCard {
+  border: 2px solid var(--color-gold, $color-gold);
+  width: 100%; // Ensure full width within container
+}
+
+// ============================================
+// Gold Tier Specific
+// ============================================
+.goldSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.goldCard {
+  border: 1.5px solid rgba(240, 165, 0, 0.3);
+}
+
+// ============================================
+// Silver Tier Specific
+// ============================================
+.silverSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1023px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.silverCard {
+  border: 1px solid #e2e8f0;
+
+  .donorName {
+    font-size: 16px;
+  }
+
+  .statsRow {
+    gap: 16px;
+    margin: 12px 0 0 0;
+    padding: 12px 0 0 0;
+    border-bottom: none;
+  }
+
+  .statValue {
+    font-size: 13px;
+  }
+}
+
+// ============================================
+// Empty State
+// ============================================
+.emptyState {
+  text-align: center;
+  padding: 64px 24px;
+  color: #64748b;
+}
+
+.emptyIcon {
+  font-size: 64px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.emptyState p {
+  font-size: 14px;
+  margin: 0;
+}
+
+// ============================================
+// Responsive adjustments
+// ============================================
+@media (max-width: 767px) {
+  .donorWallSection {
+    padding: 48px 0;
+  }
+
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .topTierRow {
+    margin-bottom: 20px;
+  }
+
+  .donorName {
+    font-size: 16px;
+  }
+
+  .statsRow {
+    gap: 16px;
+  }
+}

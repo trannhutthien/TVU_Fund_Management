@@ -1,0 +1,26 @@
+@use '../../../styles/variables' as *;
+
+.fundsPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $bg-page;
+}
+
+.mainContent {
+  flex: 1;
+  width: 100%;
+}
+
+.errorMessage {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $space-12 $space-4;
+  text-align: center;
+
+  p {
+    font-size: $text-lg;
+    color: $color-danger;
+    font-weight: $font-medium;
+  }
+}

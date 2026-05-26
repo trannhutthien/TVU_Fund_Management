@@ -1,0 +1,221 @@
+// ============================================
+// APPLICATION FOOTER — Checkbox cam kết + 2 nút
+// ============================================
+
+.footer {
+  background: var(--color-white, #ffffff);
+  border-radius: 12px;
+  padding: 20px 32px;
+  box-shadow: 0 2px 12px rgba(26, 47, 94, 0.07);
+}
+
+// ============================================
+// CHECKBOX CAM KẾT
+// ============================================
+.commitment {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.checkbox {
+  display: none;
+}
+
+.checkmarkEmpty {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  margin-top: 1px;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  background: var(--color-primary, #1a2f5e);
+  border: 2px solid var(--color-primary, #1a2f5e);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+
+  &::after {
+    content: '✓';
+    color: var(--color-white, #ffffff);
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+.commitmentText {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
+  user-select: none;
+}
+
+// ============================================
+// ACTIONS ROW
+// ============================================
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.resetBtn {
+  min-width: 120px;
+  
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: #ef4444;
+  }
+}
+
+.draftBtn {
+  min-width: 140px;
+}
+
+.submitBtn {
+  min-width: 180px;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ============================================
+// CONFIRM DIALOG
+// ============================================
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.confirmDialog {
+  background: var(--color-white, #ffffff);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 440px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.confirmIcon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.confirmTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.confirmMessage {
+  font-size: 14px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.cancelBtn {
+  min-width: 120px;
+}
+
+.confirmBtn {
+  min-width: 120px;
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 640px) {
+  .footer {
+    padding: 16px;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .resetBtn,
+  .draftBtn,
+  .submitBtn {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .commitmentText {
+    font-size: 13px;
+  }
+
+  .confirmDialog {
+    padding: 24px;
+    width: 95%;
+  }
+
+  .confirmActions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cancelBtn,
+  .confirmBtn {
+    width: 100%;
+  }
+}

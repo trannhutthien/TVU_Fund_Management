@@ -1,49 +1,64 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-/**
- * Auth Store - Quản lý authentication state
- * Sử dụng Zustand với persist middleware để lưu vào localStorage
- */
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const { exp } = JSON.parse(jsonPayload);
+    return Date.now() >= exp * 1000;
+  } catch {
+    return true;
+  }
+};
+
 const useAuthStore = create(
   persist(
     (set, get) => ({
-      // State
       user: null,
       token: null,
       isAuthenticated: false,
       isLoading: false,
-      
-      // Actions
+
       setUser: (user) => set({ user, isAuthenticated: !!user }),
-      
       setToken: (token) => set({ token }),
-      
-      login: (user, token) => set({ 
-        user, 
-        token, 
-        isAuthenticated: true 
+      login: (user, token) => set({
+        user,
+        token,
+        isAuthenticated: true
       }),
-      
-      logout: () => set({ 
-        user: null, 
-        token: null, 
-        isAuthenticated: false 
+      logout: () => set({
+        user: null,
+        token: null,
+        isAuthenticated: false
       }),
-      
       updateUser: (userData) => set((state) => ({
         user: { ...state.user, ...userData }
       })),
-      
       setLoading: (isLoading) => set({ isLoading }),
-      
-      // Getters
+
+      checkTokenExpiry: () => {
+        const { token, isAuthenticated } = get();
+        if (isAuthenticated && isTokenExpired(token)) {
+          set({ user: null, token: null, isAuthenticated: false });
+          localStorage.removeItem('refreshToken');
+          return true;
+        }
+        return false;
+      },
+
       getUser: () => get().user,
       getToken: () => get().token,
       isAuth: () => get().isAuthenticated,
       getUserRole: () => get().user?.VaiTro || null,
-      
-      // Check permissions
+
       hasRole: (role) => {
         const userRole = get().user?.VaiTro;
         if (Array.isArray(role)) {
@@ -51,17 +66,15 @@ const useAuthStore = create(
         }
         return userRole === role;
       },
-      
+
       hasPermission: (permission) => {
         const user = get().user;
-        // Implement permission logic based on your needs
         return user?.permissions?.includes(permission) || false;
       },
     }),
     {
-      name: 'auth-storage', // localStorage key
+      name: 'auth-storage',
       partialize: (state) => ({
-        // Chỉ persist những field này
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,

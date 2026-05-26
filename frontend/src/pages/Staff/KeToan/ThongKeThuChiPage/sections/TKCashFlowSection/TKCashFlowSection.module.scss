@@ -1,0 +1,201 @@
+@use '../../../../../../styles/variables' as *;
+
+// ─── CARD ──────────────────────────────────────────────────────────────────────
+.card {
+  background: var(--color-white);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.07);
+  margin-bottom: 20px;
+}
+
+// ─── CARD HEADER ───────────────────────────────────────────────────────────────
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+// ─── TITLE BLOCK ───────────────────────────────────────────────────────────────
+.titleBlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  font-size: 20px;
+  color: var(--color-primary);
+}
+
+.title {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.periodBadge {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f0f4ff;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+// ─── CHART TYPE SWITCHER ───────────────────────────────────────────────────────
+.chartTypeSwitcher {
+  background: #f0f4ff;
+  border-radius: 8px;
+  padding: 3px;
+  display: inline-flex;
+  gap: 2px;
+
+  button {
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    background: transparent;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: var(--color-primary);
+    }
+
+    &.active {
+      background: var(--color-white);
+      color: var(--color-primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+// ─── COMPARE LEGEND ────────────────────────────────────────────────────────────
+.compareLegend {
+  display: flex;
+  gap: 20px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendLine {
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legendLineThu {
+  background: var(--color-gold);
+}
+
+.legendLineChi {
+  background: var(--color-primary);
+}
+
+.legendLineThuTruoc {
+  background: linear-gradient(
+    to right,
+    rgba(240, 165, 0, 0.6) 50%,
+    transparent 50%
+  );
+  background-size: 8px 3px;
+  background-repeat: repeat-x;
+}
+
+.legendLineChiTruoc {
+  background: linear-gradient(
+    to right,
+    rgba(26, 47, 94, 0.6) 50%,
+    transparent 50%
+  );
+  background-size: 8px 3px;
+  background-repeat: repeat-x;
+}
+
+.legendText {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+}
+
+// ─── CUSTOM TOOLTIP ────────────────────────────────────────────────────────────
+.tooltip {
+  background: var(--color-white);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f1f5f9;
+}
+
+.tooltipLabel {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tooltipItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.tooltipDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tooltipName {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+  min-width: 80px;
+}
+
+.tooltipValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+// ─── RESPONSIVE ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .compareLegend {
+    gap: 12px;
+  }
+}

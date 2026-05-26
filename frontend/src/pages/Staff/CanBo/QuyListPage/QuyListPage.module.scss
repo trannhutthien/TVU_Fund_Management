@@ -1,0 +1,536 @@
+// ============================================
+// QUY LIST PAGE — Trang danh sách quỹ (Giáo vụ)
+// ============================================
+
+.page {
+  min-height: 100vh;
+  background: #f0f4ff;
+  padding: 24px;
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+// ── Breadcrumb ──────────────────────────────
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.crumbLink {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-primary, #3b6ff5);
+  }
+}
+
+.crumbSep {
+  color: #cbd5e1;
+}
+
+// ── Page header ─────────────────────────────
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.headerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-navy-blue, #1a2f5e);
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.headerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+// ── Stats row ───────────────────────────────
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+}
+
+.statIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.statText {
+  min-width: 0;
+  flex: 1;
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+// ── Filter bar ──────────────────────────────
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.searchField {
+  flex: 2;
+  min-width: 220px;
+}
+
+.select {
+  flex: 1;
+  min-width: 160px;
+  height: 44px;
+  padding: 0 12px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b6ff5);
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.15);
+  }
+}
+
+// ── Grid ────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(26, 47, 94, 0.1);
+    border-color: rgba(26, 47, 94, 0.2);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b6ff5);
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.15);
+  }
+}
+
+// ── Cover ───────────────────────────────────
+.cover {
+  position: relative;
+  height: 140px;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a2f5e 0%, #3b6ff5 100%);
+}
+
+.coverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a2f5e 0%, #3b6ff5 100%);
+}
+
+.coverIcon {
+  width: 40px;
+  height: 40px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.loaiBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--color-gold, #f0a500);
+  color: var(--color-navy-blue, #1a2f5e);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: 0 12px 0 8px;
+}
+
+.coverOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// ── Card body ───────────────────────────────
+.cardBody {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.fundName {
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ── Balance ─────────────────────────────────
+.balanceBlock {
+  margin-top: 12px;
+}
+
+.balanceLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.balanceValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  margin-top: 2px;
+}
+
+.balanceLow {
+  color: #ef4444;
+}
+
+.warnIcon {
+  width: 18px;
+  height: 18px;
+}
+
+// ── Meta ────────────────────────────────────
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.metaUrgent {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.metaIcon {
+  width: 14px;
+  height: 14px;
+}
+
+// ── Progress ────────────────────────────────
+.progressBlock {
+  margin-top: 10px;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.progressLeft {
+  color: #64748b;
+}
+
+.progressRight {
+  color: var(--color-gold, #f0a500);
+  font-weight: 700;
+}
+
+.progressWarn {
+  color: #f59e0b;
+}
+
+.progressBar {
+  height: 5px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary, #3b6ff5);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressFillWarn {
+  background: #f59e0b;
+}
+
+// ── Skeleton ────────────────────────────────
+.skeletonCard {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.skeletonCover {
+  height: 140px;
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 50%,
+    #f1f5f9 100%
+  );
+  background-size: 200% 100%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonBar {
+  height: 14px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 50%,
+    #f1f5f9 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// ── Empty state ─────────────────────────────
+.empty {
+  background: #fff;
+  border-radius: 12px;
+  padding: 64px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  color: #cbd5e1;
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+// ── Pagination ──────────────────────────────
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 20px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.pageNav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageNum {
+  min-width: 56px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+// ── Responsive ──────────────────────────────
+@media (max-width: 1024px) {
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px;
+  }
+
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterBar {
+    padding: 12px 16px;
+  }
+
+  .select {
+    flex: 1 1 100%;
+  }
+
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

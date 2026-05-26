@@ -1,34 +1,47 @@
-import api from './api'
-import { API_ENDPOINTS } from '@constants'
+import axios from 'axios';
+import api from './api';
 
-export const fundService = {
-  // Lấy tất cả quỹ
-  getAll: async (params) => {
-    const response = await api.get(API_ENDPOINTS.FUNDS, { params })
-    return response.data
-  },
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
-  // Lấy quỹ theo ID
-  getById: async (id) => {
-    const response = await api.get(API_ENDPOINTS.FUND_BY_ID(id))
-    return response.data
-  },
+/**
+ * Lấy danh sách quỹ công khai (không cần authentication)
+ * GET /api/funds/public
+ */
+export const getPublicFunds = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/funds/public`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching public funds:', error);
+    throw error;
+  }
+};
 
-  // Tạo quỹ mới
-  create: async (data) => {
-    const response = await api.post(API_ENDPOINTS.FUNDS, data)
-    return response.data
-  },
+/**
+ * Lấy chi tiết một quỹ theo ID
+ * GET /api/funds/:id
+ */
+export const getFundById = async (fundId) => {
+  try {
+    const response = await axios.get(`${API_URL}/funds/${fundId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching fund ${fundId}:`, error);
+    throw error;
+  }
+};
 
-  // Cập nhật quỹ
-  update: async (id, data) => {
-    const response = await api.put(API_ENDPOINTS.FUND_BY_ID(id), data)
-    return response.data
-  },
+/**
+ * Tạo quỹ mới
+ * POST /api/funds (cần token + role admin/giáo vụ)
+ */
+export const createFund = async (payload) => {
+  const response = await api.post('/funds', payload);
+  return response.data;
+};
 
-  // Xóa quỹ
-  delete: async (id) => {
-    const response = await api.delete(API_ENDPOINTS.FUND_BY_ID(id))
-    return response.data
-  },
-}
+export default {
+  getPublicFunds,
+  getFundById,
+  createFund,
+};

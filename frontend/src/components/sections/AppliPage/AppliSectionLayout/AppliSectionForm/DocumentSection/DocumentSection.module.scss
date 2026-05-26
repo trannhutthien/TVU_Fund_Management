@@ -1,0 +1,340 @@
+// ============================================
+// DOCUMENT SECTION — Hồ sơ minh chứng
+// Phần 4 của form tạo hồ sơ
+// ============================================
+
+.card {
+  background: var(--color-white, #ffffff);
+  border-radius: 12px;
+  border-left: 4px solid var(--color-primary, #1a2f5e);
+  padding: 28px 32px;
+  box-shadow: 0 2px 12px rgba(26, 47, 94, 0.07);
+}
+
+// ============================================
+// TIÊU ĐỀ SECTION
+// ============================================
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.titleIcon {
+  font-size: 22px;
+  color: var(--color-primary, #1a2f5e);
+  flex-shrink: 0;
+}
+
+.sectionTitle span {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary, #1a2f5e);
+}
+
+// ============================================
+// DANH SÁCH TÀI LIỆU CẦN NỘP (2 cột)
+// ============================================
+.docList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.docCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.docColLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ef4444;
+  margin-bottom: 8px;
+}
+
+.docColLabelOptional {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.docItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.docIconRequired {
+  font-size: 14px;
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.docIconOptional {
+  font-size: 14px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+// ============================================
+// DROP ZONE
+// ============================================
+.hiddenInput {
+  display: none;
+}
+
+.dropZone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 40px 20px;
+  background: #f8f9ff;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+
+  &.dragging {
+    border-color: var(--color-primary, #1a2f5e);
+    background: rgba(26, 47, 94, 0.04);
+    transform: scale(1.01);
+
+    .uploadIcon {
+      opacity: 1;
+      color: var(--color-primary, #1a2f5e);
+    }
+
+    .uploadText {
+      color: var(--color-primary, #1a2f5e);
+    }
+  }
+}
+
+.uploadIcon {
+  font-size: 40px;
+  color: var(--color-primary, #1a2f5e);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.uploadText {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+  margin: 12px 0 4px 0;
+}
+
+.uploadSubtext {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.uploadLink {
+  color: var(--color-gold, #f0a500);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.formatBadges {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.formatBadge {
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+// ============================================
+// FILE LIST
+// ============================================
+.fileList {
+  margin-top: 16px;
+}
+
+.fileListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.fileListTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+}
+
+.fileListCount {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-top: 8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #f8f9ff;
+  }
+}
+
+// ============================================
+// FILE THUMBNAIL
+// ============================================
+.fileThumb {
+  flex-shrink: 0;
+}
+
+.fileImage {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.pdfThumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdfIcon {
+  font-size: 20px;
+  color: #ef4444;
+}
+
+// ============================================
+// FILE INFO
+// ============================================
+.fileInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+// ============================================
+// REMOVE BUTTON
+// ============================================
+.removeBtn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #94a3b8;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  svg {
+    font-size: 18px;
+  }
+}
+
+// ============================================
+// TOTAL SIZE BAR
+// ============================================
+.totalBar {
+  margin-top: 12px;
+}
+
+.totalLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #64748b;
+}
+
+.totalMax {
+  color: #94a3b8;
+}
+
+.totalTrack {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.totalFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 640px) {
+  .card {
+    padding: 20px 16px;
+  }
+
+  .sectionTitle span {
+    font-size: 16px;
+  }
+
+  .docList {
+    grid-template-columns: 1fr;
+  }
+
+  .fileThumb {
+    display: none;
+  }
+
+  .dropZone {
+    padding: 28px 16px;
+  }
+
+  .uploadIcon {
+    font-size: 32px;
+  }
+}

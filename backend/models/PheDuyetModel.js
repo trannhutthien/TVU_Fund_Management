@@ -11,19 +11,19 @@ import pool from "../config/db.js";
 const createPheDuyet = async (requestId, connection = null) => {
   const executor = connection || pool;
 
-  // Tạo 3 cấp phê duyệt
-  // Lưu ý: nguoi_duyet_id NOT NULL trong schema, nên tạm set = 0 hoặc cần sửa schema
-  // Tốt nhất là sửa schema: ALTER TABLE pheduyet MODIFY nguoi_duyet_id INT(11) NULL;
+  // Tạo 3 cấp phê duyệt với nguoi_duyet_id = NULL (chưa có người duyệt)
+  // Khi cấp tương ứng được duyệt/từ chối, updatePheDuyet sẽ set nguoi_duyet_id thực tế.
+  // Yêu cầu schema: nguoi_duyet_id INT(11) NULL (đã ALTER cho phép NULL).
   const capDoDuyet = [1, 2, 3];
-  
+
   for (const cap of capDoDuyet) {
     await executor.execute(
-      `INSERT INTO PheDuyet (
+      `INSERT INTO pheduyet (
         request_id,
         nguoi_duyet_id,
         cap_do_duyet,
         ket_qua
-      ) VALUES (?, 0, ?, 'Cho duyet')`,
+      ) VALUES (?, NULL, ?, 'Cho duyet')`,
       [requestId, cap]
     );
   }
@@ -51,9 +51,9 @@ const getPheDuyetByRequestId = async (requestId) => {
       nd.ho_ten as nguoi_duyet_ho_ten,
       nd.email as nguoi_duyet_email,
       r.ten_vai_tro as nguoi_duyet_vai_tro
-     FROM PheDuyet pd
-     LEFT JOIN NguoiDung nd ON pd.nguoi_duyet_id = nd.user_id
-     LEFT JOIN VaiTro r ON nd.role_id = r.role_id
+     FROM pheduyet pd
+     LEFT JOIN nguoidung nd ON pd.nguoi_duyet_id = nd.user_id
+     LEFT JOIN vaitro r ON nd.role_id = r.role_id
      WHERE pd.request_id = ?
      ORDER BY pd.cap_do_duyet ASC`,
     [requestId]
@@ -70,7 +70,7 @@ const updatePheDuyet = async (requestId, capDoDuyet, nguoiDuyetId, ketQua, ghiCh
   const executor = connection || pool;
 
   await executor.execute(
-    `UPDATE PheDuyet 
+    `UPDATE pheduyet 
      SET nguoi_duyet_id = ?,
          ket_qua = ?,
          ghi_chu = ?,
@@ -91,7 +91,7 @@ const updatePheDuyet = async (requestId, capDoDuyet, nguoiDuyetId, ketQua, ghiCh
 const getCapDoDuyetHienTai = async (requestId) => {
   const [rows] = await pool.query(
     `SELECT cap_do_duyet, ket_qua
-     FROM PheDuyet
+     FROM pheduyet
      WHERE request_id = ? AND ket_qua = 'Cho duyet'
      ORDER BY cap_do_duyet ASC
      LIMIT 1`,
@@ -108,7 +108,7 @@ const getCapDoDuyetHienTai = async (requestId) => {
 const kiemTraDaDuyetDuCap = async (requestId) => {
   const [rows] = await pool.query(
     `SELECT COUNT(*) as so_cap_da_duyet
-     FROM PheDuyet
+     FROM pheduyet
      WHERE request_id = ? AND ket_qua = 'Da duyet'`,
     [requestId]
   );
@@ -123,7 +123,7 @@ const kiemTraDaDuyetDuCap = async (requestId) => {
 const kiemTraCoCapNaoBiTuChoi = async (requestId) => {
   const [rows] = await pool.query(
     `SELECT COUNT(*) as so_cap_tu_choi
-     FROM PheDuyet
+     FROM pheduyet
      WHERE request_id = ? AND ket_qua = 'Tu choi'`,
     [requestId]
   );

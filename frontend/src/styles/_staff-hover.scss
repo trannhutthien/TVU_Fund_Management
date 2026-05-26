@@ -1,0 +1,109 @@
+// ============================================
+// STAFF HOVER EFFECTS
+// ============================================
+//
+// Tăng độ đổ bóng và chuyển động nhẹ khi hover cho các "card" trong staff pages
+// (vai trò 1 - Admin, 2 - Kế toán, 3 - Cán bộ Quỹ).
+//
+// CÁCH HOẠT ĐỘNG:
+// - Tất cả các trang Staff được wrap trong <div class="staff-app-shell">
+//   ở StaffLayout.jsx
+// - CSS Modules sinh class theo format `_<originalName>_<hash>` (ví dụ
+//   `_card_a1b2c`, `_statCard_xyz12`)
+// - Selector `[class*="_card_"]` match được mọi class có tên gốc là "card"
+//   nhờ underscore bao quanh — KHÔNG match các class như "cardHeader",
+//   "cardIcon" vì giữa "card" và "Header" không có underscore.
+//
+// THÊM TÊN CLASS:
+// - Khi bạn tạo card mới với tên class không nằm trong danh sách dưới,
+//   thêm pattern `[class*="_<tên>_"]` vào cả nhóm transition VÀ nhóm hover.
+//
+// ============================================
+
+.staff-app-shell {
+  // ─── Transition mượt cho mọi card (kể cả không hover) ───────────────
+  // Đảm bảo khi rời chuột, card về vị trí cũ mượt thay vì snap.
+  [class*="_card_"],
+  [class*="_statCard_"],
+  [class*="_quickStat_"],
+  [class*="_miniStat_"],
+  [class*="_panel_"],
+  [class*="_amountCard_"],
+  [class*="_studentCard_"],
+  [class*="_bankCard_"],
+  [class*="_requestCard_"],
+  [class*="_summaryCard_"],
+  [class*="_avatarCard_"],
+  [class*="_infoCard_"],
+  [class*="_typeCard_"],
+  [class*="_alertItem_"],
+  [class*="_fundCard_"] {
+    transition:
+      transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.2s ease;
+    will-change: transform, box-shadow;
+  }
+
+  // ─── Hover state — lift + shadow đậm hơn ────────────────────────────
+  [class*="_card_"]:hover,
+  [class*="_statCard_"]:hover,
+  [class*="_quickStat_"]:hover,
+  [class*="_miniStat_"]:hover,
+  [class*="_panel_"]:hover,
+  [class*="_amountCard_"]:hover,
+  [class*="_studentCard_"]:hover,
+  [class*="_bankCard_"]:hover,
+  [class*="_requestCard_"]:hover,
+  [class*="_summaryCard_"]:hover,
+  [class*="_infoCard_"]:hover,
+  [class*="_typeCard_"]:hover,
+  [class*="_alertItem_"]:hover,
+  [class*="_fundCard_"]:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 14px 32px rgba(26, 47, 94, 0.14),
+                0 4px 8px rgba(26, 47, 94, 0.06) !important;
+  }
+
+  // ─── Click-able row trong bảng cũng có shadow nhẹ ───────────────────
+  // (Row đã có cursor pointer thì cho subtle scale)
+  [class*="_table_"] tbody tr {
+    transition: background-color 0.15s ease, transform 0.2s ease;
+  }
+
+  // ─── Loại trừ: button, input, modal overlay, drawer ─────────────────
+  // Đè lại để các phần tử này KHÔNG bị lift effect.
+  button[class*="_card_"],
+  button[class*="_panel_"],
+  [class*="_overlay_"],
+  [class*="_backdrop_"],
+  [class*="_drawer_"],
+  [class*="_modal_"]:hover {
+    transform: none !important;
+  }
+
+  // ─── Card có border-color riêng (urgent, warning) — giữ border ──────
+  // Chỉ tăng shadow, không thay đổi border khi hover
+  [class*="_cardUrgent_"]:hover,
+  [class*="_rowWarning_"]:hover {
+    box-shadow: 0 14px 32px rgba(239, 68, 68, 0.16),
+                0 4px 8px rgba(239, 68, 68, 0.08) !important;
+  }
+}
+
+// ============================================
+// REDUCED MOTION — Tôn trọng preference của user
+// ============================================
+@media (prefers-reduced-motion: reduce) {
+  .staff-app-shell {
+    [class*="_card_"]:hover,
+    [class*="_statCard_"]:hover,
+    [class*="_quickStat_"]:hover,
+    [class*="_miniStat_"]:hover,
+    [class*="_panel_"]:hover,
+    [class*="_amountCard_"]:hover {
+      transform: none !important;
+      // Vẫn giữ shadow nhưng không có chuyển động
+    }
+  }
+}

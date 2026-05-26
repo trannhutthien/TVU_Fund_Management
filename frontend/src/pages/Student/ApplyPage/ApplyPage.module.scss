@@ -1,0 +1,113 @@
+@use '../../../styles/variables' as *;
+
+// ============================================
+// APPLY PAGE - Nộp Đơn Yêu Cầu Hỗ Trợ
+// ============================================
+
+.applyPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+// ============================================
+// SECTION 1: TITLE — Trong suốt, nhìn thấy background
+// ============================================
+.titleSection {
+  position: relative;
+  z-index: 1;
+  padding: $space-10 0 $space-6;
+}
+
+// ============================================
+// SECTION 2: STEPPER — Glassmorphism, nổi bật, STICKY
+// ============================================
+.stepperSection {
+  position: sticky;
+  top: 80px; // Khoảng cách từ top để tránh header (header height ~70px + 10px buffer)
+  z-index: 10; // Cao hơn formSection (z-index: 1) nhưng thấp hơn header
+  padding: 0 $space-4 $space-8;
+  display: flex;
+  justify-content: center;
+  
+  // Smooth transition khi scroll
+  transition: all 0.3s ease;
+}
+
+// ============================================
+// SECTION 3: FORM — Khu vực nội dung chính
+// ============================================
+.formSection {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 0 $space-4 $space-10;
+  
+  // Container với glassmorphism effect
+  > * {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 8px 32px rgba(26, 47, 94, 0.12),
+      0 2px 8px rgba(26, 47, 94, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    
+    // Subtle gradient overlay
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(240, 165, 0, 0.3) 50%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 768px) {
+  .titleSection {
+    padding: $space-8 0 $space-4;
+  }
+
+  .stepperSection {
+    top: 70px; // Header nhỏ hơn trên mobile
+    padding: 0 $space-3 $space-6;
+  }
+
+  .formSection {
+    padding: 0 $space-3 $space-8;
+  }
+}
+
+@media (max-width: 480px) {
+  .titleSection {
+    padding: $space-6 0 $space-3;
+  }
+
+  .stepperSection {
+    top: 60px; // Header còn nhỏ hơn nữa
+    padding: 0 $space-2 $space-5;
+  }
+}

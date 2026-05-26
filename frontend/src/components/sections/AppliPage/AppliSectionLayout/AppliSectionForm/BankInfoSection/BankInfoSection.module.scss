@@ -1,0 +1,311 @@
+// ============================================
+// BANK INFO SECTION — Thông tin nhận giải ngân
+// Phần 3 của form tạo hồ sơ
+// ============================================
+
+.card {
+  background: var(--color-white, #ffffff);
+  border-radius: 12px;
+  border-left: 4px solid var(--color-primary, #1a2f5e);
+  padding: 28px 32px;
+  box-shadow: 0 2px 12px rgba(26, 47, 94, 0.07);
+}
+
+// ============================================
+// TIÊU ĐỀ SECTION
+// ============================================
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.titleIcon {
+  font-size: 22px;
+  color: var(--color-primary, #1a2f5e);
+  flex-shrink: 0;
+}
+
+.sectionTitle span {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary, #1a2f5e);
+}
+
+// ============================================
+// FIELD LABEL
+// ============================================
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-primary, #1a2f5e);
+  margin-bottom: 10px;
+}
+
+// ============================================
+// SKELETON LOADING
+// ============================================
+.skeletonCard {
+  height: 72px;
+  background: #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// ============================================
+// WARNING BANNER (không có tài khoản)
+// ============================================
+.warningBanner {
+  background: rgba(239, 68, 68, 0.06);
+  border-left: 3px solid #ef4444;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.warningIcon {
+  font-size: 20px;
+  color: #ef4444;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warningTitle {
+  font-weight: 600;
+  color: #ef4444;
+  font-size: 14px;
+  margin: 0 0 2px 0;
+}
+
+.warningDesc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.goProfileBtn {
+  margin-top: 12px;
+  width: 100%;
+  color: #ef4444 !important;
+  border-color: #ef4444 !important;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.06) !important;
+  }
+}
+
+// ============================================
+// ACCOUNT LIST
+// ============================================
+.accountList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.radioInput {
+  display: none;
+}
+
+.accountCard {
+  cursor: pointer;
+  display: block;
+}
+
+.cardInner {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+}
+
+.cardInner.selected {
+  border-color: var(--color-primary, #1a2f5e);
+  background: rgba(26, 47, 94, 0.04);
+  box-shadow: 0 0 0 3px rgba(26, 47, 94, 0.08);
+}
+
+.cardLeft {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.bankIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(26, 47, 94, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bankIcon {
+  font-size: 20px;
+  color: var(--color-primary, #1a2f5e);
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accountLabel {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.accountNumber {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary, #1a2f5e);
+  letter-spacing: 1px;
+}
+
+.accountMeta {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.cardRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.defaultBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+  background: rgba(26, 47, 94, 0.08);
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.radioIndicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease;
+  flex-shrink: 0;
+
+  .cardInner.selected & {
+    border-color: var(--color-primary, #1a2f5e);
+  }
+}
+
+.radioDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary, #1a2f5e);
+}
+
+// ============================================
+// NÚT THÊM TÀI KHOẢN
+// ============================================
+.addAccountBtn {
+  width: 100%;
+  border: 1.5px dashed #cbd5e1 !important;
+  border-radius: 10px !important;
+  color: #64748b !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px !important;
+
+  &:hover {
+    border-color: var(--color-primary, #1a2f5e) !important;
+    color: var(--color-primary, #1a2f5e) !important;
+    background: rgba(26, 47, 94, 0.04) !important;
+  }
+}
+
+// ============================================
+// DIVIDER
+// ============================================
+.divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 20px 0;
+}
+
+// ============================================
+// GHI CHÚ
+// ============================================
+.note {
+  margin-top: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.noteIcon {
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 640px) {
+  .card {
+    padding: 20px 16px;
+  }
+
+  .sectionTitle span {
+    font-size: 16px;
+  }
+
+  .accountNumber {
+    font-size: 15px;
+  }
+
+  .defaultBadge {
+    display: none;
+  }
+
+  .bankIconBox {
+    width: 36px;
+    height: 36px;
+  }
+
+  .bankIcon {
+    font-size: 18px;
+  }
+}

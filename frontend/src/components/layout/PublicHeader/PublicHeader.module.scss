@@ -155,6 +155,134 @@
 }
 
 // ============================================
+// NAV LINK HIGHLIGHT - TẠO ĐƠN (special style)
+// ============================================
+.navLinkHighlight {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-navy-blue);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 7px 16px;
+  border-radius: 20px;
+
+  // Gold gradient background
+  background: linear-gradient(135deg, var(--color-gold) 0%, #ffcc44 50%, var(--color-gold) 100%);
+  background-size: 200% 200%;
+
+  // Glowing border
+  border: 2px solid transparent;
+  box-shadow:
+    0 0 0 2px rgba(240, 165, 0, 0.4),
+    0 4px 14px rgba(240, 165, 0, 0.35);
+
+  // Smooth transitions
+  transition: all 0.3s ease;
+  animation: gradientShift 3s ease infinite, subtlePulse 2.5s ease-in-out infinite;
+
+  // No underline pseudo (override navLink::after)
+  &::after {
+    display: none;
+  }
+
+  &:hover {
+    color: var(--color-navy-blue);
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 2px rgba(240, 165, 0, 0.7),
+      0 6px 20px rgba(240, 165, 0, 0.5);
+    background-position: right center;
+  }
+
+  // Active state
+  &.activeHighlight {
+    box-shadow:
+      0 0 0 3px rgba(240, 165, 0, 0.8),
+      0 6px 20px rgba(240, 165, 0, 0.55);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 1024px) {
+    font-size: 12px;
+    padding: 6px 13px;
+  }
+}
+
+.highlightIcon {
+  font-size: 10px;
+  opacity: 0.85;
+  animation: spin 4s linear infinite;
+}
+
+// Desktop active highlight (alias — used by className string)
+.activeHighlight {
+  box-shadow:
+    0 0 0 3px rgba(240, 165, 0, 0.8),
+    0 6px 20px rgba(240, 165, 0, 0.55) !important;
+}
+
+// Mobile variant
+.mobileNavLinkHighlight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--color-navy-blue);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-gold) 0%, #ffcc44 50%, var(--color-gold) 100%);
+  background-size: 200% 200%;
+  box-shadow: 0 4px 14px rgba(240, 165, 0, 0.4);
+  animation: gradientShift 3s ease infinite;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(240, 165, 0, 0.55);
+  }
+
+  &.activeHighlight {
+    outline: 2px solid var(--color-gold-dark);
+  }
+}
+
+// ============================================
+// STATUS LABEL (Khi đã đăng nhập)
+// ============================================
+.statusLabel {
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 4px;
+
+  @media (max-width: 1024px) {
+    font-size: 12px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    padding: 12px 16px;
+    justify-content: center;
+  }
+}
+
+// ============================================
 // ACTION BUTTONS (Right)
 // ============================================
 .actions {
@@ -377,4 +505,31 @@
   .header {
     height: 64px;
   }
+}
+
+// ============================================
+// KEYFRAMES - Highlight Animations
+// ============================================
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px rgba(240, 165, 0, 0.4),
+      0 4px 14px rgba(240, 165, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(240, 165, 0, 0.65),
+      0 6px 22px rgba(240, 165, 0, 0.55);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }

@@ -1,30 +1,28 @@
 import express from "express";
-import { getAllTransactions, getTransactionById } from "../controllers/transactionController.js";
+import {
+  getAllTransactions,
+  getTransactionById,
+  getTransactionsSummary,
+  exportTransactions
+} from "../controllers/transactionController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorizeRoles } from "../middleware/rolesMiddleware.js";
 
 const router = express.Router();
-// ─── TRANSACTION ROUTES (LỊCH SỬ DÒNG TIỀN) 
-// GET /api/transactions — Lấy danh sách tất cả giao dịch (Admin/Kế toán)
-// Middleware:
-// - protect: Kiểm tra token hợp lệ
-// - authorizeRoles(1, 2): Chỉ cho phép role_id = 1 (Admin) hoặc 2 (Kế toán)
-// Mục đích:
-// - Admin/Kế toán xem lại tất cả giao dịch thu/chi để đối soát
-// - Trả về thông tin chi tiết: ai duyệt, vào quỹ nào, lúc mấy giờ
-// - Hỗ trợ filter theo: loại, quỹ, trạng thái, khoảng thời gian
-// - Hỗ trợ phân trang
+
+// ─── TRANSACTION ROUTES (LỊCH SỬ DÒNG TIỀN) ───────────────────────────────────
+
+// GET /api/transactions — Danh sách giao dịch với filter + phân trang
 router.get("/", protect, authorizeRoles(1, 2), getAllTransactions);
 
-// GET /api/transactions/:id — Xem chi tiết 1 giao dịch (Admin/Kế toán)
-// Middleware:
-// - protect: Kiểm tra token hợp lệ
-// - authorizeRoles(1, 2): Chỉ cho phép role_id = 1 (Admin) hoặc 2 (Kế toán)
-// Mục đích:
-// - Xem chi tiết đầy đủ của 1 giao dịch cụ thể
-// - Bao gồm thông tin quỹ, nhà tài trợ, người duyệt, minh chứng
-// Ví dụ:
-// GET /api/transactions/123
+// GET /api/transactions/summary — Tổng hợp thu/chi/ròng/bất thường
+// Phải đặt trước route /:id để Express match đúng
+router.get("/summary", protect, authorizeRoles(1, 2), getTransactionsSummary);
+
+// GET /api/transactions/export — Xuất Excel toàn bộ giao dịch đang filter
+router.get("/export", protect, authorizeRoles(1, 2), exportTransactions);
+
+// GET /api/transactions/:id — Chi tiết 1 giao dịch
 router.get("/:id", protect, authorizeRoles(1, 2), getTransactionById);
 
 export default router;

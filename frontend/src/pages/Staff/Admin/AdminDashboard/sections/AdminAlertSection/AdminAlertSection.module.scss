@@ -1,0 +1,241 @@
+@use '../../../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ADMIN ALERT SECTION STYLES ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── ALL CLEAR BANNER ──────────────────────────────────────────────────────────
+.allClearBanner {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(22, 163, 74, 0.04));
+  border: 1.5px solid rgba(22, 163, 74, 0.2);
+  border-radius: 16px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.allClearIcon {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.allClearContent {
+  flex: 1;
+}
+
+.allClearTitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #16a34a;
+  margin: 0 0 4px 0;
+}
+
+.allClearSubtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+// ─── ALERT GRID ────────────────────────────────────────────────────────────────
+.alertGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+// ─── ALERT CARD ────────────────────────────────────────────────────────────────
+.alertCard {
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.alertCardOrange {
+  background: linear-gradient(135deg, #fff7ed, #fff3e0);
+  border: 1.5px solid #fed7aa;
+
+  .alertIconBox {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+  }
+
+  .alertValue {
+    color: #f97316;
+  }
+
+  .alertLabel {
+    color: #92400e;
+  }
+
+  .alertSub {
+    color: #b45309;
+  }
+
+  .alertAction {
+    color: #f97316;
+  }
+}
+
+.alertCardYellow {
+  background: linear-gradient(135deg, #fefce8, #fef9c3);
+  border: 1.5px solid #fde68a;
+
+  .alertIconBox {
+    background: rgba(217, 119, 6, 0.15);
+    color: #d97706;
+  }
+
+  .alertValue {
+    color: #d97706;
+  }
+
+  .alertLabel {
+    color: #78350f;
+  }
+
+  .alertSub {
+    color: #a16207;
+  }
+
+  .alertAction {
+    color: #d97706;
+  }
+}
+
+.alertCardRed {
+  background: linear-gradient(135deg, #fff5f5, #fee2e2);
+  border: 1.5px solid #fecaca;
+
+  .alertIconBox {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+
+  .alertValue {
+    color: #ef4444;
+  }
+
+  .alertLabel {
+    color: #7f1d1d;
+  }
+
+  .alertSub {
+    color: #991b1b;
+  }
+
+  .alertAction {
+    color: #ef4444;
+  }
+}
+
+.alertCardBlue {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1.5px solid #bae6fd;
+
+  .alertIconBox {
+    background: rgba(2, 132, 199, 0.15);
+    color: #0284c7;
+  }
+
+  .alertValue {
+    color: #0284c7;
+  }
+
+  .alertLabel {
+    color: #0c4a6e;
+  }
+
+  .alertSub {
+    color: #075985;
+  }
+
+  .alertAction {
+    color: #0284c7;
+  }
+}
+
+.alertIconBox {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.alertContent {
+  flex: 1;
+}
+
+.alertValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.alertLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.alertSub {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+}
+
+.alertAction {
+  align-self: flex-end;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// ─── RESPONSIVE ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .alertGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .allClearBanner {
+    padding: 14px 18px;
+  }
+
+  .allClearIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .allClearTitle {
+    font-size: 14px;
+  }
+
+  .allClearSubtitle {
+    font-size: 12px;
+  }
+}

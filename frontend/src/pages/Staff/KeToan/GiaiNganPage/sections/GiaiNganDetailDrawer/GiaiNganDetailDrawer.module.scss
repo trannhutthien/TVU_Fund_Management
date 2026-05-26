@@ -1,0 +1,574 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 520px;
+  height: 100vh;
+  background: var(--color-white, #ffffff);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(26, 47, 94, 0.15);
+  animation: slideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  & > h2 {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-navy-blue, #1a2f5e);
+    margin: 0;
+  }
+}
+
+.headerIcon {
+  color: var(--color-gold, #f0a500);
+}
+
+.closeBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f1f5f9;
+    color: var(--color-navy-blue, #1a2f5e);
+  }
+}
+
+/* ─── Body ────────────────────────────────────────────────────────────── */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.block {
+  margin-bottom: 24px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.blockLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.blockLabelGold {
+  color: #b45309;
+}
+
+/* ─── Khối A — Sinh viên ──────────────────────────────────────────────── */
+.studentCard {
+  background: #f8f9ff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.studentTop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(26, 47, 94, 0.10);
+  color: var(--color-navy-blue, #1a2f5e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  & > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.studentInfo {
+  min-width: 0;
+}
+
+.studentName {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.studentCode {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.studentFaculty {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.studentContact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #475569;
+
+  & > svg {
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+
+  & > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* ─── Khối B — Tài khoản ngân hàng ────────────────────────────────────── */
+.bankCard {
+  background: rgba(240, 165, 0, 0.06);
+  border: 1.5px solid rgba(240, 165, 0, 0.25);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.bankRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(240, 165, 0, 0.15);
+  }
+}
+
+.bankRowLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.bankRowValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  text-align: right;
+}
+
+.bankAccountNumber {
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.5px;
+}
+
+.copyBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(240, 165, 0, 0.15);
+  color: #b45309;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(240, 165, 0, 0.3);
+  }
+}
+
+.bankWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff5f5;
+  border: 1.5px solid #fecaca;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #dc2626;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+
+  & > svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+/* ─── Khối C — Nội dung yêu cầu ───────────────────────────────────────── */
+.requestCard {
+  background: #fafbff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.requestTitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  margin-bottom: 8px;
+}
+
+.requestDesc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+  max-height: 100px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.requestMeta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.requestMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+
+  & > svg {
+    color: #94a3b8;
+  }
+}
+
+/* ─── Khối D — Số tiền card ───────────────────────────────────────────── */
+.amountCard {
+  background: var(--color-navy-blue, #1a2f5e);
+  border-radius: 14px;
+  padding: 18px 20px;
+  color: white;
+}
+
+.amountLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.amountValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-gold, #f0a500);
+  margin-top: 4px;
+  line-height: 1;
+}
+
+.amountDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 14px 0;
+}
+
+.amountRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+
+  & > strong {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 700;
+  }
+}
+
+.balanceOk {
+  color: #86efac;
+}
+
+.balanceLow {
+  color: #fca5a5;
+}
+
+.amountStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.amountStatusOk {
+  background: rgba(134, 239, 172, 0.15);
+  color: #86efac;
+}
+
+.amountStatusBad {
+  background: rgba(252, 165, 165, 0.15);
+  color: #fca5a5;
+}
+
+/* ─── Khối E — File đính kèm ──────────────────────────────────────────── */
+.fileList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #475569;
+  text-decoration: none;
+  background: #fff;
+  transition: all 0.15s ease;
+  max-width: 220px;
+
+  &:hover {
+    border-color: var(--color-navy-blue, #1a2f5e);
+    color: var(--color-navy-blue, #1a2f5e);
+    background: #f8f9ff;
+  }
+}
+
+.fileChipName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+/* ─── Khối F — Timeline phê duyệt ─────────────────────────────────────── */
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0 16px;
+  position: relative;
+
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 24px;
+    bottom: 0;
+    width: 2px;
+    background: #f1f5f9;
+  }
+}
+
+.timelineDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px #fff;
+  z-index: 1;
+}
+
+.dotGold {
+  background: var(--color-gold, #f0a500);
+}
+
+.dotRed {
+  background: #ef4444;
+}
+
+.dotGray {
+  background: #cbd5e1;
+}
+
+.timelineContent {
+  flex: 1;
+}
+
+.timelineTitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.timelineMeta {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.timelineNote {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #475569;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #f8f9ff;
+  border-radius: 6px;
+}
+
+/* ─── Loading ─────────────────────────────────────────────────────────── */
+.loadingWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonBlock {
+  height: 100px;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 25%,
+    #e2e8f0 50%,
+    #f1f5f9 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1.5px solid #f1f5f9;
+  background: #fafbff;
+  flex-shrink: 0;
+}
+
+.btnReject {
+  border: 1px solid #ef4444 !important;
+  color: #ef4444 !important;
+  background: transparent !important;
+
+  &:hover {
+    background: #fff5f5 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .drawer {
+    width: 100vw;
+  }
+}

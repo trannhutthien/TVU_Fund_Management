@@ -1,0 +1,226 @@
+.table {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+}
+
+.headerRow,
+.row {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 12px;
+}
+
+.headerRow {
+  background: #f8f9ff;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.row {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s ease;
+
+  &:hover { background: #f8f9ff; }
+
+  &:last-child { border-bottom: none; }
+}
+
+.rowReadonly {
+  background: #fafafa;
+}
+
+.colUser { flex: 1.5; min-width: 0; }
+.colEmail { flex: 1; min-width: 0; }
+.colMssv { width: 110px; }
+.colKhoa { width: 150px; min-width: 0; }
+.colLoai { width: 110px; }
+.colTong { width: 130px; }
+.colRole { width: 130px; }
+.colStatus { width: 120px; }
+.colDate { width: 100px; font-size: 13px; color: #475569; }
+.colActions { width: 220px; text-align: right; }
+
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(26, 47, 94, 0.1);
+  color: var(--color-navy-blue, #1a2f5e);
+  font-weight: 700;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid rgba(26, 47, 94, 0.08);
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.userText { min-width: 0; }
+
+.userName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userId {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.emailText {
+  font-size: 13px;
+  color: #475569;
+  display: inline-block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.khoaText,
+.loaiText {
+  font-size: 13px;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.tongText {
+  font-size: 13px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.roleBadge {
+  display: inline-block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.actionsCell {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.editBtn {}
+
+.toggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+
+  svg { width: 14px; height: 14px; }
+}
+
+.lockBtn {
+  color: #ef4444;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+}
+
+.unlockBtn {
+  color: #10b981;
+
+  &:hover {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+}
+
+.skeletonRow {
+  height: 66px;
+  border-bottom: 1px solid #f1f5f9;
+  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+  background-size: 200% 100%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty {
+  background: #fff;
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: #94a3b8;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+
+  p {
+    margin: 12px 0 0;
+    font-size: 14px;
+  }
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  color: #cbd5e1;
+}
+
+@media (max-width: 1200px) {
+  .colDate { display: none; }
+  .colActions { width: 200px; }
+}
+
+@media (max-width: 1024px) {
+  .colMssv,
+  .colKhoa,
+  .colLoai,
+  .colTong,
+  .colRole { display: none; }
+  .headerRow,
+  .row { gap: 8px; padding: 10px 14px; }
+}
+
+@media (max-width: 640px) {
+  .colEmail,
+  .colStatus { display: none; }
+  .colUser { flex: 2; }
+  .colActions { width: 120px; }
+}

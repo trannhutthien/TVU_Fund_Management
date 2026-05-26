@@ -115,6 +115,33 @@
   }
 }
 
+// Outline Danger - Button viền đỏ, nền trong suốt
+// Dùng: <button class="btn btn-outline-danger">Gắn cờ</button>
+.btn-outline-danger {
+  background: transparent;
+  color: #ef4444;
+  border: 1.5px solid #ef4444;
+
+  &:hover {
+    background: #fff5f5;
+    border-color: #dc2626;
+    color: #dc2626;
+  }
+}
+
+// Success - Button xác nhận với màu xanh lá
+// Dùng: <button class="btn btn-success">Xác nhận</button>
+.btn-success {
+  background: #16a34a;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.30);
+
+  &:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+  }
+}
+
 // ── ICON-ONLY BUTTON ────────────────────────
 // Button chỉ có icon (36x36px, vuông)
 // Dùng: <button class="btn-icon"><Icon /></button>

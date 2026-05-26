@@ -1,0 +1,201 @@
+@use '@styles/variables' as *;
+
+// ============================================
+// CLOSE BUTTON BASE
+// ============================================
+.close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:focus {
+    outline: none;
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.close-button-icon {
+  display: block;
+}
+
+// ============================================
+// SIZES
+// ============================================
+.close-button-sm {
+  width: 32px;
+  height: 32px;
+  
+  .close-button-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.close-button-md {
+  width: 40px;
+  height: 40px;
+  
+  .close-button-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.close-button-lg {
+  width: 48px;
+  height: 48px;
+  
+  .close-button-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+// ============================================
+// VARIANTS
+// ============================================
+
+// Default - Navy Blue background
+.close-button-default {
+  background: rgba(26, 47, 94, 0.8);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  
+  &:hover {
+    background: rgba(26, 47, 94, 0.95);
+    transform: scale(1.1);
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(26, 47, 94, 0.2);
+  }
+}
+
+// Dark - Solid dark background
+.close-button-dark {
+  background: #1a2f5e;
+  color: #ffffff;
+  
+  &:hover {
+    background: #0f1f3d;
+    transform: scale(1.1);
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(26, 47, 94, 0.2);
+  }
+}
+
+// Light - White background
+.close-button-light {
+  background: #ffffff;
+  color: #1a2f5e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background: #f8f9fa;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(26, 47, 94, 0.1);
+  }
+}
+
+// Floating - Transparent with border
+.close-button-floating {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  }
+}
+
+// ============================================
+// POSITIONS
+// ============================================
+
+// Static - Inline position
+.close-button-static {
+  position: relative;
+}
+
+// Top Right - Absolute position (outside)
+.close-button-top-right {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  z-index: 10;
+  
+  @media (max-width: 576px) {
+    top: -45px;
+  }
+}
+
+// Top Right Inside - Absolute position (inside card)
+.close-button-top-right-inside {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  
+  @media (max-width: 576px) {
+    top: 12px;
+    right: 12px;
+  }
+}
+
+// Top Left - Absolute position
+.close-button-top-left {
+  position: absolute;
+  top: -50px;
+  left: 0;
+  z-index: 10;
+  
+  @media (max-width: 576px) {
+    top: -45px;
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 576px) {
+  .close-button-lg {
+    width: 44px;
+    height: 44px;
+    
+    .close-button-icon {
+      width: 24px;
+      height: 24px;
+    }
+  }
+  
+  .close-button-md {
+    width: 36px;
+    height: 36px;
+    
+    .close-button-icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
+}

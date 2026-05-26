@@ -139,12 +139,60 @@ const createPublicDonation = async (donationData) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// HÀM: createStaffDonation
+// MỤC ĐÍCH: Cán bộ Quỹ ghi nhận 1 khoản tài trợ mới (đã biết nhà tài trợ)
+//   - Khác với createPublicDonation: không tự tạo nhà tài trợ, dùng id có sẵn
+//   - Khoản tạo với trạng thái 'Da duyet' (Cán bộ đã duyệt cấp 1)
+//   - TẠO PHÊ DUYỆT 2 CẤP:
+//     • Cấp 1: Cán bộ Quỹ → ket_qua = 'Da duyet' (đã ghi nhận)
+//     • Cấp 2: Kế toán/Admin → ket_qua = 'Cho duyet' (chờ duyệt)
+// ─────────────────────────────────────────────────────────────────────────────
+const createStaffDonation = async ({ nhaTaiTroId, quyId, soTien, ghiChu, hinhAnhMinhChung, nguoiDuyetId }) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [insertRes] = await connection.execute(
+      `INSERT INTO khoantaitro (
+         nha_tai_tro_id, quy_id, so_tien, trang_thai, ghi_chu, hinh_anh_minh_chung
+       ) VALUES (?, ?, ?, 'Da duyet', ?, ?)`,
+      [nhaTaiTroId, quyId, soTien, ghiChu || null, hinhAnhMinhChung || null]
+    );
+    const khoanTaiTroId = insertRes.insertId;
+
+    // Pheduyet cấp 1: Cán bộ Quỹ đã ghi nhận
+    await connection.execute(
+      `INSERT INTO pheduyet (
+         khoan_tai_tro_id, nguoi_duyet_id, cap_do_duyet, ket_qua, ghi_chu, ngay_duyet
+       ) VALUES (?, ?, 1, 'Da duyet', ?, CURRENT_TIMESTAMP)`,
+      [khoanTaiTroId, nguoiDuyetId || null, 'Cán bộ Quỹ ghi nhận khoản tài trợ']
+    );
+
+    // Pheduyet cấp 2: chờ Kế toán/Admin duyệt
+    await connection.execute(
+      `INSERT INTO pheduyet (
+         khoan_tai_tro_id, cap_do_duyet, ket_qua
+       ) VALUES (?, 2, 'Cho duyet')`,
+      [khoanTaiTroId]
+    );
+
+    await connection.commit();
+    return { khoanTaiTroId };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HÀM: getDonationById
 // MỤC ĐÍCH: Lấy thông tin chi tiết khoản tài trợ theo ID
 // ─────────────────────────────────────────────────────────────────────────────
 const getDonationById = async (khoanTaiTroId) => {
   const [rows] = await pool.query(
-    `SELECT 
+    `SELECT
       kt.khoan_tai_tro_id,
       kt.nha_tai_tro_id,
       kt.quy_id,
@@ -155,19 +203,163 @@ const getDonationById = async (khoanTaiTroId) => {
       kt.ghi_chu,
       kt.ngay_cap_nhat,
       ntt.ten_nha_tai_tro,
-      ntt.email,
-      ntt.so_dien_thoai,
+      ntt.loai as loai_ntt,
+      nd.ho_ten,
+      nd.email,
+      nd.so_dien_thoai,
+      nd.avatar,
       q.ten_quy,
       q.loai_quy,
       q.so_du as quy_so_du
      FROM KhoanTaiTro kt
      INNER JOIN NhaTaiTro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
+     INNER JOIN nguoidung nd ON ntt.user_id = nd.user_id
      INNER JOIN Quy q ON kt.quy_id = q.quy_id
      WHERE kt.khoan_tai_tro_id = ?
      LIMIT 1`,
     [khoanTaiTroId]
   );
   return rows[0] || null;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: listDonations
+// MỤC ĐÍCH: List khoản tài trợ với filter + phân trang (cho Kế toán)
+//   - keyword: tìm theo tên NTT, tên quỹ, ghi chú
+//   - quy_id, loai_ntt, trang_thai: lọc
+//   - tu_ngay, den_ngay: lọc theo ngay_tai_tro
+// ─────────────────────────────────────────────────────────────────────────────
+const listDonations = async ({
+  keyword = '',
+  quy_id = '',
+  loai_ntt = '',
+  trang_thai = '',
+  tu_ngay = '',
+  den_ngay = '',
+  page = 1,
+  page_size = 15,
+}) => {
+  const conds = [];
+  const params = [];
+
+  if (keyword) {
+    conds.push(`(ntt.ten_nha_tai_tro LIKE ? OR q.ten_quy LIKE ? OR kt.ghi_chu LIKE ?)`);
+    const like = `%${keyword}%`;
+    params.push(like, like, like);
+  }
+  if (quy_id) { conds.push(`kt.quy_id = ?`); params.push(quy_id); }
+  if (loai_ntt) { conds.push(`ntt.loai = ?`); params.push(loai_ntt); }
+  if (trang_thai) { conds.push(`kt.trang_thai = ?`); params.push(trang_thai); }
+  if (tu_ngay) { conds.push(`kt.ngay_tai_tro >= ?`); params.push(`${tu_ngay} 00:00:00`); }
+  if (den_ngay) { conds.push(`kt.ngay_tai_tro <= ?`); params.push(`${den_ngay} 23:59:59`); }
+
+  const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
+  const offset = (page - 1) * page_size;
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM khoantaitro kt
+     INNER JOIN nhataitro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
+     INNER JOIN nguoidung nd ON ntt.user_id = nd.user_id
+     INNER JOIN quy q ON kt.quy_id = q.quy_id
+     ${where}`,
+    params
+  );
+
+  const [rows] = await pool.query(
+    `SELECT
+        kt.khoan_tai_tro_id,
+        kt.nha_tai_tro_id,
+        kt.quy_id,
+        kt.so_tien,
+        kt.hinh_anh_minh_chung,
+        kt.ngay_tai_tro,
+        kt.trang_thai,
+        kt.ghi_chu,
+        kt.ngay_cap_nhat,
+        ntt.ten_nha_tai_tro,
+        ntt.loai as loai_ntt,
+        nd.ho_ten,
+        nd.email,
+        nd.so_dien_thoai,
+        nd.avatar,
+        q.ten_quy,
+        q.loai_quy
+     FROM khoantaitro kt
+     INNER JOIN nhataitro ntt ON kt.nha_tai_tro_id = ntt.nha_tai_tro_id
+     INNER JOIN nguoidung nd ON ntt.user_id = nd.user_id
+     INNER JOIN quy q ON kt.quy_id = q.quy_id
+     ${where}
+     ORDER BY
+        CASE kt.trang_thai
+          WHEN 'Da duyet' THEN 1
+          WHEN 'Cho duyet' THEN 2
+          WHEN 'Da nhan' THEN 3
+          WHEN 'Tu choi' THEN 4
+        END,
+        kt.ngay_tai_tro DESC
+     LIMIT ? OFFSET ?`,
+    [...params, Number(page_size), offset]
+  );
+
+  return { rows, total: Number(total) || 0 };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getDonationStatsForKeToan
+// MỤC ĐÍCH: 4 thẻ stats cho trang Khoản tài trợ (Kế toán)
+// ─────────────────────────────────────────────────────────────────────────────
+const getDonationStatsForKeToan = async () => {
+  const [[{ canXacNhan }]] = await pool.query(
+    `SELECT COUNT(*) AS canXacNhan FROM khoantaitro WHERE trang_thai = 'Da duyet'`
+  );
+  const [[{ daXacNhanHomNay }]] = await pool.query(
+    `SELECT COUNT(*) AS daXacNhanHomNay FROM khoantaitro
+     WHERE trang_thai = 'Da nhan' AND DATE(ngay_cap_nhat) = CURDATE()`
+  );
+  const [[{ tongThangNay }]] = await pool.query(
+    `SELECT COALESCE(SUM(so_tien),0) AS tongThangNay FROM khoantaitro
+     WHERE trang_thai = 'Da nhan'
+       AND MONTH(ngay_cap_nhat) = MONTH(CURRENT_DATE())
+       AND YEAR(ngay_cap_nhat) = YEAR(CURRENT_DATE())`
+  );
+  const [[{ choCanBo }]] = await pool.query(
+    `SELECT COUNT(*) AS choCanBo FROM khoantaitro WHERE trang_thai = 'Cho duyet'`
+  );
+  return {
+    canXacNhan: Number(canXacNhan) || 0,
+    daXacNhanHomNay: Number(daXacNhanHomNay) || 0,
+    tongThangNay: Number(tongThangNay) || 0,
+    choCanBo: Number(choCanBo) || 0,
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getPheDuyetByKhoanTaiTro
+// MỤC ĐÍCH: Lịch sử phê duyệt 1 khoản tài trợ (timeline)
+// ─────────────────────────────────────────────────────────────────────────────
+const getPheDuyetByKhoanTaiTro = async (khoanTaiTroId) => {
+  const [rows] = await pool.query(
+    `SELECT
+        pd.phe_duyet_id,
+        pd.cap_do_duyet,
+        pd.ket_qua,
+        pd.ghi_chu,
+        pd.ly_do_tu_choi,
+        pd.ngay_tao,
+        pd.ngay_duyet,
+        pd.nguoi_duyet_id,
+        nd.ho_ten AS nguoi_duyet_ten,
+        nd.avatar AS nguoi_duyet_avatar,
+        vt.ten_vai_tro AS nguoi_duyet_vai_tro
+     FROM pheduyet pd
+     LEFT JOIN nguoidung nd ON pd.nguoi_duyet_id = nd.user_id
+     LEFT JOIN vaitro vt ON nd.role_id = vt.role_id
+     WHERE pd.khoan_tai_tro_id = ?
+     ORDER BY pd.cap_do_duyet ASC`,
+    [khoanTaiTroId]
+  );
+  return rows;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,94 +383,100 @@ const getDonationById = async (khoanTaiTroId) => {
 // 6. COMMIT TRANSACTION
 // 7. Release connection
 //
-const approveDonation = async (khoanTaiTroId, nguoiDuyetId) => {
-  // ─────────────────────────────────────────────────────────────────────────
-  // BƯỚC 1: LẤY CONNECTION TỪ POOL
-  // ─────────────────────────────────────────────────────────────────────────
+const approveDonation = async (khoanTaiTroId, nguoiDuyetId, { ghiChu, minhChungKeToan } = {}) => {
   const connection = await pool.getConnection();
-  
+
   try {
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 2: BẮT ĐẦU TRANSACTION
-    // ─────────────────────────────────────────────────────────────────────────
     await connection.beginTransaction();
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 3: CẬP NHẬT TRẠNG THÁI KHOẢN TÀI TRỢ
-    // ─────────────────────────────────────────────────────────────────────────
-    // Đổi từ "Chờ duyệt" → "Đã nhận"
+    // 1) Đổi trạng thái khoản tài trợ: 'Cho duyet'/'Da duyet' → 'Da nhan'
     const [updateResult] = await connection.execute(
-      `UPDATE KhoanTaiTro 
+      `UPDATE KhoanTaiTro
        SET trang_thai = 'Da nhan',
            ngay_cap_nhat = CURRENT_TIMESTAMP
-       WHERE khoan_tai_tro_id = ? 
-       AND trang_thai = 'Cho duyet'`,
+       WHERE khoan_tai_tro_id = ?
+       AND trang_thai IN ('Cho duyet','Da duyet')`,
       [khoanTaiTroId]
     );
 
-    // Kiểm tra có cập nhật được không (có thể khoản tài trợ không tồn tại hoặc đã duyệt rồi)
     if (updateResult.affectedRows === 0) {
       throw new Error('DONATION_NOT_FOUND_OR_ALREADY_APPROVED');
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 4: LẤY THÔNG TIN KHOẢN TÀI TRỢ
-    // ─────────────────────────────────────────────────────────────────────────
+    // 2) Lấy thông tin khoản tài trợ
     const [donations] = await connection.query(
-      `SELECT quy_id, so_tien, nha_tai_tro_id 
-       FROM KhoanTaiTro 
+      `SELECT quy_id, so_tien, nha_tai_tro_id
+       FROM KhoanTaiTro
        WHERE khoan_tai_tro_id = ?`,
       [khoanTaiTroId]
     );
-
     const donation = donations[0];
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 5: CỘNG TIỀN VÀO QUỸ
-    // ─────────────────────────────────────────────────────────────────────────
-    // Cập nhật so_du của bảng Quy
+    // 3) Cộng tiền vào quỹ
     await connection.execute(
-      `UPDATE Quy 
+      `UPDATE Quy
        SET so_du = so_du + ?,
            ngay_cap_nhat = CURRENT_TIMESTAMP
        WHERE quy_id = ?`,
       [donation.so_tien, donation.quy_id]
     );
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 6: TẠO GIAO DỊCH TRONG BẢNG GiaoDich
-    // ─────────────────────────────────────────────────────────────────────────
-    // Ghi nhận giao dịch THU (nhận tiền từ nhà tài trợ)
-    // LƯU Ý: Theo schema thực tế, các cột là:
-    // - transaction_id (AUTO_INCREMENT)
-    // - quy_id, khoan_tai_tro_id, request_id, nguoi_tao_id
-    // - loai, so_tien, trang_thai
-    // - minh_chung_chuyen_khoan, ghi_chu
-    // - ngay_giao_dich, ngay_cap_nhat (AUTO)
+    // 4) Tạo giao dịch Thu (kèm minh chứng Kế toán nếu có)
     await connection.execute(
       `INSERT INTO GiaoDich (
-        quy_id,
-        khoan_tai_tro_id,
-        nguoi_tao_id,
-        loai,
-        so_tien,
-        trang_thai,
-        ghi_chu
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        quy_id, khoan_tai_tro_id, nguoi_tao_id, loai, so_tien, trang_thai,
+        minh_chung_chuyen_khoan, ghi_chu
+      ) VALUES (?, ?, ?, 'Thu', ?, 'Thanh cong', ?, ?)`,
       [
         donation.quy_id,
         khoanTaiTroId,
         nguoiDuyetId,
-        'Thu',
         donation.so_tien,
-        'Cho xu ly',
-        `Duyệt khoản tài trợ #${khoanTaiTroId}`
+        minhChungKeToan || null,
+        ghiChu || `Duyệt khoản tài trợ #${khoanTaiTroId}`
       ]
     );
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 7: COMMIT TRANSACTION
-    // ─────────────────────────────────────────────────────────────────────────
+    // 5) Cập nhật pheduyet cấp 2 → 'Da duyet'
+    const [pheUpdate] = await connection.execute(
+      `UPDATE pheduyet
+         SET ket_qua = 'Da duyet',
+             nguoi_duyet_id = ?,
+             ghi_chu = COALESCE(?, ghi_chu),
+             ngay_duyet = CURRENT_TIMESTAMP
+       WHERE khoan_tai_tro_id = ?
+         AND cap_do_duyet = 2
+         AND ket_qua = 'Cho duyet'`,
+      [nguoiDuyetId, ghiChu || null, khoanTaiTroId]
+    );
+    if (pheUpdate.affectedRows === 0) {
+      await connection.execute(
+        `INSERT INTO pheduyet (
+           khoan_tai_tro_id, nguoi_duyet_id, cap_do_duyet, ket_qua, ghi_chu, ngay_duyet
+         ) VALUES (?, ?, 2, 'Da duyet', ?, CURRENT_TIMESTAMP)`,
+        [khoanTaiTroId, nguoiDuyetId, ghiChu || null]
+      );
+    }
+
+    // 6) Re-calc 4 cột stats trên nhataitro (idempotent, chỉ tính 'Da nhan')
+    await connection.execute(
+      `UPDATE nhataitro ntt
+         SET tong_so_tien_da_tai_tro = (
+                SELECT COALESCE(SUM(so_tien), 0) FROM khoantaitro
+                 WHERE nha_tai_tro_id = ntt.nha_tai_tro_id AND trang_thai = 'Da nhan'),
+             so_lan_tai_tro = (
+                SELECT COUNT(*) FROM khoantaitro
+                 WHERE nha_tai_tro_id = ntt.nha_tai_tro_id AND trang_thai = 'Da nhan'),
+             so_quy_da_ho_tro = (
+                SELECT COUNT(DISTINCT quy_id) FROM khoantaitro
+                 WHERE nha_tai_tro_id = ntt.nha_tai_tro_id AND trang_thai = 'Da nhan'),
+             lan_tai_tro_gan_nhat = (
+                SELECT MAX(ngay_tai_tro) FROM khoantaitro
+                 WHERE nha_tai_tro_id = ntt.nha_tai_tro_id AND trang_thai = 'Da nhan')
+       WHERE ntt.nha_tai_tro_id = ?`,
+      [donation.nha_tai_tro_id]
+    );
+
     await connection.commit();
 
     return {
@@ -288,15 +486,9 @@ const approveDonation = async (khoanTaiTroId, nguoiDuyetId) => {
       soTien: donation.so_tien
     };
   } catch (error) {
-    // ─────────────────────────────────────────────────────────────────────────
-    // XỬ LÝ LỖI: ROLLBACK TRANSACTION
-    // ─────────────────────────────────────────────────────────────────────────
     await connection.rollback();
     throw error;
   } finally {
-    // ─────────────────────────────────────────────────────────────────────────
-    // GIẢI PHÓNG CONNECTION
-    // ─────────────────────────────────────────────────────────────────────────
     connection.release();
   }
 };
@@ -304,40 +496,65 @@ const approveDonation = async (khoanTaiTroId, nguoiDuyetId) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // HÀM: rejectDonation
 // MỤC ĐÍCH: Từ chối khoản tài trợ (chuyển trạng thái từ "Chờ duyệt" → "Từ chối")
+//   - KHÔNG cộng tiền vào quỹ, KHÔNG tạo giao dịch
+//   - Cập nhật pheduyet cấp 2 thành 'Tu choi' + lý do
 // ─────────────────────────────────────────────────────────────────────────────
-// 
-// KHÁC BIỆT VỚI approveDonation:
-// - KHÔNG dùng transaction (chỉ UPDATE 1 bảng)
-// - KHÔNG cộng tiền vào quỹ
-// - KHÔNG tạo giao dịch
-// - Chỉ cập nhật trạng thái và lưu lý do từ chối
-//
-const rejectDonation = async (khoanTaiTroId, lyDoTuChoi) => {
-  // Cập nhật trạng thái và lý do từ chối
-  // LƯU Ý: Schema có thể không có cột ly_do_tu_choi, sẽ lưu vào ghi_chu
-  const [result] = await pool.execute(
-    `UPDATE KhoanTaiTro 
-     SET trang_thai = 'Tu choi',
-         ngay_cap_nhat = CURRENT_TIMESTAMP
-     WHERE khoan_tai_tro_id = ? 
-     AND trang_thai = 'Cho duyet'`,
-    [khoanTaiTroId]
-  );
+const rejectDonation = async (khoanTaiTroId, lyDoTuChoi, nguoiDuyetId) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  // Kiểm tra có cập nhật được không
-  if (result.affectedRows === 0) {
-    throw new Error('DONATION_NOT_FOUND_OR_ALREADY_PROCESSED');
+    const [result] = await connection.execute(
+      `UPDATE KhoanTaiTro
+       SET trang_thai = 'Tu choi',
+           ngay_cap_nhat = CURRENT_TIMESTAMP
+       WHERE khoan_tai_tro_id = ?
+       AND trang_thai IN ('Cho duyet','Da duyet')`,
+      [khoanTaiTroId]
+    );
+
+    if (result.affectedRows === 0) {
+      throw new Error('DONATION_NOT_FOUND_OR_ALREADY_PROCESSED');
+    }
+
+    // Cập nhật pheduyet cấp 2 → 'Tu choi'
+    const [pheUpdate] = await connection.execute(
+      `UPDATE pheduyet
+         SET ket_qua = 'Tu choi',
+             nguoi_duyet_id = ?,
+             ly_do_tu_choi = ?,
+             ngay_duyet = CURRENT_TIMESTAMP
+       WHERE khoan_tai_tro_id = ?
+         AND cap_do_duyet = 2
+         AND ket_qua = 'Cho duyet'`,
+      [nguoiDuyetId || null, lyDoTuChoi, khoanTaiTroId]
+    );
+    if (pheUpdate.affectedRows === 0) {
+      await connection.execute(
+        `INSERT INTO pheduyet (
+           khoan_tai_tro_id, nguoi_duyet_id, cap_do_duyet, ket_qua, ly_do_tu_choi, ngay_duyet
+         ) VALUES (?, ?, 2, 'Tu choi', ?, CURRENT_TIMESTAMP)`,
+        [khoanTaiTroId, nguoiDuyetId || null, lyDoTuChoi]
+      );
+    }
+
+    await connection.commit();
+    return { success: true, khoanTaiTroId };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
   }
-
-  return {
-    success: true,
-    khoanTaiTroId
-  };
 };
 
 export default {
   createPublicDonation,
+  createStaffDonation,
   getDonationById,
+  listDonations,
+  getDonationStatsForKeToan,
+  getPheDuyetByKhoanTaiTro,
   approveDonation,
-  rejectDonation
+  rejectDonation,
 };

@@ -1,0 +1,203 @@
+@use '../../../styles/variables' as *;
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  // Sizes
+  &-sm {
+    gap: 8px;
+  }
+
+  &-md {
+    gap: 12px;
+  }
+
+  &-lg {
+    gap: 16px;
+  }
+}
+
+// ============================================
+// User Avatar Wrapper (with dropdown)
+// ============================================
+.user-avatar-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+// ============================================
+// User Menu Dropdown
+// ============================================
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: white;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-xl;
+  border: 1px solid $border-default;
+  z-index: $z-dropdown;
+  animation: slideDown 0.2s ease;
+  
+  // For CloseButton positioning
+  > .close-button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Header
+.user-menu-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-menu-avatar {
+  flex-shrink: 0;
+}
+
+.user-menu-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-menu-name {
+  font-size: $text-base;
+  font-weight: $font-semibold;
+  color: $color-navy-blue;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-menu-email {
+  font-size: $text-sm;
+  color: $text-secondary;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-menu-role {
+  font-size: $text-xs;
+  color: $text-muted;
+  margin: 0;
+  padding: 2px 8px;
+  background: $bg-tag;
+  border-radius: $radius-sm;
+  display: inline-block;
+}
+
+// Divider
+.user-menu-divider {
+  height: 1px;
+  background: $border-default;
+  margin: 0;
+}
+
+// Menu Items
+.user-menu-items {
+  padding: 8px;
+}
+
+.user-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: $transition-base;
+  text-align: left;
+
+  &:hover {
+    background: $bg-sidebar-hover;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.user-menu-item-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.user-menu-item-text {
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-body;
+}
+
+// Footer (Logout)
+.user-menu-footer {
+  padding: 8px;
+}
+
+.user-menu-logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: $transition-base;
+  text-align: left;
+
+  &:hover {
+    background: $color-danger-bg;
+
+    .user-menu-item-text {
+      color: $color-danger;
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .user-menu-item-text {
+    color: $color-danger-text;
+  }
+}
+
+// ============================================
+// Responsive
+// ============================================
+@media (max-width: 480px) {
+  .header-actions {
+    gap: 8px;
+  }
+
+  .user-menu-dropdown {
+    width: 260px;
+    right: -20px;
+  }
+}

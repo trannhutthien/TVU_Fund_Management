@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import Logo from '@components/common/Logo/Logo';
 import Button from '@components/common/Button/Button';
+import HeaderActions from '@components/common/HeaderActions';
+import useAuthStore from '@stores/authStore';
+import { authService } from '@services/authService';
 import styles from './PublicHeader.module.scss';
 
 /**
@@ -14,11 +18,29 @@ import styles from './PublicHeader.module.scss';
  * 
  * @param {string} activeMenu - Menu đang active (optional, NavLink tự động detect)
  * @param {function} onLoginClick - Callback khi click nút Đăng nhập
+ * @param {function} onRegisterClick - Callback khi click nút Đăng ký
  */
-const PublicHeader = ({ activeMenu, onLoginClick }) => {
+const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
   const navigate = useNavigate();
+  const { isAuthenticated, user, token, logout: logoutStore } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      if (token) {
+        await authService.logout();
+      }
+    } catch (error) {
+      console.error('Logout API error:', error);
+    } finally {
+      logoutStore();
+      localStorage.removeItem('refreshToken');
+      toast.success('Đăng xuất thành công!');
+      // Redirect về LandingPage
+      window.location.href = '/';
+    }
+  };
 
   // Detect scroll để thêm shadow
   useEffect(() => {
@@ -54,15 +76,27 @@ const PublicHeader = ({ activeMenu, onLoginClick }) => {
 
   // Navigation items
   const navItems = [
-    { label: 'VỀ CHÚNG TÔI', path: '/about' },
     { label: 'DANH MỤC QUỸ', path: '/funds' },
     { label: 'HƯỚNG DẪN & QUY ĐỊNH', path: '/guidelines' },
-    { label: 'VINH DANH', path: '/honors' },
+    { label: 'VINH DANH', path: '/donors' },
+    // Menu "CÁ NHÂN" và "TẠO ĐƠN" chỉ hiện khi đã đăng nhập
+    ...(isAuthenticated
+      ? [
+          { label: 'CÁ NHÂN', path: '/profile' },
+          { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
+        ]
+      : []),
   ];
 
   // Handle button clicks
   const handleRegisterClick = () => {
-    navigate('/register');
+    // Nếu có onRegisterClick callback (từ LandingPage), dùng nó để mở modal
+    if (onRegisterClick) {
+      onRegisterClick();
+    } else {
+      // Nếu không, navigate to /register page
+      navigate('/register');
+    }
     closeMobileMenu();
   };
 
@@ -104,9 +138,12 @@ const PublicHeader = ({ activeMenu, onLoginClick }) => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `${styles.navLink} ${isActive ? styles.active : ''}`
+                  item.highlight
+                    ? `${styles.navLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
+                    : `${styles.navLink} ${isActive ? styles.active : ''}`
                 }
               >
+                {item.highlight && <span className={styles.highlightIcon}>✦</span>}
                 {item.label}
               </NavLink>
             ))}
@@ -114,22 +151,35 @@ const PublicHeader = ({ activeMenu, onLoginClick }) => {
 
           {/* Action Buttons (Right) */}
           <div className={styles.actions}>
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={handleRegisterClick}
-              className={styles.btnRegister}
-            >
-              Đăng ký
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleLoginClick}
-              className={styles.btnLogin}
-            >
-              Đăng nhập
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <HeaderActions
+                  user={user}
+                  onLogout={handleLogout}
+                  size="sm"
+                  showNotifications={true}
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={handleRegisterClick}
+                  className={styles.btnRegister}
+                >
+                  Đăng ký
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleLoginClick}
+                  className={styles.btnLogin}
+                >
+                  Đăng nhập
+                </Button>
+              </>
+            )}
 
             {/* Hamburger Menu (Mobile only) */}
             <button
@@ -153,10 +203,13 @@ const PublicHeader = ({ activeMenu, onLoginClick }) => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `${styles.mobileNavLink} ${isActive ? styles.active : ''}`
+              item.highlight
+                ? `${styles.mobileNavLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
+                : `${styles.mobileNavLink} ${isActive ? styles.active : ''}`
             }
             onClick={closeMobileMenu}
           >
+            {item.highlight && <span className={styles.highlightIcon}>✦</span>}
             {item.label}
           </NavLink>
         ))}
@@ -166,22 +219,35 @@ const PublicHeader = ({ activeMenu, onLoginClick }) => {
 
         {/* Mobile Action Buttons */}
         <div className={styles.mobileActions}>
-          <Button
-            variant="secondary"
-            size="md"
-            onClick={handleRegisterClick}
-            className={styles.btnRegister}
-          >
-            Đăng ký
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={handleLoginClick}
-            className={styles.btnLogin}
-          >
-            Đăng nhập
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <HeaderActions
+                user={user}
+                onLogout={handleLogout}
+                size="sm"
+                showNotifications={true}
+              />
+            </>
+          ) : (
+            <>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={handleRegisterClick}
+                className={styles.btnRegister}
+              >
+                Đăng ký
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleLoginClick}
+                className={styles.btnLogin}
+              >
+                Đăng nhập
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -189,8 +255,8 @@ const PublicHeader = ({ activeMenu, onLoginClick }) => {
 };
 
 PublicHeader.propTypes = {
-  activeMenu: PropTypes.string,
   onLoginClick: PropTypes.func,
+  onRegisterClick: PropTypes.func,
 };
 
 export default PublicHeader;

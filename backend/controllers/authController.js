@@ -1,22 +1,149 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import NguoiDungModel from "../models/NguoiDungModel.js";
+import { buildUserAvatarUrl } from "../utils/imageHelper.js";
 
 // ─── Helper: tạo cặp token ───────────────────────────────────────────────────
 // Tách ra hàm riêng để login và refresh-token đều dùng chung logic
 const generateTokens = (payload) => {
-  // Access token: sống ngắn (15 phút mặc định), dùng để gọi API
+  // Access token: sống lâu hơn cho development (2 giờ), production nên dùng 15m
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "15m",
+    expiresIn: process.env.JWT_EXPIRES_IN || "2h",
   });
 
-  // Refresh token: sống lâu (7 ngày), dùng để cấp lại access token mới
+  // Refresh token: sống lâu (30 ngày cho development), production nên dùng 7d
   // Ký bằng secret KHÁC để tách biệt hoàn toàn với access token
   const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "30d",
   });
 
   return { accessToken, refreshToken };
+};
+
+// ─── POST /api/auth/register ──────────────────────────────────────────────────
+// Đăng ký tài khoản mới (công khai - không cần authentication)
+// Hỗ trợ 2 loại: SINH_VIEN và NHA_TAI_TRO
+export const register = async (req, res) => {
+  try {
+    const { 
+      hoTen, 
+      mssv, 
+      lopKhoa, 
+      email, 
+      password,
+      tenToChuc,
+      loaiNhaTaiTro,
+      soDienThoai,
+      loaiTaiKhoan // 'sinhvien' hoặc 'nhataitro'
+    } = req.body;
+
+    // 1. Validate loại tài khoản
+    if (!loaiTaiKhoan || !['sinhvien', 'nhataitro'].includes(loaiTaiKhoan)) {
+      return res.status(400).json({
+        success: false,
+        message: "Loại tài khoản không hợp lệ",
+      });
+    }
+
+    // 2. Validate dữ liệu theo loại tài khoản
+    if (loaiTaiKhoan === 'sinhvien') {
+      if (!hoTen || !mssv || !lopKhoa || !email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập đầy đủ thông tin: họ tên, MSSV, lớp/khoa, email, mật khẩu",
+        });
+      }
+    } else {
+      if (!tenToChuc || !email || !soDienThoai || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập đầy đủ thông tin: tên tổ chức, email, số điện thoại, mật khẩu",
+        });
+      }
+    }
+
+    // 3. Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Email không đúng định dạng",
+      });
+    }
+
+    // 4. Validate độ dài mật khẩu
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Mật khẩu phải có ít nhất 8 ký tự",
+      });
+    }
+
+    // 5. Kiểm tra email đã tồn tại chưa
+    const emailExists = await NguoiDungModel.checkEmailExists(email);
+    if (emailExists) {
+      return res.status(409).json({
+        success: false,
+        message: "Email đã được sử dụng",
+      });
+    }
+
+    // 6. Hash mật khẩu
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 7. Chuẩn bị dữ liệu user
+    const userData = {
+      hoTen: loaiTaiKhoan === 'sinhvien' ? hoTen.trim() : tenToChuc.trim(),
+      maSoDinhDanh: loaiTaiKhoan === 'sinhvien' ? mssv.trim() : `NTT${Date.now()}`, // Tạo mã tự động cho nhà tài trợ
+      email: email.trim().toLowerCase(),
+      matKhau: hashedPassword,
+      roleId: 4, // Vai trò "Người dùng"
+      loaiTaiKhoan: loaiTaiKhoan === 'sinhvien' ? 'SINH_VIEN' : 'NHA_TAI_TRO',
+      khoaPhong: loaiTaiKhoan === 'sinhvien' ? lopKhoa.trim() : loaiNhaTaiTro || null,
+      soDienThoai: soDienThoai || null,
+      trangThai: 'HOAT_DONG',
+      avatar: null,
+      diaChi: null
+    };
+
+    // 8. Tạo user mới trong database
+    const userId = await NguoiDungModel.createUser(userData);
+
+    // 9. Tạo token cho user mới
+    const payload = {
+      user_id: userId,
+      vai_tro: 4,
+    };
+    const { accessToken, refreshToken } = generateTokens(payload);
+
+    // 10. Lấy thông tin user vừa tạo
+    const newUser = await NguoiDungModel.getUserForProfile(userId);
+
+    return res.status(201).json({
+      success: true,
+      message: "Đăng ký tài khoản thành công",
+      accessToken,
+      refreshToken,
+      user: {
+        id: newUser.user_id,
+        maSoDinhDanh: newUser.ma_so_dinh_danh,
+        hoTen: newUser.ho_ten,
+        email: newUser.email,
+        vaiTro: newUser.role_id,
+        tenVaiTro: newUser.ten_vai_tro || null,
+        loaiTaiKhoan: newUser.loai_tai_khoan,
+        khoaPhong: newUser.khoa_phong,
+        createdAt: newUser.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi register:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
 };
 
 // ─── POST /api/auth/login ─────────────────────────────────────────────────────
@@ -73,11 +200,14 @@ export const login = async (req, res) => {
       accessToken,
       refreshToken,
       user: {
-        id: user.user_id,  // Sửa từ ma_so_dinh_danh → user_id
+        id: user.user_id,
         maSoDinhDanh: user.ma_so_dinh_danh,
         hoTen: user.ho_ten,
         email: email,
         vaiTro: user.role_id,
+        tenVaiTro: user.ten_vai_tro || null,
+        loaiTaiKhoan: user.loai_tai_khoan || null,
+        createdAt: user.created_at || null,
       },
     });
   } catch (error) {
@@ -106,12 +236,19 @@ export const getMe = async (req, res) => {
     return res.status(200).json({
       success: true,
       user: {
-        id: user.user_id,  // Sửa từ ma_so_dinh_danh → user_id
+        id: user.user_id,
         maSoDinhDanh: user.ma_so_dinh_danh,
         hoTen: user.ho_ten,
         email: user.email,
+        avatar: buildUserAvatarUrl(user.avatar), // ✅ Build full URL
+        soDienThoai: user.so_dien_thoai || null,
+        diaChi: user.dia_chi || null,
         vaiTro: user.role_id,
+        tenVaiTro: user.ten_vai_tro || null,
+        loaiTaiKhoan: user.loai_tai_khoan || null,
+        khoaPhong: user.khoa_phong || null,
         trangThai: user.trang_thai,
+        createdAt: user.created_at || null,
       },
     });
   } catch (error) {

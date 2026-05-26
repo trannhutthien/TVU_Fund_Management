@@ -1,0 +1,62 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.skeletonStat,
+.skeletonChart {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 50%,
+    #f1f5f9 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 12px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonStat {
+  height: 92px;
+}
+
+.skeletonChart {
+  height: 280px;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 1024px) {
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+}

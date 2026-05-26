@@ -1,8 +1,11 @@
 import express from "express";
-import { login, getMe, refreshToken, updatePassword, logout } from "../controllers/authController.js";
+import { register, login, getMe, refreshToken, updatePassword, logout } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+// POST /api/auth/register      — đăng ký tài khoản mới (công khai)
+router.post("/register", register);
 
 // POST /api/auth/login         — không cần token
 router.post("/login", login);

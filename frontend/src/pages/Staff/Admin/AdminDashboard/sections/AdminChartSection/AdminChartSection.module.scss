@@ -1,0 +1,245 @@
+@use '../../../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ADMIN CHART SECTION STYLES ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── SECTION ───────────────────────────────────────────────────────────────────
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── SECTION TITLE PATTERN ─────────────────────────────────────────────────────
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  h2 {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+  }
+}
+
+.titleBar {
+  width: 4px;
+  height: 20px;
+  background: var(--color-gold);
+  border-radius: 2px;
+}
+
+// ─── GRID ──────────────────────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: 50fr 25fr 25fr;
+  gap: 20px;
+}
+
+// ─── CHART CARD ────────────────────────────────────────────────────────────────
+.chartCard {
+  background: var(--color-white);
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// ─── CHART HEADER ──────────────────────────────────────────────────────────────
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chartHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primary);
+}
+
+.chartTitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+// ─── PERIOD SWITCHER ───────────────────────────────────────────────────────────
+.periodSwitcher {
+  display: flex;
+  gap: 4px;
+  background: #f0f4ff;
+  padding: 3px;
+  border-radius: 8px;
+
+  button {
+    padding: 5px 12px;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+}
+
+.periodActive {
+  background: var(--color-white) !important;
+  color: var(--color-primary) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+// ─── CUSTOM TOOLTIP ────────────────────────────────────────────────────────────
+.tooltip {
+  background: var(--color-white);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tooltipLabel {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 6px 0;
+}
+
+.tooltipItem {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 3px 0;
+}
+
+// ─── CHART FOOTER ──────────────────────────────────────────────────────────────
+.chartFooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.footerValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.footerLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+}
+
+// ─── CENTER LABEL IN DONUT ─────────────────────────────────────────────────────
+.centerLabel {
+  pointer-events: none;
+}
+
+.centerValue {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  fill: var(--color-primary);
+}
+
+.centerText {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  fill: #64748b;
+}
+
+// ─── FUND LEGEND ───────────────────────────────────────────────────────────────
+.fundLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.fundLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fundLegendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.fundLegendName {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fundLegendPercent {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.fundLegendMore {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
+  text-align: center;
+  padding-top: 4px;
+}
+
+// ─── RESPONSIVE ────────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+
+    .chartCard:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartCard {
+    padding: 16px 18px;
+  }
+
+  .periodSwitcher button {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}

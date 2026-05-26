@@ -1,0 +1,152 @@
+@use '../../../../styles/variables' as *;
+
+.fundSelectSection {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  padding: $space-6 $space-4;
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}
+
+// ============================================
+// Thanh tìm kiếm + Sắp xếp
+// ============================================
+.searchRow {
+  display: flex;
+  gap: $space-3; // 12px
+  width: 100%;
+  align-items: flex-start;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: $space-3;
+  }
+}
+
+.searchWrapper {
+  flex: 1;
+  min-width: 0; // Allow flex item to shrink below content size
+
+  // Override Input component styles for this specific use case
+  :global(.input-container) {
+    margin-bottom: 0;
+  }
+
+  :global(.input-field) {
+    border-radius: $radius-md; // 8px
+    background: $bg-card;
+    border: 1px solid $border-default;
+    padding: $space-3 $space-4 $space-3 $space-10;
+    font-size: $text-base;
+
+    &:focus {
+      border-color: var(--color-primary, $color-primary);
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  :global(.input-icon-left) {
+    color: $text-secondary;
+  }
+}
+
+.sortWrapper {
+  width: 200px;
+  flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    width: 100%;
+  }
+}
+
+.sortDropdown {
+  // Custom styles for dropdown if needed
+  :global(.dropdown) {
+    width: 100%;
+  }
+}
+
+// ============================================
+// Bộ lọc danh mục
+// ============================================
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3; // 12px
+  justify-content: center;
+  width: 100%;
+
+  @media (max-width: 640px) {
+    gap: $space-2;
+  }
+}
+
+.filterButton {
+  border-radius: $radius-full; // 9999px - pill shape
+  padding: $space-3 $space-6;
+  font-size: $text-base;
+  font-weight: $font-medium;
+  transition: $transition-fast;
+  white-space: nowrap;
+
+  @media (max-width: 640px) {
+    padding: $space-2 $space-4;
+    font-size: $text-sm;
+  }
+
+  // Active state
+  &.active {
+    background: var(--color-primary, $color-navy-blue);
+    color: $text-on-primary;
+    border-color: var(--color-primary, $color-navy-blue);
+
+    &:hover {
+      background: var(--color-primary-dark, $color-primary-dark);
+      border-color: var(--color-primary-dark, $color-primary-dark);
+    }
+  }
+
+  // Inactive state
+  &.inactive {
+    background: $bg-card;
+    color: $text-secondary;
+    border: 1px solid $border-default;
+
+    &:hover {
+      border-color: var(--color-primary, $color-navy-blue);
+      color: var(--color-primary, $color-navy-blue);
+      background: $bg-card;
+    }
+  }
+}
+
+// ============================================
+// Responsive
+// ============================================
+@media (max-width: 768px) {
+  .fundSelectSection {
+    padding: $space-5 $space-3;
+  }
+}
+
+@media (max-width: 480px) {
+  .fundSelectSection {
+    padding: $space-4 $space-3;
+  }
+
+  .container {
+    gap: $space-3;
+  }
+}

@@ -1,0 +1,232 @@
+.table {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+}
+
+.headerRow,
+.row {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 12px;
+}
+
+.headerRow {
+  background: #f8f9ff;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.row {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #f8f9ff;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.rowHighlight {
+  background: rgba(245, 158, 11, 0.04);
+  &:hover {
+    background: rgba(245, 158, 11, 0.08);
+  }
+}
+
+.colSponsor { flex: 1.5; min-width: 0; }
+.colFund    { flex: 1; min-width: 0; }
+.colAmount  { width: 130px; text-align: right; }
+.colDate    { width: 120px; }
+.colStatus  { width: 140px; }
+.colProof   { width: 90px; text-align: center; }
+.colActions { width: 200px; text-align: right; }
+
+.sponsorCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(26, 47, 94, 0.1);
+  color: var(--color-navy-blue, #1a2f5e);
+  font-weight: 700;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid rgba(26, 47, 94, 0.08);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.sponsorText {
+  min-width: 0;
+}
+
+.sponsorName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sponsorLoai {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.fundName {
+  font-size: 13px;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.fundLoai {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: rgba(240, 165, 0, 0.15);
+  color: #b07500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.amountCell {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.dateMain {
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.dateSub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.proofCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proofLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--color-navy-blue, #1a2f5e);
+  background: rgba(26, 47, 94, 0.08);
+  text-decoration: none;
+
+  &:hover {
+    background: rgba(26, 47, 94, 0.15);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.proofEmpty {
+  color: #cbd5e1;
+}
+
+.actionsCell {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.skeletonRow {
+  height: 64px;
+  border-bottom: 1px solid #f1f5f9;
+  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+  background-size: 200% 100%;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty {
+  background: #fff;
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: #94a3b8;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+
+  p {
+    margin: 12px 0 0;
+    font-size: 14px;
+  }
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  color: #cbd5e1;
+}
+
+.emptyIconGreen {
+  color: #10b981;
+}
+
+@media (max-width: 1100px) {
+  .headerRow,
+  .row {
+    font-size: 12px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .colDate,
+  .colProof { display: none; }
+  .colActions { width: 160px; }
+}
+
+@media (max-width: 768px) {
+  .colFund,
+  .colStatus { display: none; }
+  .colSponsor { flex: 2; }
+  .colActions { width: 130px; }
+}

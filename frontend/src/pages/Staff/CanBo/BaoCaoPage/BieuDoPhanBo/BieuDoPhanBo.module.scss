@@ -1,0 +1,117 @@
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.pieWrap {
+  position: relative;
+}
+
+.pieCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.pieCenterValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  line-height: 1;
+}
+
+.pieCenterLabel {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #334155;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legendName {
+  color: #64748b;
+  flex: 1;
+}
+
+.legendValue {
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  font-size: 12px;
+}
+
+.legendPercent {
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.skeleton {
+  height: 280px;
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  background-size: 200% 100%;
+  border-radius: 8px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

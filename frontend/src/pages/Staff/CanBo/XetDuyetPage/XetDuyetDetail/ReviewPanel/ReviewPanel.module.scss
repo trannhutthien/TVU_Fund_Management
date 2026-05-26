@@ -1,0 +1,250 @@
+.panel {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  border-top: 3px solid var(--color-primary, #3b6ff5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.headerIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary, #3b6ff5);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a2f5e;
+}
+
+.body {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// ── Checklist ───────────────────────────────
+.checklist {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  margin-bottom: 8px;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #f8f9ff;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.checkItemActive {
+  background: rgba(26, 47, 94, 0.04);
+
+  .checkLabel {
+    color: var(--color-primary, #3b6ff5);
+    font-weight: 500;
+  }
+}
+
+.checkbox {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
+  border-radius: 5px;
+  background: #fff;
+  color: #fff;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.checkboxOn {
+  background: var(--color-primary, #3b6ff5);
+  border-color: var(--color-primary, #3b6ff5);
+}
+
+.checkIcon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 3;
+}
+
+.checkLabel {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+// ── Progress ────────────────────────────────
+.progressRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-primary, #3b6ff5);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.progressText {
+  text-align: right;
+  font-size: 12px;
+  color: #64748b;
+}
+
+// ── Divider ─────────────────────────────────
+.divider {
+  height: 1px;
+  background: #f1f5f9;
+}
+
+// ── Note ────────────────────────────────────
+.noteBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.noteHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.noteLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a2f5e;
+}
+
+.required {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1e293b;
+  background: #fff;
+  resize: vertical;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b6ff5);
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.12);
+  }
+
+  &:disabled {
+    background: #f8fafc;
+    cursor: not-allowed;
+  }
+}
+
+.textareaError {
+  border-color: #ef4444;
+
+  &:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  }
+}
+
+.noteFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 18px;
+}
+
+.errorText {
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.counter {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+// ── Actions ─────────────────────────────────
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+// Override Button khi dùng làm nút "Từ chối" (outline đỏ)
+.btnReject {
+  border: 1.5px solid #ef4444 !important;
+  color: #ef4444 !important;
+  background: #fff !important;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.06) !important;
+  }
+}
+
+.btnRejectDisabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+// ── Hint ────────────────────────────────────
+.hint {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: -4px;
+}

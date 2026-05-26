@@ -1,0 +1,192 @@
+import {
+  HiOutlineEye,
+  HiOutlineCheckCircle,
+  HiOutlinePaperClip,
+  HiOutlineCheckBadge,
+  HiOutlineBanknotes,
+} from 'react-icons/hi2';
+import Button from '@components/common/Button/Button';
+import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import styles from './KhoanTaiTroTable.module.scss';
+
+const LOAI_LABEL = {
+  'Ca nhan': 'Cá nhân',
+  'Doanh nghiep': 'Doanh nghiệp',
+  'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
+};
+
+const STATUS_CONFIG = {
+  'Cho duyet': { status: 'pending', label: 'Chờ cán bộ' },
+  'Da duyet': { status: 'processing', label: 'Chờ kế toán' },
+  'Da nhan': { status: 'approved', label: 'Đã xác nhận' },
+  'Tu choi': { status: 'rejected', label: 'Từ chối' },
+};
+
+const formatCurrency = (amount) => {
+  const n = Number(amount) || 0;
+  return n.toLocaleString('vi-VN') + 'đ';
+};
+
+const formatDate = (value) => {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('vi-VN');
+};
+
+const formatTime = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+};
+
+const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
+
+const apiOrigin = () => {
+  const base = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5001/api';
+  return base.replace(/\/api\/?$/, '');
+};
+
+const KhoanTaiTroTable = ({ data, loading, activeTab, onViewDetail, onConfirm }) => {
+  if (loading) {
+    return (
+      <div className={styles.table}>
+        <div className={styles.headerRow}>
+          <div className={styles.colSponsor}>Nhà tài trợ</div>
+          <div className={styles.colFund}>Quỹ nhận</div>
+          <div className={styles.colAmount}>Số tiền</div>
+          <div className={styles.colDate}>Ngày tài trợ</div>
+          <div className={styles.colStatus}>Trạng thái</div>
+          <div className={styles.colProof}>Minh chứng</div>
+          <div className={styles.colActions}>Thao tác</div>
+        </div>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className={styles.skeletonRow} />
+        ))}
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    const isCanXacNhan = activeTab === 'can_xac_nhan';
+    const Icon = isCanXacNhan ? HiOutlineCheckBadge : HiOutlineBanknotes;
+    const message = isCanXacNhan
+      ? 'Không có khoản nào cần xác nhận'
+      : 'Chưa có khoản tài trợ nào';
+    return (
+      <div className={styles.empty}>
+        <Icon className={`${styles.emptyIcon} ${isCanXacNhan ? styles.emptyIconGreen : ''}`} />
+        <p>{message}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.table}>
+      <div className={styles.headerRow}>
+        <div className={styles.colSponsor}>Nhà tài trợ</div>
+        <div className={styles.colFund}>Quỹ nhận</div>
+        <div className={styles.colAmount}>Số tiền</div>
+        <div className={styles.colDate}>Ngày tài trợ</div>
+        <div className={styles.colStatus}>Trạng thái</div>
+        <div className={styles.colProof}>Minh chứng</div>
+        <div className={styles.colActions}>Thao tác</div>
+      </div>
+
+      {data.map((item) => {
+        const statusCfg = STATUS_CONFIG[item.trang_thai] || { status: 'pending', label: item.trang_thai };
+        const isCho = item.trang_thai === 'Da duyet';
+        const minhChungUrl = item.hinh_anh_minh_chung
+          ? (item.hinh_anh_minh_chung.startsWith('http')
+              ? item.hinh_anh_minh_chung
+              : `${apiOrigin()}${item.hinh_anh_minh_chung}`)
+          : null;
+
+        return (
+          <div
+            key={item.khoan_tai_tro_id}
+            className={`${styles.row} ${isCho ? styles.rowHighlight : ''}`}
+          >
+            <div className={styles.colSponsor}>
+              <div className={styles.sponsorCell}>
+                <div className={styles.avatar}>
+                  {item.avatar ? (
+                    <img src={item.avatar} alt={item.ten_nha_tai_tro} />
+                  ) : (
+                    <span>{getInitial(item.ten_nha_tai_tro)}</span>
+                  )}
+                </div>
+                <div className={styles.sponsorText}>
+                  <div className={styles.sponsorName}>{item.ten_nha_tai_tro}</div>
+                  <div className={styles.sponsorLoai}>
+                    {LOAI_LABEL[item.loai_ntt] || item.loai_ntt}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.colFund}>
+              <div className={styles.fundName}>{item.ten_quy}</div>
+              {item.loai_quy && (
+                <span className={styles.fundLoai}>{item.loai_quy}</span>
+              )}
+            </div>
+
+            <div className={`${styles.colAmount} ${styles.amountCell}`}>
+              {formatCurrency(item.so_tien)}
+            </div>
+
+            <div className={styles.colDate}>
+              <div className={styles.dateMain}>{formatDate(item.ngay_tai_tro)}</div>
+              <div className={styles.dateSub}>{formatTime(item.ngay_tai_tro)}</div>
+            </div>
+
+            <div className={styles.colStatus}>
+              <StatusBadge status={statusCfg.status} label={statusCfg.label} size="sm" />
+            </div>
+
+            <div className={`${styles.colProof} ${styles.proofCell}`}>
+              {minhChungUrl ? (
+                <a
+                  href={minhChungUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.proofLink}
+                  title="Xem minh chứng"
+                >
+                  <HiOutlinePaperClip />
+                </a>
+              ) : (
+                <span className={styles.proofEmpty}>—</span>
+              )}
+            </div>
+
+            <div className={`${styles.colActions} ${styles.actionsCell}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                leftIcon={<HiOutlineEye />}
+                onClick={() => onViewDetail?.(item)}
+              >
+                Xem
+              </Button>
+              {isCho && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<HiOutlineCheckCircle />}
+                  onClick={() => onConfirm?.(item)}
+                >
+                  Xác nhận
+                </Button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export default KhoanTaiTroTable;

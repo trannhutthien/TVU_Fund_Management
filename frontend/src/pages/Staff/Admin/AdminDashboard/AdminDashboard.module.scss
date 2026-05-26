@@ -1,0 +1,106 @@
+@use '../../../../styles/variables' as *;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ADMIN DASHBOARD STYLES ────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── PAGE ──────────────────────────────────────────────────────────────────────
+.page {
+  min-height: 100vh;
+  background: #f0f4ff;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ─── PAGE HEADER ───────────────────────────────────────────────────────────────
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.greeting {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.date {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.systemBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.systemBadgeSuccess {
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  color: #16a34a;
+}
+
+.systemBadgeWarning {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+// ─── LOADING ───────────────────────────────────────────────────────────────────
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #64748b;
+}
+
+// ─── RESPONSIVE ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .greeting {
+    font-size: 18px;
+  }
+
+  .date {
+    font-size: 12px;
+  }
+}
