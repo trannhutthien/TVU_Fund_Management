@@ -35,13 +35,15 @@ const TKBreakdownSection = ({ type, data }) => {
   const currentConfig = config[type];
   const Icon = currentConfig.icon;
 
+  const safeData = data || [];
+
   // ─── CALCULATE TOTAL ───────────────────────────────────────────────────────
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const total = safeData.reduce((sum, item) => sum + item.value, 0);
 
   // ─── LIMIT TO TOP 5 ────────────────────────────────────────────────────────
-  const displayData = data.slice(0, 5);
-  const hasMore = data.length > 5;
-  const remainingCount = data.length - 5;
+  const displayData = safeData.slice(0, 5);
+  const hasMore = safeData.length > 5;
+  const remainingCount = safeData.length - 5;
 
   // ─── RENDER CENTER LABEL ───────────────────────────────────────────────────
   const renderCenterLabel = () => {
@@ -82,7 +84,7 @@ const TKBreakdownSection = ({ type, data }) => {
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>
             <Pie
-              data={data}
+              data={safeData}
               cx="50%"
               cy="50%"
               innerRadius={55}
@@ -93,7 +95,7 @@ const TKBreakdownSection = ({ type, data }) => {
               stroke="#fff"
               strokeWidth={2}
             >
-              {data.map((entry, index) => (
+              {safeData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={currentConfig.colors[index % currentConfig.colors.length]}

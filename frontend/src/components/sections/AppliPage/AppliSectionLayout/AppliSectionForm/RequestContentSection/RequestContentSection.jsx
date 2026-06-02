@@ -142,13 +142,20 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI }) => 
             type="text"
             inputMode="numeric"
             className={`${styles.amountInput} ${soTienError ? styles.inputError : ''}`}
-            placeholder="Nhập số tiền..."
-            value={formatCurrency(so_tien_yeu_cau)}
+            placeholder="Nhập số tiền (VD: 1000000)"
+            value={so_tien_yeu_cau}
             onChange={handleAmountChange}
             onBlur={() => handleBlur('so_tien_yeu_cau')}
           />
           <span className={styles.amountUnit}>VNĐ</span>
         </div>
+
+        {/* Preview số tiền đã format */}
+        {so_tien_yeu_cau && !soTienError && (
+          <div className={styles.amountPreview}>
+            {formatCurrency(so_tien_yeu_cau)}đ
+          </div>
+        )}
 
         {/* Hiển thị range cho phép */}
         {selectedFund && (soTienMin > 0 || soTienMax > 0) && (
@@ -172,6 +179,11 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI }) => 
         {soTienTooHigh && (
           <div className={styles.errorText}>
             Số tiền tối đa là {formatCurrency(soTienMax)} VNĐ
+          </div>
+        )}
+        {!soTienError && so_tien_yeu_cau && (
+          <div className={styles.successMessage}>
+            ✓ Số tiền hợp lệ
           </div>
         )}
       </div>

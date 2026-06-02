@@ -71,11 +71,74 @@ const TKSummarySection = ({
   };
 
   // ─── CALCULATE NET BALANCE ────────────────────────────────────────────────
-  const netBalance = summaryData.tongThu - summaryData.tongChi;
-  const prevNetBalance = compareSummaryData 
+  const netBalance = summaryData ? (summaryData.tongThu - summaryData.tongChi) : 0;
+  const prevNetBalance = (compareSummaryData && summaryData)
     ? compareSummaryData.tongThu - compareSummaryData.tongChi 
     : null;
   const isNetPositive = netBalance >= 0;
+
+  // ─── RENDER FALLBACK IF NO DATA ───────────────────────────────────────────
+  if (!summaryData) {
+    return (
+      <div className={styles.grid}>
+        {/* Card 1: Tổng Thu */}
+        <div className={styles.card}>
+          <div className={`${styles.iconBox} ${styles.iconBoxGold}`}>
+            <HiArrowTrendingUp className={styles.icon} />
+          </div>
+          <div className={styles.content}>
+            <div className={`${styles.value} ${styles.valueGold}`}>
+              — đ
+            </div>
+            <div className={styles.label}>Tổng thu</div>
+            <div className={styles.sublabel}>{getPeriodLabel()}</div>
+          </div>
+        </div>
+
+        {/* Card 2: Tổng Chi */}
+        <div className={styles.card}>
+          <div className={`${styles.iconBox} ${styles.iconBoxRed}`}>
+            <HiArrowTrendingDown className={styles.icon} />
+          </div>
+          <div className={styles.content}>
+            <div className={`${styles.value} ${styles.valueRed}`}>
+              — đ
+            </div>
+            <div className={styles.label}>Tổng chi</div>
+            <div className={styles.sublabel}>{getPeriodLabel()}</div>
+          </div>
+        </div>
+
+        {/* Card 3: Số dư ròng */}
+        <div className={styles.card}>
+          <div className={`${styles.iconBox} ${styles.iconBoxPrimary}`}>
+            <HiScale className={styles.icon} />
+          </div>
+          <div className={styles.content}>
+            <div className={`${styles.value} ${styles.valueGreen}`}>
+              — đ
+            </div>
+            <div className={styles.label}>Số dư ròng</div>
+            <div className={styles.sublabel}>{getPeriodLabel()}</div>
+          </div>
+        </div>
+
+        {/* Card 4: Giao dịch phát sinh */}
+        <div className={styles.card}>
+          <div className={`${styles.iconBox} ${styles.iconBoxNavy}`}>
+            <HiArrowsRightLeft className={styles.icon} />
+          </div>
+          <div className={styles.content}>
+            <div className={`${styles.value} ${styles.valueNavy}`}>
+              —
+            </div>
+            <div className={styles.label}>Giao dịch phát sinh</div>
+            <div className={styles.sublabel}>{getPeriodLabel()}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (

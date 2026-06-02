@@ -76,8 +76,8 @@ const GiaiNganPage = () => {
     try {
       const trangThai =
         activeTab === 'cho_giai_ngan'
-          ? 'Dang xu ly,Cho giai ngan'
-          : 'Da giai ngan,Tu choi';
+          ? 'Cho duyet cap 3,Cho giai ngan'
+          : 'Da giai ngan,Tu choi,Tu choi cap 3';
 
       const res = await applicationService.getAll({
         trangThai,
@@ -138,7 +138,7 @@ const GiaiNganPage = () => {
     try {
       const [choRes] = await Promise.all([
         applicationService.getAll({
-          trangThai: 'Dang xu ly,Cho giai ngan',
+          trangThai: 'Cho duyet cap 3,Cho giai ngan',
           page: 1,
           limit: 1,
         }),
@@ -175,14 +175,18 @@ const GiaiNganPage = () => {
           const bankRes = await api.get(
             `/bank-accounts/user/${detail.nguoiNop.id}`,
           );
+          
           const accounts =
             bankRes.data?.data || bankRes.data?.bankAccounts || [];
+          
           const def =
             accounts.find((a) => a.la_mac_dinh || a.laMacDinh) ||
             accounts[0] ||
             null;
+          
           setBankAccount(def);
-        } catch {
+        } catch (err) {
+          console.error('Error fetching bank account:', err);
           setBankAccount(null);
         }
       }

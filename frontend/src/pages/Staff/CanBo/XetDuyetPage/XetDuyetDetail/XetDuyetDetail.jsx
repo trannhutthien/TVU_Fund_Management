@@ -8,6 +8,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { useAuth } from '@context/AuthContext';
 import api from '@services/api';
 import StudentInfoCard from './StudentInfoCard/StudentInfoCard';
 import RequestInfoCard from './RequestInfoCard/RequestInfoCard';
@@ -62,6 +63,7 @@ const parseFileList = (raw) => {
 const XetDuyetDetail = () => {
   const { request_id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,12 @@ const XetDuyetDetail = () => {
   const [ghiChu, setGhiChu] = useState('');
   const [ghiChuError, setGhiChuError] = useState('');
   const [previewFile, setPreviewFile] = useState(null);
+
+  // Xác định role và endpoint tương ứng
+  const userRole = user?.roleId || user?.role_id || user?.vaiTro || user?.role?.id;
+  const isAdmin = userRole === 1;
+  const isKeToan = userRole === 2;
+  const isGiaoVu = userRole === 3;
 
   useEffect(() => {
     let mounted = true;
@@ -112,11 +120,39 @@ const XetDuyetDetail = () => {
   );
 
   const tickedCount = Object.values(checklist).filter(Boolean).length;
-  const isReviewed =
-    data?.trangThai === 'Dang xu ly' ||
-    data?.trangThai === 'Tu choi' ||
-    data?.trangThai === 'Da duyet' ||
-    data?.trangThai === 'Hoan thanh';
+  
+  const isReviewed = (() => {
+    const status = data?.trangThai;
+    
+    // Đơn đã từ chối, đã giải ngân, hoàn thành → không cho duyệt nữa
+    if (
+      status === 'Tu choi' || 
+      status === 'Tu choi cap 1' || 
+      status === 'Tu choi cap 2' || 
+      status === 'Tu choi cap 3' || 
+      status === 'Da giai ngan' || 
+      status === 'Hoan thanh'
+    ) {
+      return true;
+    }
+    
+    // Cán bộ (Giáo vụ): Chỉ được duyệt đơn ở trạng thái "Cho duyet" hoặc "Cho duyet cap 1"
+    if (isGiaoVu) {
+      return status !== 'Cho duyet' && status !== 'Cho duyet cap 1';
+    }
+    
+    // Admin: Chỉ được duyệt đơn ở trạng thái "Cho duyet cap 2"
+    if (isAdmin) {
+      return status !== 'Cho duyet cap 2';
+    }
+    
+    // Kế toán: Không duyệt tại đây (duyệt ở trang Giải ngân)
+    if (isKeToan) {
+      return true;
+    }
+    
+    return false;
+  })();
 
   const isDisabled = isReviewed;
 
@@ -143,7 +179,10 @@ const XetDuyetDetail = () => {
         ghiChu,
       });
       toast.error('Đã từ chối hồ sơ');
-      navigate('/can-bo/xet-duyet');
+      
+      // Redirect về đúng trang dựa trên role
+      const redirectPath = isAdmin ? '/admin/xet-duyet' : '/can-bo/xet-duyet';
+      navigate(redirectPath);
     } catch (err) {
       const msg =
         err?.response?.data?.message || 'Không thể từ chối hồ sơ, vui lòng thử lại';
@@ -159,13 +198,37 @@ const XetDuyetDetail = () => {
       setGhiChuError('Bắt buộc nhập ghi chú xét duyệt');
       return;
     }
+    
     setSubmitting(true);
     try {
-      await api.put(`/applications/${request_id}/staff-approve`, {
-        ghiChu,
-      });
-      toast.success('Đã chuyển hồ sơ lên cấp duyệt tiếp theo');
-      navigate('/can-bo/xet-duyet');
+      // Xác định endpoint dựa trên role
+      let endpoint;
+      let successMessage;
+      let redirectPath;
+      
+      if (isGiaoVu) {
+        // Giáo vụ (role 3): Duyệt cấp 1
+        endpoint = `/applications/${request_id}/staff-approve`;
+        successMessage = 'Đã chuyển hồ sơ lên Admin xét duyệt';
+        redirectPath = '/can-bo/xet-duyet';
+      } else if (isAdmin) {
+        // Admin (role 1): Duyệt cấp 2
+        endpoint = `/applications/${request_id}/admin-approve`;
+        successMessage = 'Đã chuyển hồ sơ lên Kế toán giải ngân';
+        redirectPath = '/admin/xet-duyet';
+      } else if (isKeToan) {
+        // Kế toán (role 2): Duyệt cấp 3 - sẽ xử lý ở trang Giải ngân
+        toast.info('Vui lòng sử dụng trang Giải ngân để xử lý đơn này');
+        navigate('/ke-toan/giai-ngan');
+        return;
+      } else {
+        toast.error('Bạn không có quyền duyệt đơn này');
+        return;
+      }
+      
+      await api.put(endpoint, { ghiChu });
+      toast.success(successMessage);
+      navigate(redirectPath);
     } catch (err) {
       const msg =
         err?.response?.data?.message ||

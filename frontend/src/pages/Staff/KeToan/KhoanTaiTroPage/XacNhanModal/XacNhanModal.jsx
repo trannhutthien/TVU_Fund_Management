@@ -9,7 +9,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import { uploadService } from '@services/uploadService';
-import { approveDonation } from '@services/donationService';
+import { approveDonation, confirmDonation } from '@services/donationService';
 import styles from './XacNhanModal.module.scss';
 
 const formatCurrency = (amount) => {
@@ -47,6 +47,14 @@ const XacNhanModal = ({ item, onClose, onSuccess }) => {
 
   if (!item) return null;
 
+  const isChoDuyet = item.trang_thai === 'Cho duyet';
+  const isDaDuyet = item.trang_thai === 'Da duyet';
+  const titleText = isChoDuyet ? 'Duyệt khoản tài trợ' : 'Xác nhận khoản tài trợ';
+  const warningText = isChoDuyet
+    ? `Sau khi duyệt, hệ thống sẽ tự động cộng ${formatCurrency(item.so_tien)} vào quỹ ${item.ten_quy}, ghi nhận giao dịch Thu và cập nhật thống kê nhà tài trợ.`
+    : `Xác nhận khoản tài trợ ${formatCurrency(item.so_tien)} từ ${item.ten_nha_tai_tro} đã hoàn tất.`;
+  const buttonText = isChoDuyet ? 'Duyệt khoản tài trợ' : 'Xác nhận hoàn tất';
+
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -77,20 +85,35 @@ const XacNhanModal = ({ item, onClose, onSuccess }) => {
 
     setSubmitting(true);
     try {
+      const isChoDuyet = item.trang_thai === 'Cho duyet';
+      const isDaDuyet = item.trang_thai === 'Da duyet';
+
       let urlMinhChung = null;
       if (minhChung) {
         const upRes = await uploadService.uploadFile(minhChung);
         urlMinhChung = upRes?.data?.filePath || null;
       }
 
-      await approveDonation(item.khoan_tai_tro_id, {
-        ghi_chu: ghiChu.trim() || null,
-        minh_chung_ke_toan: urlMinhChung,
-      });
+      // Kế toán duyệt: Cho duyet → Da duyet (cộng tiền)
+      if (isChoDuyet) {
+        await approveDonation(item.khoan_tai_tro_id, {
+          ghi_chu: ghiChu.trim() || null,
+          minh_chung_ke_toan: urlMinhChung,
+        });
+        toast.success(
+          `Đã duyệt! ${formatCurrency(item.so_tien)} đã được cộng vào ${item.ten_quy}`
+        );
+      }
+      // Admin xác nhận: Da duyet → Da nhan (không cộng tiền)
+      else if (isDaDuyet) {
+        await confirmDonation(item.khoan_tai_tro_id, {
+          ghi_chu: ghiChu.trim() || null,
+        });
+        toast.success(
+          `Đã xác nhận khoản tài trợ ${formatCurrency(item.so_tien)} từ ${item.ten_nha_tai_tro}`
+        );
+      }
 
-      toast.success(
-        `Đã xác nhận! ${formatCurrency(item.so_tien)} đã được cộng vào ${item.ten_quy}`
-      );
       onSuccess?.();
     } catch (err) {
       const msg =
@@ -108,7 +131,7 @@ const XacNhanModal = ({ item, onClose, onSuccess }) => {
         <header className={styles.header}>
           <h2 className={styles.title}>
             <HiOutlineCheckCircle className={styles.titleIcon} />
-            Xác nhận tiền đã vào quỹ
+            {titleText}
           </h2>
           <button
             type="button"
@@ -145,51 +168,51 @@ const XacNhanModal = ({ item, onClose, onSuccess }) => {
           <div className={styles.warning}>
             <HiOutlineExclamationTriangle className={styles.warningIcon} />
             <div className={styles.warningText}>
-              Sau khi xác nhận, hệ thống sẽ tự động cộng{' '}
-              <strong>{formatCurrency(item.so_tien)}</strong> vào quỹ{' '}
-              <strong>{item.ten_quy}</strong>, ghi nhận giao dịch Thu và cập nhật
-              thống kê nhà tài trợ. <strong>Hành động này không thể hoàn tác.</strong>
+              {warningText}{' '}
+              <strong>Hành động này không thể hoàn tác.</strong>
             </div>
           </div>
 
-          {/* Upload minh chứng kế toán */}
-          <div className={styles.field}>
-            <label className={styles.label}>
-              Minh chứng xác nhận của kế toán{' '}
-              <span className={styles.labelHint}>(nếu có, tối đa 5MB)</span>
-            </label>
-            {preview ? (
-              <div className={styles.previewWrap}>
-                <img src={preview} alt="Xem trước" className={styles.previewImg} />
-                <div className={styles.previewInfo}>
-                  <span className={styles.previewName}>{minhChung?.name}</span>
-                  <button
-                    type="button"
-                    onClick={removeFile}
-                    className={styles.removeBtn}
-                  >
-                    <HiOutlineTrash />
-                    Xóa
-                  </button>
+          {/* Upload minh chứng kế toán - chỉ cho Kế toán */}
+          {isChoDuyet && (
+            <div className={styles.field}>
+              <label className={styles.label}>
+                Minh chứng xác nhận của kế toán{' '}
+                <span className={styles.labelHint}>(nếu có, tối đa 5MB)</span>
+              </label>
+              {preview ? (
+                <div className={styles.previewWrap}>
+                  <img src={preview} alt="Xem trước" className={styles.previewImg} />
+                  <div className={styles.previewInfo}>
+                    <span className={styles.previewName}>{minhChung?.name}</span>
+                    <button
+                      type="button"
+                      onClick={removeFile}
+                      className={styles.removeBtn}
+                    >
+                      <HiOutlineTrash />
+                      Xóa
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div
-                className={styles.dropzone}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <HiOutlinePhoto className={styles.dropzoneIcon} />
-                <span>Click để chọn ảnh minh chứng</span>
-              </div>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-          </div>
+              ) : (
+                <div
+                  className={styles.dropzone}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <HiOutlinePhoto className={styles.dropzoneIcon} />
+                  <span>Click để chọn ảnh minh chứng</span>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+            </div>
+          )}
 
           {/* Ghi chú */}
           <div className={styles.field}>
@@ -231,7 +254,7 @@ const XacNhanModal = ({ item, onClose, onSuccess }) => {
             loading={submitting}
             onClick={handleSubmit}
           >
-            Xác nhận thu tiền
+            {buttonText}
           </Button>
         </footer>
       </div>

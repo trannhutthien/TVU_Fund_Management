@@ -1,0 +1,82 @@
+.filter {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+}
+
+.searchBox {
+  flex: 2;
+  min-width: 280px;
+}
+
+.select,
+.dateInput {
+  height: 44px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--color-primary);
+  background: white;
+  transition: all 0.2s ease;
+  min-width: 180px;
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(26, 47, 94, 0.1);
+  }
+}
+
+.dateInput {
+  font-family: inherit;
+  cursor: pointer;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+}
+
+.clearBtn {
+  margin-left: auto;
+}
+
+@media (max-width: 1200px) {
+  .searchBox {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  .select,
+  .dateInput {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter {
+    flex-direction: column;
+  }
+
+  .searchBox,
+  .select,
+  .dateInput {
+    width: 100%;
+  }
+
+  .clearBtn {
+    width: 100%;
+    margin-left: 0;
+  }
+}

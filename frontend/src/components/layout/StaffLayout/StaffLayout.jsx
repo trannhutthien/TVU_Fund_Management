@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import PublicHeader from '@components/layout/PublicHeader';
 import StaffSidebar from '@components/layout/StaffSidebar';
+import PageAccessGuard from '@components/auth/PageAccessGuard';
 import styles from './StaffLayout.module.scss';
 
 /**
@@ -25,7 +26,9 @@ const StaffLayout = () => {
 
         {/* Main Content */}
         <main className={styles.mainContent}>
-          <Outlet />
+          <PageAccessGuard>
+            <Outlet />
+          </PageAccessGuard>
         </main>
       </div>
     </div>

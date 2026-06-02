@@ -9,6 +9,8 @@ import BaoCaoKPIBar from './BaoCaoKPIBar/BaoCaoKPIBar';
 import BieuDoThuChi from './BieuDoThuChi/BieuDoThuChi';
 import BieuDoPhanBo from './BieuDoPhanBo/BieuDoPhanBo';
 import BieuDoSoSanh from './BieuDoSoSanh/BieuDoSoSanh';
+import BieuDoUserGrowth from './BieuDoUserGrowth/BieuDoUserGrowth';
+import BieuDoQuyChiTiet from './BieuDoQuyChiTiet/BieuDoQuyChiTiet';
 import BangThuHuong from './BangThuHuong/BangThuHuong';
 import XuatBaoCaoPanel from './XuatBaoCaoPanel/XuatBaoCaoPanel';
 import styles from './BaoCaoPage.module.scss';
@@ -111,6 +113,11 @@ const BaoCaoPage = () => {
             onChangeYear={setChartYear}
             loading={loading}
           />
+        </div>
+
+        <div className={styles.row3}>
+          <BieuDoUserGrowth data={charts.userGrowth} loading={loading} />
+          <BieuDoQuyChiTiet data={charts.phanBoChiTietQuy} loading={loading} />
         </div>
 
         <div className={styles.row3}>

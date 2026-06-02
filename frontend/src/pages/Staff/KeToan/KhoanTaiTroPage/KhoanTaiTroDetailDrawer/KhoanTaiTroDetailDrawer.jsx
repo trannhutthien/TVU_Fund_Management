@@ -21,8 +21,8 @@ const LOAI_LABEL = {
 };
 
 const STATUS_CONFIG = {
-  'Cho duyet': { status: 'pending', label: 'Chờ cán bộ duyệt' },
-  'Da duyet': { status: 'processing', label: 'Chờ kế toán xác nhận' },
+  'Cho duyet': { status: 'pending', label: 'Chờ duyệt' },
+  'Da duyet': { status: 'processing', label: 'Chờ xác nhận' },
   'Da nhan': { status: 'approved', label: 'Đã xác nhận' },
   'Tu choi': { status: 'rejected', label: 'Từ chối' },
 };
@@ -66,7 +66,7 @@ const CAP_LABEL = {
   2: 'Kế toán xác nhận tiền vào quỹ',
 };
 
-const KhoanTaiTroDetailDrawer = ({ item, onClose, onConfirm }) => {
+const KhoanTaiTroDetailDrawer = ({ item, isAdmin, isKeToan, onClose, onConfirm }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
@@ -97,7 +97,17 @@ const KhoanTaiTroDetailDrawer = ({ item, onClose, onConfirm }) => {
         <header className={styles.header}>
           <h2 className={styles.title}>Chi tiết khoản tài trợ</h2>
           <div className={styles.headerActions}>
-            {data.trang_thai === 'Da duyet' && (
+            {data.trang_thai === 'Cho duyet' && isKeToan && (
+              <Button
+                variant="success"
+                size="sm"
+                leftIcon={<HiOutlineCheckCircle />}
+                onClick={() => onConfirm?.(data)}
+              >
+                Duyệt khoản tài trợ
+              </Button>
+            )}
+            {data.trang_thai === 'Da duyet' && isAdmin && (
               <Button
                 variant="primary"
                 size="sm"

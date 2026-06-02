@@ -90,19 +90,29 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 403) {
-      toast.error('Bạn không có quyền thực hiện thao tác này.')
+      const message = error.response.data?.message || '';
+      if (message.includes('tạm dừng') || message.includes('bị khoá') || message.includes('bị khóa')) {
+        const store = useAuthStore.getState();
+        if (store.isAuthenticated) {
+          store.logout();
+          toast.error(message || 'Tài khoản hoặc vai trò của bạn đã bị vô hiệu hóa.');
+          window.location.href = '/';
+          return Promise.reject(error);
+        }
+      }
+      toast.error(message || 'Bạn không có quyền thực hiện thao tác này.');
     }
 
     if (error.response?.status === 404) {
-      toast.error('Không tìm thấy dữ liệu.')
+      toast.error('Không tìm thấy dữ liệu.');
     }
 
     if (error.response?.status >= 500) {
-      toast.error('Lỗi máy chủ. Vui lòng thử lại sau.')
+      toast.error('Lỗi máy chủ. Vui lòng thử lại sau.');
     }
 
-    if (error.response?.data?.message) {
-      toast.error(error.response.data.message)
+    if (error.response?.status !== 403 && error.response?.data?.message) {
+      toast.error(error.response.data.message);
     }
 
     return Promise.reject(error)

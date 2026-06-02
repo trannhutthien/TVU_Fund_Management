@@ -7,6 +7,7 @@ import Button from '@components/common/Button/Button';
 import HeaderActions from '@components/common/HeaderActions';
 import useAuthStore from '@stores/authStore';
 import { authService } from '@services/authService';
+import api from '@services/api';
 import styles from './PublicHeader.module.scss';
 
 /**
@@ -88,7 +89,55 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
       : []),
   ];
 
-  // Handle button clicks
+  const [permissions, setPermissions] = useState({});
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      try {
+        const res = await api.get('/system/settings/permissions');
+        if (res.data?.success) {
+          setPermissions(res.data.permissions);
+        }
+      } catch (err) {
+        console.error('Error fetching permissions in PublicHeader:', err);
+      }
+    };
+    fetchPerms();
+  }, []);
+
+  const checkPageAccess = (pageKey) => {
+    if (!permissions || Object.keys(permissions).length === 0) return true;
+    const perm = permissions[pageKey];
+    if (!perm) return true;
+
+    if (isAuthenticated && user) {
+      let roleKey = 'sinhvien';
+      if (user.vaiTro === 1) roleKey = 'admin';
+      else if (user.vaiTro === 2) roleKey = 'ketoan';
+      else if (user.vaiTro === 3) roleKey = 'canbo';
+      else if (user.vaiTro === 4) {
+        roleKey = user.loaiTaiKhoan === 'NHA_TAI_TRO' ? 'nhataitro' : 'sinhvien';
+      }
+      return !!perm[roleKey];
+    } else {
+      return !!perm.sinhvien || !!perm.nhataitro;
+    }
+  };
+
+  const PATH_KEYS = {
+    '/': 'landing_page',
+    '/funds': 'funds',
+    '/guidelines': 'guidelines',
+    '/donors': 'donors',
+    '/profile': 'profile',
+    '/apply': 'apply',
+  };
+
+  const filteredNavItems = navItems.filter((item) => {
+    const key = PATH_KEYS[item.path];
+    return checkPageAccess(key);
+  });
+
   const handleRegisterClick = () => {
     // Nếu có onRegisterClick callback (từ LandingPage), dùng nó để mở modal
     if (onRegisterClick) {
@@ -112,7 +161,11 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
   };
 
   const handleLogoClick = () => {
-    navigate('/');
+    if (checkPageAccess('landing_page')) {
+      navigate('/');
+    } else {
+      toast.warning('Bạn không có quyền truy cập Trang chủ.');
+    }
   };
 
   return (
@@ -127,13 +180,15 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
                 variant="icon-only" 
                 theme="dark"
               />
-              <span className={styles.logoText}>TVU Fund Management</span>
+              {checkPageAccess('landing_page') && (
+                <span className={styles.logoText}>TVU Fund Management</span>
+              )}
             </div>
           </div>
 
           {/* Navigation Menu (Center) - Desktop only */}
           <nav className={styles.nav}>
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
@@ -198,7 +253,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
       {/* Mobile Menu Dropdown */}
       <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
         {/* Navigation Links */}
-        {navItems.map((item) => (
+        {filteredNavItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}

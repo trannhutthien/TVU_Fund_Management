@@ -28,8 +28,14 @@ export const formatCurrency = (amount) => {
   if (amount === null || amount === undefined) return '0đ';
   const n = Number(amount);
   if (Number.isNaN(n)) return '0đ';
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} tỷ`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} triệu`;
+  if (n >= 1_000_000_000) {
+    const val = n / 1_000_000_000;
+    return val % 1 === 0 ? `${val.toFixed(0)} tỷ` : `${val.toFixed(1)} tỷ`;
+  }
+  if (n >= 1_000_000) {
+    const val = n / 1_000_000;
+    return val % 1 === 0 ? `${val.toFixed(0)} triệu` : `${val.toFixed(1)} triệu`;
+  }
   return n.toLocaleString('vi-VN') + 'đ';
 };
 

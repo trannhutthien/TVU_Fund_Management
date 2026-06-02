@@ -1,0 +1,371 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionHeader {
+  margin-bottom: 4px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary, #1a2f5e);
+  margin: 0 0 4px 0;
+}
+
+.sectionSub {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.filterCard {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e2e8f0;
+}
+
+.filterGrid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.keywordWrapper {
+  flex: 2;
+  min-width: 250px;
+}
+
+.selectWrapper {
+  flex: 1;
+  min-width: 150px;
+}
+
+.selectInput {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: var(--color-primary, #1a2f5e);
+  }
+}
+
+.dateGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 280px;
+}
+
+.dateInput {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 13px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  outline: none;
+  flex: 1;
+
+  &:focus {
+    border-color: var(--color-primary, #1a2f5e);
+  }
+}
+
+.dateSeparator {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.clearBtnWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.clearBtn {
+  font-weight: 600;
+  font-size: 13px;
+  color: #ef4444 !important;
+
+  &:hover {
+    background-color: rgba(239, 68, 68, 0.05) !important;
+  }
+}
+
+.btnIcon {
+  font-size: 16px;
+}
+
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.resultCount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+}
+
+.tableCard {
+  background-color: #ffffff;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.logsTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 900px;
+
+  th {
+    background-color: #f8f9ff;
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary, #1a2f5e);
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  td {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+}
+
+.logRow {
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: #f8f9ff;
+  }
+}
+
+.timeCell {
+  white-space: nowrap;
+}
+
+.dateText {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 2px;
+}
+
+.timeText {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.userCell {
+  min-width: 180px;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+}
+
+.systemAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.userName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+  margin-bottom: 2px;
+}
+
+.userRoleBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #7c3aed;
+  background-color: rgba(124, 58, 237, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.systemRoleBadge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #475569;
+  background-color: #e2e8f0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.actionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.actionIcon {
+  font-size: 14px;
+}
+
+.targetCell {
+  max-width: 300px;
+}
+
+.targetMain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.targetTypeBadge {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: #475569;
+  background-color: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.targetId {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+}
+
+.targetDesc {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loadingCell,
+.emptyCell {
+  text-align: center;
+  padding: 60px 0 !important;
+  color: #64748b;
+
+  p {
+    margin: 8px 0 0 0;
+    font-size: 14px;
+  }
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid rgba(26, 47, 94, 0.1);
+  border-left-color: var(--color-primary, #1a2f5e);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background-color: #fafbfc;
+  border-top: 1px solid #f1f5f9;
+}
+
+.pageBtn {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary, #1a2f5e);
+    color: var(--color-primary, #1a2f5e);
+    background-color: #f8f9ff;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: #64748b;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

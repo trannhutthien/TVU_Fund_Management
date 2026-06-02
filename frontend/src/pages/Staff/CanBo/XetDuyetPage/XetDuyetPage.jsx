@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   HiOutlineClock,
@@ -44,7 +45,7 @@ const RESULT_OPTIONS = [
   { value: 'Tu choi', label: 'Từ chối' },
 ];
 
-const PROCESSED_STATUSES = 'Dang xu ly,Tu choi';
+const PROCESSED_STATUSES = 'Cho duyet cap 2,Cho duyet cap 3,Cho giai ngan,Da giai ngan,Tu choi cap 1,Tu choi cap 2,Tu choi cap 3,Tu choi';
 
 const INITIAL_FILTERS = {
   quy_id: null,
@@ -75,9 +76,9 @@ const daysSince = (value) => {
 };
 
 const mapResultToStatusKey = (trangThai) => {
-  if (trangThai === 'Dang xu ly') return 'processing';
-  if (trangThai === 'Tu choi') return 'rejected';
-  if (trangThai === 'Da duyet' || trangThai === 'Hoan thanh') return 'approved';
+  if (['Cho duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 1', 'Da duyet cap 2', 'Da duyet cap 3', 'Dang xu ly'].includes(trangThai)) return 'processing';
+  if (['Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3'].includes(trangThai)) return 'rejected';
+  if (trangThai === 'Da giai ngan' || trangThai === 'Hoan thanh') return 'approved';
   return 'pending';
 };
 
@@ -91,7 +92,7 @@ const matchesKeyword = (item, kw) => {
   return ten.includes(k) || mssv.includes(k) || id.includes(k);
 };
 
-const XetDuyetPage = () => {
+const XetDuyetPage = ({ isAdmin = false }) => {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('pending');
@@ -140,10 +141,34 @@ const XetDuyetPage = () => {
     };
   }, [keywordInput]);
 
+  const processedStatuses = useMemo(() => {
+    if (isAdmin) {
+      return 'Cho duyet cap 3,Cho giai ngan,Da giai ngan,Tu choi cap 2,Tu choi cap 3,Tu choi';
+    } else {
+      return 'Cho duyet cap 2,Cho duyet cap 3,Cho giai ngan,Da giai ngan,Tu choi cap 1,Tu choi cap 2,Tu choi cap 3,Tu choi';
+    }
+  }, [isAdmin]);
+
+  const resultOptions = useMemo(() => {
+    if (isAdmin) {
+      return [
+        { value: 'Cho duyet cap 3', label: 'Đã duyệt (Chờ cấp 3)' },
+        { value: 'Tu choi cap 2', label: 'Từ chối (Cấp 2)' },
+      ];
+    } else {
+      return [
+        { value: 'Cho duyet cap 2', label: 'Đã duyệt (Chờ cấp 2)' },
+        { value: 'Tu choi cap 1', label: 'Từ chối (Cấp 1)' },
+      ];
+    }
+  }, [isAdmin]);
+
   const trangThaiParam = useMemo(() => {
-    if (activeTab === 'pending') return 'Cho duyet';
-    return filterResult || PROCESSED_STATUSES;
-  }, [activeTab, filterResult]);
+    if (activeTab === 'pending') {
+      return isAdmin ? 'Cho duyet cap 2' : 'Cho duyet cap 1';
+    }
+    return filterResult || processedStatuses;
+  }, [activeTab, filterResult, isAdmin, processedStatuses]);
 
   const isSearching = !!filters.keyword.trim();
 
@@ -181,8 +206,10 @@ const XetDuyetPage = () => {
 
   useEffect(() => {
     let mounted = true;
+    const statusToCount = isAdmin ? 'Cho duyet cap 2' : 'Cho duyet cap 1';
+    
     applicationService
-      .getAll({ page: 1, limit: 1, trangThai: 'Cho duyet' })
+      .getAll({ page: 1, limit: 1, trangThai: statusToCount })
       .then((res) => {
         if (!mounted) return;
         setPendingCount(res?.pagination?.totalRecords ?? 0);
@@ -193,7 +220,7 @@ const XetDuyetPage = () => {
     return () => {
       mounted = false;
     };
-  }, [activeTab]);
+  }, [activeTab, isAdmin]);
 
   const sortedData = useMemo(() => {
     if (!isSearching) return data;
@@ -358,7 +385,7 @@ const XetDuyetPage = () => {
               {activeTab === 'processed' && (
                 <div className={styles.selectField}>
                   <Dropdown
-                    options={RESULT_OPTIONS}
+                    options={resultOptions}
                     value={filterResult}
                     onChange={(v) => {
                       setFilterResult(v);
@@ -513,6 +540,10 @@ const XetDuyetPage = () => {
       </div>
     </div>
   );
+};
+
+XetDuyetPage.propTypes = {
+  isAdmin: PropTypes.bool,
 };
 
 export default XetDuyetPage;

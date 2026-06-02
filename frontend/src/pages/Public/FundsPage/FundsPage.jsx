@@ -48,6 +48,7 @@ const FundsPage = () => {
             hinh_anh: fund.hinhAnh,
             mo_ta: fund.moTa,
             so_du: fund.soDu,
+            so_du_thuc_te: fund.soDuThucTe, // Số dư thực tế sau khi trừ các khoản chờ giải ngân
             trang_thai: fund.trangThai,
             so_tien_toi_thieu: fund.soTienToiThieu,
             so_tien_toi_da: fund.soTienToiDa,

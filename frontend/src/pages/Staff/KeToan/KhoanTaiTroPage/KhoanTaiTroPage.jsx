@@ -9,6 +9,7 @@ import {
   getDonations,
   getDonationStats,
 } from '@services/donationService';
+import { useAuth } from '@context/AuthContext';
 import KhoanTaiTroStats from './KhoanTaiTroStats/KhoanTaiTroStats';
 import KhoanTaiTroFilter from './KhoanTaiTroFilter/KhoanTaiTroFilter';
 import KhoanTaiTroTable from './KhoanTaiTroTable/KhoanTaiTroTable';
@@ -28,6 +29,10 @@ const INITIAL_FILTERS = {
 };
 
 const KhoanTaiTroPage = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.vaiTro === 1;
+  const isKeToan = user?.vaiTro === 2;
+
   const [activeTab, setActiveTab] = useState('can_xac_nhan'); // 'can_xac_nhan' | 'tat_ca'
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -40,6 +45,11 @@ const KhoanTaiTroPage = () => {
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [confirmItem, setConfirmItem] = useState(null);
+
+  const pendingCount = useMemo(() => {
+    if (!stats) return 0;
+    return isKeToan ? (stats.choCanBo || 0) : (stats.canXacNhan || 0);
+  }, [stats, isKeToan]);
 
   // Debounce keyword
   useEffect(() => {
@@ -67,8 +77,19 @@ const KhoanTaiTroPage = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const trangThaiQuery =
-        activeTab === 'can_xac_nhan' ? 'Da duyet' : filters.trang_thai;
+      // ✅ Phân quyền theo vai trò:
+      // - Kế toán (role 2): Tab "Cần xác nhận" lấy 'Cho duyet'
+      // - Admin (role 1): Tab "Cần xác nhận" lấy 'Da duyet'
+      let trangThaiQuery = filters.trang_thai;
+      
+      if (activeTab === 'can_xac_nhan') {
+        if (isKeToan) {
+          trangThaiQuery = 'Cho duyet'; // Kế toán duyệt khoản chờ duyệt
+        } else if (isAdmin) {
+          trangThaiQuery = 'Da duyet'; // Admin xem khoản đã duyệt
+        }
+      }
+
       const res = await getDonations({
         keyword: debouncedKeyword,
         quy_id: filters.quy_id,
@@ -88,7 +109,7 @@ const KhoanTaiTroPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, debouncedKeyword, filters.quy_id, filters.loai_ntt, filters.trang_thai, filters.tu_ngay, filters.den_ngay, page]);
+  }, [activeTab, debouncedKeyword, filters.quy_id, filters.loai_ntt, filters.trang_thai, filters.tu_ngay, filters.den_ngay, page, isKeToan, isAdmin]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { fetchStats(); }, [fetchStats]);
@@ -122,15 +143,20 @@ const KhoanTaiTroPage = () => {
               Xác nhận tiền đã vào quỹ từ các nhà tài trợ
             </p>
           </div>
-          {stats?.canXacNhan > 0 && (
+          {pendingCount > 0 && (
             <div className={styles.urgentBadge}>
-              {stats.canXacNhan} khoản cần xác nhận
+              {pendingCount} khoản cần {isKeToan ? 'duyệt' : 'xác nhận'}
             </div>
           )}
         </header>
 
         {/* Stats */}
-        <KhoanTaiTroStats stats={stats} loading={statsLoading} />
+        <KhoanTaiTroStats
+          stats={stats}
+          loading={statsLoading}
+          isKeToan={isKeToan}
+          isAdmin={isAdmin}
+        />
 
         {/* Tab bar */}
         <div className={styles.tabBar}>
@@ -140,9 +166,9 @@ const KhoanTaiTroPage = () => {
             onClick={() => setActiveTab('can_xac_nhan')}
           >
             <HiOutlineClock className={styles.tabIcon} />
-            <span>Cần xác nhận</span>
-            {stats?.canXacNhan > 0 && (
-              <span className={styles.tabBadge}>{stats.canXacNhan}</span>
+            <span>Cần {isKeToan ? 'duyệt' : 'xác nhận'}</span>
+            {pendingCount > 0 && (
+              <span className={styles.tabBadge}>{pendingCount}</span>
             )}
           </button>
           <button
@@ -202,6 +228,8 @@ const KhoanTaiTroPage = () => {
       {selectedItem && (
         <KhoanTaiTroDetailDrawer
           item={selectedItem}
+          isAdmin={isAdmin}
+          isKeToan={isKeToan}
           onClose={() => setSelectedItem(null)}
           onConfirm={(it) => {
             setSelectedItem(null);

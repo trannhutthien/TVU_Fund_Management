@@ -17,6 +17,7 @@ const useBaoCaoData = (period, customRange) => {
   const [loading, setLoading] = useState(true);
   const [funds, setFunds] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [userGrowth, setUserGrowth] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -27,11 +28,13 @@ const useBaoCaoData = (period, customRange) => {
       applicationService
         .getAll({ page: 1, limit: 1000 })
         .catch(() => ({ data: [] })),
+      api.get('/users/growth', { params: { months: 6 } }).catch(() => ({ data: { data: [] } })),
     ])
-      .then(([fundsRes, appsRes]) => {
+      .then(([fundsRes, appsRes, growthRes]) => {
         if (!mounted) return;
         setFunds(fundsRes?.data?.funds || []);
         setApplications(appsRes?.data || []);
+        setUserGrowth(growthRes?.data?.data || []);
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -237,6 +240,15 @@ const useBaoCaoData = (period, customRange) => {
       .slice(0, 10);
   }, [inRangeApps, funds]);
 
+  const phanBoChiTietQuy = useMemo(() => {
+    const total = funds.reduce((sum, f) => sum + Number(f.soDu || 0), 0);
+    return funds.map((f) => ({
+      name: f.tenQuy || f.ten_quy || 'Quỹ',
+      value: Number(f.soDu || 0),
+      percentage: total > 0 ? Math.round((Number(f.soDu || 0) / total) * 100) : 0,
+    }));
+  }, [funds]);
+
   return {
     loading,
     range,
@@ -246,6 +258,8 @@ const useBaoCaoData = (period, customRange) => {
       thuChiTheoThang,
       phanBoLoaiQuy,
       soSanh,
+      userGrowth,
+      phanBoChiTietQuy,
     },
     thuHuongList,
   };

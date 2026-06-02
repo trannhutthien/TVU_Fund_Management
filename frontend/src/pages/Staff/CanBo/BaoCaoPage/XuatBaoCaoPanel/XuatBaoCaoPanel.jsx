@@ -11,6 +11,8 @@ import {
   HiOutlineEye,
   HiOutlineArrowDownTray,
   HiCheckCircle,
+  HiOutlineUsers,
+  HiOutlineClipboardDocumentList,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import api from '@services/api';
@@ -25,22 +27,34 @@ const BAO_CAO_TYPES = [
     desc: 'Báo cáo tổng thu, tổng chi và số dư theo kỳ',
   },
   {
-    id: 'danh_sach_tai_tro',
-    label: 'Danh sách Tài trợ',
+    id: 'danh_sach_nha_tai_tro',
+    label: 'Danh sách Nhà tài trợ',
     icon: HiOutlineHandRaised,
-    desc: 'Danh sách khoản tài trợ đã nhận trong kỳ',
+    desc: 'Hồ sơ liên hệ và thống kê đóng góp tích lũy',
   },
   {
     id: 'danh_sach_thu_huong',
     label: 'Danh sách Thụ hưởng',
     icon: HiOutlineAcademicCap,
-    desc: 'Sinh viên đã được giải ngân trong kỳ',
+    desc: 'Sinh viên đã được giải ngân hỗ trợ trong kỳ',
   },
   {
     id: 'bao_cao_quy',
     label: 'Báo cáo theo Quỹ',
     icon: HiOutlineBuildingLibrary,
     desc: 'Tình trạng thu chi của từng quỹ riêng lẻ',
+  },
+  {
+    id: 'bao_cao_nguoi_dung',
+    label: 'Báo cáo Người dùng',
+    icon: HiOutlineUsers,
+    desc: 'Tổng số người dùng và chi tiết đăng ký mới',
+  },
+  {
+    id: 'bao_cao_de_xuat',
+    label: 'Báo cáo Đề xuất Hỗ trợ',
+    icon: HiOutlineClipboardDocumentList,
+    desc: 'Danh sách đề xuất, số tiền và trạng thái xét duyệt',
   },
 ];
 
@@ -65,28 +79,46 @@ const TYPE_LABEL_MAP = BAO_CAO_TYPES.reduce((map, t) => {
 }, {});
 
 const XuatBaoCaoPanel = ({ funds, range, rangeLabel }) => {
-  const [selectedType, setSelectedType] = useState('thu_chi_tong_hop');
+  const [selectedTypes, setSelectedTypes] = useState(['thu_chi_tong_hop']);
   const [selectedQuyId, setSelectedQuyId] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('docx');
   const [exporting, setExporting] = useState(false);
 
   const previewText = useMemo(() => {
-    const typeLabel = TYPE_LABEL_MAP[selectedType];
+    const typesLabel = selectedTypes.map(id => TYPE_LABEL_MAP[id] || id).join(', ');
     const fundLabel = selectedQuyId
       ? funds.find((f) => String(f.quyId) === String(selectedQuyId))?.tenQuy
       : 'Tất cả quỹ';
-    return `${typeLabel} — ${fundLabel} — ${rangeLabel}`;
-  }, [selectedType, selectedQuyId, funds, rangeLabel]);
+    return `${typesLabel} — ${fundLabel} — ${rangeLabel}`;
+  }, [selectedTypes, selectedQuyId, funds, rangeLabel]);
+
+  const handleToggleType = (id) => {
+    setSelectedTypes((prev) => {
+      if (prev.includes(id)) {
+        if (prev.length <= 1) {
+          toast.warning('Bạn phải chọn ít nhất một loại báo cáo');
+          return prev;
+        }
+        return prev.filter((item) => item !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
 
   const handlePreview = () => {
     toast.info('Tính năng xem trước đang được phát triển');
   };
 
   const handleExport = async () => {
+    if (selectedTypes.length === 0) {
+      toast.warning('Vui lòng chọn ít nhất một loại báo cáo');
+      return;
+    }
     setExporting(true);
     try {
       const payload = {
-        loai_bao_cao: selectedType,
+        loai_bao_cao: selectedTypes,
         quy_id: selectedQuyId || null,
         tu_ngay: formatDateInput(range.tu),
         den_ngay: formatDateInput(range.den),
@@ -97,20 +129,40 @@ const XuatBaoCaoPanel = ({ funds, range, rangeLabel }) => {
         responseType: 'blob',
       });
 
-      const mime =
-        selectedFormat === 'docx'
+      let mimeType = 'application/octet-stream';
+      if (selectedTypes.length > 1) {
+        mimeType = 'application/zip';
+      } else {
+        mimeType = selectedFormat === 'docx'
           ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
           : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      }
 
-      const blob = new Blob([response.data], { type: mime });
+      const blob = new Blob([response.data], { type: mimeType });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      link.setAttribute(
-        'download',
-        `BaoCao_${selectedType}_${ts}.${selectedFormat}`,
-      );
+
+      let fileName = '';
+      const disposition = response.headers?.['content-disposition'];
+      if (disposition && disposition.includes('attachment')) {
+        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+        const matches = filenameRegex.exec(disposition);
+        if (matches != null && matches[1]) {
+          fileName = matches[1].replace(/['"]/g, '');
+        }
+      }
+
+      if (!fileName) {
+        const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        if (selectedTypes.length > 1) {
+          fileName = `BaoCao_TongHop_${ts}.zip`;
+        } else {
+          fileName = `BaoCao_${selectedTypes[0]}_${ts}.${selectedFormat}`;
+        }
+      }
+
+      link.setAttribute('download', fileName);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -150,7 +202,7 @@ const XuatBaoCaoPanel = ({ funds, range, rangeLabel }) => {
         <div className={styles.typeGrid}>
           {BAO_CAO_TYPES.map((type) => {
             const Icon = type.icon;
-            const isActive = selectedType === type.id;
+            const isActive = selectedTypes.includes(type.id);
             return (
               <button
                 type="button"
@@ -158,7 +210,7 @@ const XuatBaoCaoPanel = ({ funds, range, rangeLabel }) => {
                 className={`${styles.typeCard} ${
                   isActive ? styles.typeCardActive : ''
                 }`}
-                onClick={() => setSelectedType(type.id)}
+                onClick={() => handleToggleType(type.id)}
               >
                 <div className={styles.typeIcon}>
                   <Icon />

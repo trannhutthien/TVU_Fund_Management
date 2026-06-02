@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types';
 import { HiChartBar } from 'react-icons/hi2';
 import {
-  ComposedChart,
+  BarChart,
   Bar,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -65,23 +64,24 @@ const CashFlowChartSection = ({ data, isLoading }) => {
         <>
           <div className={styles.chartWrapper}>
             <ResponsiveContainer width="100%" height={260}>
-              <ComposedChart
+              <BarChart
                 data={data}
                 margin={{ top: 10, right: 10, bottom: 0, left: 10 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#f1f5f9"
+                  stroke="#1e293b"
+                  strokeWidth={1.2}
                   vertical={false}
                 />
                 <XAxis
                   dataKey="thang"
-                  tick={{ fontSize: 12, fill: '#64748b', fontFamily: 'Inter' }}
+                  tick={{ fontSize: 12, fill: '#475569', fontFamily: 'Inter' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: '#94a3b8' }}
+                  tick={{ fontSize: 11, fill: '#475569' }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={formatYAxis}
@@ -90,18 +90,16 @@ const CashFlowChartSection = ({ data, isLoading }) => {
                 <Bar
                   dataKey="thu"
                   fill="#f0a500"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={36}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={20}
                 />
-                <Line
-                  type="monotone"
+                <Bar
                   dataKey="chi"
-                  stroke="#1a2f5e"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: '#1a2f5e', strokeWidth: 0 }}
-                  activeDot={{ r: 6 }}
+                  fill="#1a2f5e"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={20}
                 />
-              </ComposedChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
           <div className={styles.legend}>

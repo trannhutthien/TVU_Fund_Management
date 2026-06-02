@@ -10,8 +10,11 @@ import {
 } from 'react-icons/hi2';
 import styles from './DocumentSection.module.scss';
 
-const REQUIRED_DOCS = ['Giấy xác nhận sinh viên', 'Bảng điểm học kỳ gần nhất', 'CMND/CCCD (2 mặt)'];
-const OPTIONAL_DOCS = ['Giấy xác nhận hoàn cảnh khó khăn', 'Giấy khen / Bằng khen (nếu có)', 'Tài liệu bổ sung khác'];
+const REQUIRED_DOCS_STUDENT = ['Giấy xác nhận sinh viên', 'Bảng điểm học kỳ gần nhất', 'CMND/CCCD (2 mặt)'];
+const OPTIONAL_DOCS_STUDENT = ['Giấy xác nhận hoàn cảnh khó khăn', 'Giấy khen / Bằng khen (nếu có)', 'Tài liệu bổ sung khác'];
+
+const REQUIRED_DOCS_DONOR = ['Ảnh chụp màn hình chuyển khoản', 'Biên lai / Xác nhận giao dịch'];
+const OPTIONAL_DOCS_DONOR = ['Giấy tờ tùy thân (nếu muốn)', 'Tài liệu bổ sung khác'];
 
 const MAX_SIZE_MB = 5;
 const MAX_FILES = 5;
@@ -19,7 +22,9 @@ const TOTAL_MAX_MB = 25;
 
 const formatSize = (bytes) => (bytes / 1024 / 1024).toFixed(2) + 'MB';
 
-const DocumentSection = ({ files = [], onFilesChange }) => {
+const DocumentSection = ({ files = [], onFilesChange, isDonor = false }) => {
+  const REQUIRED_DOCS = isDonor ? REQUIRED_DOCS_DONOR : REQUIRED_DOCS_STUDENT;
+  const OPTIONAL_DOCS = isDonor ? OPTIONAL_DOCS_DONOR : OPTIONAL_DOCS_STUDENT;
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);
 
@@ -79,7 +84,9 @@ const DocumentSection = ({ files = [], onFilesChange }) => {
     <div className={styles.card}>
       <div className={styles.sectionTitle}>
         <HiOutlinePaperClip className={styles.titleIcon} />
-        <span>Phần 4: Hồ sơ minh chứng</span>
+        <span>
+          {isDonor ? 'Phần 2: Minh chứng chuyển khoản' : 'Phần 4: Hồ sơ minh chứng'}
+        </span>
       </div>
 
       <div className={styles.docList}>
@@ -197,6 +204,7 @@ const DocumentSection = ({ files = [], onFilesChange }) => {
 DocumentSection.propTypes = {
   files: PropTypes.array,
   onFilesChange: PropTypes.func,
+  isDonor: PropTypes.bool,
 };
 
 export default DocumentSection;

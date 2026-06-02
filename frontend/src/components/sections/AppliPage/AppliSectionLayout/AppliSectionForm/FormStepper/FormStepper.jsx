@@ -4,24 +4,25 @@ import styles from './FormStepper.module.scss';
 /**
  * FormStepper Component
  *
- * Thanh hiển thị tiến trình 4 bước trong form tạo hồ sơ TVU Fund Management.
- * - Hiển thị nền vàng khi section hợp lệ (không có lỗi)
- * - Tự động cập nhật trạng thái dựa trên validation
+ * Thanh hiển thị tiến trình trong form TVU Fund Management.
+ * - Sinh viên: 4 bước (Quỹ → Nội dung → Ngân hàng → Minh chứng)
+ * - Nhà tài trợ: 2 bước (Quỹ → Minh chứng)
+ * - Hiển thị nền vàng khi section hợp lệ
  *
  * @param {Object} validationStatus - Trạng thái validation của từng bước
- *   {
- *     step1: boolean, // Thông tin quỹ hợp lệ
- *     step2: boolean, // Soạn nội dung hợp lệ
- *     step3: boolean, // Tài khoản ngân hàng hợp lệ
- *     step4: boolean  // Minh chứng hợp lệ
- *   }
+ * @param {boolean} isDonor - True nếu là nhà tài trợ
  */
 
-const STEPS = [
+const STEPS_STUDENT = [
   { step: 1, label: 'Thông tin quỹ' },
   { step: 2, label: 'Soạn nội dung' },
   { step: 3, label: 'Tài khoản ngân hàng' },
   { step: 4, label: 'Minh chứng' },
+];
+
+const STEPS_DONOR = [
+  { step: 1, label: 'Chọn quỹ' },
+  { step: 2, label: 'Minh chứng chuyển khoản' },
 ];
 
 const getStepStatus = (step, validationStatus) => {
@@ -31,7 +32,8 @@ const getStepStatus = (step, validationStatus) => {
   return 'pending'; // Chưa hợp lệ
 };
 
-const FormStepper = ({ validationStatus = {} }) => {
+const FormStepper = ({ validationStatus = {}, isDonor = false }) => {
+  const STEPS = isDonor ? STEPS_DONOR : STEPS_STUDENT;
   return (
     <div className={styles.formStepper}>
       {STEPS.map((item, index) => {
@@ -84,6 +86,7 @@ FormStepper.propTypes = {
     step3: PropTypes.bool,
     step4: PropTypes.bool,
   }),
+  isDonor: PropTypes.bool,
 };
 
 export default FormStepper;

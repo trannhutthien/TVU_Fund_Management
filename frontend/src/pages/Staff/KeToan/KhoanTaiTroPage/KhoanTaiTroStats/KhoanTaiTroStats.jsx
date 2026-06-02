@@ -14,15 +14,15 @@ const formatCurrency = (amount) => {
   return n.toLocaleString('vi-VN') + 'đ';
 };
 
-const KhoanTaiTroStats = ({ stats, loading }) => {
+const KhoanTaiTroStats = ({ stats, loading, isKeToan, isAdmin }) => {
   const cards = [
     {
-      label: 'Cần xác nhận',
+      label: isKeToan ? 'Chờ Admin xác nhận' : 'Cần xác nhận',
       value: stats?.canXacNhan ?? 0,
       icon: HiOutlineClock,
-      color: '#ef4444',
-      bg: 'rgba(239,68,68,0.08)',
-      urgent: true,
+      color: isKeToan ? '#64748b' : '#ef4444',
+      bg: isKeToan ? 'rgba(100,116,139,0.08)' : 'rgba(239,68,68,0.08)',
+      urgent: !isKeToan,
     },
     {
       label: 'Đã xác nhận hôm nay',
@@ -39,11 +39,12 @@ const KhoanTaiTroStats = ({ stats, loading }) => {
       bg: 'rgba(240,165,0,0.08)',
     },
     {
-      label: 'Chờ cán bộ duyệt',
+      label: isKeToan ? 'Cần duyệt' : 'Chờ kế toán duyệt',
       value: stats?.choCanBo ?? 0,
       icon: HiOutlineArrowPathRoundedSquare,
-      color: 'var(--color-navy-blue, #1a2f5e)',
-      bg: 'rgba(26,47,94,0.08)',
+      color: isKeToan ? '#ef4444' : 'var(--color-navy-blue, #1a2f5e)',
+      bg: isKeToan ? 'rgba(239,68,68,0.08)' : 'rgba(26,47,94,0.08)',
+      urgent: isKeToan,
     },
   ];
 

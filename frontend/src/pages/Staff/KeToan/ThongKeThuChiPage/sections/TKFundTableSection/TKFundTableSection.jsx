@@ -37,6 +37,25 @@ const TKFundTableSection = ({ fundTableData, period }) => {
     return Math.min((soDu / soTienToiDa) * 100, 100);
   };
 
+  // ─── RENDER EMPTY STATE ────────────────────────────────────────────────────
+  if (!fundTableData || fundTableData.length === 0) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.cardHeader}>
+          <div className={styles.titleBlock}>
+            <HiCircleStack className={styles.titleIcon} />
+            <h3 className={styles.title}>Thống kê theo Quỹ</h3>
+          </div>
+          <div className={styles.periodLabel}>Kỳ: {getPeriodLabel()}</div>
+        </div>
+        <div className={styles.emptyState}>
+          <HiCircleStack className={styles.emptyIcon} />
+          <p className={styles.emptyText}>Không có dữ liệu quỹ trong kỳ này</p>
+        </div>
+      </div>
+    );
+  }
+
   // ─── CALCULATE TOTALS ──────────────────────────────────────────────────────
   const totals = fundTableData.reduce(
     (acc, item) => ({
@@ -68,25 +87,6 @@ const TKFundTableSection = ({ fundTableData, period }) => {
       </ResponsiveContainer>
     );
   };
-
-  // ─── RENDER EMPTY STATE ────────────────────────────────────────────────────
-  if (!fundTableData || fundTableData.length === 0) {
-    return (
-      <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <div className={styles.titleBlock}>
-            <HiCircleStack className={styles.titleIcon} />
-            <h3 className={styles.title}>Thống kê theo Quỹ</h3>
-          </div>
-          <div className={styles.periodLabel}>Kỳ: {getPeriodLabel()}</div>
-        </div>
-        <div className={styles.emptyState}>
-          <HiCircleStack className={styles.emptyIcon} />
-          <p className={styles.emptyText}>Không có dữ liệu quỹ trong kỳ này</p>
-        </div>
-      </div>
-    );
-  }
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (

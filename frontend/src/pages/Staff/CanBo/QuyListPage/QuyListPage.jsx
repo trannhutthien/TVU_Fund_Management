@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   HiOutlineBuildingLibrary,
   HiOutlineBanknotes,
@@ -19,27 +20,11 @@ import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import api from '@services/api';
+import { getAllLoaiQuy, createLoaiQuy } from '@services/fundService';
 import QuyDetailDrawer from './QuyDetailDrawer/QuyDetailDrawer';
 import styles from './QuyListPage.module.scss';
 
 const PAGE_SIZE = 12;
-
-const LOAI_QUY_OPTIONS = [
-  { value: '', label: '-- Tất cả loại --' },
-  { value: 'Tu thien', label: 'Từ thiện' },
-  { value: 'Hoc bong', label: 'Học bổng' },
-  { value: 'Y te', label: 'Y tế' },
-  { value: 'Moi truong', label: 'Môi trường' },
-  { value: 'Khac', label: 'Khác' },
-];
-
-const LOAI_QUY_LABEL = {
-  'Tu thien': 'Từ thiện',
-  'Hoc bong': 'Học bổng',
-  'Y te': 'Y tế',
-  'Moi truong': 'Môi trường',
-  'Khac': 'Khác',
-};
 
 const TRANG_THAI_OPTIONS = [
   { value: '', label: '-- Tất cả trạng thái --' },
@@ -95,7 +80,18 @@ const mapStatusToBadge = (trangThai) => {
   return 'pending';
 };
 
-const QuyListPage = () => {
+const generateMaLoai = (str) => {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ');
+};
+
+const QuyListPage = ({ isAdmin = false }) => {
   const navigate = useNavigate();
 
   const [filters, setFilters] = useState(INITIAL_FILTERS);
@@ -105,7 +101,71 @@ const QuyListPage = () => {
   const [selectedFund, setSelectedFund] = useState(null);
   const [page, setPage] = useState(1);
 
+  const [loaiQuyList, setLoaiQuyList] = useState([]);
+  const [isOpenAddLoaiQuyModal, setIsOpenAddLoaiQuyModal] = useState(false);
+  const [newLoaiQuyName, setNewLoaiQuyName] = useState('');
+  const [submittingLoaiQuy, setSubmittingLoaiQuy] = useState(false);
+
   const debounceRef = useRef(null);
+
+  // Fetch loai-quy list
+  const fetchLoaiQuy = () => {
+    getAllLoaiQuy()
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          setLoaiQuyList(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching loai-quy:', err);
+      });
+  };
+
+  useEffect(() => {
+    fetchLoaiQuy();
+  }, []);
+
+  const loaiQuyOptions = useMemo(() => {
+    const list = [{ value: '', label: '-- Tất cả loại --' }];
+    loaiQuyList.forEach((item) => {
+      list.push({ value: item.maLoai, label: item.tenLoai });
+    });
+    return list;
+  }, [loaiQuyList]);
+
+  const getLoaiQuyLabel = (maLoai) => {
+    const found = loaiQuyList.find((item) => item.maLoai === maLoai);
+    return found ? found.tenLoai : maLoai || 'Khác';
+  };
+
+  const handleAddLoaiQuySubmit = async (e) => {
+    e.preventDefault();
+    if (!newLoaiQuyName.trim()) {
+      toast.warn('Vui lòng nhập tên loại quỹ');
+      return;
+    }
+
+    const maLoai = generateMaLoai(newLoaiQuyName);
+    const tenLoai = newLoaiQuyName.trim();
+
+    try {
+      setSubmittingLoaiQuy(true);
+      const res = await createLoaiQuy(maLoai, tenLoai);
+      if (res?.success) {
+        toast.success('Tạo loại quỹ mới thành công!');
+        setNewLoaiQuyName('');
+        setIsOpenAddLoaiQuyModal(false);
+        fetchLoaiQuy();
+      } else {
+        toast.error(res?.message || 'Không thể tạo loại quỹ');
+      }
+    } catch (err) {
+      console.error('Lỗi khi tạo loại quỹ:', err);
+      toast.error(err.response?.data?.message || 'Mã loại quỹ đã tồn tại hoặc có lỗi xảy ra');
+    } finally {
+      setSubmittingLoaiQuy(false);
+    }
+  };
 
   // ─── Debounce keyword ─────────────────────────────
   useEffect(() => {
@@ -263,6 +323,24 @@ const QuyListPage = () => {
 
   const handleOpenDetail = (fund) => setSelectedFund(fund);
   const handleCloseDetail = () => setSelectedFund(null);
+  
+  // Callback để refresh danh sách sau khi cập nhật trạng thái
+  const handleStatusUpdated = () => {
+    // Fetch lại danh sách quỹ
+    setLoading(true);
+    api
+      .get('/funds')
+      .then((res) => {
+        const list = Array.isArray(res.data?.funds) ? res.data.funds : [];
+        setFunds(list);
+      })
+      .catch(() => {
+        setFunds([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   return (
     <div className={styles.page}>
@@ -287,15 +365,22 @@ const QuyListPage = () => {
           <div className={styles.headerActions}>
             <Button
               variant="secondary"
+              leftIcon={<HiOutlineFolderOpen />}
+              onClick={() => setIsOpenAddLoaiQuyModal(true)}
+            >
+              Thêm loại quỹ
+            </Button>
+            <Button
+              variant="secondary"
               leftIcon={<HiOutlineClipboardDocumentCheck />}
-              onClick={() => navigate('/can-bo/xet-duyet')}
+              onClick={() => navigate(isAdmin ? '/admin/xet-duyet' : '/can-bo/xet-duyet')}
             >
               Xét duyệt hồ sơ
             </Button>
             <Button
               variant="primary"
               leftIcon={<HiOutlinePlus />}
-              onClick={() => navigate('/can-bo/quy/tao')}
+              onClick={() => navigate(isAdmin ? '/admin/quy/tao' : '/can-bo/quy/tao')}
             >
               Tạo quỹ
             </Button>
@@ -340,7 +425,7 @@ const QuyListPage = () => {
             onChange={handleFilterChange('loai_quy')}
             aria-label="Lọc theo loại quỹ"
           >
-            {LOAI_QUY_OPTIONS.map((opt) => (
+            {loaiQuyOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -454,7 +539,7 @@ const QuyListPage = () => {
                       </div>
                     )}
                     <span className={styles.loaiBadge}>
-                      {LOAI_QUY_LABEL[fund.loaiQuy] || fund.loaiQuy}
+                      {getLoaiQuyLabel(fund.loaiQuy)}
                     </span>
                     {isInactive && (
                       <div className={styles.coverOverlay}>
@@ -582,7 +667,58 @@ const QuyListPage = () => {
         )}
       </div>
 
-      <QuyDetailDrawer fund={selectedFund} onClose={handleCloseDetail} />
+      {/* Modal Thêm loại quỹ mới */}
+      {isOpenAddLoaiQuyModal && (
+        <div className={styles.modalOverlay} onClick={() => setIsOpenAddLoaiQuyModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Thêm loại quỹ mới</h3>
+              <button 
+                className={styles.modalCloseBtn} 
+                onClick={() => setIsOpenAddLoaiQuyModal(false)}
+              >
+                <HiOutlineXMark size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddLoaiQuySubmit} className={styles.modalForm}>
+              <div className={styles.formGroup}>
+                <label className={styles.modalLabel}>Tên loại quỹ *</label>
+                <Input
+                  placeholder="Ví dụ: Nghiên cứu khoa học, Thể thao..."
+                  value={newLoaiQuyName}
+                  onChange={(e) => setNewLoaiQuyName(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className={styles.modalActions}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsOpenAddLoaiQuyModal(false)}
+                  disabled={submittingLoaiQuy}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  loading={submittingLoaiQuy}
+                >
+                  Xác nhận
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <QuyDetailDrawer 
+        fund={selectedFund} 
+        onClose={handleCloseDetail}
+        onStatusUpdated={handleStatusUpdated}
+        loaiQuyList={loaiQuyList}
+      />
     </div>
   );
 };

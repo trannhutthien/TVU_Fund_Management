@@ -243,9 +243,9 @@ const LoginForm = ({ onGoogleLogin, onSuccess, onClose }) => {
 
         {/* Footer */}
         <div className="login-form-footer">
-          <span className="login-form-footer-text">Bạn là Nhà tài trợ mới?</span>
-          <a href="/sponsor-request" className="login-form-footer-link">
-            Gửi yêu cầu hợp tác
+          <span className="login-form-footer-text">Chưa có tài khoản?</span>
+          <a href="/register" className="login-form-footer-link">
+            Đăng ký ngay
           </a>
         </div>
       </div>

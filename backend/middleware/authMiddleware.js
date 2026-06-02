@@ -1,7 +1,21 @@
 import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
+import pool from "../config/db.js";
+
+const getMaintenanceMode = () => {
+  try {
+    const settingsPath = path.join(process.cwd(), "config/system_settings.json");
+    const data = fs.readFileSync(settingsPath, "utf8");
+    const settings = JSON.parse(data);
+    return !!settings.maintenanceMode;
+  } catch (error) {
+    return false;
+  }
+};
 
 // Middleware kiểm tra JWT token — dùng cho các route cần đăng nhập
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   try {
     // Lấy token từ header: Authorization: Bearer <token>
     const authHeader = req.headers.authorization;
@@ -17,6 +31,24 @@ export const protect = (req, res, next) => {
 
     // Giải mã và xác thực token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Kiểm tra chế độ bảo trì
+    if (getMaintenanceMode() && decoded.vai_tro !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: "Hệ thống đang trong chế độ bảo trì. Chỉ Admin được phép truy cập.",
+        maintenance: true
+      });
+    }
+
+    // Kiểm tra vai trò có bị tạm dừng không
+    const [roleRows] = await pool.query("SELECT trangthai FROM vaitro WHERE vaitro_id = ?", [decoded.vai_tro]);
+    if (roleRows.length > 0 && roleRows[0].trangthai === 'TAM_DUNG') {
+      return res.status(403).json({
+        success: false,
+        message: "Vai trò của bạn đã bị tạm dừng. Vui lòng liên hệ quản trị viên."
+      });
+    }
 
     // Gán thông tin user vào request để các route sau dùng
     // LƯU Ý: Schema database dùng "user_id" không phải "id"

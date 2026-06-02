@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
   HiOutlineArrowLeft,
@@ -15,7 +15,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
-import { createFund } from '@services/fundService';
+import { createFund, getFundById, updateFund, getAllLoaiQuy } from '@services/fundService';
 import { uploadService } from '@services/uploadService';
 import styles from './TaoQuyPage.module.scss';
 
@@ -23,13 +23,7 @@ const API_BASE = (
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'
 ).replace(/\/api\/?$/, '');
 
-const LOAI_QUY_OPTIONS = [
-  { value: 'Tu thien', label: 'Từ thiện' },
-  { value: 'Hoc bong', label: 'Học bổng' },
-  { value: 'Y te', label: 'Y tế' },
-  { value: 'Moi truong', label: 'Môi trường' },
-  { value: 'Khac', label: 'Khác' },
-];
+
 
 const TRANG_THAI_OPTIONS = [
   { value: 'Dang hoat dong', label: 'Đang hoạt động' },
@@ -59,12 +53,64 @@ const buildImageUrl = (path) => {
 
 const TaoQuyPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = !!id;
   const fileInputRef = useRef(null);
 
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [loaiQuyList, setLoaiQuyList] = useState([]);
+
+  // Load loai quy tu API
+  useEffect(() => {
+    getAllLoaiQuy()
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          setLoaiQuyList(res.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching loai-quy in TaoQuyPage:', err);
+      });
+  }, []);
+
+  // Load fund details in edit mode
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    let mounted = true;
+    const fetchFund = async () => {
+      try {
+        const res = await getFundById(id);
+        if (res?.success && res?.fund && mounted) {
+          const fund = res.fund;
+          setForm({
+            ten_quy: fund.tenQuy || '',
+            loai_quy: fund.loaiQuy || '',
+            mo_ta: fund.moTa || '',
+            hinh_anh: fund.hinhAnh ? fund.hinhAnh.replace(`${API_BASE}/`, '').replace(/^\//, '') : '',
+            so_tien_toi_thieu: fund.soTienToiThieu !== null ? String(fund.soTienToiThieu) : '',
+            so_tien_toi_da: fund.soTienToiDa !== null ? String(fund.soTienToiDa) : '',
+            so_luong_chi_tieu: fund.soLuongChiTieu !== null ? String(fund.soLuongChiTieu) : '',
+            han_nop_don: fund.hanNopDon ? fund.hanNopDon.split('T')[0] : '',
+            dieu_kien_tom_tat: fund.dieuKienTomTat || '',
+            so_du: String(fund.soDu || 0),
+            trang_thai: fund.trangThai || 'Dang hoat dong',
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching fund detail:', err);
+        toast.error('Lỗi khi tải thông tin quỹ');
+      }
+    };
+    fetchFund();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id, isEditMode]);
 
   // ─── Handlers ─────────────────────────────────────
   const handleChange = (key) => (e) => {
@@ -94,7 +140,7 @@ const TaoQuyPage = () => {
 
     try {
       setUploading(true);
-      const res = await uploadService.uploadFile(file);
+      const res = await uploadService.uploadFundImage(file);
       if (res?.success && res?.data?.filePath) {
         setForm((prev) => ({ ...prev, hinh_anh: res.data.filePath }));
         toast.success('Tải ảnh lên thành công');
@@ -196,22 +242,24 @@ const TaoQuyPage = () => {
 
     try {
       setSubmitting(true);
-      const res = await createFund(payload);
+      const res = isEditMode ? await updateFund(id, payload) : await createFund(payload);
       if (res?.success) {
-        toast.success('Tạo quỹ thành công');
-        navigate('/can-bo/quy');
+        toast.success(isEditMode ? 'Cập nhật quỹ thành công' : 'Tạo quỹ thành công');
+        const parentPath = window.location.pathname.startsWith('/admin') ? '/admin/quy' : '/can-bo/quy';
+        navigate(parentPath);
       } else {
-        toast.error(res?.message || 'Không thể tạo quỹ');
+        toast.error(res?.message || (isEditMode ? 'Không thể cập nhật quỹ' : 'Không thể tạo quỹ'));
       }
     } catch (err) {
-      console.error('Create fund error:', err);
-      // Toast lỗi đã được hiển thị qua interceptor của api.js
+      console.error('Submit error:', err);
     } finally {
       setSubmitting(false);
     }
   };
 
   const previewUrl = form.hinh_anh ? buildImageUrl(form.hinh_anh) : '';
+
+  const parentUrl = window.location.pathname.startsWith('/admin') ? '/admin/quy' : '/can-bo/quy';
 
   return (
     <div className={styles.page}>
@@ -222,25 +270,29 @@ const TaoQuyPage = () => {
             Trang chủ
           </Link>
           <span className={styles.crumbSep}>/</span>
-          <Link to="/can-bo/quy" className={styles.crumbLink}>
+          <Link to={parentUrl} className={styles.crumbLink}>
             Danh sách Quỹ
           </Link>
           <span className={styles.crumbSep}>/</span>
-          <span>Tạo quỹ mới</span>
+          <span>{isEditMode ? 'Cập nhật quỹ' : 'Tạo quỹ mới'}</span>
         </div>
 
         {/* Header */}
         <header className={styles.header}>
           <div className={styles.headerText}>
-            <h1 className={styles.title}>Tạo quỹ mới</h1>
+            <h1 className={styles.title}>
+              {isEditMode ? 'Cập nhật thông tin quỹ' : 'Tạo quỹ mới'}
+            </h1>
             <p className={styles.subtitle}>
-              Thiết lập thông tin chi tiết cho một quỹ hỗ trợ mới
+              {isEditMode
+                ? 'Chỉnh sửa thông tin chi tiết của quỹ hỗ trợ'
+                : 'Thiết lập thông tin chi tiết cho một quỹ hỗ trợ mới'}
             </p>
           </div>
           <Button
             variant="ghost"
             leftIcon={<HiOutlineArrowLeft />}
-            onClick={() => navigate('/can-bo/quy')}
+            onClick={() => navigate(parentUrl)}
           >
             Quay lại
           </Button>
@@ -288,9 +340,9 @@ const TaoQuyPage = () => {
                   onChange={handleChange('loai_quy')}
                 >
                   <option value="">-- Chọn loại quỹ --</option>
-                  {LOAI_QUY_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {loaiQuyList.map((item) => (
+                    <option key={item.maLoai} value={item.maLoai}>
+                      {item.tenLoai}
                     </option>
                   ))}
                 </select>
@@ -523,20 +575,22 @@ const TaoQuyPage = () => {
 
           {/* ── Footer ───────────────────────────── */}
           <div className={styles.footer}>
-            <Button
-              variant="ghost"
-              type="button"
-              leftIcon={<HiOutlineXMark />}
-              onClick={handleReset}
-              disabled={submitting}
-            >
-              Đặt lại
-            </Button>
-            <div className={styles.footerRight}>
+            {!isEditMode && (
+              <Button
+                variant="ghost"
+                type="button"
+                leftIcon={<HiOutlineXMark />}
+                onClick={handleReset}
+                disabled={submitting}
+              >
+                Đặt lại
+              </Button>
+            )}
+            <div className={styles.footerRight} style={{ marginLeft: isEditMode ? 'auto' : undefined }}>
               <Button
                 variant="secondary"
                 type="button"
-                onClick={() => navigate('/can-bo/quy')}
+                onClick={() => navigate(parentUrl)}
                 disabled={submitting}
               >
                 Hủy
@@ -547,7 +601,7 @@ const TaoQuyPage = () => {
                 leftIcon={<HiOutlineCheckCircle />}
                 loading={submitting}
               >
-                Tạo quỹ
+                {isEditMode ? 'Lưu thay đổi' : 'Tạo quỹ'}
               </Button>
             </div>
           </div>

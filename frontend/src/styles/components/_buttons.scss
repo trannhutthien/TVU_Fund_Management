@@ -142,6 +142,19 @@
   }
 }
 
+// Warning - Button cảnh báo với màu vàng/cam
+// Dùng: <button class="btn btn-warning">Tạm dừng</button>
+.btn-warning {
+  background: #f59e0b;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.30);
+
+  &:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+  }
+}
+
 // ── ICON-ONLY BUTTON ────────────────────────
 // Button chỉ có icon (36x36px, vuông)
 // Dùng: <button class="btn-icon"><Icon /></button>

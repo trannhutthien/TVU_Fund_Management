@@ -184,6 +184,27 @@
   pointer-events: none;
 }
 
+.amountPreview {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: rgba(59, 111, 245, 0.06);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary, #1a2f5e);
+  text-align: center;
+}
+
+.successMessage {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .amountRange {
   display: flex;
   align-items: center;

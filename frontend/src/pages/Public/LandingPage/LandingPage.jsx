@@ -6,7 +6,7 @@ import StatsSection from '@components/sections/LandingPage/StatsSection';
 import AISupportSection from '@components/sections/LandingPage/AISupportSection';
 import FundBreakdownSection from '@components/sections/LandingPage/FundBreakdownSection';
 import DonorWallSection from '@components/sections/LandingPage/DonorWallSection';
-import ProcessSection from '@components/sections/LandingPage/ProcessSection';
+import CombinedProcessSection from '@components/sections/LandingPage/CombinedProcessSection';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
 import './LandingPage.scss';
@@ -76,8 +76,8 @@ const LandingPage = () => {
         <StatsSection />
         <AISupportSection />
         <FundBreakdownSection />
-        <ProcessSection onLoginClick={openLoginModal} />
-        <DonorWallSection />
+        <CombinedProcessSection onLoginClick={openLoginModal} />
+        <DonorWallSection onRegisterClick={openRegisterModal} />
         
         {/* Các section khác sẽ được thêm sau */}
         {/* <FeaturesSection /> */}

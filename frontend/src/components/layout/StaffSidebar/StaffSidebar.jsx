@@ -57,6 +57,7 @@ const NAV_CONFIG = [
     roles: [1],
     items: [
       { label: 'Xét duyệt hồ sơ', path: '/admin/xet-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [1], badgeKey: 'pendingCount' },
+      { label: 'Lịch sử phê duyệt', path: '/admin/phe-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [1] },
       { label: 'Danh sách Quỹ', path: '/admin/quy', icon: HiOutlineBuildingLibrary, roles: [1] },
       { label: 'Nhà tài trợ', path: '/admin/nha-tai-tro', icon: HiOutlineHandRaised, roles: [1] },
       { label: 'Khoản tài trợ', path: '/admin/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [1] },
@@ -67,7 +68,7 @@ const NAV_CONFIG = [
     group: 'NỘI DUNG TRANG CHỦ',
     roles: [1],
     items: [
-      { label: 'Sinh viên nổi bật', path: '/admin/testimonials', icon: HiOutlineStar, roles: [1] },
+      { label: 'Sinh viên nổi bật', path: '/admin/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [1] },
       { label: 'Tin tức & Sự kiện', path: '/admin/tin-tuc', icon: HiOutlineMegaphone, roles: [1] },
     ]
   },
@@ -133,7 +134,7 @@ const NAV_CONFIG = [
     group: 'NỘI DUNG TRANG CHỦ',
     roles: [3],
     items: [
-      { label: 'Sinh viên nổi bật', path: '/can-bo/testimonials', icon: HiOutlineStar, roles: [3] },
+      { label: 'Sinh viên nổi bật', path: '/can-bo/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [3] },
       { label: 'Tin tức & Sự kiện', path: '/can-bo/tin-tuc', icon: HiOutlineMegaphone, roles: [3] },
     ]
   },
@@ -204,12 +205,58 @@ const StaffSidebar = () => {
   
   console.log('✅ StaffSidebar - Hiển thị cho role:', user.vaiTro);
 
-  // ─── FILTER MENU THEO ROLE ─────────────────────────────
+  const [permissions, setPermissions] = useState({});
+
+  useEffect(() => {
+    const fetchPerms = async () => {
+      try {
+        const res = await api.get('/system/settings/permissions');
+        if (res.data?.success) {
+          setPermissions(res.data.permissions);
+        }
+      } catch (err) {
+        console.error('Error fetching permissions in StaffSidebar:', err);
+      }
+    };
+    fetchPerms();
+  }, []);
+
+  const checkPageAccess = (path) => {
+    if (!permissions || Object.keys(permissions).length === 0) return true;
+    
+    const segments = path.split('/').filter(Boolean);
+    let key = segments[segments.length - 1];
+    if (key === 'xet-duyet') key = 'xet_duyet';
+    if (key === 'nha-tai-tro') key = 'nha_tai_tro';
+    if (key === 'sinh-vien-noi-bat') key = 'sinh_vien_noi_bat';
+    if (key === 'tin-tuc') key = 'tin_tuc';
+    if (key === 'bao-cao') key = 'bao_cao';
+    if (key === 'khoan-tai-tro') key = 'khoan_tai_tro';
+    if (key === 'giao-dich') key = 'giao_dich';
+    if (key === 'giai-ngan') key = 'giai_ngan';
+    if (key === 'chung-tu') key = 'chung_tu';
+    if (key === 'phe-duyet') key = 'phe_duyet';
+
+    const perm = permissions[key];
+    if (!perm) return true;
+
+    let roleKey = 'sinhvien';
+    if (user.vaiTro === 1) roleKey = 'admin';
+    else if (user.vaiTro === 2) roleKey = 'ketoan';
+    else if (user.vaiTro === 3) roleKey = 'canbo';
+    else if (user.vaiTro === 4) {
+      roleKey = user.loaiTaiKhoan === 'NHA_TAI_TRO' ? 'nhataitro' : 'sinhvien';
+    }
+
+    return !!perm[roleKey];
+  };
+
+  // ─── FILTER MENU THEO ROLE & PAGE PERMISSIONS ──────────
   const visibleGroups = NAV_CONFIG
     .filter(group => group.roles.includes(user.vaiTro))
     .map(group => ({
       ...group,
-      items: group.items.filter(item => item.roles.includes(user.vaiTro))
+      items: group.items.filter(item => item.roles.includes(user.vaiTro) && checkPageAccess(item.path))
     }))
     .filter(group => group.items.length > 0);
 

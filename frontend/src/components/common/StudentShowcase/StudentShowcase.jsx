@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import studentShowcaseService from '@services/studentShowcaseService';
 import styles from './StudentShowcase.module.scss';
 
 /**
@@ -9,42 +10,77 @@ import styles from './StudentShowcase.module.scss';
  * - Carousel tự động rotate ảnh
  * - Floating cards với thống kê
  * - Decorative elements
+ * - Fetch data từ API
  * 
- * @param {array} images - Danh sách ảnh sinh viên: [{ id, url, alt, studentName }]
  * @param {number} autoRotateInterval - Thời gian tự động chuyển ảnh (ms), default: 5000
  * @param {object} stats - Thống kê hiển thị trên floating cards
  * @param {string} className - Custom class
  */
 const StudentShowcase = ({
-  images = [],
   autoRotateInterval = 5000,
   stats = {
-    successRate: 98,
-    activeFunds: 12,
+    totalStudents: 0,
+    totalAmount: 0,
   },
   className = '',
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch sinh viên nổi bật từ API
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const response = await studentShowcaseService.getPublicStudentShowcase();
+        
+        if (response.success && response.students) {
+          // Map data từ API sang format component
+          const mappedStudents = response.students.map(student => ({
+            id: student.id,
+            url: student.hinhAnh || '/placeholder-student.jpg',
+            alt: `Sinh viên ${student.hoTen}`,
+            studentName: student.hoTen,
+            major: student.khoaPhong,
+            achievement: student.thanhTich,
+            year: student.namHoc,
+            soLanHoTro: student.soLanHoTro || 1,
+            tongTienHoTro: student.tongTienHoTro || 5000000
+          }));
+          setStudents(mappedStudents);
+        }
+      } catch (error) {
+        console.error('Error fetching student showcase:', error);
+        // Fallback to empty array on error
+        setStudents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   // Auto rotate images
   useEffect(() => {
-    if (images.length <= 1) return;
+    if (students.length <= 1) return;
 
     const interval = setInterval(() => {
       setIsTransitioning(true);
       
       setTimeout(() => {
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+        setCurrentImageIndex((prev) => (prev + 1) % students.length);
         setIsTransitioning(false);
       }, 300); // Transition duration
     }, autoRotateInterval);
 
     return () => clearInterval(interval);
-  }, [images.length, autoRotateInterval]);
+  }, [students.length, autoRotateInterval]);
 
-  const currentImage = images[currentImageIndex];
-  const hasImages = images.length > 0;
+  const currentStudent = students[currentImageIndex];
+  const hasStudents = students.length > 0;
 
   const showcaseClasses = [
     styles.studentShowcase,
@@ -63,27 +99,46 @@ const StudentShowcase = ({
 
         {/* Main Image */}
         <div className={styles.mainImage}>
-          {hasImages ? (
+          {loading ? (
+            // Loading state
+            <div className={styles.imagePlaceholder}>
+              <span className={styles.placeholderIcon}>⏳</span>
+              <p className={styles.placeholderText}>Đang tải...</p>
+            </div>
+          ) : hasStudents ? (
             <div
               className={`${styles.imageContent} ${
                 isTransitioning ? styles.transitioning : ''
               }`}
             >
               <img
-                src={currentImage.url}
-                alt={currentImage.alt || `Sinh viên ${currentImage.studentName}`}
+                src={currentStudent.url}
+                alt={currentStudent.alt}
                 className={styles.studentImage}
+                onError={(e) => {
+                  e.target.src = '/placeholder-student.jpg';
+                }}
               />
               
               {/* Image overlay with student info */}
-              {currentImage.studentName && (
-                <div className={styles.imageOverlay}>
-                  <p className={styles.studentName}>{currentImage.studentName}</p>
-                  {currentImage.major && (
-                    <p className={styles.studentMajor}>{currentImage.major}</p>
+              <div className={styles.imageOverlay}>
+                <div className={styles.infoBadge}>Sinh viên nổi bật</div>
+                <p className={styles.studentName}>{currentStudent.studentName}</p>
+                <div className={styles.metaRow}>
+                  {currentStudent.major && (
+                    <span className={styles.studentMajor}>{currentStudent.major}</span>
+                  )}
+                  {currentStudent.year && (
+                    <span className={styles.studentYear}>• Niên khóa {currentStudent.year}</span>
                   )}
                 </div>
-              )}
+                {currentStudent.achievement && (
+                  <div className={styles.achievementContainer}>
+                    <span className={styles.achievementIcon}>🏆</span>
+                    <p className={styles.studentAchievement}>{currentStudent.achievement}</p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             // Placeholder khi chưa có ảnh
@@ -98,9 +153,9 @@ const StudentShowcase = ({
           )}
 
           {/* Image indicators */}
-          {images.length > 1 && (
+          {students.length > 1 && (
             <div className={styles.imageIndicators}>
-              {images.map((_, index) => (
+              {students.map((_, index) => (
                 <button
                   key={index}
                   className={`${styles.indicator} ${
@@ -120,42 +175,41 @@ const StudentShowcase = ({
           )}
         </div>
 
-        {/* Floating Card 1 - Success Rate */}
-        <div className={`${styles.floatingCard} ${styles.card1}`}>
-          <div className={styles.cardIcon}>✨</div>
-          <div className={styles.cardContent}>
-            <div className={styles.cardTitle}>Thành công</div>
-            <div className={styles.cardValue}>{stats.successRate}%</div>
+        {/* Floating Card 1 - Supports Count */}
+        {hasStudents && currentStudent && (
+          <div className={`${styles.floatingCard} ${styles.card1}`}>
+            <div className={styles.cardIcon}>✨</div>
+            <div className={styles.cardContent}>
+              <div className={styles.cardTitle}>Hỗ trợ nhận</div>
+              <div className={styles.cardValue}>
+                {currentStudent.soLanHoTro || 1} lần
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Floating Card 2 - Active Funds */}
-        <div className={`${styles.floatingCard} ${styles.card2}`}>
-          <div className={styles.cardIcon}>💰</div>
-          <div className={styles.cardContent}>
-            <div className={styles.cardTitle}>Quỹ đang hoạt động</div>
-            <div className={styles.cardValue}>{stats.activeFunds}</div>
+        {/* Floating Card 2 - Support Amount */}
+        {hasStudents && currentStudent && (
+          <div className={`${styles.floatingCard} ${styles.card2}`}>
+            <div className={styles.cardIcon}>💰</div>
+            <div className={styles.cardContent}>
+              <div className={styles.cardTitle}>Tổng tiền nhận</div>
+              <div className={styles.cardValue}>
+                {Number(currentStudent.tongTienHoTro || 5000000).toLocaleString('vi-VN')} đ
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
 StudentShowcase.propTypes = {
-  images: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      url: PropTypes.string.isRequired,
-      alt: PropTypes.string,
-      studentName: PropTypes.string,
-      major: PropTypes.string,
-    })
-  ),
   autoRotateInterval: PropTypes.number,
   stats: PropTypes.shape({
-    successRate: PropTypes.number,
-    activeFunds: PropTypes.number,
+    totalStudents: PropTypes.number,
+    totalAmount: PropTypes.number,
   }),
   className: PropTypes.string,
 };

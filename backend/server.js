@@ -4,18 +4,23 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import pool from "./config/db.js";
-import authRoutes from "./routes/authRoutes.js";
-import roleRoutes from "./routes/roleRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import fundRoutes from "./routes/fundRoutes.js";
-import donorRoutes from "./routes/donorRoutes.js";
-import donationRoutes from "./routes/donationRoutes.js";
-import transactionRoutes from "./routes/transactionRoutes.js";
-import applicationRoutes from "./routes/applicationRoutes.js";
-import statisticsRoutes from "./routes/statisticsRoutes.js";
-import bankAccountRoutes from "./routes/bankAccountRoutes.js";
-import uploadRoutes from "./routes/uploadRoutes.js";
-import baoCaoRoutes from "./routes/baoCaoRoutes.js";
+import authRoutes from "./routes/auth/authRoutes.js";
+import roleRoutes from "./routes/users/roleRoutes.js";
+import userRoutes from "./routes/users/userRoutes.js";
+import fundRoutes from "./routes/funds/fundRoutes.js";
+import donorRoutes from "./routes/donations/donorRoutes.js";
+import donationRoutes from "./routes/donations/donationRoutes.js";
+import transactionRoutes from "./routes/transactions/transactionRoutes.js";
+import applicationRoutes from "./routes/applications/applicationRoutes.js";
+import statisticsRoutes from "./routes/reports/statisticsRoutes.js";
+import bankAccountRoutes from "./routes/funds/bankAccountRoutes.js";
+import uploadRoutes from "./routes/uploads/uploadRoutes.js";
+import baoCaoRoutes from "./routes/reports/baoCaoRoutes.js";
+import pheDuyetRoutes from "./routes/applications/pheDuyetRoutes.js";
+import studentShowcaseRoutes from "./routes/showcase/studentShowcaseRoutes.js";
+import loaiQuyRoutes from "./routes/funds/loaiQuyRoutes.js";
+import { vaiTroRouter, nguoiDungRouter, nhatKyRouter, settingsRouter } from "./routes/system/systemRoutes.js";
+
 
 dotenv.config();
 
@@ -45,6 +50,14 @@ app.use("/api/statistics", statisticsRoutes);
 app.use("/api/bank-accounts", bankAccountRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/bao-cao", baoCaoRoutes);
+app.use("/api/pheduyet", pheDuyetRoutes);
+app.use("/api/student-showcase", studentShowcaseRoutes);
+app.use("/api/loai-quy", loaiQuyRoutes);
+app.use("/api/vaitro", vaiTroRouter);
+app.use("/api/nguoidung", nguoiDungRouter);
+app.use("/api/nhat-ky", nhatKyRouter);
+app.use("/api/system/settings", settingsRouter);
+
 
 // Test route
 app.get("/", (req, res) => {

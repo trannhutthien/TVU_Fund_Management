@@ -8,7 +8,7 @@ import './Button.scss';
  * Component button tái sử dụng với nhiều variants và sizes
  * Sử dụng design system từ _buttons.scss
  * 
- * @param {string} variant - Loại button: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline-danger' | 'success'
+ * @param {string} variant - Loại button: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline-danger' | 'success' | 'warning'
  * @param {string} size - Kích thước: 'sm' | 'md' | 'lg'
  * @param {boolean} disabled - Vô hiệu hóa button
  * @param {boolean} loading - Hiển thị loading state
@@ -102,7 +102,7 @@ const Button = ({
 };
 
 Button.propTypes = {
-  variant: PropTypes.oneOf(['primary', 'secondary', 'ghost', 'danger', 'outline-danger', 'success']),
+  variant: PropTypes.oneOf(['primary', 'secondary', 'ghost', 'danger', 'outline-danger', 'success', 'warning']),
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   disabled: PropTypes.bool,
   loading: PropTypes.bool,

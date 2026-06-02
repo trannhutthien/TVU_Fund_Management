@@ -1,0 +1,89 @@
+@use '@styles/variables' as *;
+
+.hdTabSection {
+  background: #f0f4ff;
+  padding: 0 24px;
+  position: sticky;
+  top: 64px; // PublicHeader height
+  z-index: 40;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+.tab {
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+  position: relative;
+  
+  &:hover {
+    color: var(--color-primary);
+    background: rgba(26, 47, 94, 0.02);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 16px 20px;
+    justify-content: flex-start;
+    border-bottom: 1px solid #e2e8f0;
+  }
+}
+
+.tabActive {
+  color: var(--color-primary);
+  background: rgba(26, 47, 94, 0.04);
+  border-bottom-color: var(--color-primary);
+  
+  @media (max-width: 768px) {
+    border-left: 3px solid var(--color-primary);
+    border-bottom-color: #e2e8f0;
+  }
+}
+
+.tabIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.tabLabel {
+  flex: 1;
+  text-align: left;
+}
+
+.tabCount {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  
+  .tabActive & {
+    color: var(--color-primary);
+    background: rgba(26, 47, 94, 0.1);
+  }
+}

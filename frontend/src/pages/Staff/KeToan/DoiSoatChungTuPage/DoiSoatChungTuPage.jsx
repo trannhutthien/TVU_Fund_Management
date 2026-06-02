@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { HiArrowUpTray, HiDocumentArrowDown } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import transactionService from '@services/transactionService';
+import fundService from '@services/fundService';
 import DSStatsSection from './sections/DSStatsSection';
 import DSFilterSection from './sections/DSFilterSection';
 import DSTableSection from './sections/DSTableSection';
@@ -46,17 +48,13 @@ const DoiSoatChungTuPage = () => {
   useEffect(() => {
     const fetchQuyOptions = async () => {
       try {
-        // TODO: Gọi API GET /api/quy
-        // const response = await api.get('/api/quy');
-        // setQuyOptions(response.data.data);
-        
-        // Mock data
-        setQuyOptions([
-          { quy_id: 1, ten_quy: 'Quỹ Học bổng' },
-          { quy_id: 2, ten_quy: 'Quỹ Khó khăn' },
-        ]);
+        const response = await fundService.getPublicFunds();
+        if (response.success && response.data) {
+          setQuyOptions(response.data);
+        }
       } catch (error) {
         console.error('Lỗi fetch quy options:', error);
+        setQuyOptions([]);
       }
     };
 
@@ -67,24 +65,35 @@ const DoiSoatChungTuPage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // TODO: Gọi API GET /api/statistics/ketoan/doi-soat-stats
-        // const response = await api.get('/api/statistics/ketoan/doi-soat-stats');
-        // setStatsData(response.data.data);
-        
-        // Mock data
-        setStatsData({
-          chuaDoiSoat: 45,
-          daDoiSoat: 120,
-          batThuong: 8,
-          tiLeHoanThanh: 72,
+        const response = await transactionService.getTransactionsSummary({
+          loai: filterLoai || undefined,
+          quyId: filterQuy || undefined,
+          tuNgay: filterDateRange.from || undefined,
+          denNgay: filterDateRange.to || undefined,
+          keyword: searchKeyword || undefined,
         });
+        
+        if (response.success && response.data) {
+          setStatsData({
+            chuaDoiSoat: response.data.chuaDoiSoat || 0,
+            daDoiSoat: response.data.daDoiSoat || 0,
+            batThuong: response.data.batThuong || 0,
+            tiLeHoanThanh: response.data.tiLeHoanThanh || 0,
+          });
+        }
       } catch (error) {
         console.error('Lỗi fetch stats:', error);
+        setStatsData({
+          chuaDoiSoat: 0,
+          daDoiSoat: 0,
+          batThuong: 0,
+          tiLeHoanThanh: 0,
+        });
       }
     };
 
     fetchStats();
-  }, []);
+  }, [filterLoai, filterQuy, filterDateRange, searchKeyword]);
 
   // ─── FETCH LIST ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -92,51 +101,53 @@ const DoiSoatChungTuPage = () => {
       try {
         setIsLoading(true);
         
-        // TODO: Gọi API GET /api/giaodich với params
-        // const params = {
-        //   doi_soat_trang_thai: activeTab === 'can_doi_soat' ? 'Chua_doi_soat' : activeTab === 'da_doi_soat' ? 'Da_doi_soat' : 'Bat_thuong',
-        //   loai: filterLoai,
-        //   quy_id: filterQuy,
-        //   from: filterDateRange.from,
-        //   to: filterDateRange.to,
-        //   keyword: searchKeyword,
-        //   page: currentPage,
-        //   limit: pageSize,
-        //   sort: 'created_at_desc',
-        // };
-        // const response = await api.get('/api/giaodich', { params });
-        // setList(response.data.data);
-        // setTotalCount(response.data.total);
+        // Map activeTab to doi_soat_trang_thai
+        let doiSoatTrangThai;
+        if (activeTab === 'can_doi_soat') {
+          doiSoatTrangThai = 'Chua_doi_soat';
+        } else if (activeTab === 'da_doi_soat') {
+          doiSoatTrangThai = 'Da_doi_soat';
+        } else if (activeTab === 'bat_thuong') {
+          doiSoatTrangThai = 'Bat_thuong';
+        }
         
-        // Mock data
-        setList([
-          {
-            transaction_id: 1,
-            loai: 'Chi',
-            so_tien: 5000000,
-            ngay_giao_dich: '2025-05-20',
-            ten_quy: 'Quỹ Học bổng',
-            ho_ten: 'Nguyễn Văn A',
-            ma_so_dinh_danh: '2021001',
-            trang_thai: 'Thanh cong',
-            doi_soat_trang_thai: 'Chua_doi_soat',
-            minh_chung_url: null,
-          },
-          {
-            transaction_id: 2,
-            loai: 'Thu',
-            so_tien: 10000000,
-            ngay_giao_dich: '2025-05-18',
-            ten_quy: 'Quỹ Khó khăn',
-            ten_nha_tai_tro: 'Vingroup',
-            trang_thai: 'Thanh cong',
-            doi_soat_trang_thai: 'Chua_doi_soat',
-            minh_chung_url: '/uploads/proofs/proof_123.pdf',
-          },
-        ]);
-        setTotalCount(45);
+        const params = {
+          doiSoatTrangThai,
+          loai: filterLoai || undefined,
+          quyId: filterQuy || undefined,
+          tuNgay: filterDateRange.from || undefined,
+          denNgay: filterDateRange.to || undefined,
+          keyword: searchKeyword || undefined,
+          page: currentPage,
+          limit: pageSize,
+        };
+        
+        const response = await transactionService.getAllTransactions(params);
+        
+        if (response.success) {
+          // Map dữ liệu từ API sang format component expect
+          const mappedData = (response.data || []).map(item => ({
+            transaction_id: item.transactionId,
+            loai: item.loai,
+            so_tien: item.soTien,
+            ngay_giao_dich: item.ngayGiaoDich,
+            ten_quy: item.quy?.tenQuy,
+            ho_ten: item.sinhVien?.hoTen,
+            ma_so_dinh_danh: item.sinhVien?.maSoDinhDanh,
+            ten_nha_tai_tro: item.khoanTaiTro?.nhaTaiTro?.ten,
+            trang_thai: item.trangThai,
+            doi_soat_trang_thai: item.doiSoatTrangThai,
+            minh_chung_url: item.minhChung,
+            ghi_chu: item.ghiChu,
+          }));
+          
+          setList(mappedData);
+          setTotalCount(response.pagination?.totalRecords || 0);
+        }
       } catch (error) {
         console.error('Lỗi fetch list:', error);
+        setList([]);
+        setTotalCount(0);
       } finally {
         setIsLoading(false);
       }
@@ -154,13 +165,15 @@ const DoiSoatChungTuPage = () => {
   const handleDoiSoat = async (item) => {
     try {
       setIsSubmitting(true);
-      // TODO: Gọi API PATCH /api/giaodich/:id/doi-soat
-      console.log('Đối soát:', item.transaction_id);
+      await transactionService.updateDoiSoatStatus(item.transactionId, {
+        doiSoatTrangThai: 'Da_doi_soat',
+      });
       alert('Đã đối soát thành công');
       // Refresh list + stats
+      window.location.reload();
     } catch (error) {
       console.error('Lỗi đối soát:', error);
-      alert('Có lỗi xảy ra');
+      alert('Có lỗi xảy ra khi đối soát');
     } finally {
       setIsSubmitting(false);
     }
@@ -169,13 +182,15 @@ const DoiSoatChungTuPage = () => {
   const handleGanCo = async (item) => {
     try {
       setIsSubmitting(true);
-      // TODO: Gọi API PATCH /api/giaodich/:id/doi-soat
-      console.log('Gắn cờ bất thường:', item.transaction_id);
+      await transactionService.updateDoiSoatStatus(item.transactionId, {
+        doiSoatTrangThai: 'Bat_thuong',
+      });
       alert('Đã gắn cờ bất thường');
       // Refresh list + stats
+      window.location.reload();
     } catch (error) {
       console.error('Lỗi gắn cờ:', error);
-      alert('Có lỗi xảy ra');
+      alert('Có lỗi xảy ra khi gắn cờ');
     } finally {
       setIsSubmitting(false);
     }
@@ -184,13 +199,15 @@ const DoiSoatChungTuPage = () => {
   const handleResolve = async (item) => {
     try {
       setIsSubmitting(true);
-      // TODO: Gọi API PATCH /api/giaodich/:id/doi-soat
-      console.log('Resolve bất thường:', item.transaction_id);
+      await transactionService.updateDoiSoatStatus(item.transactionId, {
+        doiSoatTrangThai: 'Da_doi_soat',
+      });
       alert('Đã xử lý, chuyển sang Đã đối soát');
       // Refresh list + stats
+      window.location.reload();
     } catch (error) {
       console.error('Lỗi resolve:', error);
-      alert('Có lỗi xảy ra');
+      alert('Có lỗi xảy ra khi xử lý');
     } finally {
       setIsSubmitting(false);
     }
@@ -199,13 +216,15 @@ const DoiSoatChungTuPage = () => {
   const handleRemoveFlag = async (item) => {
     try {
       setIsSubmitting(true);
-      // TODO: Gọi API PATCH /api/giaodich/:id/doi-soat
-      console.log('Xóa flag:', item.transaction_id);
+      await transactionService.updateDoiSoatStatus(item.transactionId, {
+        doiSoatTrangThai: 'Chua_doi_soat',
+      });
       alert('Đã xóa flag bất thường');
       // Refresh list + stats
+      window.location.reload();
     } catch (error) {
       console.error('Lỗi xóa flag:', error);
-      alert('Có lỗi xảy ra');
+      alert('Có lỗi xảy ra khi xóa flag');
     } finally {
       setIsSubmitting(false);
     }
@@ -213,14 +232,8 @@ const DoiSoatChungTuPage = () => {
 
   const handleImportSaoKe = async (file) => {
     try {
-      // TODO: Gọi API POST /api/giaodich/import-sao-ke
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // const response = await api.post('/api/giaodich/import-sao-ke', formData);
-      // return response.data;
-      
-      console.log('Import sao kê:', file);
-      return {
+      const response = await transactionService.importSaoKe(file);
+      return response.data || {
         matched: [],
         unmatched_in_file: [],
         unmatched_in_db: [],
@@ -244,7 +257,7 @@ const DoiSoatChungTuPage = () => {
         </div>
         <div className={styles.headerRight}>
           <Button
-            variant="outline"
+            variant="secondary"
             leftIcon={<HiArrowUpTray />}
             onClick={() => setShowImportModal(true)}
           >

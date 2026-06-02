@@ -1,0 +1,372 @@
+@use '../../../../../../styles/variables' as *;
+
+// ============================================
+// BANK ACCOUNT TAB
+// ============================================
+.tab {
+  width: 100%;
+}
+
+// ============================================
+// SECTION LABEL
+// ============================================
+.sectionLabel {
+  font-size: $text-xs;
+  font-weight: $font-extrabold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: $space-4;
+}
+
+// ============================================
+// EMPTY STATE
+// ============================================
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  color: $text-disabled;
+  margin-bottom: $space-3;
+}
+
+.emptyText {
+  font-size: $text-md;
+  font-weight: $font-semibold;
+  color: $text-secondary;
+  margin: 0 0 $space-1 0;
+}
+
+.emptySubtext {
+  font-size: $text-sm;
+  color: $text-muted;
+  margin: 0;
+}
+
+// ============================================
+// LIST OF BANK CARDS
+// ============================================
+.list {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: $space-4;
+}
+
+// ============================================
+// BANK CARD
+// ============================================
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  border: 1.5px solid $border-default;
+  border-radius: $radius-md;
+  padding: 14px $space-4;
+  margin-bottom: $space-2;
+  background: $bg-card;
+  transition: $transition-base;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &:hover {
+    border-color: $border-focus;
+    box-shadow: $shadow-sm;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: $space-3;
+  }
+}
+
+.cardDefault {
+  border-color: $color-primary;
+  border-left: 4px solid $color-gold;
+  background: rgba(26, 47, 94, 0.02);
+
+  &:hover {
+    border-color: $color-primary;
+    box-shadow: 0 4px 12px rgba(26, 47, 94, 0.08);
+  }
+}
+
+// ── Card Left ───────────────────────────────
+.cardLeft {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  flex: 1;
+  min-width: 0;
+}
+
+.iconBox {
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba(26, 47, 94, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: $color-primary;
+}
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: $font-extrabold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: $text-muted;
+}
+
+.labelDefault {
+  font-size: 10px;
+  font-weight: $font-extrabold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: $color-gold;
+}
+
+.accountNumber {
+  font-size: 18px;
+  font-weight: $font-bold;
+  letter-spacing: 1px;
+  color: $color-primary;
+  line-height: 1.2;
+}
+
+.accountDetails {
+  font-size: $text-sm;
+  color: $text-secondary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Card Right ──────────────────────────────
+.cardRight {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: $space-3;
+    border-top: 1px solid $border-light;
+  }
+}
+
+.defaultBadge {
+  background: rgba(26, 47, 94, 0.08);
+  color: $color-primary;
+  font-size: 11px;
+  font-weight: $font-semibold;
+  border-radius: $radius-full;
+  padding: 3px $space-3;
+  white-space: nowrap;
+}
+
+.trashBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-md;
+  border: none;
+  background: transparent;
+  color: $color-danger;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// ============================================
+// ADD BUTTON (dashed)
+// ============================================
+.addBtn {
+  width: 100%;
+  margin-top: $space-3;
+  border-style: dashed !important;
+  border-color: $border-default !important;
+  border-radius: $radius-md !important;
+  color: $text-secondary !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 14px $space-4 !important;
+
+  &:hover:not(:disabled) {
+    border-color: $color-primary !important;
+    color: $color-primary !important;
+    background: rgba(26, 47, 94, 0.03) !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.99) !important;
+  }
+}
+
+// ============================================
+// ADD FORM (slide-down)
+// ============================================
+.addForm {
+  background: #f8f9ff;
+  border: 1.5px dashed $border-default;
+  border-radius: $radius-md;
+  padding: $space-5;
+  margin-top: $space-3;
+  animation: slideDown 0.25s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+}
+
+.formLabel {
+  font-size: $text-xs;
+  font-weight: $font-extrabold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: $color-primary;
+  margin-bottom: $space-3;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  margin-bottom: $space-5;
+}
+
+.helperNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: $text-muted;
+  margin: -8px 0 0 0;
+  padding-left: 2px;
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+// ── Custom Checkbox ─────────────────────────
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding: $space-2 0;
+}
+
+.checkbox {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkboxMark {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid $border-default;
+  border-radius: $radius-xs;
+  background: $bg-card;
+  transition: $transition-fast;
+  flex-shrink: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid $bg-card;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+}
+
+.checkbox:checked ~ .checkboxMark {
+  background: $color-primary;
+  border-color: $color-primary;
+
+  &::after {
+    display: block;
+  }
+}
+
+.checkboxLabel:hover .checkboxMark {
+  border-color: $color-primary;
+}
+
+.checkboxText {
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-body;
+}
+
+// ── Form Actions ────────────────────────────
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-2;
+  padding-top: $space-3;
+  border-top: 1px solid $border-default;
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}

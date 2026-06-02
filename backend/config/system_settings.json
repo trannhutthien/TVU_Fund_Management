@@ -1,0 +1,12 @@
+{
+  "ten_he_thong": "TVU Fund Management",
+  "email_lien_he": "contact@tvu.edu.vn",
+  "so_dien_thoai": "0294.3855246",
+  "thoi_han_xu_ly_ngay": 5,
+  "so_cap_duyet": 2,
+  "ky_tu_ly_do_toi_thieu": 10,
+  "kich_thuoc_toi_da_mb": 5,
+  "so_file_toi_da": 5,
+  "dinh_dang_cho_phep": ["PDF", "JPG", "PNG", "DOC"],
+  "maintenanceMode": false
+}

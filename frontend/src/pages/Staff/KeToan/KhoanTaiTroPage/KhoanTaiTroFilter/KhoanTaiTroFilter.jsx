@@ -17,8 +17,8 @@ const LOAI_NTT_OPTIONS = [
 
 const TRANG_THAI_OPTIONS = [
   { value: '', label: '-- Tất cả trạng thái --' },
-  { value: 'Cho duyet', label: 'Chờ cán bộ' },
-  { value: 'Da duyet', label: 'Chờ kế toán' },
+  { value: 'Cho duyet', label: 'Chờ duyệt' },
+  { value: 'Da duyet', label: 'Chờ xác nhận' },
   { value: 'Da nhan', label: 'Đã xác nhận' },
   { value: 'Tu choi', label: 'Từ chối' },
 ];

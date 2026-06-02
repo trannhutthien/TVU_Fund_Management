@@ -3,10 +3,13 @@
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .head {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .title {
@@ -22,8 +25,148 @@
   color: #94a3b8;
 }
 
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  flex-grow: 1;
+}
+
+.metricCard {
+  border: 1px solid #f1f5f9;
+  background: #fdfdfd;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.metricCard:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(26, 47, 94, 0.03);
+}
+
+.metricHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.iconBox {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(26, 47, 94, 0.05);
+  color: var(--color-navy-blue, #1a2f5e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metricTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.metricBody {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mainValue {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-navy-blue, #1a2f5e);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badgeUp {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.badgeDown {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.badgeNone {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.metricFooter {
+  border-top: 1px dashed #f1f5f9;
+  padding-top: 10px;
+}
+
+.comparisonLabel {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.prevValue {
+  font-weight: 600;
+  color: #64748b;
+}
+
+.progressGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progressLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.progressBar {
+  height: 4px;
+  background: #f1f5f9;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.fillPrimary {
+  background: var(--color-navy-blue, #1a2f5e);
+}
+
+.fillGray {
+  background: #cbd5e1;
+}
+
 .skeleton {
-  height: 280px;
+  height: 250px;
   background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
   background-size: 200% 100%;
   border-radius: 8px;
@@ -36,5 +179,11 @@
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,0 +1,240 @@
+@use '@styles/variables' as *;
+
+// ============================================
+// REGISTER PAGE
+// ============================================
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-4;
+  background: linear-gradient(
+    135deg,
+    rgba($color-primary, 0.1) 0%,
+    rgba($color-primary-dark, 0.15) 100%
+  );
+  overflow-y: auto;
+}
+
+// ============================================
+// REGISTER CARD
+// ============================================
+.register-card {
+  background: $bg-card;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-xl;
+  padding: $space-6;
+  width: 100%;
+  max-width: 480px;
+  animation: fadeInUp 0.4s ease-out;
+
+  @media (max-width: 640px) {
+    padding: $space-5;
+    max-width: 100%;
+  }
+}
+
+// ============================================
+// LOGO
+// ============================================
+.register-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: $space-4;
+}
+
+// ============================================
+// TITLE & SUBTITLE
+// ============================================
+.register-title {
+  font-size: $text-xl;
+  font-weight: $font-bold;
+  color: $color-primary-dark;
+  text-align: center;
+  margin-bottom: $space-1;
+  letter-spacing: 0.5px;
+
+  @media (max-width: 640px) {
+    font-size: $text-lg;
+  }
+}
+
+.register-subtitle {
+  font-size: $text-xs;
+  color: $text-secondary;
+  text-align: center;
+  margin-bottom: $space-4;
+  line-height: 1.5;
+
+  @media (max-width: 640px) {
+    font-size: $text-xs;
+  }
+}
+
+// ============================================
+// ACCOUNT TYPE TABS
+// ============================================
+.register-tabs {
+  display: flex;
+  gap: $space-2;
+  margin-bottom: $space-4;
+  padding: $space-1;
+  background: $bg-input;
+  border-radius: $radius-lg;
+}
+
+.register-tab {
+  flex: 1;
+  padding: $space-2 $space-3;
+  background: transparent;
+  border: none;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover {
+    color: $text-body;
+    background: rgba($color-primary, 0.05);
+  }
+
+  &.active {
+    background: $bg-card;
+    color: $color-primary;
+    font-weight: $font-semibold;
+    box-shadow: $shadow-sm;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+}
+
+// ============================================
+// FORM
+// ============================================
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+// Custom select field
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.register-label {
+  font-size: $text-xs;
+  font-weight: $font-semibold;
+  color: $text-body;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.register-select {
+  width: 100%;
+  padding: $space-3;
+  background: $bg-input;
+  border: 2px solid $border-default;
+  border-radius: $radius-lg;
+  font-size: $text-base;
+  color: $text-body;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all $transition-base;
+
+  &:hover {
+    border-color: $border-focus;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+
+  option {
+    padding: $space-2;
+  }
+}
+
+// ============================================
+// SUBMIT BUTTON
+// ============================================
+.register-submit {
+  width: 100%;
+  margin-top: $space-2;
+  font-weight: $font-bold;
+  letter-spacing: 0.5px;
+}
+
+// ============================================
+// FOOTER
+// ============================================
+.register-footer {
+  margin-top: $space-4;
+  padding-top: $space-3;
+  border-top: 1px solid $border-default;
+  text-align: center;
+  font-size: $text-sm;
+}
+
+.register-footer-text {
+  color: $text-secondary;
+  margin-right: $space-2;
+}
+
+.register-footer-link {
+  color: $color-primary;
+  text-decoration: none;
+  font-weight: $font-semibold;
+  transition: color $transition-base;
+
+  &:hover {
+    color: $color-primary-dark;
+    text-decoration: underline;
+  }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 640px) {
+  .register-page {
+    padding: $space-3;
+  }
+
+  .register-card {
+    box-shadow: $shadow-lg;
+  }
+
+  .register-tabs {
+    gap: $space-1;
+  }
+
+  .register-tab {
+    padding: $space-2;
+    font-size: $text-xs;
+  }
+}

@@ -19,16 +19,11 @@ export const getPublicFunds = async () => {
 
 /**
  * Lấy chi tiết một quỹ theo ID
- * GET /api/funds/:id
+ * GET /api/funds/:id (cần token + role admin/giáo vụ)
  */
 export const getFundById = async (fundId) => {
-  try {
-    const response = await axios.get(`${API_URL}/funds/${fundId}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching fund ${fundId}:`, error);
-    throw error;
-  }
+  const response = await api.get(`/funds/${fundId}`);
+  return response.data;
 };
 
 /**
@@ -40,8 +35,48 @@ export const createFund = async (payload) => {
   return response.data;
 };
 
+/**
+ * Cập nhật thông tin quỹ
+ * PUT /api/funds/:id (cần token + role admin/giáo vụ)
+ */
+export const updateFund = async (fundId, payload) => {
+  const response = await api.put(`/funds/${fundId}`, payload);
+  return response.data;
+};
+
+/**
+ * Cập nhật trạng thái quỹ
+ * PUT /api/funds/:id/status (cần token + role admin/giáo vụ)
+ */
+export const updateFundStatus = async (fundId, trangThai) => {
+  const response = await api.put(`/funds/${fundId}/status`, { trangThai });
+  return response.data;
+};
+
+/**
+ * Lấy danh sách loại quỹ
+ * GET /api/loai-quy
+ */
+export const getAllLoaiQuy = async () => {
+  const response = await api.get('/loai-quy');
+  return response.data;
+};
+
+/**
+ * Tạo loại quỹ mới
+ * POST /api/loai-quy
+ */
+export const createLoaiQuy = async (maLoai, tenLoai) => {
+  const response = await api.post('/loai-quy', { maLoai, tenLoai });
+  return response.data;
+};
+
 export default {
   getPublicFunds,
   getFundById,
   createFund,
+  updateFund,
+  updateFundStatus,
+  getAllLoaiQuy,
+  createLoaiQuy,
 };

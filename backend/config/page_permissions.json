@@ -1,0 +1,182 @@
+{
+  "landing_page": {
+    "label": "Trang chủ",
+    "path": "/",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
+  "funds": {
+    "label": "Danh mục quỹ",
+    "path": "/funds",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
+  "guidelines": {
+    "label": "Hướng dẫn & Quy định",
+    "path": "/guidelines",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
+  "donors": {
+    "label": "Vinh danh",
+    "path": "/donors",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
+  "profile": {
+    "label": "Cá nhân",
+    "path": "/profile",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
+  "apply": {
+    "label": "Tạo đơn",
+    "path": "/apply",
+    "admin": false,
+    "canbo": false,
+    "ketoan": false,
+    "sinhvien": true,
+    "nhataitro": true
+  },
+  "dashboard": {
+    "label": "Trang tổng quan",
+    "path": "/dashboard",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "users": {
+    "label": "Quản lý người dùng",
+    "path": "/users",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "xet_duyet": {
+    "label": "Xét duyệt hồ sơ",
+    "path": "/xet-duyet",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "quy": {
+    "label": "Danh sách Quỹ",
+    "path": "/quy",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "nha_tai_tro": {
+    "label": "Nhà tài trợ",
+    "path": "/nha-tai-tro",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "sinh_vien_noi_bat": {
+    "label": "Sinh viên nổi bật",
+    "path": "/sinh-vien-noi-bat",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "tin_tuc": {
+    "label": "Tin tức & Sự kiện",
+    "path": "/tin-tuc",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "bao_cao": {
+    "label": "Thống kê & Báo cáo",
+    "path": "/bao-cao",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "khoan_tai_tro": {
+    "label": "Khoản tài trợ",
+    "path": "/khoan-tai-tro",
+    "admin": true,
+    "canbo": false,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "giao_dich": {
+    "label": "Lịch sử giao dịch",
+    "path": "/giao-dich",
+    "admin": true,
+    "canbo": false,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "giai_ngan": {
+    "label": "Giải ngân hồ sơ",
+    "path": "/giai-ngan",
+    "admin": false,
+    "canbo": false,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "chung_tu": {
+    "label": "Đối soát chứng từ",
+    "path": "/chung-tu",
+    "admin": false,
+    "canbo": false,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "phe_duyet": {
+    "label": "Lịch sử phê duyệt",
+    "path": "/phe-duyet",
+    "admin": true,
+    "canbo": false,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  },
+  "roles": {
+    "label": "Hệ thống & Phân quyền",
+    "path": "/roles",
+    "admin": true,
+    "canbo": false,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
+  }
+}

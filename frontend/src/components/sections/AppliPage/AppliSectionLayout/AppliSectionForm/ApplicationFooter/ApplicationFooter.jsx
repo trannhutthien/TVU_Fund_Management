@@ -4,7 +4,15 @@ import { HiOutlineArchiveBox, HiOutlinePaperAirplane, HiOutlineArrowPath } from 
 import Button from '@components/common/Button/Button';
 import styles from './ApplicationFooter.module.scss';
 
-const ApplicationFooter = ({ onSaveDraft, onSubmit, onReset, isSubmitting, isSaving, isFormValid }) => {
+const ApplicationFooter = ({ 
+  onSaveDraft, 
+  onSubmit, 
+  onReset, 
+  isSubmitting, 
+  isSaving, 
+  isFormValid,
+  isDonor = false 
+}) => {
   const [isChecked, setIsChecked] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -63,7 +71,9 @@ const ApplicationFooter = ({ onSaveDraft, onSubmit, onReset, isSubmitting, isSav
         />
         <span className={isChecked ? styles.checkmark : styles.checkmarkEmpty} />
         <span className={styles.commitmentText}>
-          Tôi cam đoan những thông tin trên là đúng sự thật và chịu trách nhiệm trước nhà trường
+          {isDonor
+            ? 'Tôi cam đoan thông tin quyên góp là chính xác và đã thực hiện chuyển khoản'
+            : 'Tôi cam đoan những thông tin trên là đúng sự thật và chịu trách nhiệm trước nhà trường'}
         </span>
       </label>
 
@@ -94,7 +104,11 @@ const ApplicationFooter = ({ onSaveDraft, onSubmit, onReset, isSubmitting, isSav
           leftIcon={!isSubmitting ? <HiOutlinePaperAirplane /> : null}
           className={styles.submitBtn}
         >
-          {isSubmitting ? 'Đang gửi...' : 'Gửi hồ sơ ngay'}
+          {isSubmitting 
+            ? 'Đang gửi...' 
+            : isDonor 
+              ? 'Gửi thông tin quyên góp' 
+              : 'Gửi hồ sơ ngay'}
         </Button>
       </div>
     </div>
@@ -108,6 +122,7 @@ ApplicationFooter.propTypes = {
   isSubmitting: PropTypes.bool,
   isSaving: PropTypes.bool,
   isFormValid: PropTypes.bool,
+  isDonor: PropTypes.bool,
 };
 
 export default ApplicationFooter;

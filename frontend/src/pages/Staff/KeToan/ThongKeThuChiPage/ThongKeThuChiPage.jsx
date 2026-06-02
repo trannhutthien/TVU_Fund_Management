@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import statisticsService from '@services/statisticsService';
 import TKFilterSection from './sections/TKFilterSection';
 import TKSummarySection from './sections/TKSummarySection';
 import TKCashFlowSection from './sections/TKCashFlowSection';
@@ -39,105 +41,26 @@ const ThongKeThuChiPage = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        
-        // TODO: Gọi API song song với Promise.all
-        // GET /api/statistics/ketoan/summary?type=month&year=2025&month=5
-        // GET /api/statistics/ketoan/cashflow?type=month&year=2025&month=5
-        // GET /api/statistics/ketoan/breakdown-thu?type=month&year=2025&month=5
-        // GET /api/statistics/ketoan/breakdown-chi?type=month&year=2025&month=5
-        // GET /api/statistics/ketoan/fund-table?type=month&year=2025&month=5
-        
-        // Mock data tạm
-        setSummaryData({
-          tongThu: 500000000,
-          tongChi: 300000000,
-          soQuy: 5,
-          soGiaoDich: 120,
+        const res = await statisticsService.getKeToanReportStats({
+          type: period.type,
+          year: period.year,
+          month: period.month,
+          quarter: period.quarter,
+          compareMode: compareMode,
         });
 
-        // Mock data kỳ trước (nếu compareMode = true)
-        if (compareMode) {
-          setCompareSummaryData({
-            tongThu: 450000000,
-            tongChi: 280000000,
-            soQuy: 5,
-            soGiaoDich: 110,
-          });
-        } else {
-          setCompareSummaryData(null);
+        if (res) {
+          setSummaryData(res.summaryData);
+          setCompareSummaryData(res.compareSummaryData);
+          setCashflowData(res.cashflowData || []);
+          setCompareCashflowData(res.compareCashflowData || []);
+          setBreakdownThuData(res.breakdownThuData || []);
+          setBreakdownChiData(res.breakdownChiData || []);
+          setFundTableData(res.fundTableData || []);
         }
-        
-        setCashflowData([
-          { thang: 'T1', thu: 400000000, chi: 250000000 },
-          { thang: 'T2', thu: 450000000, chi: 280000000 },
-          { thang: 'T3', thu: 500000000, chi: 300000000 },
-          { thang: 'T4', thu: 480000000, chi: 290000000 },
-          { thang: 'T5', thu: 500000000, chi: 300000000 },
-        ]);
-
-        // Mock data cashflow kỳ trước (nếu compareMode = true)
-        if (compareMode) {
-          setCompareCashflowData([
-            { thang: 'T1', thu: 380000000, chi: 240000000 },
-            { thang: 'T2', thu: 420000000, chi: 260000000 },
-            { thang: 'T3', thu: 450000000, chi: 280000000 },
-            { thang: 'T4', thu: 440000000, chi: 270000000 },
-            { thang: 'T5', thu: 450000000, chi: 280000000 },
-          ]);
-        } else {
-          setCompareCashflowData([]);
-        }
-        
-        setBreakdownThuData([
-          { name: 'Vingroup', value: 200000000, percentage: 40 },
-          { name: 'Vinamilk', value: 150000000, percentage: 30 },
-          { name: 'Masan', value: 150000000, percentage: 30 },
-        ]);
-        
-        setBreakdownChiData([
-          { name: 'Quỹ Học bổng', value: 180000000, percentage: 60 },
-          { name: 'Quỹ Khó khăn', value: 120000000, percentage: 40 },
-        ]);
-        
-        setFundTableData([
-          { 
-            tenQuy: 'Quỹ Học bổng', 
-            thu: 300000000, 
-            chi: 180000000, 
-            soDu: 120000000,
-            soTienToiDa: 500000000,
-            soGiaoDich: 45,
-            trangThai: 'Đang hoạt động',
-            trendData: [
-              { value: 100000000 },
-              { value: 150000000 },
-              { value: 180000000 },
-              { value: 200000000 },
-              { value: 250000000 },
-              { value: 300000000 },
-            ]
-          },
-          { 
-            tenQuy: 'Quỹ Khó khăn', 
-            thu: 200000000, 
-            chi: 120000000, 
-            soDu: 80000000,
-            soTienToiDa: 300000000,
-            soGiaoDich: 32,
-            trangThai: 'Đang hoạt động',
-            trendData: [
-              { value: 80000000 },
-              { value: 120000000 },
-              { value: 150000000 },
-              { value: 180000000 },
-              { value: 190000000 },
-              { value: 200000000 },
-            ]
-          },
-        ]);
-        
       } catch (error) {
-        console.error('Lỗi fetch data:', error);
+        console.error('Lỗi tải thống kê thu chi:', error);
+        toast.error('Không tải được dữ liệu thống kê');
       } finally {
         setIsLoading(false);
       }

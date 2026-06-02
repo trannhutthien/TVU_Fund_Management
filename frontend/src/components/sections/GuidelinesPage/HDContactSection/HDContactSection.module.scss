@@ -1,0 +1,107 @@
+@use '@styles/variables' as *;
+
+.hdContactSection {
+  background: var(--color-primary);
+  padding: 56px 24px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+// Header
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-white);
+  margin: 0 0 12px 0;
+  
+  @media (max-width: 768px) {
+    font-size: 24px;
+  }
+}
+
+.subtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 15px;
+  }
+}
+
+// Contact Grid
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  
+  @media (max-width: 991px) {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+}
+
+.contactCard {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px);
+  }
+}
+
+.contactIcon {
+  width: 36px;
+  height: 36px;
+  color: var(--color-gold);
+  margin-bottom: 16px;
+}
+
+.contactTitle {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-white);
+  margin: 0 0 12px 0;
+}
+
+.contactInfo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-white);
+  margin: 0 0 8px 0;
+}
+
+.contactSub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.contactButton {
+  border-color: var(--color-white) !important;
+  color: var(--color-white) !important;
+  
+  &:hover {
+    background: var(--color-white) !important;
+    color: var(--color-primary) !important;
+  }
+}

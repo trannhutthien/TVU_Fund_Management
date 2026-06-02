@@ -1,12 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   HiOutlineBuildingLibrary,
   HiOutlineXMark,
   HiOutlineClipboardDocumentCheck,
+  HiOutlinePauseCircle,
+  HiOutlineXCircle,
+  HiOutlinePlayCircle,
+  HiOutlinePencilSquare,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { updateFundStatus } from '@services/fundService';
 import styles from './QuyDetailDrawer.module.scss';
 
 const LOAI_QUY_LABEL = {
@@ -65,9 +70,10 @@ const formatGiaTriHoTro = (fund) => {
   return 'Không quy định';
 };
 
-const QuyDetailDrawer = ({ fund, onClose }) => {
+const QuyDetailDrawer = ({ fund, onClose, onStatusUpdated, loaiQuyList = [] }) => {
   const navigate = useNavigate();
   const isOpen = !!fund;
+  const [updating, setUpdating] = useState(false);
 
   // Lock body scroll khi mở Drawer + đóng bằng ESC
   useEffect(() => {
@@ -94,6 +100,44 @@ const QuyDetailDrawer = ({ fund, onClose }) => {
   const handleGoToXetDuyet = () => {
     navigate(`/can-bo/xet-duyet?quy_id=${fund.quyId}`);
     onClose?.();
+  };
+
+  const handleEditFund = () => {
+    const parentPath = window.location.pathname.startsWith('/admin') ? '/admin/quy' : '/can-bo/quy';
+    navigate(`${parentPath}/sua/${fund.quyId}`);
+    onClose?.();
+  };
+
+  // Handler cập nhật trạng thái quỹ
+  const handleUpdateStatus = async (newStatus) => {
+    const confirmMessages = {
+      'Tam dung': 'Bạn có chắc muốn TẠM DỪNG quỹ này? Quỹ sẽ không hiển thị trên trang công khai nhưng vẫn có thể kích hoạt lại.',
+      'Da dong': 'Bạn có chắc muốn ĐÓNG quỹ này? Quỹ sẽ không hiển thị trên trang công khai và không thể kích hoạt lại.',
+      'Dang hoat dong': 'Bạn có chắc muốn KÍCH HOẠT LẠI quỹ này? Quỹ sẽ hiển thị trên trang công khai.',
+    };
+
+    if (!window.confirm(confirmMessages[newStatus])) {
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      await updateFundStatus(fund.quyId, newStatus);
+      
+      // Thông báo thành công
+      alert('Cập nhật trạng thái quỹ thành công!');
+      
+      // Callback để refresh danh sách
+      onStatusUpdated?.();
+      
+      // Đóng drawer
+      onClose?.();
+    } catch (error) {
+      console.error('Error updating fund status:', error);
+      alert('Có lỗi xảy ra khi cập nhật trạng thái quỹ. Vui lòng thử lại.');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -136,7 +180,10 @@ const QuyDetailDrawer = ({ fund, onClose }) => {
             <h3 className={styles.fundName}>{fund.tenQuy}</h3>
             <div className={styles.badgeRow}>
               <span className={styles.loaiBadge}>
-                {LOAI_QUY_LABEL[fund.loaiQuy] || fund.loaiQuy}
+                {(() => {
+                  const found = loaiQuyList.find((item) => item.maLoai === fund.loaiQuy);
+                  return found ? found.tenLoai : LOAI_QUY_LABEL[fund.loaiQuy] || fund.loaiQuy;
+                })()}
               </span>
               <StatusBadge
                 status={mapStatusToBadge(fund.trangThai)}
@@ -221,12 +268,85 @@ const QuyDetailDrawer = ({ fund, onClose }) => {
 
         {/* Footer action */}
         <div className={styles.footer}>
+          {/* Buttons quản lý trạng thái */}
+          <div className={styles.statusActions}>
+            {fund.trangThai === 'Dang hoat dong' && (
+              <>
+                <Button
+                  variant="warning"
+                  size="md"
+                  leftIcon={<HiOutlinePauseCircle />}
+                  onClick={() => handleUpdateStatus('Tam dung')}
+                  disabled={updating}
+                  className={styles.statusBtn}
+                >
+                  {updating ? 'Đang xử lý...' : 'Tạm dừng'}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="md"
+                  leftIcon={<HiOutlineXCircle />}
+                  onClick={() => handleUpdateStatus('Da dong')}
+                  disabled={updating}
+                  className={styles.statusBtn}
+                >
+                  {updating ? 'Đang xử lý...' : 'Đóng quỹ'}
+                </Button>
+              </>
+            )}
+            
+            {fund.trangThai === 'Tam dung' && (
+              <>
+                <Button
+                  variant="success"
+                  size="md"
+                  leftIcon={<HiOutlinePlayCircle />}
+                  onClick={() => handleUpdateStatus('Dang hoat dong')}
+                  disabled={updating}
+                  className={styles.statusBtn}
+                >
+                  {updating ? 'Đang xử lý...' : 'Kích hoạt lại'}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="md"
+                  leftIcon={<HiOutlineXCircle />}
+                  onClick={() => handleUpdateStatus('Da dong')}
+                  disabled={updating}
+                  className={styles.statusBtn}
+                >
+                  {updating ? 'Đang xử lý...' : 'Đóng quỹ'}
+                </Button>
+              </>
+            )}
+            
+            {fund.trangThai === 'Da dong' && (
+              <div className={styles.closedNote}>
+                Quỹ đã đóng. Không thể thay đổi trạng thái.
+              </div>
+            )}
+          </div>
+          
+          {fund.trangThai !== 'Da dong' && (
+            <Button
+              variant="secondary"
+              size="md"
+              leftIcon={<HiOutlinePencilSquare />}
+              onClick={handleEditFund}
+              className={styles.actionBtn}
+              disabled={updating}
+            >
+              Chỉnh sửa thông tin
+            </Button>
+          )}
+          
           <Button
             variant="primary"
             size="md"
             leftIcon={<HiOutlineClipboardDocumentCheck />}
             onClick={handleGoToXetDuyet}
             className={styles.actionBtn}
+            disabled={updating}
           >
             Xem đơn đang xử lý của quỹ này
           </Button>

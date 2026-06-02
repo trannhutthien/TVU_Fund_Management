@@ -1,9 +1,18 @@
-import { createContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect, useContext } from 'react'
 import { authService } from '@services'
 import useAuthStore from '@stores/authStore'
 import { toast } from 'react-toastify'
 
 export const AuthContext = createContext(null)
+
+// Hook để sử dụng AuthContext
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
 
 // Lấy token từ key Zustand `auth-storage` nếu không có ở key `token`
 const readTokenFromStorage = () => {
@@ -43,7 +52,7 @@ export const AuthProvider = ({ children }) => {
         try {
           const response = await authService.getCurrentUser()
           if (cancelled) return
-          const fetchedUser = response?.data || response
+          const fetchedUser = response?.user || response?.data || response
           setUser(fetchedUser)
           storeLogin(fetchedUser, token)
         } catch {

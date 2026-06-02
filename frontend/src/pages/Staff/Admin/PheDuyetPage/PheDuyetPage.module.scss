@@ -1,0 +1,98 @@
+.page {
+  background: #f0f4ff;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.badge {
+  background: rgba(26, 47, 94, 0.08);
+  color: var(--color-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.placeholder {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  margin-bottom: 16px;
+  border: 2px dashed #e2e8f0;
+  text-align: center;
+
+  p {
+    margin: 8px 0;
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  button {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+.pagination {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+}

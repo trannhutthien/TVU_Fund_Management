@@ -91,8 +91,8 @@ const ImpactStatsSection = () => {
           {
             icon: HiOutlineBanknotes,
             value: parseFloat(totalDisbursedInBillion.toFixed(1)),
-            suffix: ' Tỷ VNĐ',
-            label: 'ĐÃ NHẬN TÀI TRỢ',
+            suffix: ' VNĐ',
+            label: 'ĐÃ NHẬN TÀI TRỢ', // Tổng số tiền từ các khoản tài trợ có trạng thái "Da nhan"
           },
           {
             icon: HiOutlineBuildingOffice2,
@@ -116,7 +116,7 @@ const ImpactStatsSection = () => {
           {
             icon: HiOutlineBanknotes,
             value: 0,
-            suffix: ' Tỷ VNĐ',
+            suffix: 'VNĐ',
             label: 'ĐÃ GIẢI NGÂN',
           },
           {

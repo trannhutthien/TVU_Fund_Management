@@ -44,25 +44,28 @@ const AdminDashboard = () => {
           userStats,
           donationStats,
           fundHealth,
-          applications,
+          applicationStats, // Thêm API mới
           cashflowData,
           staffUsers,
+          userGrowthRes,
         ] = await Promise.all([
           api.get('/statistics/ketoan/summary'),
           api.get('/users/stats'),
           api.get('/donations/stats'),
           api.get('/statistics/ketoan/fund-health'),
-          api.get('/applications', { params: { page: 1, limit: 1 } }),
+          api.get('/statistics/applications/stats'), // API mới
           api.get('/statistics/ketoan/cashflow', { params: { months: 6 } }),
           api.get('/users', { params: { role_id: '1,2,3', limit: 10 } }), // Lấy staff
+          api.get('/users/growth', { params: { months: 6 } }).catch(() => ({ data: { data: [] } })),
         ]);
 
         // Map data cho alertData
-        const pendingCap2Count = applications.data?.pagination?.totalRecords || 0;
-        const pendingDonationsCount = donationStats.data?.data?.choXacNhan || 0;
+        const keToanData = keToanSummary.data?.data || {};
+        const appStats = applicationStats.data?.data || {};
+        const pendingDonationsCount = donationStats.data?.data?.canXacNhan || 0;
         
         setAlertData({
-          pendingCap2: pendingCap2Count,
+          pendingCap2: appStats.dangXuLy || 0, // Đơn đang xử lý (Dang xu ly)
           pendingDonations: pendingDonationsCount,
           abnormalTransactions: 0, // TODO: Cần API riêng
           lowBalanceFunds: (fundHealth.data?.data || []).filter(f => {
@@ -72,13 +75,13 @@ const AdminDashboard = () => {
         });
 
         // Map data cho financeData
-        const summary = keToanSummary.data?.data || {};
+        const donations = donationStats.data?.data || {};
         setFinanceData({
-          tongThuHeThong: summary.tongThu || 0,
-          tongChiHeThong: summary.tongChi || 0,
-          tongSoDuTatCaQuy: (summary.tongThu || 0) - (summary.tongChi || 0),
-          tongKhoanTaiTro: donationStats.data?.data?.tongKhoanTaiTro || 0,
-          tongGiaiNgan: summary.choGiaiNgan || 0,
+          tongThuHeThong: keToanData.tongThu || 0,
+          tongChiHeThong: keToanData.tongChi || 0,
+          tongSoDuTatCaQuy: (keToanData.tongThu || 0) - (keToanData.tongChi || 0),
+          tongKhoanTaiTro: donations.tongKhoanTaiTro || 0, // Số khoản tài trợ đã nhận (Da nhan)
+          tongGiaiNgan: keToanData.tongGiaiNgan || 0, // Số đơn đã giải ngân (Da giai ngan)
         });
 
         // Map data cho userData
@@ -87,17 +90,18 @@ const AdminDashboard = () => {
           tongNguoiDung: users.tongNguoiDung || 0,
           sinhVien: users.sinhVien || 0,
           nhaTaiTro: users.nhaTaiTro || 0,
-          nhanVien: (users.admin || 0) + (users.canBo || 0) + (users.keToan || 0),
+          nhanVien: users.nhanVien || 0, // Backend đã tính tổng role 1,2,3
           newThisMonth: users.newThisMonth || 0,
         });
 
         // Map data cho operationData
         setOperationData({
-          tongDon: applications.data?.pagination?.totalRecords || 0,
-          choGiaiNgan: summary.choGiaiNgan || 0,
-          dangXuLy: 0, // TODO: Cần query riêng
-          daHoanThanh: 0, // TODO: Cần query riêng
-          tuChoi: 0, // TODO: Cần query riêng
+          tongDon: appStats.tongDon || 0,
+          choDuyet: appStats.choDuyet || 0, // Đơn chờ xử lý (Cho duyet)
+          choGiaiNgan: appStats.choGiaiNgan || 0,
+          dangXuLy: appStats.dangXuLy || 0,
+          daHoanThanh: appStats.daHoanThanh || 0,
+          tuChoi: appStats.tuChoi || 0,
           tongQuy: (fundHealth.data?.data || []).length,
           quyHoatDong: (fundHealth.data?.data || []).filter(f => f.trang_thai === 'Dang hoat dong').length,
           funds: fundHealth.data?.data || [],
@@ -115,7 +119,7 @@ const AdminDashboard = () => {
             chi: item.chi || 0,
             soDu: (item.thu || 0) - (item.chi || 0),
           })),
-          userGrowth6Months: [], // TODO: Cần API riêng cho user growth
+          userGrowth6Months: userGrowthRes.data?.data || [],
           fundDistribution: fundHealthArray.map(fund => ({
             name: fund.ten_quy,
             value: fund.so_du || 0,

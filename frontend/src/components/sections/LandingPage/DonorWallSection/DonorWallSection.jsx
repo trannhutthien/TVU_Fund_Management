@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { HiHeart } from 'react-icons/hi2';
+import { message } from 'antd';
 import Button from '@components/common/Button';
 import Logo from '@components/common/Logo';
+import useAuthStore from '@stores/authStore';
 import donorService from '@services/donorService';
 import styles from './DonorWallSection.module.scss';
 
@@ -57,8 +61,12 @@ const DonorCard = ({ donor }) => {
  * Section vinh danh các nhà tài trợ và tổ chức đã đóng góp
  * Hiển thị top 6 nhà tài trợ có số tiền đóng góp lớn nhất
  * Dữ liệu lấy từ API backend
+ * 
+ * @param {function} onRegisterClick - Callback để mở form đăng ký
  */
-const DonorWallSection = () => {
+const DonorWallSection = ({ onRegisterClick }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [topDonors, setTopDonors] = useState([]);
   const [tickerDonors, setTickerDonors] = useState([]);
@@ -111,6 +119,39 @@ const DonorWallSection = () => {
 
     fetchDonors();
   }, []);
+
+  // Handle "Liên hệ hợp tác" button click
+  const handleContactClick = () => {
+    // Case 1: Chưa đăng nhập → Mở form đăng ký
+    if (!isAuthenticated) {
+      if (onRegisterClick) {
+        onRegisterClick();
+      } else {
+        message.info('Vui lòng đăng ký tài khoản để trở thành nhà tài trợ');
+      }
+      return;
+    }
+
+    // Case 2: Đã đăng nhập với role_id = 4 (Người dùng)
+    if (user?.vaiTro === 4) {
+      // Kiểm tra loai_tai_khoan
+      const accountType = user?.loaiTaiKhoan || user?.loai_tai_khoan;
+      
+      if (accountType === 'NHA_TAI_TRO') {
+        // Đúng là nhà tài trợ → Navigate đến trang tạo đơn tài trợ
+        // TODO: Cần tạo trang này (ví dụ: /donor/create-donation)
+        message.success('Chuyển đến trang tạo khoản tài trợ');
+        navigate('/donor/create-donation');
+      } else {
+        // Không phải nhà tài trợ → Thông báo
+        message.warning('Tài khoản của bạn không phải là tài khoản nhà tài trợ. Vui lòng liên hệ quản trị viên để được hỗ trợ.');
+      }
+      return;
+    }
+
+    // Case 3: Đã đăng nhập với role khác (Staff: 1, 2, 3)
+    message.info('Tính năng này dành cho nhà tài trợ. Vui lòng đăng nhập bằng tài khoản nhà tài trợ.');
+  };
 
   // Loading state
   if (loading) {
@@ -198,7 +239,11 @@ const DonorWallSection = () => {
               </p>
             </div>
             <div className={styles.ctaAction}>
-              <Button variant="primary" size="lg">
+              <Button 
+                variant="primary" 
+                size="lg"
+                onClick={handleContactClick}
+              >
                 Liên hệ hợp tác →
               </Button>
             </div>
@@ -207,6 +252,10 @@ const DonorWallSection = () => {
       </div>
     </section>
   );
+};
+
+DonorWallSection.propTypes = {
+  onRegisterClick: PropTypes.func,
 };
 
 export default DonorWallSection;

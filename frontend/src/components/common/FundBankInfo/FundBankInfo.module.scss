@@ -1,0 +1,152 @@
+@import '@styles/variables.scss';
+@import '@styles/mixins.scss';
+
+.fundBankInfo {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--color-primary);
+
+    .headerIcon {
+      font-size: 28px;
+      color: var(--color-primary);
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+  }
+
+  .infoGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .infoRow {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 16px;
+    align-items: center;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .valueWithCopy {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--color-primary);
+        box-shadow: 0 2px 8px rgba(26, 47, 94, 0.1);
+      }
+
+      .value {
+        flex: 1;
+        font-size: 1rem;
+        color: var(--color-text-primary);
+        word-break: break-all;
+
+        &.highlight {
+          font-weight: 700;
+          color: var(--color-primary);
+          font-size: 1.1rem;
+        }
+      }
+
+      .copyBtn {
+        flex-shrink: 0;
+        background: transparent;
+        border: none;
+        color: var(--color-primary);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+
+        svg {
+          font-size: 20px;
+        }
+
+        &:hover {
+          background: var(--color-primary);
+          color: white;
+          transform: scale(1.1);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
+  }
+
+  .notice {
+    margin-top: 20px;
+    padding: 16px;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 8px;
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #856404;
+      font-weight: 500;
+    }
+  }
+}
+
+.noBankInfo {
+  padding: 40px;
+  text-align: center;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e0;
+  border-radius: 12px;
+
+  .icon {
+    font-size: 48px;
+    color: #cbd5e0;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin: 8px 0;
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+
+    &.subText {
+      font-size: 0.9rem;
+      color: var(--color-text-tertiary);
+    }
+  }
+}

@@ -17,6 +17,7 @@ const AdminOperationSection = ({ operationData }) => {
 
   const {
     tongDon,
+    choDuyet, // Thêm field mới
     choGiaiNgan,
     dangXuLy,
     daHoanThanh,
@@ -27,6 +28,7 @@ const AdminOperationSection = ({ operationData }) => {
   } = operationData;
 
   // ─── CALCULATE PERCENTAGES ─────────────────────────────────────────────────
+  const choDuyetPercent = tongDon > 0 ? (choDuyet / tongDon) * 100 : 0;
   const dangXuLyPercent = tongDon > 0 ? (dangXuLy / tongDon) * 100 : 0;
   const choGiaiNganPercent = tongDon > 0 ? (choGiaiNgan / tongDon) * 100 : 0;
   const daHoanThanhPercent = tongDon > 0 ? (daHoanThanh / tongDon) * 100 : 0;
@@ -35,6 +37,12 @@ const AdminOperationSection = ({ operationData }) => {
 
   // ─── FUNNEL DATA ───────────────────────────────────────────────────────────
   const funnelData = [
+    {
+      label: 'Chờ xử lý',
+      value: choDuyet,
+      percent: choDuyetPercent,
+      color: '#94a3b8', // Màu xám
+    },
     {
       label: 'Đang xử lý',
       value: dangXuLy,
@@ -57,7 +65,7 @@ const AdminOperationSection = ({ operationData }) => {
       label: 'Từ chối',
       value: tuChoi,
       percent: tuChoiPercent,
-      color: '#94a3b8',
+      color: '#64748b',
     },
   ];
 
@@ -203,6 +211,7 @@ const AdminOperationSection = ({ operationData }) => {
 AdminOperationSection.propTypes = {
   operationData: PropTypes.shape({
     tongDon: PropTypes.number,
+    choDuyet: PropTypes.number, // Thêm field mới
     choGiaiNgan: PropTypes.number,
     dangXuLy: PropTypes.number,
     daHoanThanh: PropTypes.number,

@@ -14,6 +14,45 @@ export const uploadService = {
     return response.data
   },
 
+  // Upload ảnh đại diện
+  uploadAvatar: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post('/upload/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
+  // Upload ảnh bìa quỹ
+  uploadFundImage: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post('/upload/fund', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
+  // Upload ảnh sinh viên nổi bật
+  uploadStudentImage: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post('/upload/student', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
   // Upload nhiều files
   uploadMultipleFiles: async (files) => {
     const formData = new FormData()

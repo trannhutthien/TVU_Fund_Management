@@ -1,0 +1,130 @@
+.container {
+  background-color: #f0f4ff;
+  min-height: calc(100vh - 70px);
+  padding: 24px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+
+  .divider {
+    color: #cbd5e1;
+  }
+
+  .active {
+    color: var(--color-primary, #1a2f5e);
+    font-weight: 500;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.iconBox {
+  background-color: rgba(26, 47, 94, 0.08);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .shieldIcon {
+    font-size: 24px;
+    color: var(--color-primary, #1a2f5e);
+  }
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-primary, #1a2f5e);
+  margin: 0 0 4px 0;
+}
+
+.description {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.adminBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tabBar {
+  display: flex;
+  background-color: #ffffff;
+  border-bottom: 2px solid #e2e8f0;
+  border-radius: 12px 12px 0 0;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none; // Hide default scrollbar for Firefox
+
+  &::-webkit-scrollbar {
+    display: none; // Hide default scrollbar for Chrome/Safari
+  }
+}
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 16px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  font-family: 'Be Vietnam Pro', sans-serif;
+
+  &:hover {
+    color: var(--color-primary, #1a2f5e);
+  }
+}
+
+.activeTab {
+  color: var(--color-primary, #1a2f5e);
+  border-bottom-color: var(--color-primary, #1a2f5e);
+}
+
+.tabIcon {
+  font-size: 18px;
+}
+
+.tabContent {
+  flex-grow: 1;
+}

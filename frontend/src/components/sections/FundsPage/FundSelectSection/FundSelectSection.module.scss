@@ -1,11 +1,11 @@
 @use '../../../../styles/variables' as *;
 
 .fundSelectSection {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
+  background: transparent;
+  backdrop-filter: none;
   padding: $space-6 $space-4;
   width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: none;
 }
 
 .container {
@@ -42,14 +42,15 @@
 
   :global(.input-field) {
     border-radius: $radius-md; // 8px
-    background: $bg-card;
-    border: 1px solid $border-default;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: $space-3 $space-4 $space-3 $space-10;
     font-size: $text-base;
 
     &:focus {
       border-color: var(--color-primary, $color-primary);
       box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+      background: rgba(255, 255, 255, 0.95);
     }
 
     &::placeholder {
@@ -120,14 +121,14 @@
 
   // Inactive state
   &.inactive {
-    background: $bg-card;
+    background: rgba(255, 255, 255, 0.85);
     color: $text-secondary;
-    border: 1px solid $border-default;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 
     &:hover {
       border-color: var(--color-primary, $color-navy-blue);
       color: var(--color-primary, $color-navy-blue);
-      background: $bg-card;
+      background: rgba(255, 255, 255, 0.95);
     }
   }
 }

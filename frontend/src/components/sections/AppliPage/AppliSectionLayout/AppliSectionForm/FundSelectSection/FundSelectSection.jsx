@@ -9,7 +9,9 @@ import {
   HiOutlineUsers
 } from 'react-icons/hi2';
 import Dropdown from '@components/common/Dropdown/Dropdown';
+import FundBankInfo from '@components/common/FundBankInfo';
 import fundService from '@services/fundService';
+import { getFundBankAccounts } from '@services/donationService';
 import styles from './FundSelectSection.module.scss';
 
 const formatVND = (amount) => {
@@ -28,7 +30,7 @@ const daysRemaining = (dateStr) => {
   return diff;
 };
 
-const FundSelectSection = ({ onFundSelect }) => {
+const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
   const [selectedLoaiQuy, setSelectedLoaiQuy] = useState(null);
   const [selectedFundId, setSelectedFundId] = useState(null);
   const [allFunds, setAllFunds] = useState([]); // Tất cả quỹ từ database
@@ -36,25 +38,38 @@ const FundSelectSection = ({ onFundSelect }) => {
   const [fundList, setFundList] = useState([]); // Quỹ đã filter theo loại
   const [fundDetail, setFundDetail] = useState(null);
   const [loadingFunds, setLoadingFunds] = useState(false);
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [loadingBankAccounts, setLoadingBankAccounts] = useState(false);
 
-  // Lấy tất cả quỹ từ database khi component mount
+  // Lấy tất cả quỹ và loại quỹ từ database khi component mount
   useEffect(() => {
-    const fetchAllFunds = async () => {
+    const fetchAllFundsAndTypes = async () => {
       setLoadingFunds(true);
       try {
-        const response = await fundService.getPublicFunds();
-        const funds = response.funds || [];
+        // Lấy danh sách quỹ
+        const responseFunds = await fundService.getPublicFunds();
+        const funds = responseFunds.funds || [];
         setAllFunds(funds);
 
-        // Tạo danh sách loại quỹ động từ dữ liệu thực
-        const uniqueTypes = [...new Set(funds.map(f => f.loaiQuy))].filter(Boolean);
-        const typeOptions = uniqueTypes.map(type => ({
-          value: type,
-          label: formatLoaiQuyLabel(type)
-        }));
-        setLoaiQuyOptions(typeOptions);
+        // Lấy danh sách loại quỹ từ bảng loaiquy
+        const responseTypes = await fundService.getAllLoaiQuy();
+        if (responseTypes.success && responseTypes.data) {
+          const typeOptions = responseTypes.data.map(item => ({
+            value: item.maLoai,
+            label: item.tenLoai
+          }));
+          setLoaiQuyOptions(typeOptions);
+        } else {
+          // Fallback: Tạo danh sách loại quỹ động từ dữ liệu thực nếu API lỗi
+          const uniqueTypes = [...new Set(funds.map(f => f.loaiQuy))].filter(Boolean);
+          const typeOptions = uniqueTypes.map(type => ({
+            value: type,
+            label: formatLoaiQuyLabel(type)
+          }));
+          setLoaiQuyOptions(typeOptions);
+        }
       } catch (error) {
-        console.error('Lỗi tải danh sách quỹ:', error);
+        console.error('Lỗi tải danh sách quỹ/loại quỹ:', error);
         setAllFunds([]);
         setLoaiQuyOptions([]);
       } finally {
@@ -62,7 +77,7 @@ const FundSelectSection = ({ onFundSelect }) => {
       }
     };
 
-    fetchAllFunds();
+    fetchAllFundsAndTypes();
   }, []);
 
   // Format label cho loại quỹ
@@ -98,13 +113,37 @@ const FundSelectSection = ({ onFundSelect }) => {
   useEffect(() => {
     if (!selectedFundId || fundList.length === 0) {
       setFundDetail(null);
+      setBankAccounts([]);
       return;
     }
 
     const detail = fundList.find((f) => f.quyId === selectedFundId);
     setFundDetail(detail || null);
     onFundSelect?.(detail || null);
-  }, [selectedFundId, fundList, onFundSelect]);
+
+    // Nếu là donor, lấy thông tin tài khoản ngân hàng
+    if (isDonor && detail) {
+      fetchBankAccounts(detail.quyId);
+    }
+  }, [selectedFundId, fundList, onFundSelect, isDonor]);
+
+  // Lấy thông tin tài khoản ngân hàng của quỹ
+  const fetchBankAccounts = async (fundId) => {
+    try {
+      setLoadingBankAccounts(true);
+      const response = await getFundBankAccounts(fundId);
+      if (response.success) {
+        setBankAccounts(response.bankAccounts || []);
+      } else {
+        setBankAccounts([]);
+      }
+    } catch (error) {
+      console.error('Lỗi tải thông tin tài khoản ngân hàng:', error);
+      setBankAccounts([]);
+    } finally {
+      setLoadingBankAccounts(false);
+    }
+  };
 
   const fundOptions = fundList.map((f) => ({
     value: f.quyId,
@@ -136,7 +175,9 @@ const FundSelectSection = ({ onFundSelect }) => {
     <div className={styles.card}>
       <div className={styles.sectionTitle}>
         <HiOutlineBuildingLibrary className={styles.titleIcon} />
-        <span>Phần 1: Thông tin Quỹ hỗ trợ</span>
+        <span>
+          {isDonor ? 'Phần 1: Chọn Quỹ nhận quyên góp' : 'Phần 1: Thông tin Quỹ hỗ trợ'}
+        </span>
       </div>
 
       <div className={styles.fieldGroup}>
@@ -161,7 +202,11 @@ const FundSelectSection = ({ onFundSelect }) => {
             options={fundOptions}
             value={selectedFundId}
             onChange={(val) => setSelectedFundId(val)}
-            placeholder="-- Chọn quỹ bạn muốn đăng ký --"
+            placeholder={
+              isDonor
+                ? '-- Chọn quỹ bạn muốn quyên góp --'
+                : '-- Chọn quỹ bạn muốn đăng ký --'
+            }
             disabled={loadingFunds || fundList.length === 0}
             className={styles.dropdown}
             renderOption={(option) => (
@@ -186,75 +231,125 @@ const FundSelectSection = ({ onFundSelect }) => {
 
       {fundDetail && (
         <div className={styles.detailAnimated}>
+          {/* Tóm tắt điều kiện - Hiển thị cho cả 2 */}
           <div className={styles.conditionCard}>
             <div className={styles.conditionHeader}>
               <HiOutlineInformationCircle className={styles.conditionIcon} />
-              <span className={styles.conditionTitle}>Tóm tắt điều kiện</span>
+              <span className={styles.conditionTitle}>
+                {isDonor ? 'Thông tin quỹ' : 'Tóm tắt điều kiện'}
+              </span>
             </div>
             <p className={styles.conditionText}>
               {fundDetail.dieuKienTomTat ||
-                'Chưa có thông tin điều kiện cho quỹ này.'}
+                (isDonor 
+                  ? 'Cảm ơn bạn đã quan tâm đến quỹ này. Mọi đóng góp của bạn sẽ được sử dụng đúng mục đích.'
+                  : 'Chưa có thông tin điều kiện cho quỹ này.'
+                )}
             </p>
           </div>
 
-          <div className={styles.infoGrid}>
-            <div className={styles.infoCell}>
-              <div className={styles.infoLabel}>
-                <HiOutlineCurrencyDollar className={styles.infoIcon} /> Giá trị hỗ trợ
+          {/* Info Grid - Khác nhau cho Donor và Student */}
+          {isDonor ? (
+            // Nhà tài trợ: Hiển thị thông tin tổng quan về quỹ
+            <div className={styles.infoGrid}>
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineBanknotes className={styles.infoIcon} /> Số dư quỹ hiện tại
+                </div>
+                <div className={styles.infoValue}>
+                  {formatVND(soDu)}
+                </div>
               </div>
-              <div className={styles.infoValue}>
-                {soTienToiThieu && soTienToiDa
-                  ? `${formatVND(soTienToiThieu)} – ${formatVND(soTienToiDa)}`
-                  : soTienToiThieu
-                  ? `Từ ${formatVND(soTienToiThieu)}`
-                  : soTienToiDa
-                  ? `Tối đa ${formatVND(soTienToiDa)}`
-                  : 'Chưa xác định'}
+
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineUsers className={styles.infoIcon} /> Số người đã nhận hỗ trợ
+                </div>
+                <div className={styles.infoValue}>
+                  {soDonDaNop || 0} người
+                </div>
+              </div>
+
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineCurrencyDollar className={styles.infoIcon} /> Loại quỹ
+                </div>
+                <div className={styles.infoValue}>
+                  {formatLoaiQuyLabel(fundDetail.loaiQuy)}
+                </div>
+              </div>
+
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineInformationCircle className={styles.infoIcon} /> Trạng thái
+                </div>
+                <div className={`${styles.infoValue} ${styles.valueSuccess}`}>
+                  Đang hoạt động
+                </div>
               </div>
             </div>
-
-            <div className={styles.infoCell}>
-              <div className={styles.infoLabel}>
-                <HiOutlineCalendarDays className={styles.infoIcon} /> Hạn nộp đơn
+          ) : (
+            // Sinh viên: Hiển thị thông tin điều kiện hỗ trợ
+            <div className={styles.infoGrid}>
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineCurrencyDollar className={styles.infoIcon} /> Giá trị hỗ trợ
+                </div>
+                <div className={styles.infoValue}>
+                  {soTienToiThieu && soTienToiDa
+                    ? `${formatVND(soTienToiThieu)} – ${formatVND(soTienToiDa)}`
+                    : soTienToiThieu
+                    ? `Từ ${formatVND(soTienToiThieu)}`
+                    : soTienToiDa
+                    ? `Tối đa ${formatVND(soTienToiDa)}`
+                    : 'Chưa xác định'}
+                </div>
               </div>
-              <div
-                className={`${styles.infoValue} ${
-                  isDeadlineSoon ? styles.valueDanger : ''
-                } ${isDeadlinePassed ? styles.valueDanger : ''}`}
-              >
-                {isDeadlineSoon && '⚠️ '}
-                {isDeadlinePassed ? 'Đã hết hạn' : formatDate(hanNopDon)}
+
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineCalendarDays className={styles.infoIcon} /> Hạn nộp đơn
+                </div>
+                <div
+                  className={`${styles.infoValue} ${
+                    isDeadlineSoon ? styles.valueDanger : ''
+                  } ${isDeadlinePassed ? styles.valueDanger : ''}`}
+                >
+                  {isDeadlineSoon && '⚠️ '}
+                  {isDeadlinePassed ? 'Đã hết hạn' : formatDate(hanNopDon)}
+                </div>
+              </div>
+
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineBanknotes className={styles.infoIcon} /> Số dư quỹ
+                </div>
+                <div
+                  className={`${styles.infoValue} ${isSoDuLow ? styles.valueDanger : ''}`}
+                >
+                  {isSoDuLow && '⚠️ '}
+                  {formatVND(soDu)}
+                </div>
+              </div>
+
+              <div className={styles.infoCell}>
+                <div className={styles.infoLabel}>
+                  <HiOutlineUsers className={styles.infoIcon} /> Số suất còn lại
+                </div>
+                <div
+                  className={`${styles.infoValue} ${isNearlyFull ? styles.valueWarning : ''}`}
+                >
+                  {soLuongChiTieu == null
+                    ? 'Không giới hạn suất'
+                    : `${soLuongChiTieu - soDonDaNop} / ${soLuongChiTieu} suất`}
+                  {isNearlyFull && ' — Sắp đầy'}
+                </div>
               </div>
             </div>
+          )}
 
-            <div className={styles.infoCell}>
-              <div className={styles.infoLabel}>
-                <HiOutlineBanknotes className={styles.infoIcon} /> Số dư quỹ
-              </div>
-              <div
-                className={`${styles.infoValue} ${isSoDuLow ? styles.valueDanger : ''}`}
-              >
-                {isSoDuLow && '⚠️ '}
-                {formatVND(soDu)}
-              </div>
-            </div>
-
-            <div className={styles.infoCell}>
-              <div className={styles.infoLabel}>
-                <HiOutlineUsers className={styles.infoIcon} /> Số suất còn lại
-              </div>
-              <div
-                className={`${styles.infoValue} ${isNearlyFull ? styles.valueWarning : ''}`}
-              >
-                {soLuongChiTieu == null
-                  ? 'Không giới hạn suất'
-                  : `${soLuongChiTieu - soDonDaNop} / ${soLuongChiTieu} suất`}
-                {isNearlyFull && ' — Sắp đầy'}
-              </div>
-            </div>
-          </div>
-
-          {soLuongChiTieu != null && (
+          {/* Progress bar - Chỉ hiển thị cho sinh viên */}
+          {!isDonor && soLuongChiTieu != null && (
             <div className={styles.progressSection}>
               <div className={styles.progressLabel}>
                 <span>Tỷ lệ đã nhận</span>
@@ -271,9 +366,31 @@ const FundSelectSection = ({ onFundSelect }) => {
             </div>
           )}
 
-          {soLuongChiTieu == null && (
+          {/* Unlimited badge - Chỉ hiển thị cho sinh viên */}
+          {!isDonor && soLuongChiTieu == null && (
             <div className={styles.unlimitedBadge}>
               Không giới hạn suất — có thể nộp đơn tự do
+            </div>
+          )}
+
+          {/* Donor encouragement message */}
+          {isDonor && (
+            <div className={styles.donorMessage}>
+              💝 Mọi đóng góp của bạn đều có ý nghĩa và sẽ giúp đỡ những sinh viên có hoàn cảnh khó khăn
+            </div>
+          )}
+
+          {/* Bank Account Info - Chỉ hiển thị cho donor */}
+          {isDonor && !loadingBankAccounts && bankAccounts.length > 0 && (
+            <FundBankInfo
+              bankAccount={bankAccounts[0]}
+              fundName={fundDetail.tenQuy}
+            />
+          )}
+
+          {isDonor && loadingBankAccounts && (
+            <div className={styles.loadingBankInfo}>
+              Đang tải thông tin tài khoản ngân hàng...
             </div>
           )}
         </div>
@@ -284,6 +401,8 @@ const FundSelectSection = ({ onFundSelect }) => {
 
 FundSelectSection.propTypes = {
   onFundSelect: PropTypes.func,
+  selectedFund: PropTypes.object,
+  isDonor: PropTypes.bool,
 };
 
 export default FundSelectSection;

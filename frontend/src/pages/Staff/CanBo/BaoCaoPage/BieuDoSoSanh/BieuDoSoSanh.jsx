@@ -1,101 +1,139 @@
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  LabelList,
-  ResponsiveContainer,
-} from 'recharts';
-import { CHART_COLORS, formatCurrency } from '../utils';
+  HiOutlineBanknotes,
+  HiOutlineDocumentText,
+  HiOutlineUserGroup,
+  HiOutlineCheckCircle,
+  HiArrowUpRight,
+  HiArrowDownRight,
+  HiMinus,
+} from 'react-icons/hi2';
+import { formatCurrency } from '../utils';
 import styles from './BieuDoSoSanh.module.scss';
 
-const formatVal = (v) => {
-  if (typeof v !== 'number') return v;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}tr`;
-  return v;
+const METRIC_ICONS = {
+  'Tổng chi': HiOutlineBanknotes,
+  'Số đơn': HiOutlineDocumentText,
+  'SV hỗ trợ': HiOutlineUserGroup,
+  'Đơn duyệt': HiOutlineCheckCircle,
 };
 
-const BieuDoSoSanh = ({ data, loading }) => (
-  <div className={styles.card}>
-    <div className={styles.head}>
-      <div>
-        <h2 className={styles.title}>So sánh với kỳ trước</h2>
-        <p className={styles.subtitle}>
-          Đối chiếu các chỉ tiêu chính
-        </p>
+const MetricCard = ({ title, kyNay, kyTruoc }) => {
+  const Icon = METRIC_ICONS[title] || HiOutlineDocumentText;
+  const isMoney = title === 'Tổng chi';
+
+  // Format display
+  const valNay = isMoney ? formatCurrency(kyNay) : kyNay;
+  const valTruoc = isMoney ? formatCurrency(kyTruoc) : kyTruoc;
+
+  // Calculate percentage change
+  let pct = 0;
+  let trend = 'none'; // 'up' | 'down' | 'none'
+  if (kyTruoc > 0) {
+    pct = Math.round(((kyNay - kyTruoc) / kyTruoc) * 100);
+    trend = pct > 0 ? 'up' : pct < 0 ? 'down' : 'none';
+  } else if (kyNay > 0) {
+    pct = 100;
+    trend = 'up';
+  }
+
+  // Progress relative proportion (max is 100%)
+  const maxVal = Math.max(kyNay, kyTruoc, 1);
+  const percentNay = Math.round((kyNay / maxVal) * 100);
+  const percentTruoc = Math.round((kyTruoc / maxVal) * 100);
+
+  return (
+    <div className={styles.metricCard}>
+      <div className={styles.metricHeader}>
+        <div className={styles.iconBox}>
+          <Icon size={18} />
+        </div>
+        <span className={styles.metricTitle}>{title}</span>
+      </div>
+
+      <div className={styles.metricBody}>
+        <div className={styles.mainValue}>{valNay}</div>
+        
+        {trend === 'up' && (
+          <div className={`${styles.badge} ${styles.badgeUp}`}>
+            <HiArrowUpRight size={12} />
+            <span>+{pct}%</span>
+          </div>
+        )}
+        {trend === 'down' && (
+          <div className={`${styles.badge} ${styles.badgeDown}`}>
+            <HiArrowDownRight size={12} />
+            <span>{pct}%</span>
+          </div>
+        )}
+        {trend === 'none' && (
+          <div className={`${styles.badge} ${styles.badgeNone}`}>
+            <HiMinus size={10} />
+            <span>0%</span>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.metricFooter}>
+        <div className={styles.comparisonLabel}>
+          <span>Kỳ trước: </span>
+          <span className={styles.prevValue}>{valTruoc}</span>
+        </div>
+        
+        {/* Double comparison progress bars */}
+        <div className={styles.progressGroup}>
+          <div className={styles.progressLabelRow}>
+            <span>Kỳ này</span>
+            <span>{percentNay}%</span>
+          </div>
+          <div className={styles.progressBar}>
+            <div
+              className={`${styles.progressFill} ${styles.fillPrimary}`}
+              style={{ width: `${percentNay}%` }}
+            />
+          </div>
+
+          <div className={styles.progressLabelRow}>
+            <span>Kỳ trước</span>
+            <span>{percentTruoc}%</span>
+          </div>
+          <div className={styles.progressBar}>
+            <div
+              className={`${styles.progressFill} ${styles.fillGray}`}
+              style={{ width: `${percentTruoc}%` }}
+            />
+          </div>
+        </div>
       </div>
     </div>
+  );
+};
 
-    {loading ? (
-      <div className={styles.skeleton} />
-    ) : (
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ top: 5, right: 60, bottom: 5, left: 10 }}
-          barCategoryGap="25%"
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis
-            type="number"
-            tick={{ fontSize: 11, fill: '#64748b' }}
-            tickFormatter={formatVal}
-          />
-          <YAxis
-            type="category"
-            dataKey="chiTieu"
-            width={90}
-            tick={{ fontSize: 12, fill: '#64748b' }}
-          />
-          <Tooltip
-            contentStyle={{
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-              fontSize: '12px',
-              padding: '8px 12px',
-            }}
-            formatter={(value, _name, props) => {
-              const isMoney = props.payload.chiTieu === 'Tổng chi';
-              return [isMoney ? formatCurrency(value) : value, _name];
-            }}
-          />
-          <Legend iconType="circle" iconSize={8} />
-          <Bar
-            dataKey="kyNay"
-            name="Kỳ này"
-            fill={CHART_COLORS.primary}
-            radius={[0, 4, 4, 0]}
-            barSize={16}
-          >
-            <LabelList
-              dataKey="kyNay"
-              position="right"
-              formatter={formatVal}
-              style={{ fontSize: 11, fill: '#1a2f5e', fontWeight: 600 }}
+const BieuDoSoSanh = ({ data, loading }) => {
+  return (
+    <div className={styles.card}>
+      <div className={styles.head}>
+        <div>
+          <h2 className={styles.title}>So sánh với kỳ trước</h2>
+          <p className={styles.subtitle}>Hiệu suất chỉ tiêu hoạt động so với chu kỳ trước</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className={styles.skeleton} />
+      ) : (
+        <div className={styles.grid}>
+          {data.map((item, idx) => (
+            <MetricCard
+              key={idx}
+              title={item.chiTieu}
+              kyNay={item.kyNay}
+              kyTruoc={item.kyTruoc}
             />
-          </Bar>
-          <Bar
-            dataKey="kyTruoc"
-            name="Kỳ trước"
-            fill={CHART_COLORS.gray}
-            radius={[0, 4, 4, 0]}
-            barSize={16}
-          >
-            <LabelList
-              dataKey="kyTruoc"
-              position="right"
-              formatter={formatVal}
-              style={{ fontSize: 11, fill: '#94a3b8', fontWeight: 500 }}
-            />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    )}
-  </div>
-);
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default BieuDoSoSanh;

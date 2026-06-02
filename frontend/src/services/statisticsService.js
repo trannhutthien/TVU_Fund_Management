@@ -108,6 +108,23 @@ const statisticsService = {
     });
     return res.data.data;
   },
+
+  /**
+   * Lấy báo cáo thống kê thu chi kế toán theo kỳ
+   * @param {object} params - type, year, month, quarter, compareMode
+   */
+  getKeToanReportStats: async (params) => {
+    const res = await api.get('/statistics/ketoan/report', { params });
+    return res.data.data;
+  },
+
+  /**
+   * Lấy thống kê nâng cao cho Admin
+   */
+  getAdminAdvancedStats: async () => {
+    const res = await api.get('/statistics/admin/advanced');
+    return res.data.data;
+  },
 };
 
 export default statisticsService;

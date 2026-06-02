@@ -7,6 +7,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { useAuth } from '@context/AuthContext';
 import styles from './KhoanTaiTroTable.module.scss';
 
 const LOAI_LABEL = {
@@ -16,8 +17,8 @@ const LOAI_LABEL = {
 };
 
 const STATUS_CONFIG = {
-  'Cho duyet': { status: 'pending', label: 'Chờ cán bộ' },
-  'Da duyet': { status: 'processing', label: 'Chờ kế toán' },
+  'Cho duyet': { status: 'pending', label: 'Chờ duyệt' },
+  'Da duyet': { status: 'processing', label: 'Chờ xác nhận' },
   'Da nhan': { status: 'approved', label: 'Đã xác nhận' },
   'Tu choi': { status: 'rejected', label: 'Từ chối' },
 };
@@ -49,6 +50,9 @@ const apiOrigin = () => {
 };
 
 const KhoanTaiTroTable = ({ data, loading, activeTab, onViewDetail, onConfirm }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.vaiTro === 1;
+  const isKeToan = user?.vaiTro === 2;
   if (loading) {
     return (
       <div className={styles.table}>
@@ -96,7 +100,9 @@ const KhoanTaiTroTable = ({ data, loading, activeTab, onViewDetail, onConfirm })
 
       {data.map((item) => {
         const statusCfg = STATUS_CONFIG[item.trang_thai] || { status: 'pending', label: item.trang_thai };
-        const isCho = item.trang_thai === 'Da duyet';
+        const isChoDuyet = item.trang_thai === 'Cho duyet'; // Kế toán duyệt
+        const isDaDuyet = item.trang_thai === 'Da duyet'; // Admin xác nhận
+        const showHighlight = (isKeToan && isChoDuyet) || (isAdmin && isDaDuyet);
         const minhChungUrl = item.hinh_anh_minh_chung
           ? (item.hinh_anh_minh_chung.startsWith('http')
               ? item.hinh_anh_minh_chung
@@ -106,7 +112,7 @@ const KhoanTaiTroTable = ({ data, loading, activeTab, onViewDetail, onConfirm })
         return (
           <div
             key={item.khoan_tai_tro_id}
-            className={`${styles.row} ${isCho ? styles.rowHighlight : ''}`}
+            className={`${styles.row} ${showHighlight ? styles.rowHighlight : ''}`}
           >
             <div className={styles.colSponsor}>
               <div className={styles.sponsorCell}>
@@ -171,7 +177,17 @@ const KhoanTaiTroTable = ({ data, loading, activeTab, onViewDetail, onConfirm })
               >
                 Xem
               </Button>
-              {isCho && (
+              {isChoDuyet && isKeToan && (
+                <Button
+                  variant="success"
+                  size="sm"
+                  leftIcon={<HiOutlineCheckCircle />}
+                  onClick={() => onConfirm?.(item)}
+                >
+                  Duyệt
+                </Button>
+              )}
+              {isDaDuyet && isAdmin && (
                 <Button
                   variant="primary"
                   size="sm"

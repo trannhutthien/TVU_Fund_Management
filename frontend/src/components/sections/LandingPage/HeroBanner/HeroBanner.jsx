@@ -33,21 +33,9 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Mock data cho student showcase - Sau này sẽ fetch từ API
-  const studentImages = [
-    // Tạm thời để empty array, sau này sẽ fetch từ API
-    // {
-    //   id: 1,
-    //   url: '/path/to/student1.jpg',
-    //   alt: 'Sinh viên được hỗ trợ',
-    //   studentName: 'Nguyễn Văn A',
-    //   major: 'Công nghệ thông tin'
-    // },
-  ];
-
   const showcaseStats = {
-    successRate: 98,
-    activeFunds: 12,
+    totalStudents: stats.supportedRequests,
+    totalAmount: stats.totalFundAmount,
   };
 
   // Fetch statistics from API
@@ -149,11 +137,7 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => {
-                document.getElementById('about')?.scrollIntoView({ 
-                  behavior: 'smooth' 
-                });
-              }}
+              onClick={() => navigate('/guidelines')}
             >
               Tìm hiểu thêm
             </Button>
@@ -190,7 +174,6 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
 
         {/* Right Image - Student Showcase */}
         <StudentShowcase
-          images={studentImages}
           stats={showcaseStats}
           autoRotateInterval={5000}
         />
