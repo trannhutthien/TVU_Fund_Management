@@ -16,6 +16,7 @@ import {
   HiOutlineDocumentText,
   HiOutlineQuestionMarkCircle,
   HiOutlineArrowRightOnRectangle,
+  HiOutlineClipboardDocumentList,
 } from 'react-icons/hi2';
 import useAuthStore from '@stores/authStore';
 import Logo from '@components/common/Logo';
@@ -50,6 +51,7 @@ const NAV_CONFIG = [
     items: [
       { label: 'Quản lý người dùng', path: '/admin/users', icon: HiOutlineUsers, roles: [1] },
       { label: 'Hệ thống & Phân quyền', path: '/admin/roles', icon: HiOutlineShieldCheck, roles: [1] },
+      { label: 'Nhật ký hệ thống', path: '/admin/nhat-ky', icon: HiOutlineClipboardDocumentList, roles: [1] },
     ]
   },
   {
@@ -236,6 +238,7 @@ const StaffSidebar = () => {
     if (key === 'giai-ngan') key = 'giai_ngan';
     if (key === 'chung-tu') key = 'chung_tu';
     if (key === 'phe-duyet') key = 'phe_duyet';
+    if (key === 'nhat-ky') key = 'nhat_ky';
 
     const perm = permissions[key];
     if (!perm) return true;

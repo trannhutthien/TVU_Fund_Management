@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   HiOutlineShieldCheck,
   HiOutlineLockClosed,
@@ -21,7 +22,31 @@ const TABS = [
 ];
 
 const HiThongPhanQuyenPage = () => {
-  const [activeTab, setActiveTab] = useState('vai_tro');
+  const location = useLocation();
+  const getInitialTab = () => {
+    if (location.state && location.state.tab) {
+      return location.state.tab;
+    }
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && TABS.some(t => t.id === tabParam)) {
+      return tabParam;
+    }
+    return 'vai_tro';
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  useEffect(() => {
+    if (location.state && location.state.tab) {
+      setActiveTab(location.state.tab);
+    } else {
+      const params = new URLSearchParams(location.search);
+      const tabParam = params.get('tab');
+      if (tabParam && TABS.some(t => t.id === tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, [location]);
 
   return (
     <div className={styles.container}>

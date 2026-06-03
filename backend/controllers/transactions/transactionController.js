@@ -4,9 +4,15 @@ import ExcelJS from "exceljs";
 // Helper to map DB row to frontend Transaction object structure
 const mapTransactionRow = (tx) => {
   if (!tx) return null;
+  
+  // Xác định loại giao dịch:
+  // - Giao dịch THU: yeucauhotro_id = NULL và nguoinhan_id = NULL (từ tài trợ vào quỹ)
+  // - Giao dịch CHI: yeucauhotro_id != NULL và nguoinhan_id != NULL (từ quỹ ra sinh viên)
+  const loai = (tx.yeucauhotro_id === null && tx.nguoinhan_id === null) ? 'Thu' : 'Chi';
+  
   return {
     transactionId: tx.giaodich_id,
-    loai: 'Chi', // In the new schema, all rows in giaodich are disbursement (Chi).
+    loai: loai,
     soTien: parseFloat(tx.sotien || 0),
     trangThai: tx.trangthai,
     doiSoatTrangThai: tx.doisoattrangthai,

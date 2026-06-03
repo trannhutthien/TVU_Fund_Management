@@ -6,6 +6,8 @@ import {
   updateVaiTro,
   getNguoiDung,
   getNhatKy,
+  getNhatKyStats,
+  exportNhatKy,
   getSystemSettings,
   updateSystemSettings,
   getPagePermissions,
@@ -26,6 +28,8 @@ nguoiDungRouter.get("/", protect, isAdmin, getNguoiDung);
 
 // 3. Router Nhật ký hệ thống (nhat-ky)
 const nhatKyRouter = express.Router();
+nhatKyRouter.get("/stats", protect, isAdmin, getNhatKyStats);
+nhatKyRouter.get("/export", protect, isAdmin, exportNhatKy);
 nhatKyRouter.get("/", protect, isAdmin, getNhatKy);
 
 // 4. Router Cài đặt hệ thống (system/settings)

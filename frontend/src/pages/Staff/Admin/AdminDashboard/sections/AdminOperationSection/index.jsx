@@ -151,16 +151,37 @@ const AdminOperationSection = ({ operationData }) => {
             </div>
           </div>
 
+          {/* Total Stats */}
+          {funds.length > 0 && (
+            <div className={styles.fundTotalStats}>
+              <span className={styles.fundTotalLabel}>Tổng số dư tất cả quỹ:</span>
+              <span className={styles.fundTotalValue}>
+                {funds.reduce((sum, f) => sum + (f.so_du || 0), 0).toLocaleString('vi-VN')}đ
+              </span>
+            </div>
+          )}
+
           {/* Fund List */}
           <div className={styles.fundList}>
             {funds.slice(0, 5).map((fund, index) => {
               const healthPercent = getFundHealthPercent(fund);
               const healthColor = getFundHealthColor(fund);
+              
+              // Icon mapping
+              const fundIcons = {
+                'Quỹ học bổng vược khó 2026': '🎓',
+                'Quỷ sinh viên xuất sắc': '🏆',
+                'quỷ từ thiện sinh viên khuyết tật': '❤️',
+              };
+              const fundIcon = fundIcons[fund.ten_quy] || '💰';
 
               return (
                 <div key={index} className={styles.fundItem}>
                   <div className={styles.fundRow1}>
-                    <span className={styles.fundName}>{fund.ten_quy}</span>
+                    <div className={styles.fundNameWithIcon}>
+                      <span className={styles.fundIcon}>{fundIcon}</span>
+                      <span className={styles.fundName}>{fund.ten_quy}</span>
+                    </div>
                     <span
                       className={`${styles.fundStatus} ${
                         fund.trang_thai === 'Dang hoat dong'
@@ -173,18 +194,31 @@ const AdminOperationSection = ({ operationData }) => {
                         : 'Tạm dừng'}
                     </span>
                   </div>
-                  <div className={styles.fundProgressBar}>
-                    <div
-                      className={styles.fundProgressFill}
-                      style={{
-                        width: `${healthPercent}%`,
-                        background: healthColor,
-                      }}
-                    />
+                  <div className={styles.fundProgressWrapper}>
+                    <div className={styles.fundProgressBar}>
+                      <div
+                        className={styles.fundProgressFill}
+                        style={{
+                          width: `${Math.min(healthPercent, 100)}%`,
+                          background: healthColor,
+                        }}
+                      />
+                    </div>
+                    <span 
+                      className={styles.fundProgressPercent}
+                      style={{ color: healthColor }}
+                    >
+                      {healthPercent.toFixed(0)}%
+                    </span>
                   </div>
                   <div className={styles.fundRow3}>
-                    {(fund.so_du || 0).toLocaleString('vi-VN')}đ /{' '}
-                    {(fund.so_tien_toi_da || 0).toLocaleString('vi-VN')}đ
+                    <span className={styles.fundAmount}>
+                      {(fund.so_du || 0).toLocaleString('vi-VN')}đ
+                    </span>
+                    <span className={styles.fundSeparator}>/</span>
+                    <span className={styles.fundTarget}>
+                      {(fund.so_tien_toi_da || 0).toLocaleString('vi-VN')}đ
+                    </span>
                   </div>
                 </div>
               );

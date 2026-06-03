@@ -10,6 +10,91 @@ import AdminChartSection from './sections/AdminChartSection';
 import AdminActivitySection from './sections/AdminActivitySection';
 import styles from './AdminDashboard.module.scss';
 
+// ─── HELPERS FOR ACTIVITY LOG MAPPING ───────────────────────────────────────
+const mapHanhDongToType = (hanhDong, moTa) => {
+  const action = hanhDong ? hanhDong.toUpperCase() : '';
+  
+  if (action.includes('GIAI_NGAN')) return 'giai_ngan';
+  
+  if (action.includes('TU_CHOI')) return 'tu_choi';
+  
+  if (action.includes('DUYET_YEU_CAU') || action.includes('DUYET_DON') || action.includes('PHE_DUYET')) {
+    if (moTa && moTa.toLowerCase().includes('giải ngân')) {
+      return 'giai_ngan';
+    }
+    return 'duyet_don';
+  }
+  
+  if (action.includes('TAI_TRO') || action.includes('DONG_GOP')) return 'tai_tro';
+  
+  if (action.includes('QUY')) return 'tao_quy';
+  
+  if (action.includes('DANG_NHAP') || action.includes('DANG_XUAT') || action.includes('TAO_NGUOI_DUNG') || action.includes('KHOA_TAI_KHOAN') || action.includes('DANG_KY')) {
+    return 'dang_ky';
+  }
+  
+  return 'dang_ky'; 
+};
+
+const formatActivityMessage = (log) => {
+  const moTa = log.mo_ta || '';
+  const regex = /^\[.*?\] (.*?): (.*)$/;
+  const match = moTa.match(regex);
+  
+  let userPart = log.nguoi_thuc_hien?.ho_ten || 'Hệ thống';
+  let contentPart = moTa;
+  
+  if (match) {
+    userPart = match[1];
+    contentPart = match[2];
+  } else {
+    const firstColonIdx = moTa.indexOf(':');
+    if (firstColonIdx !== -1) {
+      const potentialUser = moTa.substring(0, firstColonIdx).trim();
+      if (potentialUser.includes('[') || potentialUser.includes(']')) {
+        const cleanedUser = potentialUser.replace(/\[.*?\]/g, '').trim();
+        userPart = cleanedUser || userPart;
+        contentPart = moTa.substring(firstColonIdx + 1).trim();
+      }
+    }
+  }
+
+  // Format monetary values
+  let formattedContent = contentPart.replace(
+    /(\d+(?:[\.,]\d+)*\s*(?:VNĐ|VND|đ|đồng))/gi,
+    '<span class="amount">$1</span>'
+  );
+
+  return `<strong>${userPart}</strong> ${formattedContent}`;
+};
+
+const getSubText = (log) => {
+  const parts = [];
+  
+  if (log.loai_doi_tuong) {
+    const typeLabel = {
+      yeucauhotro: 'Hồ sơ hỗ trợ',
+      khoantaitro: 'Khoản tài trợ',
+      quy: 'Quỹ',
+      nguoidung: 'Người dùng',
+      vaitro: 'Vai trò',
+      caidat: 'Cài đặt'
+    }[log.loai_doi_tuong] || log.loai_doi_tuong;
+    
+    if (log.doi_tuong_id) {
+      parts.push(`${typeLabel} #${log.doi_tuong_id}`);
+    } else {
+      parts.push(typeLabel);
+    }
+  }
+  
+  if (log.ip_address && log.ip_address !== '::1') {
+    parts.push(`IP: ${log.ip_address}`);
+  }
+  
+  return parts.join(' · ');
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── ADMIN DASHBOARD ───────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -48,6 +133,7 @@ const AdminDashboard = () => {
           cashflowData,
           staffUsers,
           userGrowthRes,
+          systemLogs, // Fetch real system logs
         ] = await Promise.all([
           api.get('/statistics/ketoan/summary'),
           api.get('/users/stats'),
@@ -57,6 +143,7 @@ const AdminDashboard = () => {
           api.get('/statistics/ketoan/cashflow', { params: { months: 6 } }),
           api.get('/users', { params: { role_id: '1,2,3', limit: 10 } }), // Lấy staff
           api.get('/users/growth', { params: { months: 6 } }).catch(() => ({ data: { data: [] } })),
+          api.get('/nhat-ky', { params: { page: 1, page_size: 10 } }).catch(() => ({ data: { logs: [] } })),
         ]);
 
         // Map data cho alertData
@@ -107,7 +194,6 @@ const AdminDashboard = () => {
           funds: fundHealth.data?.data || [],
         });
 
-        // TODO: Fetch chart data và activity data khi có API
         const cashflowArray = cashflowData.data?.data || [];
         const fundHealthArray = fundHealth.data?.data || [];
         const staffArray = staffUsers.data?.data || [];
@@ -126,30 +212,16 @@ const AdminDashboard = () => {
           })),
         });
 
-        // Mock activity data với format đúng
-        setActivityData([
-          {
-            id: 1,
-            type: 'giai_ngan',
-            message: '<strong>Trần Thị Kế Toán</strong> đã giải ngân <span class="amount">3.500.000đ</span> cho <strong>Nguyễn Văn A</strong>',
-            subText: 'Quỹ Học bổng TVU · Hồ sơ #123',
-            time: new Date(Date.now() - 15 * 60000).toISOString(), // 15 phút trước
-          },
-          {
-            id: 2,
-            type: 'duyet_don',
-            message: '<strong>Lê Văn Cán Bộ</strong> đã duyệt đơn hỗ trợ của <strong>Phạm Thị B</strong>',
-            subText: 'Quỹ Khó khăn · Hồ sơ #124',
-            time: new Date(Date.now() - 45 * 60000).toISOString(), // 45 phút trước
-          },
-          {
-            id: 3,
-            type: 'tai_tro',
-            message: '<strong>Vingroup</strong> tài trợ <span class="amount">50.000.000đ</span> cho <strong>Quỹ Học bổng</strong>',
-            subText: 'Khoản tài trợ #45',
-            time: new Date(Date.now() - 2 * 3600000).toISOString(), // 2 giờ trước
-          },
-        ]);
+        // Process and map real activity logs from database
+        const logsArray = systemLogs.data?.logs || [];
+        const mappedActivities = logsArray.map(log => ({
+          id: log.log_id,
+          type: mapHanhDongToType(log.hanh_dong, log.mo_ta),
+          message: formatActivityMessage(log),
+          subText: getSubText(log),
+          time: log.created_at,
+        }));
+        setActivityData(mappedActivities);
 
         setStaffData(staffArray.map(staff => ({
           id: staff.user_id || staff.id,

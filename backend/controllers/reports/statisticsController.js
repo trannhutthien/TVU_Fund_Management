@@ -217,19 +217,24 @@ export const getKeToanSummary = async (req, res) => {
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
 
+    // Tổng THU: Lấy từ bảng giaodich (giao dịch THU từ tài trợ)
     const [[thuRow]] = await pool.query(
       `SELECT COALESCE(SUM(sotien), 0) AS total
-       FROM khoantaitro
-       WHERE trangthai = 'Da nhan'
-         AND YEAR(ngaycapnhat) = ?
-         AND MONTH(ngaycapnhat) = ?`,
+       FROM giaodich
+       WHERE trangthai = 'Thanh cong'
+         AND yeucauhotro_id IS NULL
+         AND nguoinhan_id IS NULL
+         AND YEAR(ngaygiaodich) = ?
+         AND MONTH(ngaygiaodich) = ?`,
       [year, month]
     );
 
+    // Tổng CHI: Lấy từ bảng giaodich (giao dịch CHI cho sinh viên)
     const [[chiRow]] = await pool.query(
       `SELECT COALESCE(SUM(sotien), 0) AS total
        FROM giaodich
        WHERE trangthai = 'Thanh cong'
+         AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
          AND YEAR(ngaygiaodich) = ?
          AND MONTH(ngaygiaodich) = ?`,
       [year, month]
@@ -293,13 +298,18 @@ export const getKeToanCashflow = async (req, res) => {
          SUM(thu) AS thu,
          SUM(chi) AS chi
        FROM (
-         SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
-         FROM khoantaitro
-         WHERE trangthai = 'Da nhan'
+         -- Giao dịch THU: từ tài trợ vào quỹ
+         SELECT ngaygiaodich AS ngay_date, sotien AS thu, 0 AS chi
+         FROM giaodich
+         WHERE trangthai = 'Thanh cong'
+           AND yeucauhotro_id IS NULL
+           AND nguoinhan_id IS NULL
          UNION ALL
+         -- Giao dịch CHI: từ quỹ ra sinh viên
          SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
          FROM giaodich
          WHERE trangthai = 'Thanh cong'
+           AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
        ) AS combined
        WHERE ngay_date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
        GROUP BY thang_key, thang, nam
@@ -466,21 +476,21 @@ export const getKeToanFundHealth = async (req, res) => {
          q.tenquy AS ten_quy,
          lq.tenloai AS loai_quy,
          q.sodu AS so_du,
-         q.sotienhotrotoida AS so_tien_toi_da,
+         q.sotienmuctieu AS so_tien_toi_da,
          q.trangthai AS trang_thai
        FROM quy q
        LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
-       WHERE q.trangthai = 'Dang hoat dong'
        ORDER BY q.sodu ASC`
     );
 
+    // Trả về data với snake_case keys như frontend expect
     const data = rows.map((f) => ({
-      quyId: f.quy_id,
-      tenQuy: f.ten_quy,
-      loaiQuy: f.loai_quy,
-      soDu: parseFloat(f.so_du || 0),
-      soTienToiDa: parseFloat(f.so_tien_toi_da || 0),
-      trangThai: f.trang_thai,
+      quy_id: f.quy_id,
+      ten_quy: f.ten_quy,
+      loai_quy: f.loai_quy,
+      so_du: parseFloat(f.so_du || 0),
+      so_tien_toi_da: parseFloat(f.so_tien_toi_da || 0),
+      trang_thai: f.trang_thai,
     }));
 
     return res.status(200).json({

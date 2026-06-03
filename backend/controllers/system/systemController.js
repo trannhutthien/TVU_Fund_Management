@@ -1,6 +1,7 @@
 import pool from "../../config/db.js";
 import fs from "fs/promises";
 import path from "path";
+import ExcelJS from "exceljs";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 import { buildUserAvatarUrl } from "../../utils/helpers/imageHelper.js";
 
@@ -464,4 +465,224 @@ export const updatePagePermissions = async (req, res) => {
     });
   }
 };
+
+// ─── GET /api/nhat-ky/stats ──────────────────────────────────────────────────
+export const getNhatKyStats = async (req, res) => {
+  try {
+    // 1. Tổng bản ghi
+    const [[{ total }]] = await pool.query("SELECT COUNT(*) AS total FROM nhatkyhethong");
+
+    // 2. Hôm nay
+    const [[{ todayCount }]] = await pool.query(
+      "SELECT COUNT(*) AS todayCount FROM nhatkyhethong WHERE DATE(createdat) = CURDATE()"
+    );
+
+    // 3. Tuần này (7 ngày gần nhất)
+    const [[{ weekCount }]] = await pool.query(
+      "SELECT COUNT(*) AS weekCount FROM nhatkyhethong WHERE createdat >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
+    );
+
+    // 4. Người dùng độc nhất hôm nay
+    const [[{ uniqueUsers }]] = await pool.query(
+      "SELECT COUNT(DISTINCT nguoidung_id) AS uniqueUsers FROM nhatkyhethong WHERE DATE(createdat) = CURDATE() AND nguoidung_id IS NOT NULL"
+    );
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        tongBanGhi: total || 0,
+        homNay: todayCount || 0,
+        tuanNay: weekCount || 0,
+        nguoiDungDoc: uniqueUsers || 0,
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getNhatKyStats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, không thể lấy thống kê nhật ký"
+    });
+  }
+};
+
+// ─── GET /api/nhat-ky/export ─────────────────────────────────────────────────
+export const exportNhatKy = async (req, res) => {
+  try {
+    const {
+      keyword = "",
+      hanh_dong = "",
+      loai_doi_tuong = "",
+      nguoi_dung_id = "",
+      tu_ngay = "",
+      den_ngay = ""
+    } = req.query;
+
+    const conds = [];
+    const params = [];
+
+    if (keyword) {
+      conds.push("(nk.mota LIKE ? OR n.hoten LIKE ? OR n.email LIKE ? OR nk.ipaddress LIKE ?)");
+      const like = `%${keyword}%`;
+      params.push(like, like, like, like);
+    }
+
+    if (hanh_dong) {
+      conds.push("nk.hanhdong = ?");
+      params.push(hanh_dong);
+    }
+
+    if (loai_doi_tuong) {
+      conds.push("nk.loaidoituong = ?");
+      params.push(loai_doi_tuong);
+    }
+
+    if (nguoi_dung_id) {
+      conds.push("nk.nguoidung_id = ?");
+      params.push(parseInt(nguoi_dung_id));
+    }
+
+    if (tu_ngay) {
+      conds.push("nk.createdat >= ?");
+      params.push(`${tu_ngay} 00:00:00`);
+    }
+
+    if (den_ngay) {
+      conds.push("nk.createdat <= ?");
+      params.push(`${den_ngay} 23:59:59`);
+    }
+
+    const whereClause = conds.length > 0 ? `WHERE ${conds.join(" AND ")}` : "";
+
+    const selectQuery = `
+      SELECT 
+        nk.nhatkyhethong_id,
+        nk.nguoidung_id,
+        nk.hanhdong,
+        nk.loaidoituong,
+        nk.doituong_id,
+        nk.mota,
+        nk.ipaddress,
+        nk.createdat,
+        n.hoten,
+        n.email,
+        v.tenvaitro
+      FROM nhatkyhethong nk
+      LEFT JOIN nguoidung n ON nk.nguoidung_id = n.nguoidung_id
+      LEFT JOIN vaitro v ON n.vaitro_id = v.vaitro_id
+      ${whereClause}
+      ORDER BY nk.createdat DESC
+      LIMIT 100000
+    `;
+
+    const [logs] = await pool.query(selectQuery, params);
+
+    // Create Excel Workbook
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "TVU Fund Management";
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet("Nhật ký hệ thống");
+
+    // Title
+    sheet.mergeCells("A1:G1");
+    const titleCell = sheet.getCell("A1");
+    titleCell.value = "NHẬT KÝ HOẠT ĐỘNG HỆ THỐNG";
+    titleCell.font = { size: 16, bold: true, color: { argb: "FF1A2F5E" } };
+    titleCell.alignment = { horizontal: "center", vertical: "middle" };
+    sheet.getRow(1).height = 30;
+
+    sheet.getCell("A3").value = "Ngày xuất:";
+    sheet.getCell("A3").font = { bold: true };
+    sheet.getCell("B3").value = new Date().toLocaleString("vi-VN");
+
+    sheet.getCell("A4").value = "Tổng số bản ghi:";
+    sheet.getCell("A4").font = { bold: true };
+    sheet.getCell("B4").value = logs.length;
+
+    // Table headers
+    const headers = [
+      "Mã Log",
+      "Thời gian",
+      "Người thực hiện",
+      "Vai trò",
+      "Hành động",
+      "Mô tả chi tiết",
+      "Địa chỉ IP"
+    ];
+
+    const headerRow = sheet.getRow(6);
+    headerRow.values = headers;
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.height = 24;
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1A2F5E" }
+      };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" }
+      };
+    });
+
+    // Populate data
+    logs.forEach((log, idx) => {
+      const row = sheet.getRow(7 + idx);
+      row.values = [
+        `LOG${log.nhatkyhethong_id}`,
+        new Date(log.createdat).toLocaleString("vi-VN"),
+        log.hoten ? `${log.hoten} (${log.email || ""})` : "Hệ thống",
+        log.tenvaitro || "Hệ thống",
+        log.hanhdong || "—",
+        log.mota || "—",
+        log.ipaddress || "—"
+      ];
+
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFE2E8F0" } },
+          left: { style: "thin", color: { argb: "FFE2E8F0" } },
+          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+          right: { style: "thin", color: { argb: "FFE2E8F0" } }
+        };
+      });
+    });
+
+    // Auto fit columns
+    sheet.columns.forEach((col, idx) => {
+      let maxLength = headers[idx]?.length || 10;
+      col.eachCell?.({ includeEmpty: false }, (cell) => {
+        const v = String(cell.value ?? "");
+        if (v.length > maxLength) maxLength = v.length;
+      });
+      col.width = Math.min(maxLength + 4, 60);
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const fileName = `NhatKyHeThong_${Date.now()}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+    res.setHeader("Content-Length", buffer.length);
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Lỗi exportNhatKy:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi xuất Excel nhật ký",
+      error: error.message
+    });
+  }
+};
+
 

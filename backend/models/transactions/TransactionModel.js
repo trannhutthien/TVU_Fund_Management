@@ -207,6 +207,16 @@ const getAllTransactions = async (filters, limit, offset) => {
   let whereConditions = [];
   let queryParams = [];
 
+  // Filter theo loại giao dịch
+  // Thu: yeucauhotro_id IS NULL AND nguoinhan_id IS NULL
+  // Chi: yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL
+  if (filters.loai === 'Thu') {
+    whereConditions.push('gd.yeucauhotro_id IS NULL');
+    whereConditions.push('gd.nguoinhan_id IS NULL');
+  } else if (filters.loai === 'Chi') {
+    whereConditions.push('(gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)');
+  }
+
   // Filter theo quỹ
   if (filters.quyId) {
     whereConditions.push('gd.quy_id = ?');
@@ -263,7 +273,7 @@ const getAllTransactions = async (filters, limit, offset) => {
   const countQuery = `
     SELECT COUNT(*) as total
     FROM giaodich gd
-    INNER JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+    LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
     ${whereClause}
   `;
 
@@ -301,7 +311,7 @@ const getAllTransactions = async (filters, limit, offset) => {
       nd_thuchien.hoten as nguoithuchien_hoten
     FROM giaodich gd
     INNER JOIN quy q ON gd.quy_id = q.quy_id
-    INNER JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+    LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
     LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
     LEFT JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
     LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
@@ -328,6 +338,14 @@ const getAllTransactions = async (filters, limit, offset) => {
 const getTransactionsSummary = async (filters) => {
   let whereConditions = [];
   let queryParams = [];
+
+  // Filter theo loại giao dịch
+  if (filters.loai === 'Thu') {
+    whereConditions.push('gd.yeucauhotro_id IS NULL');
+    whereConditions.push('gd.nguoinhan_id IS NULL');
+  } else if (filters.loai === 'Chi') {
+    whereConditions.push('(gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)');
+  }
 
   if (filters.quyId) {
     whereConditions.push('gd.quy_id = ?');
@@ -372,11 +390,24 @@ const getTransactionsSummary = async (filters) => {
   const [rows] = await pool.query(
     `SELECT
        COUNT(*) AS total,
+       -- Tổng thu: yeucauhotro_id IS NULL AND nguoinhan_id IS NULL
+       COALESCE(SUM(CASE 
+         WHEN gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL 
+         THEN gd.sotien 
+         ELSE 0 
+       END), 0) AS tong_thu,
+       -- Tổng chi: yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL
+       COALESCE(SUM(CASE 
+         WHEN gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL 
+         THEN gd.sotien 
+         ELSE 0 
+       END), 0) AS tong_chi,
+       -- Đối soát stats
        COUNT(CASE WHEN gd.doisoattrangthai = 'Chua_doi_soat' THEN 1 END) AS chua_doi_soat,
        COUNT(CASE WHEN gd.doisoattrangthai = 'Da_doi_soat' THEN 1 END) AS da_doi_soat,
        COUNT(CASE WHEN gd.doisoattrangthai = 'Bat_thuong' THEN 1 END) AS bat_thuong
      FROM giaodich gd
-     INNER JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
      ${whereClause}`,
     queryParams
   );
@@ -384,8 +415,15 @@ const getTransactionsSummary = async (filters) => {
   const r = rows[0];
   const total = Number(r.total) || 0;
   const daDoiSoat = Number(r.da_doi_soat) || 0;
+  const tongThu = Number(r.tong_thu) || 0;
+  const tongChi = Number(r.tong_chi) || 0;
 
   return {
+    tongThu,
+    tongChi,
+    soRong: tongThu - tongChi,
+    soGiaoDich: total,
+    soGiaoDichBatThuong: Number(r.bat_thuong) || 0,
     chuaDoiSoat: Number(r.chua_doi_soat) || 0,
     daDoiSoat,
     batThuong: Number(r.bat_thuong) || 0,

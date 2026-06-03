@@ -36,6 +36,7 @@ import AdminApplicationsPage from './pages/Staff/Admin/ApplicationsPage'
 import PheDuyetPage from './pages/Staff/Admin/PheDuyetPage/PheDuyetPage'
 import StudentShowcasePage from './pages/Staff/Admin/StudentShowcasePage/StudentShowcasePage'
 import AdminBaoCaoPage from './pages/Staff/Admin/BaoCaoPage'
+import NhatKyPage from './pages/Staff/Admin/NhatKyPage/NhatKyPage'
 
 import KeToanDashboard from './pages/Staff/KeToan/KeToanDashboard'
 import KeToanGiaiNganPage from './pages/Staff/KeToan/GiaiNganPage'
@@ -99,6 +100,7 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<CanBoUserManagementPage isAdmin={true} />} />
             <Route path="/admin/roles" element={<HiThongPhanQuyenPage />} />
+            <Route path="/admin/nhat-ky" element={<NhatKyPage />} />
             <Route path="/admin/xet-duyet" element={<XetDuyetPage isAdmin={true} />} />
             <Route path="/admin/phe-duyet" element={<PheDuyetPage />} />
             <Route path="/admin/quy" element={<CanBoQuyListPage isAdmin={true} />} />

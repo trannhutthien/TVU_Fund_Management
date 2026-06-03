@@ -151,6 +151,8 @@ export const getAllPheDuyet = async (req, res) => {
         -- Nếu là đơn hỗ trợ
         yc.sotiendenghi AS so_tien_de_nghi,
         yc.trangthai AS trang_thai_don,
+        yc.lydo AS lydo_don,
+        yc.ngaynop AS ngay_nop_don,
         sv.hoten AS ten_sinh_vien,
         sv.masodinhdanh AS ma_so_dinh_danh,
         -- Quỹ
@@ -258,12 +260,19 @@ export const getApprovalTimeline = async (req, res) => {
 
     const [rows] = await pool.query(`
       SELECT 
-        pd.*,
-        nd.hoten,
+        pd.pheduyet_id AS phe_duyet_id,
+        pd.yeucauhotro_id AS request_id,
+        pd.capduyet AS cap_do_duyet,
+        pd.nguoiduyet_id AS nguoi_duyet_id,
+        pd.ketqua AS ket_qua,
+        pd.lydo AS ly_do_tu_choi,
+        pd.ghichu AS ghi_chu,
+        pd.ngayduyet AS ngay_duyet,
+        nd.hoten AS ho_ten,
         nd.email,
         nd.avatar,
         nd.vaitro_id,
-        vt.tenvaitro
+        vt.tenvaitro AS ten_vai_tro
       FROM pheduyet pd
       LEFT JOIN nguoidung nd ON nd.nguoidung_id = pd.nguoiduyet_id
       LEFT JOIN vaitro vt ON vt.vaitro_id = nd.vaitro_id
@@ -271,9 +280,21 @@ export const getApprovalTimeline = async (req, res) => {
       ORDER BY pd.capduyet ASC
     `, [id]);
 
+    const roleNameMap = {
+      'admin': 'Quản trị viên',
+      'ketoan': 'Kế toán',
+      'canboquy': 'Giáo vụ',
+      'sinhvien': 'Sinh viên'
+    };
+
+    const mappedRows = rows.map(row => ({
+      ...row,
+      ten_vai_tro: roleNameMap[row.ten_vai_tro] || row.ten_vai_tro
+    }));
+
     return res.status(200).json({
       success: true,
-      data: rows
+      data: mappedRows
     });
   } catch (error) {
     console.error("Lỗi getApprovalTimeline:", error);

@@ -207,7 +207,7 @@ const AdminActivitySection = ({ activityData = [], staffData = [] }) => {
           <div className={styles.feedFooter}>
             <Button
               variant="ghost"
-              onClick={() => navigate('/admin/hoat-dong')}
+              onClick={() => navigate('/admin/roles?tab=nhat_ky', { state: { tab: 'nhat_ky' } })}
             >
               Xem lịch sử đầy đủ
             </Button>

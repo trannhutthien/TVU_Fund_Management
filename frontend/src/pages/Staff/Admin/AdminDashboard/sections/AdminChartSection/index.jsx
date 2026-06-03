@@ -138,15 +138,15 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
           {/* Chart */}
           <ResponsiveContainer width="100%" height={240}>
             <ComposedChart data={cashflow6Months}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" vertical={false} />
               <XAxis
                 dataKey="month"
-                tick={{ fontSize: 12, fill: '#94a3b8' }}
+                tick={{ fontSize: 13, fill: '#1e293b', fontWeight: 600 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 12, fill: '#94a3b8' }}
+                tick={{ fontSize: 13, fill: '#1e293b', fontWeight: 600 }}
                 tickFormatter={formatCurrencyShort}
                 axisLine={false}
                 tickLine={false}
@@ -206,28 +206,47 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
                   <stop offset="95%" stopColor="#f0a500" stopOpacity={0} />
                 </linearGradient>
               </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" vertical={false} />
               <XAxis
                 dataKey="month"
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 12, fill: '#1e293b', fontWeight: 600 }}
                 axisLine={false}
                 tickLine={false}
               />
-              <YAxis hide />
+              <YAxis
+                tick={{ fontSize: 12, fill: '#1e293b', fontWeight: 600 }}
+                axisLine={false}
+                tickLine={false}
+                width={35}
+              />
               <Tooltip
                 contentStyle={{
                   background: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                   fontSize: '12px',
+                  padding: '8px 12px',
                 }}
+                labelStyle={{
+                  fontWeight: 600,
+                  marginBottom: '4px',
+                  color: '#1e293b',
+                }}
+                itemStyle={{
+                  color: '#f0a500',
+                  fontWeight: 600,
+                }}
+                formatter={(value) => [`${value} người dùng`, 'Mới']}
               />
               <Area
                 type="monotone"
                 dataKey="count"
                 stroke="#f0a500"
-                strokeWidth={2}
+                strokeWidth={3}
                 fill="url(#colorUsers)"
+                dot={{ r: 4, fill: '#f0a500', strokeWidth: 2, stroke: '#fff' }}
+                activeDot={{ r: 6, fill: '#f0a500', strokeWidth: 2, stroke: '#fff' }}
               />
             </AreaChart>
           </ResponsiveContainer>

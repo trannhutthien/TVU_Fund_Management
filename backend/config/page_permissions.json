@@ -178,5 +178,14 @@
     "ketoan": false,
     "sinhvien": false,
     "nhataitro": false
+  },
+  "nhat_ky": {
+    "label": "Nhật ký hệ thống",
+    "path": "/nhat-ky",
+    "admin": true,
+    "canbo": false,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
   }
 }
