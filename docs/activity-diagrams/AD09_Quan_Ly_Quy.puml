@@ -1,0 +1,110 @@
+@startuml AD09_Quan_Ly_Quy
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD09: QUẢN LÝ QUỸ**
+
+|#E1BEE7|Cán bộ Quỹ|
+start
+:Vào "Quản lý quỹ";
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách quỹ;
+:Hiển thị thông tin
+- Tên quỹ
+- Số dư
+- Trạng thái
+- Số nhà tài trợ
+- Số đơn đã nộp;
+
+|#E1BEE7|Cán bộ Quỹ|
+:Chọn thao tác;
+
+if (Thao tác?) then (Tạo quỹ mới)
+  :Điền thông tin quỹ
+  - Tên quỹ
+  - Mô tả
+  - Điều kiện hỗ trợ
+  - Giới hạn hỗ trợ
+  - Hình ảnh;
+  :Nhấn "Tạo quỹ";
+  
+  |#F5F5F5|Hệ thống|
+  :Kiểm tra thông tin;
+  :Lưu quỹ mới;
+  :Đặt số dư ban đầu = 0;
+  :Đặt trạng thái
+  "Đang hoạt động";
+  
+  |#E1BEE7|Cán bộ Quỹ|
+  :Thông báo tạo
+  quỹ thành công;
+  
+elseif (Thao tác?) then (Sửa thông tin)
+  :Click vào quỹ;
+  :Chỉnh sửa thông tin
+  (Không sửa số dư);
+  :Nhấn "Lưu";
+  
+  |#F5F5F5|Hệ thống|
+  :Cập nhật thông tin quỹ;
+  
+  |#E1BEE7|Cán bộ Quỹ|
+  :Thông báo cập nhật
+  thành công;
+  
+elseif (Thao tác?) then (Đổi trạng thái)
+  :Click vào quỹ;
+  :Chọn trạng thái mới
+  - Đang hoạt động
+  - Tạm dừng
+  - Đã đóng;
+  
+  if (Chọn "Đã đóng"?) then (Có)
+    |#F5F5F5|Hệ thống|
+    :Hiển thị cảnh báo
+    KHÔNG THỂ HOÀN TÁC;
+    
+    |#E1BEE7|Cán bộ Quỹ|
+    :Xác nhận đóng quỹ?;
+    
+    if (Xác nhận?) then (Không)
+      stop
+    endif
+  endif
+  
+  |#F5F5F5|Hệ thống|
+  :Cập nhật trạng thái;
+  
+  |#E1BEE7|Cán bộ Quỹ|
+  :Thông báo đã thay đổi
+  trạng thái;
+  
+else (Xem chi tiết)
+  :Click vào quỹ;
+  
+  |#F5F5F5|Hệ thống|
+  :Hiển thị chi tiết
+  - Thông tin quỹ
+  - Số dư thực tế
+  - Danh sách nhà tài trợ
+  - Danh sách đơn
+  - Lịch sử giao dịch
+  - Biểu đồ thống kê;
+  
+  |#E1BEE7|Cán bộ Quỹ|
+  :Xem và phân tích;
+endif
+
+:Quay lại danh sách;
+stop
+
+legend right
+**Quyền:** Cán bộ Quỹ (role 3), Admin (role 1)
+**API:** POST/PUT /api/funds
+**Trạng thái:** Hoạt động, Tạm dừng, Đã đóng
+endlegend
+
+@enduml

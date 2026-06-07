@@ -4,20 +4,22 @@ import {
   HiOutlineBanknotes,
   HiOutlineCheckBadge,
 } from 'react-icons/hi2';
-import StatCard from './StatCard';
+import { useNavigate } from 'react-router-dom';
+import { StatCard } from '@components/common/Card';
 import { CHART_COLORS } from '../../constants';
 import { formatCurrency } from '../../utils';
 import styles from './QuickStats.module.scss';
 
 const QuickStats = ({ stats }) => {
+  const navigate = useNavigate();
+
   const cards = [
     {
       key: 'choDuyet',
       label: 'Đơn chờ xử lý',
       value: stats.choDuyet,
       icon: HiOutlineClock,
-      color: CHART_COLORS.red,
-      bgColor: 'rgba(239,68,68,0.08)',
+      iconBgColor: 'red',
       subText: 'Cần xử lý ngay',
       urgent: true,
       link: '/can-bo/xet-duyet',
@@ -27,8 +29,7 @@ const QuickStats = ({ stats }) => {
       label: 'Đang xử lý',
       value: stats.dangXuLy,
       icon: HiOutlineArrowPath,
-      color: CHART_COLORS.orange,
-      bgColor: 'rgba(245,158,11,0.08)',
+      iconBgColor: 'yellow',
       subText: 'Đã chuyển duyệt',
     },
     {
@@ -36,8 +37,7 @@ const QuickStats = ({ stats }) => {
       label: 'Tổng số dư quỹ',
       value: formatCurrency(stats.tongSoDu),
       icon: HiOutlineBanknotes,
-      color: CHART_COLORS.green,
-      bgColor: 'rgba(16,185,129,0.08)',
+      iconBgColor: 'green',
       subText: `${stats.soQuyHoatDong} quỹ đang hoạt động`,
     },
     {
@@ -45,8 +45,7 @@ const QuickStats = ({ stats }) => {
       label: 'Đã xử lý tháng này',
       value: stats.daXuLyThangNay,
       icon: HiOutlineCheckBadge,
-      color: CHART_COLORS.primary,
-      bgColor: 'rgba(26,47,94,0.08)',
+      iconBgColor: 'blue',
       subText: `Tỷ lệ duyệt: ${stats.tyLeDuyet}%`,
     },
   ];
@@ -54,7 +53,16 @@ const QuickStats = ({ stats }) => {
   return (
     <div className={styles.statsRow}>
       {cards.map((card) => (
-        <StatCard key={card.key} card={card} />
+        <StatCard
+          key={card.key}
+          title={card.label}
+          value={card.value}
+          subtitle={card.subText}
+          icon={<card.icon size={20} />}
+          iconBgColor={card.iconBgColor}
+          onClick={card.link ? () => navigate(card.link) : undefined}
+          className={card.urgent && Number(card.value) > 0 ? styles.statUrgent : ''}
+        />
       ))}
     </div>
   );

@@ -1,0 +1,70 @@
+@startuml AD07_Tai_Tro_Cong_Khai
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD07: TẠO KHOẢN TÀI TRỢ**
+
+|#C8E6C9|Nhà tài trợ|
+start
+:Vào trang "Tạo tài trợ";
+:Xem danh sách quỹ
+đang hoạt động;
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách quỹ 
+công khai;
+:Hiển thị thông tin
+Tên quỹ, Mô tả
+Số dư hiện tại;
+
+|#C8E6C9|Nhà tài trợ|
+:Chọn quỹ muốn tài trợ;
+:Điền thông tin tài trợ
+- Số tiền
+- Lời nhắn (tùy chọn)
+- Upload chứng từ;
+:Nhấn "Tạo tài trợ";
+
+|#F5F5F5|Hệ thống|
+:Kiểm tra thông tin;
+
+if (Dữ liệu hợp lệ?) then (Không)
+  :Hiển thị lỗi
+  Thiếu thông tin hoặc
+  file không hợp lệ;
+  stop
+endif
+
+if (Đã có hồ sơ 
+nhà tài trợ?) then (Chưa)
+  :Tự động tạo hồ sơ
+  nhà tài trợ;
+endif
+
+:Lưu khoản tài trợ;
+:Đặt trạng thái
+"Chờ xác nhận";
+:Lưu file chứng từ;
+
+|#C8E6C9|Nhà tài trợ|
+:Nhận thông báo 
+đã tạo thành công;
+:Hiển thị mã tài trợ
+và trạng thái;
+:Thông báo
+Kế toán sẽ xác nhận
+trong 24-48h;
+:Chuyển đến
+"Lịch sử tài trợ";
+stop
+
+legend right
+**Quyền:** Nhà tài trợ (role 4)
+**API:** POST /api/donations
+**Đặc điểm:** Tự động tạo hồ sơ nhà tài trợ lần đầu
+**Bước tiếp theo:** Kế toán xác nhận
+endlegend
+
+@enduml

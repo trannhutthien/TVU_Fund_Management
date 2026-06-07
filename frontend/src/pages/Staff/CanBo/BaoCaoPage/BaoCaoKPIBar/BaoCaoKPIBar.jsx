@@ -4,6 +4,7 @@ import {
   HiOutlineBanknotes,
   HiOutlineAcademicCap,
 } from 'react-icons/hi2';
+import { StatCard } from '@components/common/Card';
 import { formatCurrency } from '../utils';
 import styles from './BaoCaoKPIBar.module.scss';
 
@@ -59,24 +60,34 @@ const BaoCaoKPIBar = ({ kpi, loading }) => {
 
   return (
     <div className={styles.statsRow}>
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <div key={card.key} className={styles.statCard}>
-            <div
-              className={styles.statIconWrap}
-              style={{ background: card.bg, color: card.color }}
-            >
-              <Icon className={styles.statIcon} />
-            </div>
-            <div className={styles.statText}>
-              <div className={styles.statValue}>{card.value}</div>
-              <div className={styles.statLabel}>{card.label}</div>
-              <div className={styles.statSub}>{card.sub}</div>
-            </div>
-          </div>
-        );
-      })}
+      <StatCard
+        title={cards[0].label}
+        value={cards[0].value}
+        subtitle={cards[0].sub}
+        icon={<HiOutlineArrowTrendingUp size={20} />}
+        iconBgColor="green"
+      />
+      <StatCard
+        title={cards[1].label}
+        value={cards[1].value}
+        subtitle={cards[1].sub}
+        icon={<HiOutlineArrowTrendingDown size={20} />}
+        iconBgColor="red"
+      />
+      <StatCard
+        title={cards[2].label}
+        value={cards[2].value}
+        subtitle={cards[2].sub}
+        icon={<HiOutlineBanknotes size={20} />}
+        iconBgColor="blue"
+      />
+      <StatCard
+        title={cards[3].label}
+        value={cards[3].value}
+        subtitle={cards[3].sub}
+        icon={<HiOutlineAcademicCap size={20} />}
+        iconBgColor="yellow"
+      />
     </div>
   );
 };

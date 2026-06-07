@@ -1,0 +1,90 @@
+@startuml AD06_Phe_Duyet_Cap_3_Giai_Ngan
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD06: PHÊ DUYỆT CẤP 3 & GIẢI NGÂN**
+
+|#FFCCBC|Kế toán|
+start
+:Vào trang "Giải ngân";
+:Xem danh sách đơn
+"Chờ duyệt cấp 3";
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách đơn 
+đã qua 2 cấp duyệt;
+:Hiển thị kèm
+số dư quỹ hiện tại;
+
+|#FFCCBC|Kế toán|
+:Click vào đơn cần xét;
+:Xem chi tiết đầy đủ
+- Thông tin đơn
+- Lịch sử cấp 1, 2
+- Số dư quỹ;
+:Xét duyệt lần cuối;
+
+if (Quyết định?) then (Phê duyệt & Giải ngân)
+  
+  |#F5F5F5|Hệ thống|
+  :Kiểm tra số dư quỹ;
+  
+  if (Quỹ đủ số dư?) then (Không)
+    :Thông báo lỗi
+    Quỹ không đủ số dư;
+    stop
+  endif
+  
+  |#FFCCBC|Kế toán|
+  :Nhập thông tin giải ngân
+  - Phương thức
+  - Số tài khoản (nếu CK)
+  - Ghi chú;
+  
+  |#F5F5F5|Hệ thống|
+  :Lưu kết quả phê duyệt;
+  :Cập nhật trạng thái
+  "Đã giải ngân";
+  :Trừ tiền từ quỹ;
+  :Tạo giao dịch CHI;
+  :Gửi thông báo
+  cho sinh viên;
+  
+  |#FFCCBC|Kế toán|
+  :Thông báo giải ngân 
+  thành công
+  - Số dư quỹ mới
+  - Mã giao dịch;
+  
+else (Từ chối)
+  :Nhập lý do từ chối
+  (BẮT BUỘC);
+  
+  if (Đã nhập lý do?) then (Chưa)
+    :Yêu cầu nhập lý do;
+    stop
+  endif
+  
+  |#F5F5F5|Hệ thống|
+  :Lưu kết quả từ chối;
+  :Cập nhật trạng thái
+  "Từ chối cấp 3";
+  :Gửi thông báo
+  cho sinh viên;
+  
+  |#FFCCBC|Kế toán|
+  :Đã từ chối đơn;
+endif
+
+:Quay lại danh sách;
+stop
+
+legend right
+**Quyền:** Kế toán (role 2), Admin (role 1)
+**API:** PUT /api/applications/:id/disburse
+**Quan trọng:** Trừ tiền quỹ tự động, tạo giao dịch CHI
+endlegend
+
+@enduml

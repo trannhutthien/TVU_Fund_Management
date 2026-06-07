@@ -910,3 +910,56 @@ export const createAuthenticatedDonation = async (req, res) => {
     });
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/donations/my-donations (LẤY LỊCH SỬ CỦA TÀI KHOẢN ĐANG ĐĂNG NHẬP) 
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getMyDonations = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Không có quyền truy cập, vui lòng đăng nhập",
+      });
+    }
+
+    // Lấy thông tin nhà tài trợ từ user_id
+    const donors = await DonorModel.getAllDonors();
+    let donor = donors.find(d => d.nguoidung_id === userId);
+
+    if (!donor) {
+      return res.status(200).json({
+        success: true,
+        data: []
+      });
+    }
+
+    // Lấy lịch sử quyên góp từ DonorModel
+    const rows = await DonorModel.getDonationHistory(donor.nhataitro_id);
+
+    // Ánh xạ sang các trường mà frontend mong đợi
+    const data = rows.map((r) => ({
+      id: r.khoantaitro_id,
+      soTien: Number(r.sotien) || 0,
+      hinhThuc: r.hinhthuc,
+      trangThai: r.trangthai,
+      ngayQuyenGop: r.ngaytaitro,
+      ghiChu: r.ghichu,
+      phuongThuc: r.hinhthuc,
+      tenQuy: r.tenquy,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error("Lỗi getMyDonations:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, không thể lấy lịch sử quyên góp",
+    });
+  }
+};
+

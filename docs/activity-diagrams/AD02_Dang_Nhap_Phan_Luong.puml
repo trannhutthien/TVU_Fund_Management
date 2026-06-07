@@ -1,0 +1,77 @@
+@startuml AD02_Dang_Nhap_Phan_Luong
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD02: ĐĂNG NHẬP & PHÂN LUỒNG**
+
+|#E3F2FD|Người dùng|
+start
+:Nhập email và mật khẩu;
+:Nhấn "Đăng nhập";
+
+|#F5F5F5|Hệ thống|
+:Tìm tài khoản theo email;
+
+if (Email tồn tại?) then (Không)
+  :Thông báo lỗi
+  Email không tồn tại;
+  stop
+endif
+
+:Kiểm tra mật khẩu;
+
+if (Mật khẩu đúng?) then (Không)
+  :Thông báo lỗi
+  Mật khẩu không chính xác;
+  stop
+endif
+
+if (Tài khoản bị khóa?) then (Có)
+  :Thông báo lỗi
+  Tài khoản đã bị khóa;
+  stop
+endif
+
+:Tạo JWT Token;
+:Trả về thông tin
+user và token;
+
+|#E3F2FD|Người dùng|
+:Lưu token;
+
+|#F5F5F5|Hệ thống|
+:Kiểm tra vai trò;
+
+if (Vai trò?) then (Admin)
+  :Chuyển đến
+  Admin Dashboard;
+  
+elseif (Vai trò?) then (Kế toán)
+  :Chuyển đến
+  Kế toán Dashboard;
+  
+elseif (Vai trò?) then (Cán bộ)
+  :Chuyển đến
+  Cán bộ Dashboard;
+  
+else (User)
+  if (Loại tài khoản?) then (Sinh viên)
+    :Chuyển đến
+    Sinh viên Dashboard;
+  else (Nhà tài trợ)
+    :Chuyển đến
+    Nhà tài trợ Dashboard;
+  endif
+endif
+
+stop
+
+legend right
+**API:** POST /api/auth/login
+**Token:** JWT (15 phút + 7 ngày)
+**Mã hóa:** bcrypt
+endlegend
+
+@enduml

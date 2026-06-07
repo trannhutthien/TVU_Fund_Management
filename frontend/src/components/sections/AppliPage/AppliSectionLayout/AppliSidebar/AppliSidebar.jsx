@@ -4,13 +4,14 @@ import RulesPanel from './RulesPanel/RulesPanel';
 import HelpPanel from './HelpPanel/HelpPanel';
 import styles from './AppliSidebar.module.scss';
 
-const AppliSidebar = ({ moTa, tieuDe, onApplySuggestion }) => {
+const AppliSidebar = ({ moTa, tieuDe, onApplySuggestion, selectedFund }) => {
   return (
     <aside className={styles.sidebar}>
       <AIAssistantPanel
         moTa={moTa}
         tieuDe={tieuDe}
         onApplySuggestion={onApplySuggestion}
+        selectedFund={selectedFund}
       />
       <RulesPanel />
       <HelpPanel />
@@ -22,6 +23,8 @@ AppliSidebar.propTypes = {
   moTa: PropTypes.string,
   tieuDe: PropTypes.string,
   onApplySuggestion: PropTypes.func,
+  selectedFund: PropTypes.object,
 };
+
 
 export default AppliSidebar;

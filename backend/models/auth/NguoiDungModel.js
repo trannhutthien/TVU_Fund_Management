@@ -141,11 +141,54 @@ const updatePassword = async (userId, hashedPassword) => {
   return result;
 };
 
+// Tìm user theo email (dùng cho Google OAuth - không cần mật khẩu)
+const getUserByEmail = async (email) => {
+  const [rows] = await pool.query(
+    `SELECT 
+      nd.nguoidung_id, 
+      nd.masodinhdanh, 
+      nd.hoten, 
+      nd.email, 
+      nd.avatar,
+      nd.vaitro_id, 
+      nd.loaitaikhoan, 
+      nd.trangthai,
+      nd.ngaytao,
+      vt.tenvaitro,
+      vt.trangthai AS vt_trangthai
+     FROM nguoidung nd
+     LEFT JOIN vaitro vt ON nd.vaitro_id = vt.vaitro_id
+     WHERE nd.email = ?
+     LIMIT 1`,
+    [email]
+  );
+  if (rows[0]) {
+    rows[0].trangthai = rows[0].trangthai === 'Hoat dong' ? 'HOAT_DONG' : (rows[0].trangthai === 'Khoa' ? 'KHOA' : (rows[0].trangthai === 'Cho duyet' ? 'CHO_DUYET' : rows[0].trangthai));
+    rows[0].loaitaikhoan = rows[0].loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (rows[0].loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : rows[0].loaitaikhoan);
+  }
+  return rows[0] || null;
+};
+
+// Tạo user mới từ Google OAuth (không có mật khẩu, matkhau = NULL)
+const createUserFromGoogle = async ({ hoTen, email, avatar }) => {
+  const maSoDinhDanh = `GG${Date.now()}`;
+
+  const [result] = await pool.query(
+    `INSERT INTO nguoidung 
+    (hoten, masodinhdanh, email, matkhau, vaitro_id, loaitaikhoan, trangthai, avatar) 
+    VALUES (?, ?, ?, NULL, 4, 'Sinh vien', 'Hoat dong', ?)`,
+    [hoTen, maSoDinhDanh, email.toLowerCase(), avatar || null]
+  );
+  return result.insertId;
+};
+
 export default { 
   checkEmailExists,
   createUser,
   getUserForLogin, 
   getUserForProfile, 
   getUserPassword, 
-  updatePassword 
+  updatePassword,
+  getUserByEmail,
+  createUserFromGoogle,
 };

@@ -447,6 +447,7 @@ const ApplyPage = () => {
                     moTa={contentValues.mo_ta}
                     tieuDe={contentValues.tieu_de}
                     onApplySuggestion={handleApplyAISuggestion}
+                    selectedFund={selectedFund}
                   />
                 ) : null
               }

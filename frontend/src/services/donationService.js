@@ -175,3 +175,18 @@ export const getDonationDetail = async (donationId) => {
  * @returns {Promise} Chi tiết khoản tài trợ
  */
 export const getDonationById = getDonationDetail;
+
+/**
+ * Lấy danh sách quyên góp của nhà tài trợ hiện tại (đã đăng nhập)
+ * @returns {Promise} Danh sách quyên góp
+ */
+export const getMyDonations = async () => {
+  try {
+    const response = await api.get('/donations/my-donations');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching my donations:', error);
+    throw error.response?.data || { message: 'Lỗi khi lấy lịch sử quyên góp của tôi' };
+  }
+};
+

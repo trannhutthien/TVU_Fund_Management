@@ -1,0 +1,129 @@
+@startuml AD12_Xem_Lich_Su_Phe_Duyet
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD12: XEM LỊCH SỬ PHÊ DUYỆT**
+
+|#E3F2FD|Người dùng|
+start
+:Vào xem chi tiết đơn;
+
+|#F5F5F5|Hệ thống|
+:Kiểm tra quyền xem;
+
+if (Người dùng?) then (Sinh viên)
+  :Chỉ cho phép xem
+  đơn của chính mình;
+else (Cán bộ/KT/Admin)
+  :Cho phép xem
+  tất cả đơn;
+endif
+
+:Lấy thông tin đơn;
+:Lấy lịch sử phê duyệt
+3 cấp;
+:Hiển thị Timeline
+gồm 3 bước;
+
+|#E3F2FD|Người dùng|
+:Xem Timeline;
+
+|#F5F5F5|Hệ thống|
+:Bước 1 - Phê duyệt cấp 1;
+if (Trạng thái cấp 1?) then (Chưa xử lý)
+  :Hiển thị
+  ⏳ Đang chờ xử lý
+  Người duyệt = Chưa có;
+  
+elseif (Trạng thái?) then (Đã duyệt)
+  :Hiển thị
+  ✅ Đã phê duyệt
+  - Người duyệt
+  - Ngày duyệt
+  - Ghi chú;
+  
+else (Từ chối)
+  :Hiển thị
+  ❌ Đã từ chối
+  - Người từ chối
+  - Ngày từ chối
+  - Lý do;
+  stop
+endif
+
+:Bước 2 - Phê duyệt cấp 2;
+if (Trạng thái cấp 2?) then (Chưa xử lý)
+  :Hiển thị
+  ⏳ Đang chờ xử lý;
+  
+elseif (Trạng thái?) then (Đã duyệt)
+  :Hiển thị
+  ✅ Đã phê duyệt
+  - Người duyệt
+  - Ngày duyệt
+  - Ghi chú;
+  
+else (Từ chối)
+  :Hiển thị
+  ❌ Đã từ chối
+  - Lý do từ chối;
+  stop
+endif
+
+:Bước 3 - Phê duyệt cấp 3
+và Giải ngân;
+if (Trạng thái cấp 3?) then (Chưa xử lý)
+  :Hiển thị
+  ⏳ Chờ Kế toán xử lý;
+  
+elseif (Trạng thái?) then (Đã giải ngân)
+  :Hiển thị
+  ✅💰 Đã giải ngân
+  - Người duyệt
+  - Số tiền
+  - Phương thức
+  - Ngày giải ngân;
+  
+else (Từ chối)
+  :Hiển thị
+  ❌ Đã từ chối
+  - Lý do từ chối;
+  stop
+endif
+
+|#E3F2FD|Người dùng|
+if (Xem giao dịch?) then (Có)
+  |#F5F5F5|Hệ thống|
+  :Lấy thông tin giao dịch
+  liên quan đến đơn;
+  :Hiển thị
+  - Mã giao dịch
+  - Số tiền
+  - Ngày giao dịch;
+endif
+
+if (Xuất PDF?) then (Có)
+  |#F5F5F5|Hệ thống|
+  :Tạo file PDF;
+  :Bao gồm
+  - Timeline phê duyệt
+  - Chữ ký người duyệt
+  - Con dấu;
+  
+  |#E3F2FD|Người dùng|
+  :Tải file PDF;
+endif
+
+stop
+
+legend right
+**Quyền:** 
+- Sinh viên = Chỉ đơn của mình
+- Cán bộ/KT/Admin = Tất cả đơn
+**API:** GET /api/applications/:id/approval-history
+**Icon:** ⏳ Chờ, ✅ Duyệt, ❌ Từ chối
+endlegend
+
+@enduml

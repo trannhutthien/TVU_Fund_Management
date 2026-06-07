@@ -1186,6 +1186,23 @@ export const getAdminAdvancedStats = async (req, res) => {
       };
     });
 
+    // 4.5. Đếm số đơn theo các trạng thái thực tế phục vụ biểu đồ tiến độ phê duyệt
+    const [[{ choDuyet }]] = await pool.query(
+      `SELECT COUNT(*) AS choDuyet FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 1'`
+    );
+    const [[{ dangXuLy }]] = await pool.query(
+      `SELECT COUNT(*) AS dangXuLy FROM yeucauhotro WHERE trangthai IN ('Da duyet cap 1', 'Cho duyet cap 2', 'Da duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 3')`
+    );
+    const [[{ choGiaiNgan }]] = await pool.query(
+      `SELECT COUNT(*) AS choGiaiNgan FROM yeucauhotro WHERE trangthai = 'Cho giai ngan'`
+    );
+    const [[{ daGiaiNgan }]] = await pool.query(
+      `SELECT COUNT(*) AS daGiaiNgan FROM yeucauhotro WHERE trangthai = 'Da giai ngan'`
+    );
+    const [[{ tuChoi }]] = await pool.query(
+      `SELECT COUNT(*) AS tuChoi FROM yeucauhotro WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3')`
+    );
+
     // 5. Dự báo tài chính & đề xuất chính sách (Báo cáo chiến lược)
     // Tính toán số tiền trung bình giải ngân mỗi tháng trong 3 tháng gần nhất
     const [[monthlySpendRow]] = await pool.query(
@@ -1227,6 +1244,13 @@ export const getAdminAdvancedStats = async (req, res) => {
           soThanhCong,
           tyLeThanhCong,
           thoiGianXuLy
+        },
+        trangThaiDon: {
+          choDuyet: Number(choDuyet) || 0,
+          dangXuLy: Number(dangXuLy) || 0,
+          choGiaiNgan: Number(choGiaiNgan) || 0,
+          daGiaiNgan: Number(daGiaiNgan) || 0,
+          tuChoi: Number(tuChoi) || 0
         },
         khoaStats,
         topDonors,

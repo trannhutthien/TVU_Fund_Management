@@ -1,0 +1,86 @@
+@startuml AD08a_Ke_Toan_Xac_Nhan_Tai_Tro
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD08a: XÁC NHẬN TÀI TRỢ (KẾ TOÁN)**
+
+|#FFCCBC|Kế toán|
+start
+:Vào "Xác nhận tài trợ";
+:Xem danh sách khoản
+"Chờ xác nhận";
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách khoản
+đang chờ xác nhận;
+:Hiển thị thông tin
+Mã, Nhà tài trợ
+Quỹ, Số tiền, Ngày;
+
+|#FFCCBC|Kế toán|
+:Click vào khoản cần xét;
+:Xem chi tiết
+- Thông tin nhà tài trợ
+- Số tiền
+- Chứng từ đính kèm
+- Lời nhắn;
+:Mở xem chứng từ;
+:Đối chiếu với
+sao kê ngân hàng;
+
+if (Đã nhận tiền 
+thực tế?) then (Có)
+  :Click "Xác nhận";
+  :Nhập ghi chú (nếu có);
+  
+  |#F5F5F5|Hệ thống|
+  :Lưu kết quả xác nhận;
+  :Cập nhật trạng thái
+  "Đã nhận";
+  :Cộng tiền vào quỹ;
+  :Tạo giao dịch THU;
+  :Gửi email cảm ơn
+  nhà tài trợ;
+  
+  |#FFCCBC|Kế toán|
+  :Thông báo xác nhận
+  thành công
+  - Đã cộng tiền vào quỹ
+  - Số dư quỹ mới
+  - Mã giao dịch;
+  
+else (Chưa/Không khớp)
+  :Click "Từ chối";
+  :Nhập lý do từ chối
+  (BẮT BUỘC);
+  
+  if (Đã nhập lý do?) then (Chưa)
+    :Yêu cầu nhập lý do;
+    stop
+  endif
+  
+  |#F5F5F5|Hệ thống|
+  :Lưu kết quả từ chối;
+  :Cập nhật trạng thái
+  "Từ chối";
+  :KHÔNG cộng tiền;
+  :Gửi thông báo
+  cho nhà tài trợ;
+  
+  |#FFCCBC|Kế toán|
+  :Đã từ chối
+  Quỹ giữ nguyên số dư;
+endif
+
+:Quay lại danh sách;
+stop
+
+legend right
+**Quyền:** Kế toán (role 2)
+**API:** PUT /api/donations/:id/confirm
+**Quan trọng:** Cộng tiền tự động, tạo giao dịch THU
+endlegend
+
+@enduml

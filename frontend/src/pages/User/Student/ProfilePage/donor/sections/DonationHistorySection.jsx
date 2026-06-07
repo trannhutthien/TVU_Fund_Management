@@ -7,6 +7,7 @@ import {
   HiChevronUp,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button';
+import * as donationService from '@services/donationService';
 import styles from './DonationHistorySection.module.scss';
 
 /**
@@ -20,15 +21,25 @@ const DonationHistorySection = () => {
   const [expandedRows, setExpandedRows] = useState(new Set());
 
   useEffect(() => {
-    // TODO: Fetch donations from API
-    // const response = await donationService.getMyDonations();
-    
-    // Mock data for now
-    setTimeout(() => {
-      setDonations([]);
-      setLoading(false);
-    }, 500);
+    const fetchDonations = async () => {
+      try {
+        setLoading(true);
+        const res = await donationService.getMyDonations();
+        if (res?.success) {
+          setDonations(res.data || []);
+        } else {
+          setError(res?.message || 'Không thể lấy dữ liệu lịch sử quyên góp');
+        }
+      } catch (err) {
+        console.error('Lỗi khi fetch quyên góp:', err);
+        setError(err.message || 'Lỗi khi kết nối đến server');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDonations();
   }, []);
+
 
   const handleCreateNew = () => {
     navigate('/apply');
@@ -58,21 +69,26 @@ const DonationHistorySection = () => {
 
   const getStatusClass = (status) => {
     const statusMap = {
-      'CHO_XAC_NHAN': styles.statusPending,
-      'DA_XAC_NHAN': styles.statusApproved,
-      'HOAN_THANH': styles.statusCompleted,
+      'Cho duyet': styles.statusPending,
+      'Cho xac nhan': styles.statusPending,
+      'Da duyet': styles.statusApproved,
+      'Da nhan': styles.statusCompleted,
+      'Tu choi': styles.statusDefault,
     };
     return statusMap[status] || styles.statusDefault;
   };
 
   const getStatusLabel = (status) => {
     const statusLabels = {
-      'CHO_XAC_NHAN': 'Chờ xác nhận',
-      'DA_XAC_NHAN': 'Đã xác nhận',
-      'HOAN_THANH': 'Hoàn thành',
+      'Cho duyet': 'Chờ duyệt',
+      'Cho xac nhan': 'Chờ xác nhận',
+      'Da duyet': 'Đã duyệt',
+      'Da nhan': 'Đã nhận tiền',
+      'Tu choi': 'Từ chối',
     };
     return statusLabels[status] || status;
   };
+
 
   return (
     <div className={styles.section}>

@@ -1,0 +1,57 @@
+@startuml AD01_Dang_Ky_Tai_Khoan
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD01: ĐĂNG KÝ TÀI KHOẢN**
+
+|#E3F2FD|Người dùng|
+start
+:Truy cập trang đăng ký;
+:Chọn loại tài khoản
+- Sinh viên
+- Nhà tài trợ;
+:Điền form đăng ký
+- Email
+- Mật khẩu
+- Họ tên
+- Số điện thoại
+- Thông tin khác;
+:Nhấn "Đăng ký";
+
+|#F5F5F5|Hệ thống|
+:Kiểm tra thông tin;
+
+if (Email đã tồn tại?) then (Có)
+  |#E3F2FD|Người dùng|
+  :Thông báo lỗi
+  Email đã được sử dụng;
+  stop
+else (Chưa)
+  |#F5F5F5|Hệ thống|
+  :Mã hóa mật khẩu;
+  :Lưu tài khoản mới;
+  :Gán vai trò
+  User (role 4);
+  
+  if (Loại tài khoản?) then (Nhà tài trợ)
+    :Tự động tạo
+    hồ sơ nhà tài trợ;
+  endif
+  
+  |#E3F2FD|Người dùng|
+  :Thông báo đăng ký
+  thành công;
+  :Chuyển đến
+  trang đăng nhập;
+  stop
+endif
+
+legend right
+**API:** POST /api/auth/register
+**Mã hóa:** bcrypt
+**Đặc điểm:** Tự động tạo hồ sơ nhà tài trợ
+endlegend
+
+@enduml

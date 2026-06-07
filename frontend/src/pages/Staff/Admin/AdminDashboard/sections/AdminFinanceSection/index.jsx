@@ -6,6 +6,7 @@ import {
   HiGift,
   HiAcademicCap,
 } from 'react-icons/hi2';
+import { StatCard } from '@components/common/Card';
 import styles from './AdminFinanceSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -46,75 +47,51 @@ const AdminFinanceSection = ({ financeData }) => {
       {/* Stats Grid */}
       <div className={styles.grid}>
         {/* Card 1 - Tổng thu */}
-        <div className={styles.statCard}>
-          <div className={`${styles.iconBox} ${styles.iconBoxGold}`}>
-            <HiArrowTrendingUp size={20} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{formatCurrency(tongThuHeThong)}</div>
-            <div className={styles.statLabel}>Tổng thu tích lũy</div>
-            <div className={styles.statSub}>Từ tất cả khoản tài trợ</div>
-          </div>
-        </div>
+        <StatCard
+          title="Tổng thu tích lũy"
+          value={formatCurrency(tongThuHeThong)}
+          subtitle="Từ tất cả khoản tài trợ"
+          icon={<HiArrowTrendingUp size={20} />}
+          iconBgColor="yellow"
+        />
 
         {/* Card 2 - Tổng chi */}
-        <div className={styles.statCard}>
-          <div className={`${styles.iconBox} ${styles.iconBoxRed}`}>
-            <HiArrowTrendingDown size={20} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={`${styles.statValue} ${styles.statValueRed}`}>
-              {formatCurrency(tongChiHeThong)}
-            </div>
-            <div className={styles.statLabel}>Tổng đã giải ngân</div>
-            <div className={styles.statSub}>Cho sinh viên nhận hỗ trợ</div>
-          </div>
-        </div>
+        <StatCard
+          title="Tổng đã giải ngân"
+          value={formatCurrency(tongChiHeThong)}
+          subtitle="Cho sinh viên nhận hỗ trợ"
+          icon={<HiArrowTrendingDown size={20} />}
+          iconBgColor="red"
+        />
 
         {/* Card 3 - Tổng số dư */}
-        <div className={styles.statCard}>
-          <div className={`${styles.iconBox} ${styles.iconBoxNavy}`}>
-            <HiBuildingLibrary size={20} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={`${styles.statValue} ${styles.statValueGreen}`}>
-              {formatCurrency(tongSoDuTatCaQuy)}
-            </div>
-            <div className={styles.statLabel}>Tổng số dư các quỹ</div>
-            <div className={styles.statSub}>Số dư khả dụng hiện tại</div>
-            {/* Mini Progress Bar */}
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressFill}
-                style={{ width: `${Math.min(balancePercentage, 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Tổng số dư các quỹ"
+          value={formatCurrency(tongSoDuTatCaQuy)}
+          subtitle="Số dư khả dụng hiện tại"
+          icon={<HiBuildingLibrary size={20} />}
+          iconBgColor="blue"
+          trend={balancePercentage >= 50 ? 'up' : balancePercentage >= 20 ? 'neutral' : 'down'}
+          trendValue={`${balancePercentage.toFixed(1)}%`}
+        />
 
         {/* Card 4 - Tổng khoản tài trợ */}
-        <div className={styles.statCard}>
-          <div className={`${styles.iconBox} ${styles.iconBoxGold}`}>
-            <HiGift size={20} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{tongKhoanTaiTro}</div>
-            <div className={styles.statLabel}>Khoản tài trợ đã nhận</div>
-            <div className={styles.statSub}>Tổng số lượt tài trợ thành công</div>
-          </div>
-        </div>
+        <StatCard
+          title="Khoản tài trợ đã nhận"
+          value={tongKhoanTaiTro}
+          subtitle="Tổng số lượt tài trợ thành công"
+          icon={<HiGift size={20} />}
+          iconBgColor="yellow"
+        />
 
         {/* Card 5 - Tổng giải ngân */}
-        <div className={styles.statCard}>
-          <div className={`${styles.iconBox} ${styles.iconBoxNavy}`}>
-            <HiAcademicCap size={20} />
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{tongGiaiNgan}</div>
-            <div className={styles.statLabel}>Lượt giải ngân cho SV</div>
-            <div className={styles.statSub}>Sinh viên đã nhận hỗ trợ</div>
-          </div>
-        </div>
+        <StatCard
+          title="Lượt giải ngân cho SV"
+          value={tongGiaiNgan}
+          subtitle="Sinh viên đã nhận hỗ trợ"
+          icon={<HiAcademicCap size={20} />}
+          iconBgColor="blue"
+        />
       </div>
     </div>
   );

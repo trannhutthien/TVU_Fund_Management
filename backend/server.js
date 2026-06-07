@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-import pool from "./config/db.js";
 import authRoutes from "./routes/auth/authRoutes.js";
 import roleRoutes from "./routes/users/roleRoutes.js";
 import userRoutes from "./routes/users/userRoutes.js";
@@ -21,8 +20,19 @@ import studentShowcaseRoutes from "./routes/showcase/studentShowcaseRoutes.js";
 import loaiQuyRoutes from "./routes/funds/loaiQuyRoutes.js";
 import { vaiTroRouter, nguoiDungRouter, nhatKyRouter, settingsRouter } from "./routes/system/systemRoutes.js";
 
-
 dotenv.config();
+
+console.log("🚀 Server starting...");
+console.log("PORT:", process.env.PORT);
+console.log("DATABASE_URL:", process.env.DATABASE_URL ? "SET (length=" + process.env.DATABASE_URL.length + ")" : "NOT SET");
+
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err.message);
+    console.error(err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('UNHANDLED REJECTION:', reason);
+});
 
 const app = express();
 
@@ -58,15 +68,27 @@ app.use("/api/nguoidung", nguoiDungRouter);
 app.use("/api/nhat-ky", nhatKyRouter);
 app.use("/api/system/settings", settingsRouter);
 
-
 // Test route
 app.get("/", (req, res) => {
     res.send("API đang chạy...");
 });
 
+// Debug route - check DB connection
+app.get("/debug", async (req, res) => {
+    try {
+        const pool = (await import("./config/db.js")).default;
+        const conn = await pool.getConnection();
+        const [rows] = await conn.query("SELECT COUNT(*) as cnt FROM nguoidung");
+        conn.release();
+        res.json({ status: "ok", users: rows[0].cnt, port: process.env.PORT });
+    } catch (e) {
+        res.status(500).json({ status: "error", message: e.message, code: e.code });
+    }
+});
+
 // Chạy server
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => {
-    console.log(`Server chạy tại http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server chạy tại http://0.0.0.0:${PORT}`);
 });

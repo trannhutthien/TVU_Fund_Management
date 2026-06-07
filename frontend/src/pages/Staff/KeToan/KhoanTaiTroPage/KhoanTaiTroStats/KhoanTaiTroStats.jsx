@@ -4,6 +4,7 @@ import {
   HiOutlineBanknotes,
   HiOutlineArrowPathRoundedSquare,
 } from 'react-icons/hi2';
+import { StatCard } from '@components/common/Card';
 import styles from './KhoanTaiTroStats.module.scss';
 
 const formatCurrency = (amount) => {
@@ -60,27 +61,32 @@ const KhoanTaiTroStats = ({ stats, loading, isKeToan, isAdmin }) => {
 
   return (
     <div className={styles.statsRow}>
-      {cards.map((card) => {
-        const Icon = card.icon;
-        const isUrgent = card.urgent && Number(card.value) > 0;
-        return (
-          <div
-            key={card.label}
-            className={`${styles.statCard} ${isUrgent ? styles.statUrgent : ''}`}
-          >
-            <div
-              className={styles.statIconWrap}
-              style={{ background: card.bg, color: card.color }}
-            >
-              <Icon className={styles.statIcon} />
-            </div>
-            <div className={styles.statText}>
-              <div className={styles.statValue}>{card.value}</div>
-              <div className={styles.statLabel}>{card.label}</div>
-            </div>
-          </div>
-        );
-      })}
+      <StatCard
+        title={cards[0].label}
+        value={cards[0].value}
+        icon={<HiOutlineClock size={20} />}
+        iconBgColor={isKeToan ? 'purple' : 'red'}
+        className={!isKeToan && Number(cards[0].value) > 0 ? styles.statUrgent : ''}
+      />
+      <StatCard
+        title={cards[1].label}
+        value={cards[1].value}
+        icon={<HiOutlineCheckBadge size={20} />}
+        iconBgColor="green"
+      />
+      <StatCard
+        title={cards[2].label}
+        value={cards[2].value}
+        icon={<HiOutlineBanknotes size={20} />}
+        iconBgColor="yellow"
+      />
+      <StatCard
+        title={cards[3].label}
+        value={cards[3].value}
+        icon={<HiOutlineArrowPathRoundedSquare size={20} />}
+        iconBgColor={isKeToan ? 'red' : 'blue'}
+        className={isKeToan && Number(cards[3].value) > 0 ? styles.statUrgent : ''}
+      />
     </div>
   );
 };

@@ -521,11 +521,11 @@ const AdminBaoCaoPage = () => {
               <div className={styles.row2} style={{ marginTop: '20px' }}>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={[
-                    { name: 'Chờ duyệt', value: advancedStats?.hieuSuat?.tongDaXuLy === 0 ? 0 : 4 }, // Mock values match state
-                    { name: 'Đang xử lý', value: 2 },
-                    { name: 'Chờ giải ngân', value: 3 },
-                    { name: 'Đã giải ngân', value: advancedStats?.hieuSuat?.soThanhCong || 5 },
-                    { name: 'Từ chối', value: (advancedStats?.hieuSuat?.tongDaXuLy - advancedStats?.hieuSuat?.soThanhCong) || 1 }
+                    { name: 'Chờ duyệt', value: advancedStats?.trangThaiDon?.choDuyet || 0 },
+                    { name: 'Đang xử lý', value: advancedStats?.trangThaiDon?.dangXuLy || 0 },
+                    { name: 'Chờ giải ngân', value: advancedStats?.trangThaiDon?.choGiaiNgan || 0 },
+                    { name: 'Đã giải ngân', value: advancedStats?.trangThaiDon?.daGiaiNgan || 0 },
+                    { name: 'Từ chối', value: advancedStats?.trangThaiDon?.tuChoi || 0 }
                   ]}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />

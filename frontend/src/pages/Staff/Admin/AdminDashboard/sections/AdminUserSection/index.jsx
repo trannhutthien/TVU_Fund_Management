@@ -6,6 +6,7 @@ import {
   HiBuildingOffice2,
   HiIdentification,
 } from 'react-icons/hi2';
+import { StatCard } from '@components/common/Card';
 import styles from './AdminUserSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -72,54 +73,41 @@ const AdminUserSection = ({ userData }) => {
         {/* Left - Stats Cards */}
         <div className={styles.statsGrid}>
           {/* Card 1 - Tổng người dùng */}
-          <div className={styles.statCard}>
-            <div className={`${styles.iconBox} ${styles.iconBoxNavy}`}>
-              <HiUsers size={20} />
-            </div>
-            <div className={styles.statContent}>
-              <div className={styles.statValue}>{tongNguoiDung.toLocaleString('vi-VN')}</div>
-              <div className={styles.statLabel}>Tổng người dùng</div>
-              {newThisMonth > 0 && (
-                <div className={styles.newBadge}>+{newThisMonth} tháng này</div>
-              )}
-            </div>
-          </div>
+          <StatCard
+            title="Tổng người dùng"
+            value={tongNguoiDung.toLocaleString('vi-VN')}
+            subtitle={newThisMonth > 0 ? `+${newThisMonth} tháng này` : undefined}
+            icon={<HiUsers size={20} />}
+            iconBgColor="blue"
+            trend={newThisMonth > 0 ? 'up' : 'neutral'}
+          />
 
           {/* Card 2 - Sinh viên */}
-          <div className={styles.statCard}>
-            <div className={`${styles.iconBox} ${styles.iconBoxGold}`}>
-              <HiAcademicCap size={20} />
-            </div>
-            <div className={styles.statContent}>
-              <div className={styles.statValue}>{sinhVien.toLocaleString('vi-VN')}</div>
-              <div className={styles.statLabel}>Sinh viên đăng ký</div>
-              <div className={styles.statSub}>{sinhVienPercent}% tổng người dùng</div>
-            </div>
-          </div>
+          <StatCard
+            title="Sinh viên đăng ký"
+            value={sinhVien.toLocaleString('vi-VN')}
+            subtitle={`${sinhVienPercent}% tổng người dùng`}
+            icon={<HiAcademicCap size={20} />}
+            iconBgColor="yellow"
+          />
 
           {/* Card 3 - Nhà tài trợ */}
-          <div className={styles.statCard}>
-            <div className={`${styles.iconBox} ${styles.iconBoxBlue}`}>
-              <HiBuildingOffice2 size={20} />
-            </div>
-            <div className={styles.statContent}>
-              <div className={styles.statValue}>{nhaTaiTro.toLocaleString('vi-VN')}</div>
-              <div className={styles.statLabel}>Nhà tài trợ</div>
-              <div className={styles.statSub}>{nhaTaiTroPercent}% tổng người dùng</div>
-            </div>
-          </div>
+          <StatCard
+            title="Nhà tài trợ"
+            value={nhaTaiTro.toLocaleString('vi-VN')}
+            subtitle={`${nhaTaiTroPercent}% tổng người dùng`}
+            icon={<HiBuildingOffice2 size={20} />}
+            iconBgColor="teal"
+          />
 
           {/* Card 4 - Nhân viên */}
-          <div className={styles.statCard}>
-            <div className={`${styles.iconBox} ${styles.iconBoxPurple}`}>
-              <HiIdentification size={20} />
-            </div>
-            <div className={styles.statContent}>
-              <div className={styles.statValue}>{nhanVien.toLocaleString('vi-VN')}</div>
-              <div className={styles.statLabel}>Nhân viên hệ thống</div>
-              <div className={styles.statSub}>Admin + Cán bộ + Kế toán</div>
-            </div>
-          </div>
+          <StatCard
+            title="Nhân viên hệ thống"
+            value={nhanVien.toLocaleString('vi-VN')}
+            subtitle="Admin + Cán bộ + Kế toán"
+            icon={<HiIdentification size={20} />}
+            iconBgColor="purple"
+          />
         </div>
 
         {/* Right - Donut Chart */}

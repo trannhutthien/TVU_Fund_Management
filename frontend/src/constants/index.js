@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
   APPLICATIONS: '/applications',
   APPLICATION_BY_ID: (id) => `/applications/${id}`,
   MY_APPLICATIONS: '/applications/my-applications',
+  AI_SUGGEST: '/applications/ai-suggest',
   APPROVE_LEVEL_1: (id) => `/applications/${id}/approve-level-1`,
   REJECT_LEVEL_1: (id) => `/applications/${id}/reject-level-1`,
   APPROVE_LEVEL_2: (id) => `/applications/${id}/approve-level-2`,

@@ -1,0 +1,87 @@
+@startuml AD11_Xem_Nhat_Ky_He_Thong
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD11: XEM NHẬT KÝ HỆ THỐNG**
+
+|#FFCDD2|Admin|
+start
+:Vào "Nhật ký hệ thống";
+
+|#F5F5F5|Hệ thống|
+:Hiển thị bộ lọc
+- Người dùng
+- Loại hành động
+- Loại đối tượng
+- Khoảng thời gian
+- IP Address;
+
+|#FFCDD2|Admin|
+:Chọn bộ lọc;
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách nhật ký
+theo điều kiện lọc;
+:Giới hạn 100 bản ghi
+gần nhất;
+:Hiển thị danh sách
+- Thời gian
+- Người thực hiện
+- Vai trò
+- Hành động
+- Đối tượng
+- Mô tả ngắn
+- IP Address;
+
+|#FFCDD2|Admin|
+if (Xem chi tiết?) then (Có)
+  :Click vào dòng nhật ký;
+  
+  |#F5F5F5|Hệ thống|
+  :Hiển thị chi tiết đầy đủ
+  - Thông tin người dùng
+  - Chi tiết hành động
+  - Dữ liệu trước thay đổi
+  - Dữ liệu sau thay đổi
+  - So sánh thay đổi;
+  
+  |#FFCDD2|Admin|
+  if (Xuất báo cáo?) then (Có)
+    :Click "Xuất báo cáo";
+    
+    |#F5F5F5|Hệ thống|
+    :Tạo file Excel hoặc CSV;
+    :Bao gồm tất cả
+    thông tin đã lọc;
+    
+    |#FFCDD2|Admin|
+    :Tải file về;
+  endif
+  
+else (Tìm kiếm)
+  :Nhập từ khóa tìm kiếm;
+  
+  |#F5F5F5|Hệ thống|
+  :Tìm trong
+  - Mô tả
+  - Tên người dùng
+  - Email
+  - Hành động;
+  :Hiển thị kết quả;
+  
+  |#FFCDD2|Admin|
+  :Xem kết quả tìm kiếm;
+endif
+
+stop
+
+legend right
+**Quyền:** Chỉ Admin (role 1)
+**API:** GET /api/system/logs
+**Hành động:** CREATE, UPDATE, DELETE, APPROVE, REJECT, LOGIN
+**Mục đích:** Audit trail, bảo mật, giám sát
+endlegend
+
+@enduml

@@ -439,21 +439,93 @@ CREATE TABLE IF NOT EXISTS nhat_ky_he_thong (
   FOREIGN KEY (nguoi_dung_id) REFERENCES nguoidung(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Nhật ký hoạt động hệ thống';
 
+-- ============================================
+-- 13. BẢNG LOẠI QUỸ (loaiquy)
+-- Quản lý các loại quỹ (đào tạo, nghiên cứu, ...)
+-- ============================================
+CREATE TABLE IF NOT EXISTS loaiquy (
+  loaiquy_id INT AUTO_INCREMENT PRIMARY KEY,
+  maloai VARCHAR(50) NOT NULL COMMENT 'Mã loại quỹ',
+  tenloai VARCHAR(100) NOT NULL COMMENT 'Tên loại quỹ',
+  ngaytao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  UNIQUE KEY uk_maloai (maloai)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Loại quỹ';
+
+-- Dữ liệu mẫu loại quỹ
+INSERT INTO loaiquy (maloai, tenloai) VALUES
+('DT', 'Đào tạo'),
+('NC', 'Nghiên cứu'),
+('CTXH', 'Cộng đồng xã hội'),
+('KHQT', 'Hợp tác quốc tế'),
+('Khac', 'Khác')
+ON DUPLICATE KEY UPDATE tenloai = VALUES(tenloai);
+
+-- ============================================
+-- 14. BẢNG ĐƠN VỊ HỌC (donvihoc)
+-- Quản lý các khoa/phòng ban
+-- ============================================
+CREATE TABLE IF NOT EXISTS donvihoc (
+  donvihoc_id INT AUTO_INCREMENT PRIMARY KEY,
+  madonvi VARCHAR(50) NOT NULL COMMENT 'Mã đơn vị',
+  tenkhoa VARCHAR(100) NOT NULL COMMENT 'Tên khoa/phòng ban',
+  trangthai ENUM('Hoat dong', 'Khong hoat dong') DEFAULT 'Hoat dong' COMMENT 'Trạng thái',
+  ngaytao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  UNIQUE KEY uk_madonvi (madonvi)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Đơn vị học';
+
+-- ============================================
+-- 15. BẢNG SINH VIÊN NỔI BẬT (sinhviennoibat)
+-- Lưu thông tin sinh viên xuất sắc (dùng trong code thực tế)
+-- ============================================
+CREATE TABLE IF NOT EXISTS sinhviennoibat (
+  sinhviennoibat_id INT AUTO_INCREMENT PRIMARY KEY,
+  nguoidung_id INT NULL COMMENT 'ID người dùng liên kết',
+  ho_ten VARCHAR(100) NOT NULL COMMENT 'Họ và tên',
+  khoa VARCHAR(100) NULL COMMENT 'Khoa/Ngành học',
+  khoa_hoc VARCHAR(20) NULL COMMENT 'Khóa học',
+  hinh_anh VARCHAR(255) NULL COMMENT 'Đường dẫn ảnh',
+  thanh_tich TEXT NULL COMMENT 'Thành tích nổi bật',
+  so_lan_ho_tro INT DEFAULT 0 COMMENT 'Số lần được hỗ trợ',
+  tong_tien_ho_tro DECIMAL(15,2) DEFAULT 0 COMMENT 'Tổng tiền được hỗ trợ',
+  thu_tu INT DEFAULT 0 COMMENT 'Thứ tự hiển thị',
+  trang_thai ENUM('Hien thi', 'An') DEFAULT 'Hien thi' COMMENT 'Trạng thái',
+  ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ngay_cap_nhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  INDEX idx_nguoidung_id (nguoidung_id),
+  INDEX idx_trang_thai (trang_thai),
+  INDEX idx_thu_tu (thu_tu),
+  
+  FOREIGN KEY (nguoidung_id) REFERENCES nguoidung(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Sinh viên nổi bật';
+
 -- Thêm khóa ngoại cho nguoidung liên kết với taikhoannganhang
 ALTER TABLE nguoidung ADD CONSTRAINT fk_nguoidung_taikhoannganhang 
 FOREIGN KEY (taikhoannganhang_id) REFERENCES taikhoannganhang(taikhoannganhang_id) 
 ON DELETE SET NULL ON UPDATE CASCADE;
 
+-- Thêm cột loaiquy_id cho bang quy (nếu chưa có)
+ALTER TABLE quy ADD COLUMN loaiquy_id INT NULL COMMENT 'ID loại quỹ (FK)' AFTER mo_ta;
+ALTER TABLE quy ADD FOREIGN KEY (loaiquy_id) REFERENCES loaiquy(loaiquy_id) ON DELETE SET NULL ON UPDATE CASCADE;
+
 -- ============================================
 -- SUMMARY
 -- ============================================
--- BẢNG MỚI TẠO:
--- 1. sinh_vien_noi_bat - Quản lý sinh viên nổi bật hiển thị trên Landing Page
--- 2. nhat_ky_he_thong - Quản lý nhật ký hoạt động của hệ thống
---
--- BẢNG CẬP NHẬT:
--- Không có bảng nào được cập nhật cấu trúc trong lần này
--- Chỉ có logic nghiệp vụ được cập nhật:
--- - Bảng quy: Thêm trạng thái 'Tam dung' và 'Da dong' (đã có sẵn trong ENUM)
--- - Bảng yeucauhotro: Logic tính toán số dư thực tế (không thay đổi cấu trúc)
+-- TỔNG CỘNG 15 BẢNG:
+-- 1. vaitro - Vai trò người dùng
+-- 2. nguoidung - Người dùng hệ thống
+-- 3. nhataitro - Nhà tài trợ
+-- 4. quy - Quỹ hỗ trợ
+-- 5. yeucauhotro - Yêu cầu hỗ trợ
+-- 6. pheduyet - Phê duyệt đơn
+-- 7. khoantaitro - Khoản tài trợ
+-- 8. giaodich - Giao dịch giải ngân
+-- 9. taikhoannganhang - Tài khoản ngân hàng
+-- 10. sinh_vien_noi_bat - Sinh viên nổi bật (Landing Page)
+-- 11. nhat_ky_he_thong - Nhật ký hệ thống
+-- 12. loaiquy - Loại quỹ
+-- 13. donvihoc - Đơn vị học/Khoa
+-- 14. sinhviennoibat - Sinh viên nổi bật (dùng trong code)
 -- ============================================

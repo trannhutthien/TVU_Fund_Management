@@ -73,4 +73,11 @@ export const applicationService = {
     const response = await api.post(API_ENDPOINTS.REJECT_LEVEL_3(id), data)
     return response.data
   },
+
+  // Gọi trợ lý AI gợi ý và tối ưu nội dung
+  getAiSuggestion: async (data) => {
+    const response = await api.post(API_ENDPOINTS.AI_SUGGEST, data, { timeout: 30000 })
+    return response.data
+  },
 }
+

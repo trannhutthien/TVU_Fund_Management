@@ -19,6 +19,7 @@ import {
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { StatCard } from '@components/common/Card';
 import api from '@services/api';
 import { getAllLoaiQuy, createLoaiQuy } from '@services/fundService';
 import QuyDetailDrawer from './QuyDetailDrawer/QuyDetailDrawer';
@@ -264,37 +265,6 @@ const QuyListPage = ({ isAdmin = false }) => {
     return { dangHoatDong, tongSoDu, sapHetHan, tamDung };
   }, [funds]);
 
-  const STAT_CARDS = [
-    {
-      label: 'Quỹ đang hoạt động',
-      value: stats.dangHoatDong,
-      icon: HiOutlineBuildingLibrary,
-      color: 'var(--color-primary)',
-      bg: 'rgba(59, 111, 245, 0.1)',
-    },
-    {
-      label: 'Tổng số dư',
-      value: formatCurrency(stats.tongSoDu),
-      icon: HiOutlineBanknotes,
-      color: '#10b981',
-      bg: 'rgba(16, 185, 129, 0.1)',
-    },
-    {
-      label: 'Quỹ sắp hết hạn',
-      value: stats.sapHetHan,
-      icon: HiOutlineCalendarDays,
-      color: '#f59e0b',
-      bg: 'rgba(245, 158, 11, 0.1)',
-    },
-    {
-      label: 'Quỹ tạm dừng',
-      value: stats.tamDung,
-      icon: HiOutlinePauseCircle,
-      color: '#94a3b8',
-      bg: 'rgba(148, 163, 184, 0.1)',
-    },
-  ];
-
   // ─── Pagination ──────────────────────────────────
   const total = filteredFunds.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -389,23 +359,30 @@ const QuyListPage = ({ isAdmin = false }) => {
 
         {/* Stat Cards */}
         <div className={styles.statsRow}>
-          {STAT_CARDS.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.label} className={styles.statCard}>
-                <div
-                  className={styles.statIconWrap}
-                  style={{ background: card.bg, color: card.color }}
-                >
-                  <Icon className={styles.statIcon} />
-                </div>
-                <div className={styles.statText}>
-                  <div className={styles.statValue}>{card.value}</div>
-                  <div className={styles.statLabel}>{card.label}</div>
-                </div>
-              </div>
-            );
-          })}
+          <StatCard
+            title="Quỹ đang hoạt động"
+            value={stats.dangHoatDong}
+            icon={<HiOutlineBuildingLibrary size={20} />}
+            iconBgColor="blue"
+          />
+          <StatCard
+            title="Tổng số dư"
+            value={formatCurrency(stats.tongSoDu)}
+            icon={<HiOutlineBanknotes size={20} />}
+            iconBgColor="green"
+          />
+          <StatCard
+            title="Quỹ sắp hết hạn"
+            value={stats.sapHetHan}
+            icon={<HiOutlineCalendarDays size={20} />}
+            iconBgColor="yellow"
+          />
+          <StatCard
+            title="Quỹ tạm dừng"
+            value={stats.tamDung}
+            icon={<HiOutlinePauseCircle size={20} />}
+            iconBgColor="purple"
+          />
         </div>
 
         {/* Filter Bar */}

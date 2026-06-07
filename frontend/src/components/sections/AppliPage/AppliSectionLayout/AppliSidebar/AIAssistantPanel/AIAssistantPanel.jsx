@@ -5,34 +5,35 @@ import {
   HiOutlineCheckCircle,
   HiOutlineXCircle,
 } from 'react-icons/hi2';
+import { applicationService } from '@services/applicationService';
 import styles from './AIAssistantPanel.module.scss';
 
-const AI_MODEL = 'claude-sonnet-4-20250514';
-const AI_URL = 'https://api.anthropic.com/v1/messages';
-
-const callAI = async (messages, maxTokens = 1000) => {
-  const response = await fetch(AI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      max_tokens: maxTokens,
-      messages,
-    }),
-  });
-  const data = await response.json();
-  return data.content[0].text;
-};
-
-const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion }) => {
+const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund }) => {
+  const [activeTab, setActiveTab] = useState('suggest'); // 'suggest' | 'draft'
   const [status, setStatus] = useState('idle');
   const [analysis, setAnalysis] = useState(null);
+  
+  // Trạng thái cho Tối ưu văn phong
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [optimizedText, setOptimizedText] = useState('');
+  
+  // Trạng thái cho Soạn đơn từ ý chính
+  const [draftInput, setDraftInput] = useState('');
+  const [isDrafting, setIsDrafting] = useState(false);
 
+  const quyId = selectedFund?.quyId;
+
+  // Tự động phân tích khi nội dung Mô tả (moTa) thay đổi
   useEffect(() => {
-    if (!moTa || moTa.trim().length < 50) {
+    if (activeTab !== 'suggest') return;
+    if (!quyId) {
+      setStatus('idle');
+      setAnalysis(null);
+      return;
+    }
+
+    if (!moTa || moTa.trim().length < 10) {
       setStatus('idle');
       setAnalysis(null);
       return;
@@ -40,133 +41,247 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion }) => {
 
     setStatus('analyzing');
 
+    // Debounce 1.5s để tránh gọi API liên tục khi người dùng đang gõ
     const timer = setTimeout(() => {
       analyzeText(moTa);
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [moTa]);
+  }, [moTa, quyId, activeTab]);
 
+  // Hàm gọi API phân tích văn phong đơn
   const analyzeText = async (text) => {
     try {
-      const raw = await callAI([
-        {
-          role: 'user',
-          content: `Phân tích đoạn văn xin học bổng/hỗ trợ sau và trả về JSON với cấu trúc:
-{"danhGia":"nhận xét tổng thể 1 câu","diemManh":"điểm mạnh ngắn","diemYeu":"điểm cần cải thiện ngắn","goiY":"gợi ý cụ thể 1-2 câu"}
-Chỉ trả về JSON, không thêm gì khác.
-Đoạn văn: "${text}"`,
-        },
-      ]);
-      const result = JSON.parse(raw);
-      setAnalysis(result);
-      setStatus('done');
-    } catch {
+      const response = await applicationService.getAiSuggestion({
+        quyId,
+        action: 'analyze',
+        moTa: text,
+        tieuDe
+      });
+
+      if (response.success && response.data) {
+        setAnalysis(response.data);
+        setStatus('done');
+      } else {
+        setStatus('error');
+      }
+    } catch (err) {
+      console.error('Lỗi phân tích đơn:', err);
       setStatus('error');
     }
   };
 
+  // Hàm gọi API viết lại tối ưu văn phong
   const optimizeText = async () => {
+    if (!moTa || moTa.trim().length < 10) return;
     setIsOptimizing(true);
     try {
-      const rewritten = await callAI([
-        {
-          role: 'user',
-          content: `Viết lại đoạn văn xin học bổng sau theo phong cách chân thành, rõ ràng, thuyết phục. Giữ nguyên thông tin, chỉ cải thiện văn phong. Trả về chỉ đoạn văn đã viết lại, không thêm gì khác:
-"${moTa}"`,
-        },
-      ]);
-      setOptimizedText(rewritten);
-      setShowPreview(true);
+      const response = await applicationService.getAiSuggestion({
+        quyId,
+        action: 'optimize',
+        moTa,
+        tieuDe
+      });
+
+      if (response.success && response.data) {
+        setOptimizedText(response.data);
+        setShowPreview(true);
+      }
+    } catch (err) {
+      console.error('Lỗi tối ưu đơn:', err);
     } finally {
       setIsOptimizing(false);
     }
   };
 
+  // Hàm gọi API soạn thảo đơn từ ý chính/hoàn cảnh
+  const draftFromBulletPoints = async () => {
+    if (!draftInput || draftInput.trim().length < 5) return;
+    setIsDrafting(true);
+    try {
+      const response = await applicationService.getAiSuggestion({
+        quyId,
+        action: 'draft',
+        moTa: draftInput,
+        tieuDe
+      });
+
+      if (response.success && response.data) {
+        setOptimizedText(response.data);
+        setShowPreview(true);
+      }
+    } catch (err) {
+      console.error('Lỗi soạn thảo đơn từ ý chính:', err);
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  // Áp dụng văn bản đã tạo/tối ưu vào form chính
   const handleApply = () => {
     onApplySuggestion?.(optimizedText);
     setShowPreview(false);
+    
+    // Nếu vừa soạn thảo đơn, reset ô nhập ý chính và quay về tab Suggest
+    if (activeTab === 'draft') {
+      setDraftInput('');
+      setActiveTab('suggest');
+    }
   };
 
   return (
     <>
       <div className={styles.card}>
+        {/* Header */}
         <div className={styles.header}>
           <HiOutlineSparkles className={styles.headerIcon} />
           <span className={styles.headerText}>Cộng sự AI hỗ trợ</span>
         </div>
 
-        {status === 'idle' && (
+        {/* Nội dung khi chưa chọn Quỹ */}
+        {!selectedFund ? (
           <div className={styles.idleMsg}>
-            Nhập nội dung lý do để AI bắt đầu phân tích và hỗ trợ bạn.
+            Vui lòng chọn Quỹ hỗ trợ ở <strong>Bước 1</strong> để bắt đầu nhận gợi ý từ cộng sự AI.
           </div>
-        )}
-
-        {status === 'analyzing' && (
-          <div className={styles.analyzingBox}>
-            <div className={styles.spinner} />
-            <span className={styles.analyzingText}>
-              AI đang phân tích văn phong...
-            </span>
-          </div>
-        )}
-
-        {status === 'error' && (
-          <div className={styles.idleMsg}>
-            Không thể phân tích lúc này. Vui lòng thử lại sau.
-          </div>
-        )}
-
-        {status === 'done' && analysis && (
+        ) : (
           <>
-            <div className={styles.analysisBox}>
-              <div className={styles.analysisLabel}>PHÂN TÍCH VĂN PHONG</div>
-              <p className={styles.analysisText}>{analysis.danhGia}</p>
+            {/* Tabs */}
+            <div className={styles.tabs}>
+              <button
+                type="button"
+                className={`${styles.tab} ${activeTab === 'suggest' ? styles.active : ''}`}
+                onClick={() => setActiveTab('suggest')}
+              >
+                Gợi ý & Tối ưu
+              </button>
+              <button
+                type="button"
+                className={`${styles.tab} ${activeTab === 'draft' ? styles.active : ''}`}
+                onClick={() => setActiveTab('draft')}
+              >
+                Soạn mới bằng AI
+              </button>
             </div>
 
-            {analysis.diemManh && (
-              <div className={styles.itemRow}>
-                <HiOutlineCheckCircle className={styles.iconStrong} />
-                <span className={styles.itemText}>{analysis.diemManh}</span>
-              </div>
+            {/* TAB 1: GỢI Ý & TỐI ƯU */}
+            {activeTab === 'suggest' && (
+              <>
+                {status === 'idle' && (
+                  <div className={styles.idleMsg}>
+                    Nhập nội dung lý do ở ô <strong>Mô tả lý do đề nghị hỗ trợ</strong> bên trái để AI tự động phân tích và đưa ra phản hồi.
+                  </div>
+                )}
+
+                {status === 'analyzing' && (
+                  <div className={styles.analyzingBox}>
+                    <div className={styles.spinner} />
+                    <span className={styles.analyzingText}>
+                      AI đang phân tích văn phong đơn...
+                    </span>
+                  </div>
+                )}
+
+                {status === 'error' && (
+                  <div className={styles.idleMsg}>
+                    Không thể phân tích đơn lúc này hoặc chưa cấu hình API Key ở máy chủ. Vui lòng thử lại sau.
+                  </div>
+                )}
+
+                {status === 'done' && analysis && (
+                  <>
+                    <div className={styles.analysisBox}>
+                      <div className={styles.analysisLabel}>ĐÁNH GIÁ CHUNG</div>
+                      <p className={styles.analysisText}>{analysis.danhGia}</p>
+                    </div>
+
+                    {analysis.diemManh && (
+                      <div className={styles.itemRow}>
+                        <HiOutlineCheckCircle className={styles.iconStrong} />
+                        <span className={styles.itemText}>
+                          <strong>Ưu điểm:</strong> {analysis.diemManh}
+                        </span>
+                      </div>
+                    )}
+
+                    {analysis.diemYeu && (
+                      <div className={styles.itemRow}>
+                        <HiOutlineXCircle className={styles.iconWeak} />
+                        <span className={styles.itemText}>
+                          <strong>Cần cải thiện:</strong> {analysis.diemYeu}
+                        </span>
+                      </div>
+                    )}
+
+                    {analysis.goiY && (
+                      <div className={styles.suggestionBox}>
+                        <span className={styles.suggestionLabel}>💡 Gợi ý:</span>{' '}
+                        <span className={styles.suggestionText}>{analysis.goiY}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      className={styles.optimizeBtn}
+                      onClick={optimizeText}
+                      disabled={isOptimizing || !moTa || moTa.trim().length < 10}
+                    >
+                      {isOptimizing ? (
+                        <>
+                          <div className={styles.btnSpinner} />
+                          Đang tối ưu văn phong...
+                        </>
+                      ) : (
+                        <>
+                          <HiOutlineSparkles />
+                          Tối ưu đơn với AI
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </>
             )}
 
-            {analysis.diemYeu && (
-              <div className={styles.itemRow}>
-                <HiOutlineXCircle className={styles.iconWeak} />
-                <span className={styles.itemText}>{analysis.diemYeu}</span>
-              </div>
-            )}
+            {/* TAB 2: SOẠN MỚI BẰNG AI */}
+            {activeTab === 'draft' && (
+              <>
+                <div className={styles.draftInputBox}>
+                  <label className={styles.draftLabel}>
+                    Nhập hoàn cảnh / các ý chính của bạn:
+                  </label>
+                  <textarea
+                    className={styles.draftTextarea}
+                    placeholder="Ví dụ: Gia đình làm nông ở vùng sâu, hạn mặn mất mùa, gặp khó khăn đóng học phí học kỳ 2. Cam kết cố gắng học tốt..."
+                    value={draftInput}
+                    onChange={(e) => setDraftInput(e.target.value)}
+                  />
+                </div>
 
-            {analysis.goiY && (
-              <div className={styles.suggestionBox}>
-                <span className={styles.suggestionLabel}>💡 Gợi ý:</span>{' '}
-                <span className={styles.suggestionText}>{analysis.goiY}</span>
-              </div>
+                <button
+                  type="button"
+                  className={styles.optimizeBtn}
+                  onClick={draftFromBulletPoints}
+                  disabled={isDrafting || !draftInput || draftInput.trim().length < 5}
+                >
+                  {isDrafting ? (
+                    <>
+                      <div className={styles.btnSpinner} />
+                      Đang soạn đơn...
+                    </>
+                  ) : (
+                    <>
+                      <HiOutlineSparkles />
+                      Tự soạn đơn bằng AI
+                    </>
+                  )}
+                </button>
+              </>
             )}
-
-            <button
-              type="button"
-              className={styles.optimizeBtn}
-              onClick={optimizeText}
-              disabled={isOptimizing}
-            >
-              {isOptimizing ? (
-                <>
-                  <div className={styles.btnSpinner} />
-                  Đang tối ưu...
-                </>
-              ) : (
-                <>
-                  <HiOutlineSparkles />
-                  ✦ Tối ưu văn phong với AI
-                </>
-              )}
-            </button>
           </>
         )}
       </div>
 
+      {/* Modal hiển thị nội dung AI viết */}
       {showPreview && (
         <div className={styles.overlay} onClick={() => setShowPreview(false)}>
           <div
@@ -174,7 +289,7 @@ Chỉ trả về JSON, không thêm gì khác.
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.modalTitle}>
-              ✦ Nội dung đã được AI tối ưu
+              ✦ Nội dung do AI soạn thảo & tối ưu
             </div>
             <textarea
               className={styles.modalTextarea}
@@ -187,14 +302,14 @@ Chỉ trả về JSON, không thêm gì khác.
                 className={styles.modalBtnOutline}
                 onClick={() => setShowPreview(false)}
               >
-                Giữ nguyên
+                Đóng
               </button>
               <button
                 type="button"
                 className={styles.modalBtnPrimary}
                 onClick={handleApply}
               >
-                Dùng nội dung này
+                Sử dụng nội dung này
               </button>
             </div>
           </div>
@@ -208,6 +323,7 @@ AIAssistantPanel.propTypes = {
   moTa: PropTypes.string,
   tieuDe: PropTypes.string,
   onApplySuggestion: PropTypes.func,
+  selectedFund: PropTypes.object,
 };
 
 export default AIAssistantPanel;

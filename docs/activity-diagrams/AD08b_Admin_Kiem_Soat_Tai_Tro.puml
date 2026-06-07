@@ -1,0 +1,107 @@
+@startuml AD08b_Admin_Kiem_Soat_Tai_Tro
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD08b: KIỂM SOÁT TÀI TRỢ (ADMIN)**
+
+|#FFCDD2|Admin|
+start
+:Vào "Quản lý tài trợ";
+
+|#F5F5F5|Hệ thống|
+:Hiển thị bộ lọc
+- Trạng thái
+- Quỹ
+- Nhà tài trợ
+- Khoảng thời gian
+- Khoảng số tiền;
+
+|#FFCDD2|Admin|
+:Chọn bộ lọc;
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách tài trợ
+theo điều kiện lọc;
+:Hiển thị thông tin chi tiết;
+
+|#FFCDD2|Admin|
+:Chọn chức năng;
+
+if (Chức năng?) then (Xem chi tiết)
+  :Click vào khoản tài trợ;
+  
+  |#F5F5F5|Hệ thống|
+  :Hiển thị đầy đủ
+  - Thông tin nhà tài trợ
+  - Thông tin tài trợ
+  - Chứng từ đính kèm
+  - Người xác nhận
+  - Thời gian xử lý;
+  
+  |#FFCDD2|Admin|
+  :Xem và phân tích;
+  
+  if (Phát hiện vấn đề?) then (Có)
+    :Liên hệ Kế toán
+    để xác minh lại;
+  endif
+  
+elseif (Chức năng?) then (Xem thống kê)
+  :Click "Thống kê";
+  
+  |#F5F5F5|Hệ thống|
+  :Tính toán thống kê
+  - Tổng số khoản
+  - Tổng tiền đã nhận
+  - Tổng tiền chờ xác nhận
+  - Theo quỹ
+  - Theo tháng;
+  :Tạo biểu đồ
+  - Biểu đồ cột
+  - Biểu đồ tròn
+  - Top nhà tài trợ
+  - Xu hướng;
+  
+  |#FFCDD2|Admin|
+  :Phân tích xu hướng
+  và đưa ra đánh giá;
+  
+elseif (Chức năng?) then (Xuất báo cáo)
+  :Click "Xuất báo cáo";
+  
+  |#F5F5F5|Hệ thống|
+  :Tạo file báo cáo
+  Excel hoặc PDF;
+  :Bao gồm
+  - Danh sách đã lọc
+  - Thống kê tổng hợp
+  - Biểu đồ;
+  
+  |#FFCDD2|Admin|
+  :Tải file báo cáo;
+  
+else (Xem giao dịch THU)
+  :Click "Giao dịch THU";
+  
+  |#F5F5F5|Hệ thống|
+  :Lấy lịch sử
+  giao dịch THU;
+  :Hiển thị chi tiết
+  từng giao dịch;
+  
+  |#FFCDD2|Admin|
+  :Xem và kiểm tra
+  lịch sử giao dịch;
+endif
+
+stop
+
+legend right
+**Quyền:** Admin (role 1)
+**API:** GET /api/donations/statistics
+**Mục đích:** Giám sát, thống kê, phát hiện bất thường
+endlegend
+
+@enduml

@@ -99,9 +99,12 @@ const LoginForm = ({ onGoogleLogin, onSuccess, onClose }) => {
     }
   };
 
-  // Handle Google login
+  // Handle Google login — redirect đến backend để bắt đầu OAuth flow
   const handleGoogleLogin = () => {
-    onGoogleLogin?.();
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+    // Bỏ /api ở cuối để lấy base URL của server
+    const serverBase = apiBase.replace(/\/api$/, '');
+    window.location.href = `${serverBase}/api/auth/google`;
   };
 
   return (

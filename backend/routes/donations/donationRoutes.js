@@ -9,6 +9,7 @@ import {
   listDonations,
   getDonationStats,
   getDonationDetail,
+  getMyDonations,
 } from "../../controllers/donations/donationController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
@@ -24,6 +25,10 @@ router.post("/public", createPublicDonation);
 
 // POST /api/donations/authenticated — Nhà tài trợ đã đăng nhập quyên góp (CẦN TOKEN, ROLE 4)
 router.post("/authenticated", protect, authorizeRoles(4), createAuthenticatedDonation);
+
+// GET /api/donations/my-donations — Lấy danh sách quyên góp của nhà tài trợ hiện tại (CẦN TOKEN, ROLE 4)
+router.get("/my-donations", protect, authorizeRoles(4), getMyDonations);
+
 
 // GET /api/donations/stats — Stats cho Kế toán (Admin/Kế toán)
 router.get("/stats", protect, authorizeRoles(1, 2), getDonationStats);

@@ -1,0 +1,78 @@
+@startuml AD10_Xuat_Bao_Cao
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD10: XUẤT BÁO CÁO**
+
+|#FFCCBC|Kế toán|
+start
+:Vào trang "Báo cáo";
+
+|#F5F5F5|Hệ thống|
+:Hiển thị menu báo cáo
+1. Thu chi tổng hợp
+2. Danh sách nhà tài trợ
+3. Danh sách thủ hưởng
+4. Báo cáo quỹ chi tiết
+5. Báo cáo đề xuất;
+
+|#FFCCBC|Kế toán|
+:Chọn loại báo cáo;
+:Chọn bộ lọc
+- Quỹ (tùy chọn)
+- Từ ngày đến ngày
+- Tiêu chí khác;
+
+|#F5F5F5|Hệ thống|
+if (Loại báo cáo?) then (Thu chi)
+  :Lấy dữ liệu giao dịch;
+  :Tính toán
+  - Tổng thu
+  - Tổng chi
+  - Chênh lệch
+  - Số dư đầu kỳ/cuối kỳ;
+  
+elseif (Loại?) then (Nhà tài trợ)
+  :Lấy danh sách
+  nhà tài trợ;
+  :Tính tổng số lần
+  và số tiền tài trợ;
+  
+elseif (Loại?) then (Thủ hưởng)
+  :Lấy danh sách
+  sinh viên đã được hỗ trợ;
+  :Tính tổng số tiền
+  đã nhận;
+  
+else (Báo cáo quỹ)
+  :Lấy chi tiết quỹ;
+  :Bao gồm
+  - Tài trợ
+  - Giải ngân
+  - Thống kê;
+endif
+
+:Mở template Word;
+:Điền dữ liệu
+vào template;
+:Tạo file Word mới;
+
+|#FFCCBC|Kế toán|
+:Click "Tải xuống";
+:Mở file Word;
+:Có thể
+- Xem nội dung
+- Chỉnh sửa
+- Thêm chữ ký
+- In hoặc lưu;
+stop
+
+legend right
+**Quyền:** Kế toán (role 2), Admin (role 1)
+**API:** GET /api/reports/*
+**Template:** docxtemplater
+endlegend
+
+@enduml

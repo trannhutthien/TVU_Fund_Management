@@ -1,0 +1,73 @@
+@startuml AD03_Sinh_Vien_Nop_Don
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD03: SINH VIÊN NỘP ĐƠN**
+
+|#B3E5FC|Sinh viên|
+start
+:Vào trang "Nộp đơn xin hỗ trợ";
+:Xem danh sách quỹ 
+đang hoạt động;
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách quỹ 
+đang mở;
+
+|#B3E5FC|Sinh viên|
+:Chọn quỹ muốn xin hỗ trợ;
+:Điền thông tin đơn
+- Lý do xin hỗ trợ
+- Số tiền đề nghị
+- Tài liệu đính kèm;
+:Nhấn "Nộp đơn";
+
+|#F5F5F5|Hệ thống|
+:Kiểm tra thông tin;
+
+if (Dữ liệu hợp lệ?) then (Không)
+  :Hiển thị lỗi
+  Thiếu thông tin hoặc 
+  không hợp lệ;
+  stop
+endif
+
+if (Số tiền vượt giới hạn?) then (Có)
+  :Thông báo vượt 
+  giới hạn cho phép;
+  stop
+endif
+
+if (Quỹ đủ số dư?) then (Không)
+  :Cảnh báo quỹ 
+  không đủ số dư
+  (Vẫn cho phép nộp);
+endif
+
+:Lưu đơn vào hệ thống;
+:Đặt trạng thái 
+"Chờ duyệt cấp 1";
+:Tạo 3 bước phê duyệt
+- Cấp 1 (Cán bộ)
+- Cấp 2 (Cán bộ)
+- Cấp 3 (Kế toán);
+
+|#B3E5FC|Sinh viên|
+:Nhận thông báo 
+đã nộp thành công;
+:Hiển thị mã đơn 
+và trạng thái;
+:Chuyển đến trang 
+"Đơn của tôi";
+stop
+
+legend right
+**Quyền:** Sinh viên (role 4)
+**API:** POST /api/applications
+**Trạng thái ban đầu:** Chờ duyệt cấp 1
+**Bước tiếp theo:** Cán bộ phê duyệt cấp 1
+endlegend
+
+@enduml

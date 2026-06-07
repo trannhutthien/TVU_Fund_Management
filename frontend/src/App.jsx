@@ -22,6 +22,7 @@ import GuidelinesPage from './pages/Public/GuidelinesPage/GuidelinesPage'
 // Pages - Auth
 import LoginPage from './pages/Auth/LoginPage'
 import RegisterPage from './pages/Auth/RegisterPage'
+import GoogleAuthCallbackPage from './pages/Auth/GoogleAuthCallbackPage'
 
 // Pages - Student (Role 4)
 import ProfilePage from './pages/User/Student/ProfilePage/ProfilePage'
@@ -83,6 +84,9 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Route>
+
+          {/* Google OAuth Callback - không wrap AuthLayout */}
+          <Route path="/auth/google/callback" element={<GoogleAuthCallbackPage />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>

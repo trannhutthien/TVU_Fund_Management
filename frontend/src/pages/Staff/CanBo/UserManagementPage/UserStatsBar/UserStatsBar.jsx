@@ -4,6 +4,7 @@ import {
   HiOutlineHandRaised,
   HiOutlineLockClosed,
 } from 'react-icons/hi2';
+import { StatCard } from '@components/common/Card';
 import styles from './UserStatsBar.module.scss';
 
 const UserStatsBar = ({ stats, loading }) => {
@@ -62,23 +63,30 @@ const UserStatsBar = ({ stats, loading }) => {
 
   return (
     <div className={styles.statsRow}>
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <div key={card.label} className={styles.statCard}>
-            <div
-              className={styles.statIconWrap}
-              style={{ background: card.bg, color: card.color }}
-            >
-              <Icon className={styles.statIcon} />
-            </div>
-            <div className={styles.statText}>
-              <div className={styles.statValue}>{card.value}</div>
-              <div className={styles.statLabel}>{card.label}</div>
-            </div>
-          </div>
-        );
-      })}
+      <StatCard
+        title={cards[0].label}
+        value={cards[0].value}
+        icon={<HiOutlineUsers size={20} />}
+        iconBgColor="blue"
+      />
+      <StatCard
+        title={cards[1].label}
+        value={cards[1].value}
+        icon={<HiOutlineAcademicCap size={20} />}
+        iconBgColor="yellow"
+      />
+      <StatCard
+        title={cards[2].label}
+        value={cards[2].value}
+        icon={<HiOutlineHandRaised size={20} />}
+        iconBgColor="green"
+      />
+      <StatCard
+        title={cards[3].label}
+        value={cards[3].value}
+        icon={<HiOutlineLockClosed size={20} />}
+        iconBgColor="red"
+      />
     </div>
   );
 };

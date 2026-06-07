@@ -16,6 +16,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
+import { StatCard } from '@components/common/Card';
 import { getStaffDonors, getDonorStats } from '@services/donorService';
 import NhaTaiTroDetailDrawer from './NhaTaiTroDetailDrawer/NhaTaiTroDetailDrawer';
 import KhoanTaiTroModal from './KhoanTaiTroModal/KhoanTaiTroModal';
@@ -134,29 +135,25 @@ const NhaTaiTroPage = () => {
       label: 'Tổng nhà tài trợ',
       value: stats?.tongNhaTaiTro ?? 0,
       icon: HiOutlineHandRaised,
-      color: 'var(--color-navy-blue, #1a2f5e)',
-      bg: 'rgba(26,47,94,0.08)',
+      iconBgColor: 'blue',
     },
     {
       label: 'Tổng đã đóng góp',
       value: formatCurrency(stats?.tongDaDongGop),
       icon: HiOutlineBanknotes,
-      color: '#10b981',
-      bg: 'rgba(16,185,129,0.08)',
+      iconBgColor: 'green',
     },
     {
       label: 'Tháng này',
       value: formatCurrency(stats?.thangNay),
       icon: HiOutlineCalendarDays,
-      color: 'var(--color-gold, #f0a500)',
-      bg: 'rgba(240,165,0,0.08)',
+      iconBgColor: 'yellow',
     },
     {
       label: 'Khoản chờ duyệt',
       value: stats?.choDuyet ?? 0,
       icon: HiOutlineClock,
-      color: '#ef4444',
-      bg: 'rgba(239,68,68,0.08)',
+      iconBgColor: 'red',
       urgent: true,
     },
   ];
@@ -210,23 +207,14 @@ const NhaTaiTroPage = () => {
             const Icon = card.icon;
             const isUrgent = card.urgent && Number(card.value) > 0;
             return (
-              <div
+              <StatCard
                 key={card.label}
-                className={`${styles.statCard} ${
-                  isUrgent ? styles.statUrgent : ''
-                }`}
-              >
-                <div
-                  className={styles.statIconWrap}
-                  style={{ background: card.bg, color: card.color }}
-                >
-                  <Icon className={styles.statIcon} />
-                </div>
-                <div className={styles.statText}>
-                  <div className={styles.statValue}>{card.value}</div>
-                  <div className={styles.statLabel}>{card.label}</div>
-                </div>
-              </div>
+                title={card.label}
+                value={card.value}
+                icon={<Icon size={20} />}
+                iconBgColor={card.iconBgColor}
+                className={isUrgent ? styles.statUrgent : ''}
+              />
             );
           })}
         </div>

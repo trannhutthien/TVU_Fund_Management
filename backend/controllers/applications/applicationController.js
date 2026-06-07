@@ -162,7 +162,7 @@ export const createApplication = async (req, res) => {
       hanhdong: "NOP_YEU_CAU_HO_TRO",
       loaidoituong: "yeucauhotro",
       doituong_id: result.yeucauhotroId,
-      mota: `Nộp đơn xin hỗ trợ từ quỹ '${fund.tenquy}' với số tiền đề nghị: ${parseFloat(soTienYeuCau).toLocaleString('vi-VN')} VNĐ`,
+      mota: `Nộp đơn xin hỗ trợ từ quỹ '${fund.ten_quy}' với số tiền đề nghị: ${parseFloat(soTienYeuCau).toLocaleString('vi-VN')} VNĐ`,
       dulieumoi: applicationData
     });
 
@@ -186,8 +186,8 @@ export const createApplication = async (req, res) => {
         soTienYeuCau: applicationData.soTienDeNghi,
         quy: {
           id: fund.quy_id,
-          tenQuy: fund.tenquy,
-          loaiQuy: fund.loaiquy_id
+          tenQuy: fund.ten_quy,
+          loaiQuy: fund.loai_quy
         },
         trangThai: 'Cho duyet cap 1',
         ngayNop: new Date(),
@@ -1202,7 +1202,7 @@ export const disburseApplication = async (req, res) => {
       loaidoituong: "yeucauhotro",
       doituong_id: id,
       mota: isDisbursed
-        ? `Phê duyệt cấp 3 và giải ngân thành công số tiền ${soTienYeuCau.toLocaleString('vi-VN')} VNĐ từ quỹ '${fund.tenquy}' cho đơn hỗ trợ ID ${id}`
+        ? `Phê duyệt cấp 3 và giải ngân thành công số tiền ${soTienYeuCau.toLocaleString('vi-VN')} VNĐ từ quỹ '${fund.ten_quy}' cho đơn hỗ trợ ID ${id}`
         : `Phê duyệt cấp 3 thành công đơn hỗ trợ ID ${id}. Chờ giải ngân khi quỹ đủ tiền.`,
       dulieucu: { trangthai: currentStatus },
       dulieumoi: { trangthai: trangThaiMoi }
@@ -1229,7 +1229,7 @@ export const disburseApplication = async (req, res) => {
         isDisbursed: isDisbursed,
         quy: {
           id: fund.quy_id,
-          tenQuy: fund.tenquy,
+          tenQuy: fund.ten_quy,
           soDuCu: soDuQuy,
           soDuMoi: isDisbursed ? soDuQuy - soTienYeuCau : soDuQuy
         },

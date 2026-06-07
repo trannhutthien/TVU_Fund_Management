@@ -1,0 +1,71 @@
+@startuml AD05_Phe_Duyet_Cap_2
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 250
+
+title **AD05: PHÊ DUYỆT CẤP 2**
+
+|#E1BEE7|Cán bộ Quỹ|
+start
+:Vào "Quản lý đơn";
+:Xem danh sách đơn
+"Chờ duyệt cấp 2";
+
+|#F5F5F5|Hệ thống|
+:Lấy danh sách đơn 
+đã qua cấp 1;
+:Hiển thị kèm
+ý kiến người duyệt cấp 1;
+
+|#E1BEE7|Cán bộ Quỹ|
+:Click vào đơn cần xét;
+:Xem chi tiết đơn
+và lịch sử phê duyệt cấp 1;
+:Xem xét lần 2;
+
+if (Quyết định?) then (Phê duyệt)
+  :Nhập ghi chú (nếu có);
+  
+  |#F5F5F5|Hệ thống|
+  :Lưu kết quả phê duyệt;
+  :Cập nhật trạng thái đơn
+  thành "Đã duyệt cấp 2";
+  :Chuyển đơn sang
+  "Chờ duyệt cấp 3";
+  :Gửi thông báo cho Kế toán;
+  
+  |#E1BEE7|Cán bộ Quỹ|
+  :Thông báo đã phê duyệt
+  Chuyển sang Kế toán (cấp 3);
+  
+else (Từ chối)
+  :Nhập lý do từ chối
+  (BẮT BUỘC);
+  
+  if (Đã nhập lý do?) then (Chưa)
+    :Yêu cầu nhập lý do;
+    stop
+  endif
+  
+  |#F5F5F5|Hệ thống|
+  :Lưu kết quả từ chối;
+  :Cập nhật trạng thái đơn
+  thành "Từ chối cấp 2";
+  :Gửi thông báo
+  cho sinh viên;
+  
+  |#E1BEE7|Cán bộ Quỹ|
+  :Đã từ chối đơn;
+endif
+
+:Quay lại danh sách;
+stop
+
+legend right
+**Quyền:** Cán bộ Quỹ (role 3), Admin (role 1)
+**API:** PUT /api/applications/:id/approve-level-2
+**Bước tiếp theo:** Kế toán duyệt cấp 3 & giải ngân
+endlegend
+
+@enduml
