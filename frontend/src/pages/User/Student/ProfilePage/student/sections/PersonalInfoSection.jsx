@@ -12,11 +12,13 @@ import {
   HiOutlinePencilSquare,
   HiOutlineCheck,
   HiOutlineXMark,
+  HiOutlineKey,
 } from 'react-icons/hi2';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
 import useAuthStore from '@stores/authStore';
 import { userService } from '@services/userService';
+import ChangePasswordModal from '../../shared/ChangePasswordModal';
 import styles from './PersonalInfoSection.module.scss';
 
 /**
@@ -25,6 +27,7 @@ import styles from './PersonalInfoSection.module.scss';
 const PersonalInfoSection = ({ user, onSave }) => {
   const { updateUser } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -142,6 +145,16 @@ const PersonalInfoSection = ({ user, onSave }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
+          {!isEditing && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsChangePasswordModalOpen(true)}
+              leftIcon={<HiOutlineKey size={16} />}
+            >
+              {user?.hasPassword ? 'Đổi mật khẩu' : 'Thiết lập mật khẩu'}
+            </Button>
+          )}
           {!isEditing ? (
             <Button
               variant="secondary"
@@ -245,6 +258,12 @@ const PersonalInfoSection = ({ user, onSave }) => {
           <span>Thông tin được bảo mật và dùng cho việc xét duyệt hỗ trợ/quyên góp. Nhấn nút "Chỉnh sửa" để thay đổi thông tin.</span>
         </div>
       )}
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        user={user}
+      />
     </div>
   );
 };

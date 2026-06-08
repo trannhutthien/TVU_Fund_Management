@@ -1,0 +1,141 @@
+@startuml SD09_AI_Ho_Tro_Viet_Don
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD09: AI HỖ TRỢ VIẾT ĐƠN XIN HỖ TRỢ**
+
+actor "Sinh viên" as SV
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+participant "Google Gemini AI" as AI_Service
+
+SV -> Browser: Vào trang "Nộp đơn"
+activate Browser
+
+Browser -> API: Lấy thông tin quỹ
+activate API
+API -> DB: Truy vấn thông tin quỹ
+activate DB
+DB --> API: Thông tin quỹ
+deactivate DB
+API --> Browser: Hiển thị quỹ
+deactivate API
+
+SV -> Browser: Click "AI hỗ trợ viết đơn"
+
+note over SV
+**3 chức năng AI:**
+1. Phân tích đơn
+2. Tối ưu đơn
+3. Soạn đơn mẫu
+end note
+
+== CHỨC NĂNG 1: PHÂN TÍCH ĐƠN ==
+
+SV -> Browser: Nhập nội dung đơn (>10 ký tự)
+SV -> Browser: Chọn "Phân tích"
+
+Browser -> API: Gửi yêu cầu phân tích
+activate API
+note right: POST /api/applications/ai-suggest\naction: "analyze"
+
+API -> API: Xác thực token người dùng
+
+API -> DB: Lấy thông tin quỹ\n- Tên quỹ\n- Mô tả\n- Điều kiện hỗ trợ
+activate DB
+DB --> API: Thông tin quỹ
+deactivate DB
+
+API -> API: Tạo prompt cho AI:\n"Phân tích đoạn văn của sinh viên\nvà đưa ra nhận xét"
+
+API -> AI_Service: Gửi prompt đến Gemini AI
+activate AI_Service
+AI_Service -> AI_Service: Phân tích nội dung\nvà đánh giá
+AI_Service --> API: Trả về JSON:\n- Đánh giá\n- Điểm mạnh\n- Điểm yếu\n- Gợi ý cải thiện
+deactivate AI_Service
+
+API --> Browser: Trả về kết quả phân tích
+deactivate API
+
+Browser --> SV: Hiển thị:\n✅ Điểm mạnh: ...\n❌ Điểm yếu: ...\n💡 Gợi ý: ...
+
+== CHỨC NĂNG 2: TỐI ƯU ĐƠN ==
+
+SV -> Browser: Chọn "Tối ưu đơn"
+
+Browser -> API: Gửi yêu cầu tối ưu
+activate API
+note right: POST /api/applications/ai-suggest\naction: "optimize"
+
+API -> DB: Lấy thông tin quỹ
+activate DB
+DB --> API: Thông tin quỹ
+deactivate DB
+
+API -> API: Tạo prompt:\n"Viết lại đoạn văn\ncho lịch sự, chân thành hơn"
+
+API -> AI_Service: Gửi prompt đến Gemini AI
+activate AI_Service
+AI_Service -> AI_Service: Viết lại nội dung:\n- Sửa lỗi chính tả\n- Cải thiện văn phong\n- Giữ nguyên thông tin
+AI_Service --> API: Trả về đoạn văn đã tối ưu
+deactivate AI_Service
+
+API --> Browser: Trả về nội dung mới
+deactivate API
+
+Browser --> SV: Hiển thị đoạn văn tối ưu\n(Sinh viên có thể copy)
+
+== CHỨC NĂNG 3: SOẠN ĐƠN MẪU ==
+
+SV -> Browser: Nhập vài ý chính\n(VD: "Gia đình khó khăn,\nbố mẹ thất nghiệp")
+SV -> Browser: Chọn "Soạn đơn mẫu"
+
+Browser -> API: Gửi yêu cầu soạn đơn
+activate API
+note right: POST /api/applications/ai-suggest\naction: "draft"
+
+API -> DB: Lấy thông tin quỹ
+activate DB
+DB --> API: Thông tin quỹ\n+ Điều kiện hỗ trợ
+deactivate DB
+
+API -> API: Tạo prompt:\n"Viết lá đơn hoàn chỉnh\ntừ các ý chính"
+
+API -> AI_Service: Gửi prompt đến Gemini AI
+activate AI_Service
+AI_Service -> AI_Service: Soạn lá đơn hoàn chỉnh:\n- Lời kính gửi\n- Giới thiệu bản thân\n- Hoàn cảnh khó khăn\n- Lời cảm ơn
+AI_Service --> API: Trả về lá đơn mẫu
+deactivate AI_Service
+
+API --> Browser: Trả về đơn mẫu
+deactivate API
+
+Browser --> SV: Hiển thị đơn mẫu đầy đủ\n(Sinh viên chỉnh sửa và dùng)
+
+deactivate Browser
+
+SV -> SV: Chỉnh sửa nội dung\ntheo ý mình
+SV -> Browser: Dán nội dung vào form\nvà nộp đơn
+
+note over SV, AI_Service
+**Lưu ý:**
+- AI chỉ hỗ trợ, không thay thế người viết
+- Sinh viên vẫn phải kiểm tra và chỉnh sửa
+- Nội dung cuối cùng do sinh viên quyết định
+end note
+
+legend right
+**Mô tả**: AI Gemini hỗ trợ sinh viên viết đơn xin hỗ trợ
+**API**: POST /api/applications/ai-suggest
+**Quyền hạn**: Sinh viên (role 4), hoặc công khai
+**3 chức năng**:
+  1. **Analyze** - Phân tích và đánh giá đơn
+  2. **Optimize** - Viết lại cho hay hơn
+  3. **Draft** - Soạn đơn mẫu từ ý chính
+**AI Service**: Google Gemini (gemini-1.5-flash)
+**Validation**: Tối thiểu 5-10 ký tự
+endlegend
+
+@enduml

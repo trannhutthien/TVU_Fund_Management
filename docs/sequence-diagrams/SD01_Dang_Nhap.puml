@@ -1,0 +1,74 @@
+@startuml SD01_Dang_Nhap
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD01: ĐĂNG NHẬP HỆ THỐNG**
+
+actor "Người dùng" as User
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+
+User -> Browser: Nhập email và mật khẩu
+activate Browser
+
+Browser -> API: Gửi yêu cầu đăng nhập
+activate API
+note right: POST /api/auth/login
+
+API -> DB: Tìm người dùng theo email
+activate DB
+DB --> API: Trả về thông tin người dùng
+deactivate DB
+
+alt Người dùng không tồn tại
+    API --> Browser: Thông báo lỗi\n"Email không tồn tại"
+    Browser --> User: Hiển thị thông báo lỗi
+else Người dùng tồn tại
+    API -> API: So sánh mật khẩu
+    
+    alt Mật khẩu không đúng
+        API --> Browser: Thông báo lỗi\n"Mật khẩu không chính xác"
+        Browser --> User: Hiển thị thông báo lỗi
+    else Mật khẩu đúng
+        alt Tài khoản bị khóa
+            API --> Browser: Thông báo lỗi\n"Tài khoản đã bị khóa"
+            Browser --> User: Hiển thị thông báo lỗi
+        else Tài khoản hoạt động
+            API -> API: Tạo token xác thực\n(Thời hạn 15 phút)
+            API -> API: Tạo token làm mới\n(Thời hạn 7 ngày)
+            
+            API --> Browser: Trả về token và\nthông tin người dùng
+            deactivate API
+            
+            Browser -> Browser: Lưu token vào bộ nhớ
+            Browser -> Browser: Xác định vai trò người dùng
+            
+            alt Admin (Vai trò 1)
+                Browser --> User: Chuyển đến\nTrang quản trị Admin
+            else Kế toán (Vai trò 2)
+                Browser --> User: Chuyển đến\nTrang quản lý tài chính
+            else Cán bộ (Vai trò 3)
+                Browser --> User: Chuyển đến\nTrang quản lý đơn
+            else Sinh viên/Nhà tài trợ (Vai trò 4)
+                Browser --> User: Chuyển đến\nTrang dành cho người dùng
+            end
+        end
+    end
+end
+
+deactivate Browser
+
+legend right
+**Mô tả**: Xác thực người dùng và phân quyền truy cập
+**API**: POST /api/auth/login
+**Vai trò**: 
+  - 1 = Admin (Quản trị viên)
+  - 2 = Kế toán
+  - 3 = Cán bộ Quỹ
+  - 4 = Sinh viên/Nhà tài trợ
+**Token**: Access Token (15 phút) + Refresh Token (7 ngày)
+endlegend
+
+@enduml

@@ -124,6 +124,7 @@ export const googleCallback = async (req, res) => {
       tenVaiTro: user.tenvaitro || null,
       loaiTaiKhoan: user.loaitaikhoan || "SINH_VIEN",
       createdAt: user.ngaytao || null,
+      hasPassword: !!user.hasPassword,
     };
 
     // 8. Redirect về frontend kèm token (encode để tránh vấn đề URL)

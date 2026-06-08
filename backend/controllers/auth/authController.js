@@ -178,6 +178,7 @@ export const register = async (req, res) => {
         loaiTaiKhoan: newUser.loaitaikhoan,
         khoaPhong: newUser.khoaphong,
         createdAt: newUser.ngaytao,
+        hasPassword: true,
       },
     });
   } catch (error) {
@@ -278,6 +279,7 @@ export const login = async (req, res) => {
         tenVaiTro: user.tenvaitro || null,
         loaiTaiKhoan: user.loaitaikhoan || null,
         createdAt: user.ngaytao || null,
+        hasPassword: true,
       },
     });
   } catch (error) {
@@ -319,6 +321,7 @@ export const getMe = async (req, res) => {
         khoaPhong: user.khoaphong || null,
         trangThai: user.trangthai,
         createdAt: user.ngaytao || null,
+        hasPassword: !!user.hasPassword,
       },
     });
   } catch (error) {
@@ -403,14 +406,14 @@ export const refreshToken = async (req, res) => {
 // User cần cung cấp mật khẩu cũ và mật khẩu mới
 export const updatePassword = async (req, res) => {
   try {
-    const { oldPassword, newPassword, confirmPassword} = req.body;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
     const userId = req.user.id; // Lấy từ middleware protect
 
-    // 1. Kiểm tra dữ liệu đầu vào
-    if (!oldPassword || !newPassword || !confirmPassword) {
+    // 1. Kiểm tra mật khẩu mới và xác nhận mật khẩu mới có đầy đủ không
+    if (!newPassword || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới và xác nhận mật khẩu mới",
+        message: "Vui lòng nhập mật khẩu mới và xác nhận mật khẩu mới",
       });
     }
 
@@ -430,7 +433,7 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    // 3. Lấy mật khẩu hiện tại từ database
+    // 4. Lấy mật khẩu hiện tại từ database
     const userData = await NguoiDungModel.getUserPassword(userId);
     if (!userData) {
       return res.status(404).json({
@@ -439,35 +442,48 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    // 4. Xác thực mật khẩu cũ
-    const isOldPasswordValid = await bcrypt.compare(oldPassword, userData.mat_khau);
-    if (!isOldPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Mật khẩu cũ không đúng",
-      });
+    // Kiểm tra xem tài khoản đã có mật khẩu hay chưa (Google accounts ban đầu sẽ có matkhau = NULL)
+    const hasPassword = userData.matkhau !== null;
+
+    if (hasPassword) {
+      // Nếu đã có mật khẩu, bắt buộc phải nhập mật khẩu cũ
+      if (!oldPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập mật khẩu cũ để xác nhận",
+        });
+      }
+
+      // Xác thực mật khẩu cũ
+      const isOldPasswordValid = await bcrypt.compare(oldPassword, userData.matkhau);
+      if (!isOldPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: "Mật khẩu cũ không đúng",
+        });
+      }
+
+      // Kiểm tra mật khẩu mới không trùng với mật khẩu cũ
+      const isSamePassword = await bcrypt.compare(newPassword, userData.matkhau);
+      if (isSamePassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Mật khẩu mới không được trùng với mật khẩu cũ",
+        });
+      }
     }
 
-    // 5. Kiểm tra mật khẩu mới không trùng với mật khẩu cũ
-    const isSamePassword = await bcrypt.compare(newPassword, userData.mat_khau);
-    if (isSamePassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Mật khẩu mới không được trùng với mật khẩu cũ",
-      });
-    }
-
-    // 6. Hash mật khẩu mới
+    // 5. Hash mật khẩu mới
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // 7. Cập nhật mật khẩu trong database
+    // 6. Cập nhật mật khẩu trong database
     await NguoiDungModel.updatePassword(userId, hashedPassword);
 
-    // 8. Trả về kết quả thành công
+    // 7. Trả về kết quả thành công
     return res.status(200).json({
       success: true,
-      message: "Cập nhật mật khẩu thành công",
+      message: hasPassword ? "Cập nhật mật khẩu thành công" : "Thiết lập mật khẩu lần đầu thành công",
     });
   } catch (error) {
     console.error("Lỗi updatePassword:", error);

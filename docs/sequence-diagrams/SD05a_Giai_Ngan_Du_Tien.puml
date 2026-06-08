@@ -1,0 +1,109 @@
+@startuml SD05a_Giai_Ngan_Du_Tien
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD05a: GIẢI NGÂN (QUỸ ĐỦ TIỀN)**
+
+actor "Kế toán" as KT
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+
+KT -> Browser: Vào trang "Giải ngân"
+activate Browser
+
+Browser -> API: Lấy danh sách đơn chờ giải ngân
+activate API
+API -> DB: Truy vấn đơn có trạng thái\n"Chờ duyệt cấp 3"
+activate DB
+DB --> API: Danh sách đơn
+deactivate DB
+API --> Browser: Hiển thị danh sách
+deactivate API
+
+KT -> Browser: Click vào đơn cần giải ngân
+Browser -> API: Lấy chi tiết đơn + quỹ
+activate API
+API -> DB: Truy vấn thông tin đơn\nvà số dư quỹ
+activate DB
+DB --> API: Chi tiết + Số dư quỹ
+deactivate DB
+API --> Browser: Hiển thị thông tin
+deactivate API
+
+KT -> KT: Kiểm tra:\n- Lịch sử phê duyệt cấp 1, 2\n- Số tiền đề nghị\n- Số dư quỹ hiện tại
+
+note over KT
+**Trường hợp: Quỹ đủ tiền**
+Số dư quỹ ≥ Số tiền đơn
+end note
+
+KT -> Browser: Chọn phương thức giải ngân\n(Chuyển khoản/Tiền mặt)
+KT -> Browser: Nhập ghi chú và nhấn "Giải ngân"
+
+Browser -> API: Gửi yêu cầu giải ngân
+activate API
+note right: POST /api/applications/:id/disburse
+
+API -> API: Xác thực token
+API -> API: Kiểm tra quyền Kế toán (role 2)
+
+API -> DB: Kiểm tra cấp 1 + 2 đã duyệt
+activate DB
+DB --> API: Kết quả kiểm tra
+deactivate DB
+
+alt Cấp 1 hoặc 2 chưa duyệt
+    API --> Browser: Thông báo lỗi\n"Đơn chưa qua đủ 2 cấp"
+    Browser --> KT: Hiển thị lỗi
+else Đã qua 2 cấp
+    API -> DB: Lấy số dư quỹ hiện tại
+    activate DB
+    DB --> API: Số dư quỹ
+    deactivate DB
+    
+    API -> API: Tính toán:\nSố dư quỹ - Số tiền đơn
+    
+    alt Quỹ đủ tiền (≥ Số tiền đơn)
+        API -> DB: **Bắt đầu giao dịch**
+        activate DB
+        
+        API -> DB: Trừ tiền từ quỹ\nSố dư mới = Số dư - Số tiền đơn
+        DB --> API: Đã trừ tiền
+        
+        API -> DB: Tạo giao dịch CHI\n- Loại: Chi\n- Số tiền\n- Quỹ\n- Liên kết đơn
+        DB --> API: Giao dịch đã tạo
+        
+        API -> DB: Cập nhật phê duyệt cấp 3\n- Kết quả: Duyệt\n- Người duyệt\n- Phương thức
+        DB --> API: Đã cập nhật
+        
+        API -> DB: Đổi trạng thái đơn\nthành "Đã giải ngân"
+        DB --> API: Đã cập nhật
+        
+        API -> DB: **Xác nhận giao dịch**
+        deactivate DB
+        
+        API --> Browser: Thông báo thành công\n- Mã giao dịch\n- Số tiền\n- Số dư quỹ còn lại
+        deactivate API
+        
+        Browser --> KT: Hiển thị "Đã giải ngân"\nIn phiếu chi (nếu cần)
+    end
+end
+
+deactivate Browser
+
+legend right
+**Mô tả**: Kế toán giải ngân khi quỹ đủ tiền
+**API**: POST /api/applications/:id/disburse
+**Quyền hạn**: Kế toán (role 2), Admin (role 1)
+**Điều kiện**: 
+  - Đã qua cấp 1 và cấp 2
+  - Số dư quỹ ≥ Số tiền đơn
+**Kết quả**: 
+  - Trừ tiền quỹ
+  - Tạo giao dịch CHI
+  - Trạng thái: "Đã giải ngân"
+endlegend
+
+@enduml

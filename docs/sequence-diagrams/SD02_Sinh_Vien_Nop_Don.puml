@@ -1,0 +1,75 @@
+@startuml SD02_Sinh_Vien_Nop_Don
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD02: SINH VIÊN NỘP ĐƠN XIN HỖ TRỢ**
+
+actor "Sinh viên" as SV
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+
+SV -> Browser: Vào trang "Nộp đơn"
+activate Browser
+
+Browser -> API: Lấy danh sách quỹ đang hoạt động
+activate API
+API -> DB: Truy vấn quỹ đang mở
+activate DB
+DB --> API: Trả về danh sách quỹ
+deactivate DB
+API --> Browser: Hiển thị danh sách quỹ
+deactivate API
+
+SV -> Browser: Chọn quỹ và điền thông tin\n- Lý do xin hỗ trợ\n- Số tiền đề nghị\n- Tài liệu đính kèm
+
+Browser -> API: Gửi đơn xin hỗ trợ
+activate API
+note right: POST /api/applications
+
+API -> API: Xác thực token người dùng
+API -> API: Kiểm tra quyền Sinh viên (role 4)
+
+API -> DB: Kiểm tra quỹ tồn tại
+activate DB
+DB --> API: Thông tin quỹ
+deactivate DB
+
+alt Quỹ không tồn tại hoặc đã đóng
+    API --> Browser: Thông báo lỗi\n"Quỹ không khả dụng"
+    Browser --> SV: Hiển thị thông báo lỗi
+else Số tiền không hợp lệ (≤ 0)
+    API --> Browser: Thông báo lỗi\n"Số tiền phải lớn hơn 0"
+    Browser --> SV: Hiển thị thông báo lỗi
+else Dữ liệu hợp lệ
+    API -> DB: **Bắt đầu giao dịch**
+    activate DB
+    
+    API -> DB: Tạo đơn xin hỗ trợ\nTrạng thái: "Chờ duyệt cấp 1"
+    DB --> API: Đơn đã tạo (ID)
+    
+    API -> DB: Tạo 3 bản ghi phê duyệt\n- Cấp 1: Chờ duyệt\n- Cấp 2: Chờ duyệt\n- Cấp 3: Chờ duyệt
+    DB --> API: Phê duyệt đã tạo
+    
+    API -> DB: **Xác nhận giao dịch**
+    deactivate DB
+    
+    API --> Browser: Trả về thông tin đơn\n- Mã đơn\n- Trạng thái\n- Ngày nộp
+    deactivate API
+    
+    Browser --> SV: Hiển thị thông báo thành công\n"Đơn đã nộp, chờ phê duyệt"
+end
+
+deactivate Browser
+
+legend right
+**Mô tả**: Sinh viên tạo đơn xin hỗ trợ từ quỹ
+**API**: POST /api/applications
+**Quyền hạn**: Sinh viên (role 4)
+**Giao dịch**: Đảm bảo tạo đơn và phê duyệt cùng lúc
+**Trạng thái ban đầu**: Chờ duyệt cấp 1
+**Bước tiếp theo**: Cán bộ phê duyệt cấp 1
+endlegend
+
+@enduml

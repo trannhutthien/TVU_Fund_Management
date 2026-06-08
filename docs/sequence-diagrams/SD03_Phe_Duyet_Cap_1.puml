@@ -1,0 +1,115 @@
+@startuml SD03_Phe_Duyet_Cap_1
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD03: PHÊ DUYỆT ĐƠN CẤP 1**
+
+actor "Cán bộ Quỹ" as Staff
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+
+Staff -> Browser: Vào trang "Quản lý đơn"
+activate Browser
+
+Browser -> API: Lấy danh sách đơn chờ duyệt cấp 1
+activate API
+API -> DB: Truy vấn đơn có trạng thái\n"Chờ duyệt cấp 1"
+activate DB
+DB --> API: Danh sách đơn
+deactivate DB
+API --> Browser: Hiển thị danh sách
+deactivate API
+
+Staff -> Browser: Click vào đơn cần xét
+Browser -> API: Lấy chi tiết đơn
+activate API
+API -> DB: Truy vấn thông tin đầy đủ
+activate DB
+DB --> API: Chi tiết đơn + Tài liệu
+deactivate DB
+API --> Browser: Hiển thị chi tiết
+deactivate API
+
+Staff -> Staff: Xem xét đơn\n- Lý do xin hỗ trợ\n- Tài liệu đính kèm\n- Số tiền đề nghị
+
+alt Quyết định Phê duyệt
+    Staff -> Browser: Nhập ghi chú (nếu có)\nvà nhấn "Phê duyệt"
+    
+    Browser -> API: Gửi yêu cầu phê duyệt cấp 1
+    activate API
+    note right: PUT /api/applications/:id/staff-approve
+    
+    API -> API: Xác thực token
+    API -> API: Kiểm tra quyền Cán bộ (role 3)
+    
+    API -> DB: Kiểm tra trạng thái đơn
+    activate DB
+    DB --> API: Trạng thái hiện tại
+    deactivate DB
+    
+    alt Trạng thái không phải "Chờ duyệt cấp 1"
+        API --> Browser: Thông báo lỗi\n"Đơn đã được xử lý"
+        Browser --> Staff: Hiển thị thông báo
+    else Trạng thái hợp lệ
+        API -> DB: **Bắt đầu giao dịch**
+        activate DB
+        
+        API -> DB: Cập nhật phê duyệt cấp 1\n- Kết quả: Duyệt\n- Người duyệt\n- Ngày duyệt\n- Ghi chú
+        DB --> API: Đã cập nhật
+        
+        API -> DB: Đổi trạng thái đơn\nthành "Đã duyệt cấp 1"
+        DB --> API: Đã cập nhật
+        
+        API -> DB: Chuyển sang "Chờ duyệt cấp 2"
+        DB --> API: Đã cập nhật
+        
+        API -> DB: **Xác nhận giao dịch**
+        deactivate DB
+        
+        API --> Browser: Thông báo thành công
+        deactivate API
+        Browser --> Staff: "Đã phê duyệt\nĐơn chuyển sang cấp 2"
+    end
+
+else Quyết định Từ chối
+    Staff -> Browser: Nhập lý do từ chối\n(BẮT BUỘC)
+    
+    alt Chưa nhập lý do
+        Browser --> Staff: Yêu cầu nhập lý do
+    else Đã nhập lý do
+        Browser -> API: Gửi yêu cầu từ chối
+        activate API
+        note right: PUT /api/applications/:id/reject-level-1
+        
+        API -> DB: **Bắt đầu giao dịch**
+        activate DB
+        
+        API -> DB: Cập nhật phê duyệt cấp 1\n- Kết quả: Từ chối\n- Lý do từ chối
+        DB --> API: Đã cập nhật
+        
+        API -> DB: Đổi trạng thái đơn\nthành "Từ chối cấp 1"
+        DB --> API: Đã cập nhật
+        
+        API -> DB: **Xác nhận giao dịch**
+        deactivate DB
+        
+        API --> Browser: Thông báo thành công
+        deactivate API
+        
+        Browser --> Staff: "Đã từ chối đơn"
+    end
+end
+
+deactivate Browser
+
+legend right
+**Mô tả**: Cán bộ Quỹ phê duyệt hoặc từ chối đơn cấp 1
+**API**: PUT /api/applications/:id/staff-approve
+**Quyền hạn**: Cán bộ (role 3), Admin (role 1)
+**Giao dịch**: Đảm bảo cập nhật đồng bộ
+**Bước tiếp theo**: Admin phê duyệt cấp 2
+endlegend
+
+@enduml

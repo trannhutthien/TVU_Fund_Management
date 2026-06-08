@@ -25,4 +25,10 @@ export const authService = {
     const response = await api.get(API_ENDPOINTS.ME)
     return response.data
   },
+
+  // Cập nhật mật khẩu
+  updatePassword: async (passwordData) => {
+    const response = await api.put(API_ENDPOINTS.UPDATE_PASSWORD, passwordData)
+    return response.data
+  },
 }

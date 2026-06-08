@@ -1,0 +1,112 @@
+@startuml SD07a_Xac_Nhan_Tai_Tro_Duyet
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD07a: XÁC NHẬN TÀI TRỢ (DUYỆT)**
+
+actor "Kế toán" as KT
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+participant "Hệ thống Email" as Email
+
+KT -> Browser: Vào trang "Xác nhận tài trợ"
+activate Browser
+
+Browser -> API: Lấy danh sách chờ xác nhận
+activate API
+API -> DB: Truy vấn khoản tài trợ\ncó trạng thái "Chờ xác nhận"
+activate DB
+DB --> API: Danh sách khoản tài trợ
+deactivate DB
+API --> Browser: Hiển thị danh sách
+deactivate API
+
+KT -> Browser: Click vào khoản cần xác nhận
+Browser -> API: Lấy chi tiết khoản tài trợ
+activate API
+API -> DB: Truy vấn thông tin đầy đủ\n+ Chứng từ đính kèm
+activate DB
+DB --> API: Chi tiết khoản tài trợ
+deactivate DB
+API --> Browser: Hiển thị chi tiết
+deactivate API
+
+KT -> KT: Kiểm tra:\n- Sao kê ngân hàng\n- Số tiền khớp\n- Thời gian chuyển khoản\n- Nội dung chuyển khoản
+
+note over KT
+**Trường hợp: Thông tin KHỚP**
+Đã nhận được tiền từ nhà tài trợ
+end note
+
+KT -> Browser: Nhập ghi chú (nếu có)\nvà nhấn "Xác nhận"
+
+Browser -> API: Gửi yêu cầu xác nhận
+activate API
+note right: PUT /api/donations/:id/approve
+
+API -> API: Xác thực token
+API -> API: Kiểm tra quyền Kế toán (role 2)
+
+API -> DB: Kiểm tra trạng thái khoản tài trợ
+activate DB
+DB --> API: Trạng thái hiện tại
+deactivate DB
+
+alt Trạng thái không phải "Chờ xác nhận"
+    API --> Browser: Thông báo lỗi\n"Khoản đã được xử lý"
+    Browser --> KT: Hiển thị lỗi
+else Trạng thái hợp lệ
+    API -> DB: **Bắt đầu giao dịch**
+    activate DB
+    
+    API -> DB: Cập nhật trạng thái\nthành "Đã nhận"
+    DB --> API: Đã cập nhật
+    
+    API -> DB: **Cộng tiền vào quỹ**\nSố dư mới = Số dư + Số tiền tài trợ
+    note right: Đây là bước QUAN TRỌNG
+    DB --> API: Quỹ đã cập nhật
+    
+    API -> DB: Tạo giao dịch THU\n- Loại: Thu\n- Số tiền\n- Quỹ ID\n- Nhà tài trợ ID\n- Liên kết khoản tài trợ
+    DB --> API: Giao dịch đã tạo
+    
+    API -> DB: Lưu người xác nhận\nvà thời gian xác nhận
+    DB --> API: Đã lưu
+    
+    API -> DB: **Xác nhận giao dịch**
+    deactivate DB
+    
+    API -> Email: Gửi email cảm ơn\nđến nhà tài trợ
+    activate Email
+    Email --> API: Email đã gửi
+    deactivate Email
+    
+    API --> Browser: Thông báo thành công\n- Đã cộng tiền\n- Số dư quỹ mới\n- Mã giao dịch
+    deactivate API
+    
+    Browser --> KT: Hiển thị "Đã xác nhận\nvà cộng tiền vào quỹ"
+end
+
+deactivate Browser
+
+note over KT, Email
+**Kết quả:**
+✅ Tiền đã được cộng vào quỹ
+✅ Giao dịch THU đã được ghi nhận
+✅ Email cảm ơn đã gửi
+→ Quỹ có thể sử dụng để giải ngân
+end note
+
+legend right
+**Mô tả**: Kế toán xác nhận đã nhận tiền và cộng vào quỹ
+**API**: PUT /api/donations/:id/approve
+**Quyền hạn**: Kế toán (role 2), Admin (role 1)
+**Giao dịch**: 
+  - Cộng tiền vào quỹ
+  - Tạo giao dịch THU
+  - Trạng thái: "Đã nhận"
+**Tác động**: Tăng số dư quỹ (nguồn thu chính)
+endlegend
+
+@enduml

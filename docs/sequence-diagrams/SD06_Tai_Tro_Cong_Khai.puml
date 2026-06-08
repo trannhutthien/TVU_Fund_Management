@@ -1,0 +1,95 @@
+@startuml SD06_Tai_Tro_Cong_Khai
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD06: TÀI TRỢ CÔNG KHAI (KHÔNG CẦN ĐĂNG NHẬP)**
+
+actor "Người tài trợ" as Donor
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+
+Donor -> Browser: Vào trang "Quyên góp"
+activate Browser
+
+Browser -> API: Lấy danh sách quỹ công khai
+activate API
+note right: Không cần token
+API -> DB: Truy vấn quỹ đang hoạt động
+activate DB
+DB --> API: Danh sách quỹ
+deactivate DB
+API --> Browser: Hiển thị quỹ với\n- Tên quỹ\n- Mô tả\n- Số dư hiện tại
+deactivate API
+
+Donor -> Browser: Chọn quỹ muốn tài trợ
+Donor -> Browser: Điền thông tin:\n- Họ tên\n- Email\n- Số điện thoại\n- Số tiền\n- Lời nhắn (tùy chọn)
+
+Browser -> API: Gửi thông tin tài trợ
+activate API
+note right: POST /api/donations/public\n(API công khai)
+
+API -> API: Kiểm tra dữ liệu\n- Email hợp lệ\n- Số tiền > 0\n- Số điện thoại đúng format
+
+alt Dữ liệu không hợp lệ
+    API --> Browser: Thông báo lỗi\n"Vui lòng kiểm tra lại thông tin"
+    Browser --> Donor: Hiển thị lỗi
+else Dữ liệu hợp lệ
+    API -> DB: Kiểm tra quỹ tồn tại
+    activate DB
+    DB --> API: Thông tin quỹ
+    deactivate DB
+    
+    alt Quỹ không hoạt động
+        API --> Browser: Thông báo lỗi\n"Quỹ không còn nhận tài trợ"
+        Browser --> Donor: Hiển thị lỗi
+    else Quỹ đang hoạt động
+        API -> DB: **Bắt đầu giao dịch**
+        activate DB
+        
+        API -> DB: Kiểm tra email\ntrong danh sách nhà tài trợ
+        DB --> API: Kết quả kiểm tra
+        
+        alt Email chưa tồn tại
+            API -> DB: Tạo nhà tài trợ mới\n- Họ tên\n- Email\n- Số điện thoại\n- Loại: Cá nhân
+            note right: Tự động tạo hồ sơ
+            DB --> API: Nhà tài trợ đã tạo (ID)
+        else Email đã tồn tại
+            note over API: Dùng lại nhà tài trợ cũ
+        end
+        
+        API -> DB: Tạo khoản tài trợ\n- Nhà tài trợ ID\n- Quỹ ID\n- Số tiền\n- Lời nhắn\n- Trạng thái: "Chờ xác nhận"
+        DB --> API: Khoản tài trợ đã tạo
+        
+        API -> DB: **Xác nhận giao dịch**
+        deactivate DB
+        
+        API --> Browser: Trả về:\n- Mã tài trợ\n- Thông tin ngân hàng để chuyển khoản\n- Nội dung chuyển khoản
+        deactivate API
+        
+        Browser --> Donor: Hiển thị thành công\n"Cảm ơn bạn đã tài trợ!\nVui lòng chuyển khoản\ntheo thông tin dưới đây"
+        
+        Browser -> Browser: Hiển thị thông tin chuyển khoản:\n- Ngân hàng\n- Số tài khoản\n- Tên tài khoản\n- Nội dung: "TAI TRO [Mã]"
+    end
+end
+
+deactivate Browser
+
+note over Donor, DB
+**Bước tiếp theo:**
+Người tài trợ chuyển khoản
+→ Kế toán xác nhận đã nhận tiền
+→ Cộng tiền vào quỹ
+end note
+
+legend right
+**Mô tả**: Quyên góp công khai không cần đăng nhập
+**API**: POST /api/donations/public (Công khai)
+**Quyền hạn**: Không yêu cầu xác thực
+**Tự động**: Tạo hồ sơ nhà tài trợ lần đầu
+**Trạng thái**: "Chờ xác nhận" (chờ Kế toán duyệt)
+**Chú ý**: Chưa cộng tiền vào quỹ
+endlegend
+
+@enduml

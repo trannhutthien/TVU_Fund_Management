@@ -1,0 +1,91 @@
+@startuml SD10_Xuat_Bao_Cao
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD10: XUẤT BÁO CÁO TÀI CHÍNH**
+
+actor "Kế toán" as KT
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+participant "Template Engine" as Template
+
+KT -> Browser: Vào trang "Báo cáo"
+activate Browser
+
+Browser -> API: Lấy menu loại báo cáo
+activate API
+API --> Browser: Hiển thị menu:\n1. Thu chi tổng hợp\n2. Danh sách nhà tài trợ\n3. Danh sách thủ hưởng\n4. Báo cáo quỹ\n5. Báo cáo đề xuất
+deactivate API
+
+KT -> Browser: Chọn loại báo cáo\nVí dụ: "Thu chi tổng hợp"
+
+KT -> Browser: Chọn bộ lọc:\n- Quỹ (tùy chọn)\n- Từ ngày: 01/01/2024\n- Đến ngày: 31/12/2024
+
+KT -> Browser: Nhấn "Xuất báo cáo"
+
+Browser -> API: Gửi yêu cầu xuất báo cáo
+activate API
+note right: GET /api/reports/revenue-expense
+
+API -> API: Xác thực token
+API -> API: Kiểm tra quyền\nKế toán (role 2) hoặc Admin (role 1)
+
+API -> DB: Truy vấn giao dịch THU\ntrong khoảng thời gian
+activate DB
+DB --> API: Danh sách giao dịch THU
+deactivate DB
+
+API -> API: Tính tổng thu
+
+API -> DB: Truy vấn giao dịch CHI\ntrong khoảng thời gian
+activate DB
+DB --> API: Danh sách giao dịch CHI
+deactivate DB
+
+API -> API: Tính tổng chi
+
+API -> API: Tính chênh lệch:\nChênh lệch = Tổng thu - Tổng chi
+
+API -> DB: Lấy thông tin quỹ
+activate DB
+DB --> API: Thông tin quỹ
+deactivate DB
+
+API -> Template: Mở template Word\n"thu_chi_tong_hop.docx"
+activate Template
+Template --> API: Template đã mở
+deactivate Template
+
+API -> Template: Điền dữ liệu vào template:\n- Kỳ báo cáo\n- Tổng thu\n- Tổng chi\n- Chênh lệch\n- Số dư đầu kỳ\n- Số dư cuối kỳ
+activate Template
+Template --> API: File Word đã tạo
+deactivate Template
+
+API --> Browser: Trả về file Word\n(Tên: BaoCao_ThuChi_20240101_20241231.docx)
+deactivate API
+
+Browser -> Browser: Tải file về máy
+
+Browser --> KT: Thông báo "Đã tải xuống"
+
+deactivate Browser
+
+KT -> KT: Mở file Word:\n- Xem nội dung\n- Chỉnh sửa nếu cần\n- Thêm chữ ký\n- In hoặc gửi email
+
+legend right
+**Mô tả**: Xuất báo cáo tài chính dạng file Word
+**API**: GET /api/reports/revenue-expense
+**Quyền hạn**: Kế toán (role 2), Admin (role 1)
+**Loại báo cáo**:
+  1. Thu chi tổng hợp
+  2. Danh sách nhà tài trợ
+  3. Danh sách thủ hưởng
+  4. Báo cáo quỹ chi tiết
+  5. Báo cáo đề xuất
+**Template**: Sử dụng docxtemplater
+**Format**: .docx (có thể chỉnh sửa)
+endlegend
+
+@enduml

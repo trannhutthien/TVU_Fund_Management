@@ -1,0 +1,124 @@
+@startuml SD07b_Tu_Choi_Tai_Tro
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD07b: TỪ CHỐI TÀI TRỢ**
+
+actor "Kế toán" as KT
+participant "Trình duyệt" as Browser
+participant "API Hệ thống" as API
+database "Cơ sở dữ liệu" as DB
+
+KT -> Browser: Vào trang "Xác nhận tài trợ"
+activate Browser
+
+Browser -> API: Lấy danh sách chờ xác nhận
+activate API
+API -> DB: Truy vấn khoản tài trợ\ncó trạng thái "Chờ xác nhận"
+activate DB
+DB --> API: Danh sách khoản tài trợ
+deactivate DB
+API --> Browser: Hiển thị danh sách
+deactivate API
+
+KT -> Browser: Click vào khoản cần xác nhận
+Browser -> API: Lấy chi tiết khoản tài trợ
+activate API
+API -> DB: Truy vấn thông tin\n+ Chứng từ đính kèm
+activate DB
+DB --> API: Chi tiết khoản tài trợ
+deactivate DB
+API --> Browser: Hiển thị chi tiết
+deactivate API
+
+KT -> KT: Kiểm tra sao kê ngân hàng
+
+note over KT
+**Trường hợp: Thông tin KHÔNG KHỚP**
+Ví dụ:
+- Không tìm thấy giao dịch
+- Số tiền không khớp
+- Nội dung chuyển khoản sai
+- Chứng từ giả mạo
+end note
+
+KT -> Browser: Nhập lý do từ chối\n(BẮT BUỘC)
+
+alt Chưa nhập lý do
+    Browser --> KT: Yêu cầu nhập lý do từ chối
+else Đã nhập lý do
+    Browser -> API: Gửi yêu cầu từ chối
+    activate API
+    note right: PUT /api/donations/:id/reject
+    
+    API -> API: Xác thực token
+    API -> API: Kiểm tra quyền Kế toán (role 2)
+    
+    API -> DB: Kiểm tra trạng thái
+    activate DB
+    DB --> API: Trạng thái hiện tại
+    deactivate DB
+    
+    alt Trạng thái không phải "Chờ xác nhận"
+        API --> Browser: Thông báo lỗi\n"Khoản đã được xử lý"
+        Browser --> KT: Hiển thị lỗi
+    else Trạng thái hợp lệ
+        API -> DB: Cập nhật trạng thái\nthành "Từ chối"
+        activate DB
+        note right
+        KHÔNG cộng tiền
+        KHÔNG tạo giao dịch THU
+        end note
+        DB --> API: Đã cập nhật
+        deactivate DB
+        
+        API -> DB: Lưu lý do từ chối
+        activate DB
+        DB --> API: Đã lưu
+        deactivate DB
+        
+        API -> DB: Lưu người từ chối\nvà thời gian
+        activate DB
+        DB --> API: Đã lưu
+        deactivate DB
+        
+        API --> Browser: Thông báo thành công\n"Đã từ chối khoản tài trợ"
+        deactivate API
+        
+        Browser --> KT: Hiển thị "Đã từ chối"
+    end
+end
+
+deactivate Browser
+
+note over KT, DB
+**Kết quả:**
+❌ KHÔNG cộng tiền vào quỹ
+❌ KHÔNG tạo giao dịch THU
+✅ Lưu lý do từ chối để kiểm tra lại
+→ Quỹ không thay đổi
+end note
+
+note over KT
+**Lưu ý:**
+Kế toán có thể liên hệ nhà tài trợ
+để làm rõ trường hợp bị từ chối
+end note
+
+legend right
+**Mô tả**: Từ chối khoản tài trợ không hợp lệ
+**API**: PUT /api/donations/:id/reject
+**Quyền hạn**: Kế toán (role 2), Admin (role 1)
+**Lý do từ chối**:
+  - Không tìm thấy giao dịch
+  - Số tiền không khớp
+  - Nội dung chuyển khoản sai
+  - Chứng từ giả
+**Kết quả**: 
+  - KHÔNG cộng tiền
+  - KHÔNG tạo giao dịch
+  - Trạng thái: "Từ chối"
+endlegend
+
+@enduml

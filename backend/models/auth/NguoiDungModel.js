@@ -108,7 +108,8 @@ const getUserForProfile = async (userId) => {
       dv.tenkhoa AS khoaphong, 
       nd.trangthai,
       nd.ngaytao,
-      vt.tenvaitro
+      vt.tenvaitro,
+      (nd.matkhau IS NOT NULL) AS hasPassword
      FROM nguoidung nd
      LEFT JOIN vaitro vt ON nd.vaitro_id = vt.vaitro_id
      LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
@@ -155,7 +156,8 @@ const getUserByEmail = async (email) => {
       nd.trangthai,
       nd.ngaytao,
       vt.tenvaitro,
-      vt.trangthai AS vt_trangthai
+      vt.trangthai AS vt_trangthai,
+      (nd.matkhau IS NOT NULL) AS hasPassword
      FROM nguoidung nd
      LEFT JOIN vaitro vt ON nd.vaitro_id = vt.vaitro_id
      WHERE nd.email = ?
