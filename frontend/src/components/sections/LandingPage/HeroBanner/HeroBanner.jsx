@@ -4,7 +4,8 @@ import PropTypes from 'prop-types';
 import { 
   HiOutlineCheckCircle, 
   HiOutlineBanknotes, 
-  HiOutlineHeart 
+  HiOutlineHeart,
+  HiOutlineArchiveBox
 } from 'react-icons/hi2';
 import Button from '@components/common/Button';
 import StatCard from '@components/common/Card/StatCard';
@@ -30,6 +31,7 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
     supportedRequests: 0,
     totalFundAmount: 0,
     totalDonors: 0,
+    totalFunds: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -48,6 +50,7 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
           supportedRequests: data.supportedRequests,
           totalFundAmount: data.totalFundAmount,
           totalDonors: data.totalDonors,
+          totalFunds: data.totalFunds || 0,
         });
       } catch (error) {
         console.error('Error fetching statistics:', error);
@@ -56,6 +59,7 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
           supportedRequests: 0,
           totalFundAmount: 0,
           totalDonors: 0,
+          totalFunds: 0,
         });
       } finally {
         setLoading(false);
@@ -100,83 +104,105 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
       </div>
 
       <div className={styles.container}>
-        {/* Left Content */}
-        <div className={styles.content}>
-          {/* Badge */}
-          <div className={styles.badge}>
-            <span className={styles.badgeIcon}>🎓</span>
-            <span className={styles.badgeText}>Hỗ trợ sinh viên TVU</span>
-          </div>
+        {/* Main 2-column layout */}
+        <div className={styles.heroMain}>
+          {/* Left Content */}
+          <div className={styles.content}>
+            {/* Badge */}
+            <div className={styles.badge}>
+              <span className={styles.badgeIcon}>🎓</span>
+              <span className={styles.badgeText}>Hỗ trợ sinh viên TVU</span>
+            </div>
 
-          {/* Main Heading */}
-          <h1 className={styles.heading}>
-            Nền tảng quản lý
-            <span className={styles.highlight}> Quỹ học bổng</span>
-            <br />
-            Đại học Trà Vinh
-          </h1>
+            {/* Main Heading */}
+            <h1 className={styles.heading}>
+              Nền tảng quản lý
+              <span className={styles.highlight}> Quỹ học bổng</span>
+              <br />
+              Đại học Trà Vinh
+            </h1>
 
-          {/* Description */}
-          <p className={styles.description}>
-            Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. 
-            Kết nối sinh viên với các cơ hội hỗ trợ tài chính, 
-            giúp các em yên tâm theo đuổi ước mơ học tập.
-          </p>
+            {/* Description */}
+            <p className={styles.description}>
+              Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. 
+              Kết nối sinh viên với các cơ hội hỗ trợ tài chính, 
+              giúp các em yên tâm theo đuổi ước mơ học tập.
+            </p>
 
-          {/* CTA Buttons */}
-          <div className={styles.actions}>
-            {!isAuthenticated && (
+            {/* CTA Buttons */}
+            <div className={styles.actions}>
+              {!isAuthenticated && (
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={handleLoginClick}
+                >
+                  Đăng nhập ngay
+                </Button>
+              )}
               <Button
                 variant="primary"
                 size="lg"
-                onClick={handleLoginClick}
+                onClick={() => navigate('/guidelines')}
               >
-                Đăng nhập ngay
+                Tìm hiểu thêm
               </Button>
-            )}
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigate('/guidelines')}
-            >
-              Tìm hiểu thêm
-            </Button>
+            </div>
           </div>
 
-          {/* Stats - 3 StatCard */}
-          <div className={styles.stats}>
-            <StatCard
-              title="Sinh viên được hỗ trợ"
-              value={formatNumber(stats.supportedRequests)}
-              icon={<HiOutlineCheckCircle />}
-              iconBgColor="green"
-              loading={loading}
-              className={styles.statCard}
-            />
-            <StatCard
-              title="Tổng giá trị hỗ trợ"
-              value={`${formatCurrency(stats.totalFundAmount)} đ`}
-              icon={<HiOutlineBanknotes />}
-              iconBgColor="blue"
-              loading={loading}
-              className={styles.statCard}
-            />
-            <StatCard
-              title="Nhà hảo tâm"
-              value={formatNumber(stats.totalDonors)}
-              icon={<HiOutlineHeart />}
-              iconBgColor="red"
-              loading={loading}
-              className={styles.statCard}
-            />
-          </div>
+          {/* Right Image - Student Showcase */}
+          <StudentShowcase
+            stats={showcaseStats}
+            autoRotateInterval={5000}
+          />
         </div>
 
-        {/* Right Image - Student Showcase */}
-        <StudentShowcase
-          stats={showcaseStats}
-          autoRotateInterval={5000}
-        />
+        {/* Bottom Stats Bar (merged from StatsSection) */}
+        <div className={styles.statsBar}>
+          <StatCard
+            title="Sinh viên được hỗ trợ"
+            value={formatNumber(stats.supportedRequests)}
+            icon={<HiOutlineCheckCircle />}
+            iconBgColor="green"
+            trend="up"
+            trendValue="+12.5%"
+            subtitle="So với năm trước"
+            loading={loading}
+            className={styles.statCard}
+          />
+          <StatCard
+            title="Tổng giá trị hỗ trợ"
+            value={`${formatCurrency(stats.totalFundAmount)} đ`}
+            icon={<HiOutlineBanknotes />}
+            iconBgColor="blue"
+            trend="up"
+            trendValue="+8.3%"
+            subtitle="Tích lũy từ các quỹ"
+            loading={loading}
+            className={styles.statCard}
+          />
+          <StatCard
+            title="Nhà hảo tâm"
+            value={formatNumber(stats.totalDonors)}
+            icon={<HiOutlineHeart />}
+            iconBgColor="red"
+            trend="up"
+            trendValue="+5"
+            subtitle="Đối tác đồng hành"
+            loading={loading}
+            className={styles.statCard}
+          />
+          <StatCard
+            title="Quỹ đang hoạt động"
+            value={formatNumber(stats.totalFunds)}
+            icon={<HiOutlineArchiveBox />}
+            iconBgColor="purple"
+            trend="neutral"
+            subtitle="Đa dạng hình thức"
+            loading={loading}
+            className={styles.statCard}
+          />
+        </div>
       </div>
 
       {/* Background Decorations */}

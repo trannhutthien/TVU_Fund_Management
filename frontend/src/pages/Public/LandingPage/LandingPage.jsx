@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import PublicHeader from '@components/layout/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter';
 import HeroBanner from '@components/sections/LandingPage/HeroBanner';
-import StatsSection from '@components/sections/LandingPage/StatsSection';
+import NewsSection from '@components/sections/LandingPage/NewsSection';
+import FundProgressSection from '@components/sections/LandingPage/FundProgressSection';
 import AISupportSection from '@components/sections/LandingPage/AISupportSection';
 import FundBreakdownSection from '@components/sections/LandingPage/FundBreakdownSection';
-import DonorWallSection from '@components/sections/LandingPage/DonorWallSection';
 import CombinedProcessSection from '@components/sections/LandingPage/CombinedProcessSection';
+import TestimonialsSection from '@components/sections/LandingPage/TestimonialsSection';
+import DonorWallSection from '@components/sections/LandingPage/DonorWallSection';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
 import './LandingPage.scss';
@@ -73,17 +75,13 @@ const LandingPage = () => {
           onLoginClick={openLoginModal}
           onRegisterClick={openRegisterModal}
         />
-        <StatsSection />
+        <NewsSection />
+        <FundProgressSection />
         <AISupportSection />
         <FundBreakdownSection />
         <CombinedProcessSection onLoginClick={openLoginModal} />
+        <TestimonialsSection />
         <DonorWallSection onRegisterClick={openRegisterModal} />
-        
-        {/* Các section khác sẽ được thêm sau */}
-        {/* <FeaturesSection /> */}
-        {/* <FundProgressSection /> */}
-        {/* <TestimonialsSection /> */}
-        {/* <FAQSection /> */}
       </main>
       
       <PublicFooter />

@@ -12,7 +12,7 @@ import styles from './DonorWallSection.module.scss';
 /**
  * DonorCard Component - Card hiển thị thông tin nhà tài trợ
  */
-const DonorCard = ({ donor }) => {
+const DonorCard = ({ donor, isFeatured = false }) => {
   const getInitial = (name) => {
     if (!name || typeof name !== 'string') return '?';
     return name.charAt(0).toUpperCase();
@@ -23,27 +23,28 @@ const DonorCard = ({ donor }) => {
     if (donor.avatar || donor.logo) {
       return (
         <Logo
-          size="xl"
+          size={isFeatured ? "xxl" : "xl"}
           variant="icon-only"
           imageVariant="circular"
           imageSrc={donor.avatar || donor.logo}
           imageAlt={donor.name || donor.ten || 'Nhà tài trợ'}
-          className={styles.donorLogo}
+          className={isFeatured ? styles.featuredDonorLogo : styles.donorLogo}
         />
       );
     }
 
     // Nếu không có avatar, hiển thị chữ cái đầu trong circle Gold
     return (
-      <div className={styles.avatarLetter}>
+      <div className={isFeatured ? styles.featuredAvatarLetter : styles.avatarLetter}>
         {getInitial(donor.name || donor.ten)}
       </div>
     );
   };
 
   return (
-    <div className={styles.donorCard}>
+    <div className={`${styles.donorCard} ${isFeatured ? styles.featuredDonorCard : ''}`}>
       <div className={styles.cardContent}>
+        {isFeatured && <span className={styles.featuredBadge}>⭐ TOP 1 NHÀ TÀI TRỢ</span>}
         {renderAvatar()}
         <h3 className={styles.donorName}>{donor.name || donor.ten || 'Nhà tài trợ'}</h3>
         {donor.desc && <p className={styles.donorDesc}>{donor.desc}</p>}
@@ -181,21 +182,30 @@ const DonorWallSection = ({ onRegisterClick }) => {
           </p>
         </div>
 
-        {/* Top 6 Donors Grid */}
-        <div className={styles.donorsGrid}>
-          {topDonors.length > 0 ? (
-            topDonors.map((donor, index) => (
-              <DonorCard 
-                key={donor.id || index} 
-                donor={donor}
-              />
-            ))
-          ) : (
-            <div className={styles.emptyState}>
-              <p>Chưa có dữ liệu nhà tài trợ</p>
+        {/* Top 6 Donors - 2 Columns (Featured on Left, Grid on Right) */}
+        {topDonors.length > 0 ? (
+          <div className={styles.donorLayout}>
+            {/* Top 1 Featured Donor */}
+            <div className={styles.featuredSection}>
+              <DonorCard donor={topDonors[0]} isFeatured={true} />
             </div>
-          )}
-        </div>
+
+            {/* Other Donors Grid */}
+            <div className={styles.otherDonorsGrid}>
+              {topDonors.slice(1).map((donor, index) => (
+                <DonorCard 
+                  key={donor.id || index} 
+                  donor={donor}
+                  isFeatured={false}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <p>Chưa có dữ liệu nhà tài trợ</p>
+          </div>
+        )}
 
         {/* Ticker - Tất cả nhà tài trợ (xoay vòng) */}
         <div className={styles.tickerSection}>

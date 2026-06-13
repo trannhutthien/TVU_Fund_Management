@@ -144,6 +144,7 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
                     <div className={styles.stepLeft}>
                       <div className={`${styles.stepBox} ${styles.stepBoxNavy}`}>
                         <Icon className={styles.stepIcon} />
+                        <span className={styles.stepNumberBadge}>{step.step}</span>
                       </div>
                       {!isLast && <div className={styles.connector} />}
                     </div>
@@ -202,6 +203,7 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
                     <div className={styles.stepLeft}>
                       <div className={`${styles.stepBox} ${styles.stepBoxGold}`}>
                         <Icon className={styles.stepIcon} />
+                        <span className={styles.stepNumberBadge}>{step.step}</span>
                       </div>
                       {!isLast && <div className={`${styles.connector} ${styles.connectorGold}`} />}
                     </div>

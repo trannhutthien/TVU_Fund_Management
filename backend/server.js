@@ -20,6 +20,7 @@ import studentShowcaseRoutes from "./routes/showcase/studentShowcaseRoutes.js";
 import loaiQuyRoutes from "./routes/funds/loaiQuyRoutes.js";
 import { vaiTroRouter, nguoiDungRouter, nhatKyRouter, settingsRouter } from "./routes/system/systemRoutes.js";
 import guestRoutes from "./routes/guest/guestRoutes.js";
+import newsRoutes from "./routes/news/newsRoutes.js";
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ app.use("/api/bao-cao", baoCaoRoutes);
 app.use("/api/pheduyet", pheDuyetRoutes);
 app.use("/api/student-showcase", studentShowcaseRoutes);
 app.use("/api/loai-quy", loaiQuyRoutes);
+app.use("/api/news", newsRoutes);
 app.use("/api/vaitro", vaiTroRouter);
 app.use("/api/nguoidung", nguoiDungRouter);
 app.use("/api/nhat-ky", nhatKyRouter);

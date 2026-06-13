@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th6 12, 2026 lúc 11:46 AM
+-- Thời gian đã tạo: Th6 13, 2026 lúc 07:52 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.1.25
 
@@ -500,6 +500,37 @@ INSERT INTO `taikhoannganhang` (`taikhoannganhang_id`, `quy_id`, `sotaikhoan`, `
 -- --------------------------------------------------------
 
 --
+-- Cấu trúc bảng cho bảng `tintuc`
+--
+
+CREATE TABLE `tintuc` (
+  `tintuc_id` int(11) NOT NULL,
+  `tieude` varchar(255) NOT NULL,
+  `motangan` varchar(500) DEFAULT NULL,
+  `noidung` longtext NOT NULL COMMENT 'Nội dung đầy đủ bài viết (có thể chứa HTML/Markdown)',
+  `avatar` varchar(255) DEFAULT NULL COMMENT 'Đường dẫn ảnh thumbnail hiển thị ở card tin tức',
+  `danhmuc` enum('Tin hoc bong','Tin giao duc','Su kien','Thong bao','Khac') DEFAULT 'Thong bao',
+  `lanoibat` tinyint(4) DEFAULT 0 COMMENT '0=Bình thường, 1=Featured lớn, 2=Featured nhỏ hàng dưới, 3=Sidebar',
+  `trangthai` enum('Ban nhap','Da xuat ban','Da an') DEFAULT 'Ban nhap',
+  `ngayxuatban` timestamp NULL DEFAULT NULL,
+  `nguoitao_id` int(11) NOT NULL COMMENT 'Admin hoặc Cán bộ tạo bài viết',
+  `nguoisua_id` int(11) DEFAULT NULL COMMENT 'Người chỉnh sửa lần cuối',
+  `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `tintuc`
+--
+
+INSERT INTO `tintuc` (`tintuc_id`, `tieude`, `motangan`, `noidung`, `avatar`, `danhmuc`, `lanoibat`, `trangthai`, `ngayxuatban`, `nguoitao_id`, `nguoisua_id`, `ngaytao`, `ngaycapnhat`) VALUES
+(1, 'TVU trao 50 suất học bổng hỗ trợ sinh viên vượt khó học kỳ 1 năm học 2025-2026', 'Ngày 10/6/2025, Trường Đại học Trà Vinh phối hợp cùng Quỹ Phát triển TVU tổ chức lễ trao 50 suất học bổng trị giá hơn 500 triệu đồng cho sinh viên có hoàn cảnh khó khăn nhưng đạt thành tích học tập xuất sắc.', '<p>Ngày 10/6/2025, tại Hội trường lớn Trường Đại học Trà Vinh, Quỹ Phát triển TVU đã tổ chức Lễ trao học bổng hỗ trợ sinh viên vượt khó học kỳ 1 năm học 2025-2026.</p><p>Buổi lễ có sự tham dự của Ban Giám hiệu nhà trường, đại diện các khoa, phòng ban và 50 sinh viên xuất sắc đến từ nhiều ngành học khác nhau.</p><p>Mỗi suất học bổng trị giá 10 triệu đồng, tổng kinh phí hơn 500 triệu đồng được huy động từ các nhà hảo tâm, doanh nghiệp và cựu sinh viên TVU trên cả nước.</p><p>Phát biểu tại buổi lễ, đại diện Ban Giám hiệu nhấn mạnh: Học bổng không chỉ là sự hỗ trợ vật chất mà còn là nguồn động lực tinh thần to lớn, khích lệ các em tiếp tục nỗ lực vươn lên trong học tập và cuộc sống.</p>', '/uploads/tintuc/trao-hoc-bong-2025.jpg', 'Tin hoc bong', 1, 'Da xuat ban', '2025-06-10 01:00:00', 1, NULL, '2026-06-13 04:48:43', '2026-06-13 04:48:43'),
+(2, 'Thông báo mở hồ sơ xét học bổng hỗ trợ sinh viên có hoàn cảnh đặc biệt khó khăn học kỳ 2 năm học 2025-2026', 'Phòng Công tác Sinh viên Trường Đại học Trà Vinh thông báo nhận hồ sơ xét cấp học bổng hỗ trợ dành cho sinh viên có hoàn cảnh đặc biệt khó khăn. Thời gian nộp hồ sơ từ ngày 01/07/2025 đến hết ngày 31/07/2025.', '<p>Căn cứ kế hoạch hoạt động của Quỹ Phát triển TVU, Phòng Công tác Sinh viên thông báo đến toàn thể sinh viên về việc nhận hồ sơ xét cấp học bổng hỗ trợ học kỳ 2 năm học 2025-2026.</p><h3>Đối tượng xét duyệt</h3><ul><li>Sinh viên hệ chính quy đang theo học tại Trường Đại học Trà Vinh.</li><li>Có hoàn cảnh gia đình đặc biệt khó khăn (hộ nghèo, cận nghèo, mồ côi cha/mẹ hoặc cả hai).</li><li>Không bị kỷ luật từ mức cảnh cáo trở lên trong năm học hiện tại.</li></ul><h3>Hồ sơ cần chuẩn bị</h3><ul><li>Đơn xin học bổng theo mẫu (tải tại hệ thống TVU Fund).</li><li>Giấy xác nhận hộ nghèo/cận nghèo có xác nhận của UBND xã/phường (bản sao công chứng).</li><li>Bảng điểm học kỳ gần nhất.</li><li>Giấy tờ minh chứng hoàn cảnh khác (nếu có).</li></ul><h3>Thời gian và địa điểm nộp hồ sơ</h3><p>Sinh viên nộp hồ sơ trực tuyến qua hệ thống TVU Fund tại địa chỉ website hoặc nộp trực tiếp tại Phòng Công tác Sinh viên (Phòng A105) từ ngày 01/07/2025 đến 31/07/2025.</p>', '/uploads/tintuc/thong-bao-ho-so-hk2.jpg', 'Thong bao', 0, 'Da xuat ban', '2025-06-15 00:30:00', 1, NULL, '2026-06-13 04:48:43', '2026-06-13 04:48:43'),
+(3, 'TVU Fund tổ chức Hội thảo \"Kết nối doanh nghiệp — Đồng hành cùng sinh viên Trà Vinh\" năm 2025', 'Quỹ Phát triển TVU phối hợp cùng Trung tâm Hỗ trợ Sinh viên và Quan hệ Doanh nghiệp tổ chức hội thảo kết nối nhà tài trợ và sinh viên, thu hút hơn 30 doanh nghiệp trong và ngoài tỉnh tham gia đăng ký đồng hành.', '<p>Ngày 20/5/2025, Quỹ Phát triển TVU phối hợp cùng Trung tâm Hỗ trợ Sinh viên và Quan hệ Doanh nghiệp Trường Đại học Trà Vinh tổ chức thành công Hội thảo \"Kết nối doanh nghiệp — Đồng hành cùng sinh viên Trà Vinh\" năm 2025.</p><p>Hội thảo thu hút hơn 30 doanh nghiệp trong và ngoài tỉnh Trà Vinh tham dự, cùng gần 200 sinh viên đại diện từ các khoa chuyên ngành.</p><h3>Kết quả nổi bật</h3><ul><li>12 doanh nghiệp ký kết biên bản ghi nhớ đồng hành tài trợ học bổng cho sinh viên TVU giai đoạn 2025-2027.</li><li>Tổng giá trị cam kết tài trợ đạt hơn 2 tỷ đồng.</li><li>5 doanh nghiệp cam kết cung cấp chương trình thực tập có lương dành riêng cho sinh viên nhận học bổng TVU Fund.</li></ul><p>Đây là hoạt động thường niên nhằm mở rộng mạng lưới nhà tài trợ, tạo thêm nguồn lực bền vững hỗ trợ sinh viên có hoàn cảnh khó khăn tại Trường Đại học Trà Vinh.</p>', '/uploads/tintuc/hoi-thao-ket-noi-2025.jpg', 'Su kien', 0, 'Da xuat ban', '2025-05-20 02:00:00', 1, NULL, '2026-06-13 04:48:43', '2026-06-13 04:48:43');
+
+-- --------------------------------------------------------
+
+--
 -- Cấu trúc bảng cho bảng `vaitro`
 --
 
@@ -666,6 +697,18 @@ ALTER TABLE `taikhoannganhang`
   ADD KEY `idx_quy` (`quy_id`);
 
 --
+-- Chỉ mục cho bảng `tintuc`
+--
+ALTER TABLE `tintuc`
+  ADD PRIMARY KEY (`tintuc_id`),
+  ADD KEY `idx_trangthai` (`trangthai`),
+  ADD KEY `idx_danhmuc` (`danhmuc`),
+  ADD KEY `idx_noi_bat` (`lanoibat`),
+  ADD KEY `idx_ngayxuatban` (`ngayxuatban`),
+  ADD KEY `idx_nguoitao` (`nguoitao_id`),
+  ADD KEY `nguoisua_id` (`nguoisua_id`);
+
+--
 -- Chỉ mục cho bảng `vaitro`
 --
 ALTER TABLE `vaitro`
@@ -764,6 +807,12 @@ ALTER TABLE `taikhoannganhang`
   MODIFY `taikhoannganhang_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
+-- AUTO_INCREMENT cho bảng `tintuc`
+--
+ALTER TABLE `tintuc`
+  MODIFY `tintuc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT cho bảng `vaitro`
 --
 ALTER TABLE `vaitro`
@@ -842,6 +891,13 @@ ALTER TABLE `sinhviennoibat`
 --
 ALTER TABLE `taikhoannganhang`
   ADD CONSTRAINT `taikhoannganhang_ibfk_1` FOREIGN KEY (`quy_id`) REFERENCES `quy` (`quy_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `tintuc`
+--
+ALTER TABLE `tintuc`
+  ADD CONSTRAINT `tintuc_ibfk_1` FOREIGN KEY (`nguoitao_id`) REFERENCES `nguoidung` (`nguoidung_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `tintuc_ibfk_2` FOREIGN KEY (`nguoisua_id`) REFERENCES `nguoidung` (`nguoidung_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Các ràng buộc cho bảng `yeucauhotro`

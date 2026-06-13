@@ -50,16 +50,23 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 80px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
   position: relative;
   z-index: 2;
+}
+
+// Hero Main Layout Grid
+.heroMain {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 60px;
+  align-items: center;
 
   @media (max-width: 968px) {
     grid-template-columns: 1fr;
-    gap: 60px;
+    gap: 40px;
     text-align: center;
   }
 }
@@ -163,28 +170,29 @@
   }
 }
 
-.stats {
-  display: flex;
-  align-items: stretch;
-  gap: 16px;
-  margin-top: 24px;
-  padding-top: 32px;
+// Stats Bar at the bottom
+.statsBar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  padding-top: 40px;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   animation: fadeInUp 0.6s ease-out 0.4s backwards;
 
   @media (max-width: 968px) {
-    justify-content: center;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
   }
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 12px;
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
 // Custom style for StatCard in HeroBanner
 .statCard {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   
   // Override StatCard default styles to match HeroBanner theme
@@ -194,21 +202,16 @@
   
   &:hover {
     background: rgba(255, 255, 255, 0.12) !important;
-    transform: translateY(-2px);
-  }
-
-  @media (max-width: 768px) {
-    flex: none;
-    width: 100%;
+    transform: translateY(-4px);
   }
 }
 
 // Override StatCard text colors for dark background
-.stats :global(.stat-card-title) {
+.statsBar :global(.stat-card-title) {
   color: rgba(255, 255, 255, 0.7) !important;
 }
 
-.stats :global(.stat-card-value) {
+.statsBar :global(.stat-card-value) {
   color: var(--color-gold) !important;
   
   // Keep gold color on hover
@@ -217,7 +220,7 @@
   }
 }
 
-.stats :global(.stat-card-icon) {
+.statsBar :global(.stat-card-icon) {
   background: rgba(255, 255, 255, 0.12) !important;
   color: var(--color-gold) !important;
 }

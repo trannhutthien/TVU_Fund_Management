@@ -552,3 +552,55 @@ CREATE TABLE guest_khoantaitro (
 --
 -- Sau 7 ngày có thể DELETE các bản ghi HET_HAN để dọn bảng.
 -- ------------------------------------------------------------
+
+CREATE TABLE tintuc (
+    tintuc_id       INT AUTO_INCREMENT PRIMARY KEY,
+
+    -- Nội dung bài viết
+    tieude          VARCHAR(255)    NOT NULL,
+    mota_ngan       VARCHAR(500)    NULL        COMMENT 'Mô tả ngắn hiển thị ở card preview trên Landing Page',
+    noidung         LONGTEXT        NOT NULL    COMMENT 'Nội dung đầy đủ bài viết (có thể chứa HTML/Markdown)',
+    avatar    VARCHAR(255)    NULL        COMMENT 'Đường dẫn ảnh thumbnail hiển thị ở card tin tức',
+
+    -- Phân loại
+    danh_muc        ENUM(
+                        'Tin hoc bong',
+                        'Tin giao duc',
+                        'Su kien',
+                        'Thong bao',
+                        'Khac'
+                    ) DEFAULT 'Thong bao',
+    la_noi_bat      TINYINT(1)      DEFAULT 0   COMMENT '1 = Hiển thị ở vị trí featured (card lớn) trên Landing Page',
+
+    -- Trạng thái xuất bản
+    trangthai       ENUM(
+                        'Ban nhap',
+                        'Da xuat ban',
+                        'Da an'
+                    ) DEFAULT 'Ban nhap',
+    ngay_xuat_ban   TIMESTAMP       NULL        COMMENT 'Thời điểm bài được xuất bản công khai',
+
+    -- Người quản lý
+    nguoitao_id     INT             NOT NULL    COMMENT 'Admin hoặc Cán bộ tạo bài viết',
+    nguoisua_id     INT             NULL        COMMENT 'Người chỉnh sửa lần cuối',
+
+    -- Timestamps
+    ngaytao         TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    ngaycapnhat     TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    -- Index
+    INDEX idx_trangthai     (trangthai),
+    INDEX idx_danhmuc       (danh_muc),
+    INDEX idx_noi_bat       (la_noi_bat),
+    INDEX idx_ngayxuatban   (ngay_xuat_ban),
+    INDEX idx_nguoitao      (nguoitao_id),
+
+    FOREIGN KEY (nguoitao_id)
+        REFERENCES nguoidung(nguoidung_id)
+        ON UPDATE CASCADE,
+
+    FOREIGN KEY (nguoisua_id)
+        REFERENCES nguoidung(nguoidung_id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);

@@ -238,8 +238,8 @@ const FundBreakdownSection = () => {
             <div className={styles.label}>MINH BẠCH TÀI CHÍNH</div>
             <h2 className={styles.title}>Ngân sách được phân bổ như thế nào?</h2>
             <p className={styles.description}>
-              Toàn bộ nguồn quỹ được phân bổ minh bạch theo từng danh mục hỗ trợ, 
-              cập nhật theo thời gian thực từ các nguồn đóng góp.
+              Hệ thống Quỹ học bổng TVU phân bổ nguồn ngân sách vào các hạng mục hỗ trợ chính dựa trên nhu cầu thực tế của sinh viên. 
+              Toàn bộ dữ liệu tài chính được cập nhật và hiển thị công khai, minh bạch theo thời gian thực từ các nguồn đóng góp.
             </p>
           </div>
 
@@ -256,7 +256,7 @@ const FundBreakdownSection = () => {
                     {/* Label Row */}
                     <div className={styles.progressHeader}>
                       <span className={styles.progressLabel}>{item.name}</span>
-                      <span className={styles.progressPercent}>{barWidth}%</span>
+                      <span className={styles.progressPercent}>{barWidth}% ({formatCurrency(item.amount)})</span>
                     </div>
 
                     {/* Progress Bar - Dùng shouldAnimate thay vì isVisible */}
@@ -266,7 +266,7 @@ const FundBreakdownSection = () => {
                       borderRadius: '4px',
                       overflow: 'hidden',
                       position: 'relative',
-                      marginBottom: '8px'
+                      marginBottom: '16px'
                     }}>
                       <div style={{
                         height: '100%',
@@ -277,9 +277,6 @@ const FundBreakdownSection = () => {
                         transitionDelay: `${index * 0.1}s`,
                       }} />
                     </div>
-
-                    {/* Amount */}
-                    <div className={styles.progressAmount}>{formatCurrency(item.amount)}</div>
                   </div>
                 );
               })}
