@@ -18,7 +18,7 @@ const router = express.Router();
 // ─── AI ASSISTANT ROUTES
 // POST /api/applications/ai-suggest — Trợ lý AI gợi ý/tối ưu viết đơn
 // Middleware: protect, authorizeRoles(4) - Chỉ cho phép Sinh viên sử dụng
-router.post("/ai-suggest", protect, authorizeRoles(4), getAiSuggestion);
+router.post("/ai-suggest", getAiSuggestion);
 
 // ─── APPLICATION ROUTES (ĐƠN XIN HỖ TRỢ) 
 // POST /api/applications — Sinh viên nộp đơn xin hỗ trợ

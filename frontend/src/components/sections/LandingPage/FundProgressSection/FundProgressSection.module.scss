@@ -1,70 +1,89 @@
 @use '@styles/variables' as *;
 
 .fundProgressSection {
-  padding: 80px 0;
-  background-color: var(--color-white, #ffffff);
+  padding: 100px 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  position: relative;
+  overflow: hidden;
+
+  // Subtle background decor
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    right: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .header {
-  margin-bottom: 48px;
+  margin-bottom: 56px;
+  text-align: left;
 }
 
 .titleContainer {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
 .decoratorLine {
-  width: 5px;
-  height: 28px;
-  background-color: var(--color-gold, #f0a500);
+  width: 6px;
+  height: 32px;
+  background: linear-gradient(180deg, var(--color-gold, #f0a500) 0%, #d97706 100%);
   border-radius: 4px;
   display: inline-block;
 }
 
 .title {
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 32px;
+  font-weight: 850;
   color: var(--color-primary, #1a2f5e);
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
 }
 
 .subtitle {
-  font-size: 15px;
+  font-size: 16px;
   color: #64748b;
   margin: 0;
-  max-width: 700px;
-  line-height: 1.5;
+  max-width: 750px;
+  line-height: 1.6;
 }
 
 .layoutGrid {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 40px;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 48px;
   align-items: start;
 
-  @media (max-width: 968px) {
+  @media (max-width: 992px) {
     grid-template-columns: 1fr;
+    gap: 32px;
   }
 }
 
-// Left sidebar stack of funds
+// ── Left sidebar: Stack of funds ───────────────────────────────────────────
 .fundStack {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-height: 550px;
+  gap: 18px;
+  max-height: 620px;
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: 10px;
 
   /* Custom scrollbar */
   &::-webkit-scrollbar {
@@ -77,38 +96,63 @@
   &::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 10px;
+    transition: background 0.2s;
   }
   &::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
 
-  @media (max-width: 968px) {
-    max-height: 320px;
+  @media (max-width: 992px) {
+    max-height: 350px;
+    padding-right: 0;
   }
 }
 
 .fundItem {
-  background: #f8fafc;
-  padding: 16px;
-  border-radius: 12px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
   border: 1px solid #e2e8f0;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0px;
+    background-color: var(--item-primary, #1a2f5e);
+    transition: width 0.25s ease;
+  }
 
   &:hover {
-    background: #f1f5f9;
     border-color: #cbd5e1;
     transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.04);
   }
 }
 
 .activeItem {
-  background: rgba(26, 47, 94, 0.03) !important;
-  border-color: var(--color-primary, #1a2f5e) !important;
-  box-shadow: 0 4px 15px rgba(26, 47, 94, 0.05);
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 25px var(--item-shadow) !important;
+  transform: translateX(4px);
+
+  &::after {
+    width: 5px;
+  }
 
   .fundName {
-    color: var(--color-primary, #1a2f5e);
+    color: var(--item-primary, #1a2f5e);
+  }
+  
+  .fundPercent {
+    color: var(--item-primary, #1a2f5e);
   }
 }
 
@@ -116,32 +160,34 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .fundCategory {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--color-gold, #f0a500);
-  background: rgba(240, 165, 0, 0.1);
-  padding: 4px 8px;
+  font-weight: 800;
+  color: var(--item-primary, #f0a500);
+  background: var(--item-bg, rgba(240, 165, 0, 0.08));
+  padding: 4px 10px;
   border-radius: 100px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .fundPercent {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-primary, #1a2f5e);
+  font-size: 14px;
+  font-weight: 800;
+  color: #64748b;
+  transition: color 0.25s;
 }
 
 .fundName {
-  font-size: 15px;
-  font-weight: 700;
-  color: #334155;
-  margin: 0 0 12px;
-  line-height: 1.4;
-  transition: color 0.2s ease;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 14px;
+  line-height: 1.45;
+  transition: color 0.25s;
 }
 
 .progressTrack {
@@ -150,39 +196,41 @@
   background: #e2e8f0;
   border-radius: 100px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .progressBar {
   height: 100%;
-  background-color: var(--color-primary, #1a2f5e);
   border-radius: 100px;
-  transition: width 0.5s ease-in-out;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fundBalanceSummary {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #64748b;
 
   strong {
-    color: var(--color-primary, #1a2f5e);
+    color: #1e293b;
+    font-weight: 700;
   }
 }
 
-// Right details view
+// ── Right Column: Selected Fund Details ────────────────────────────────────
 .fundDetailCard {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+  border-radius: 24px;
+  padding: 44px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  animation: fadeIn 0.4s ease-out;
+  gap: 36px;
+  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 
   @media (max-width: 576px) {
     padding: 24px;
+    gap: 28px;
   }
 }
 
@@ -193,32 +241,38 @@
 }
 
 .detailCategory {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--color-gold, #f0a500);
-  letter-spacing: 1px;
+  font-size: 12.5px;
+  font-weight: 850;
+  color: var(--theme-primary, #f0a500);
+  background: var(--theme-bg, rgba(240, 165, 0, 0.08));
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 100px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
 .detailTitle {
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.3;
+  font-size: 26px;
+  font-weight: 850;
+  line-height: 1.35;
   color: var(--color-primary, #1a2f5e);
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .detailDesc {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #64748b;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: #475569;
   margin: 0;
 }
 
+// ── Progress Box & Milestones ─────────────────────────────────────────────
 .progressBox {
   background: #f8fafc;
-  padding: 24px;
-  border-radius: 16px;
+  padding: 28px;
+  border-radius: 20px;
   border: 1px solid #e2e8f0;
 }
 
@@ -226,37 +280,170 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  font-weight: 700;
-  font-size: 14px;
-  color: #475569;
+  margin-bottom: 16px;
+  font-weight: 800;
+  font-size: 15px;
+  color: #334155;
 }
 
 .percentageText {
-  color: var(--color-primary, #1a2f5e);
-  font-size: 18px;
+  color: var(--theme-primary, #1a2f5e);
+  font-size: 22px;
+  font-weight: 900;
 }
 
+// Large progress bar and node container
 .largeProgressTrack {
   height: 12px;
   width: 100%;
   background: #e2e8f0;
   border-radius: 100px;
-  overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  // Overflow visible to let nodes stand out
+  overflow: visible;
 }
 
 .largeProgressBar {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-primary, #1a2f5e), #3b82f6);
+  background: var(--theme-gradient, linear-gradient(90deg, #1a2f5e, #3b82f6));
   border-radius: 100px;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Milestone nodes container
+.milestonesTrackNodes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.milestoneNode {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  cursor: pointer;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.25);
+    z-index: 10;
+  }
+}
+
+.nodeReached {
+  border-color: var(--theme-primary) !important;
+  background: var(--theme-primary) !important;
+  box-shadow: 0 0 10px var(--theme-shadow);
+}
+
+.nodeInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.checkIcon {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dotIndicator {
+  width: 6px;
+  height: 6px;
+  background-color: #94a3b8;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+
+  .nodeReached & {
+    background-color: #ffffff;
+  }
+}
+
+// Labels container below the progress bar
+.milestonesLabels {
+  position: relative;
+  height: 48px;
+  margin-bottom: 24px;
+
+  @media (max-width: 576px) {
+    height: 36px;
+  }
+}
+
+.milestoneLabelCol {
+  position: absolute;
+  transform: translateX(-50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 120px;
+  pointer-events: none;
+  
+  @media (max-width: 576px) {
+    width: 70px;
+  }
+}
+
+.milestoneLabelName {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-bottom: 2px;
+  transition: color 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  .labelColReached & {
+    color: var(--theme-text, #1e293b);
+  }
+
+  @media (max-width: 576px) {
+    font-size: 9px;
+  }
+}
+
+.milestoneLabelDesc {
+  font-size: 9px;
+  color: #94a3b8;
+  line-height: 1.2;
+  transition: color 0.3s;
+  max-width: 110px;
+
+  .labelColReached & {
+    color: #64748b;
+  }
+
+  // Hide descriptions on mobile screens to avoid text crowding
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
 .progressValuesRow {
   display: flex;
   justify-content: space-between;
   gap: 16px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+  margin-top: 12px;
 }
 
 .alignRight {
@@ -265,29 +452,32 @@
 
 .valueLabel {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
   display: block;
   margin-bottom: 4px;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .currentVal {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--color-primary, #1a2f5e);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--theme-primary, #1a2f5e);
   margin: 0;
 }
 
 .goalVal {
-  font-size: 18px;
-  font-weight: 800;
-  color: #475569;
+  font-size: 20px;
+  font-weight: 900;
+  color: #334155;
   margin: 0;
 }
 
-.detailStatsRow {
+// ── Stats Grid: 4 items ───────────────────────────────────────────────────
+.statsGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 
   @media (max-width: 576px) {
@@ -296,42 +486,67 @@
   }
 }
 
-.statBox {
+.statCard {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px;
-  border: 1px solid #f1f5f9;
-  border-radius: 12px;
+  padding: 18px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
   background: #ffffff;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--theme-primary);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.02);
+  }
+}
+
+.statIconWrapper {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-bg, rgba(59, 130, 246, 0.08));
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: background-color 0.3s;
 }
 
 .statIcon {
-  font-size: 28px;
-  color: var(--color-gold, #f0a500);
-  background: rgba(240, 165, 0, 0.1);
-  padding: 6px;
-  border-radius: 8px;
-  flex-shrink: 0;
+  font-size: 22px;
+  color: var(--theme-primary, #2563eb);
+}
+
+.statText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .statLabel {
   font-size: 11px;
-  color: #94a3b8;
-  display: block;
-  font-weight: 600;
+  color: #64748b;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .statValue {
-  font-size: 14px;
-  font-weight: 700;
-  color: #334155;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #1e293b;
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
 }
 
 .detailAction {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .btnAction {
@@ -340,11 +555,22 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px var(--theme-shadow);
+  transition: all 0.35s ease !important;
+
+  &:hover {
+    background: var(--theme-primary-hover) !important;
+    border-color: var(--theme-primary-hover) !important;
+    box-shadow: 0 6px 20px var(--theme-shadow) !important;
+  }
 }
 
 .arrowIcon {
   font-size: 18px;
-  transition: transform 0.2s ease;
+  transition: transform 0.25s ease;
   
   .btnAction:hover & {
     transform: translateX(4px);
@@ -356,14 +582,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 0;
+  padding: 100px 0;
   gap: 16px;
   color: #64748b;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 3px solid #e2e8f0;
   border-top-color: var(--color-primary, #1a2f5e);
   border-radius: 50%;
@@ -376,10 +602,10 @@
   }
 }
 
-@keyframes fadeIn {
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;

@@ -1,7 +1,12 @@
 import crypto from "crypto";
 import GuestModel from "../../models/guest/GuestModel.js";
 import FundModel from "../../models/funds/FundModel.js";
-import { sendEmail } from "../../utils/helpers/emailHelper.js";
+import {
+  sendOTPEmail,
+  sendAccountCreatedEmail,
+  sendDonationOTPEmail,
+  sendDonationCreatedEmail
+} from "../../services/emailService.js";
 
 /**
  * Validates email format
@@ -132,26 +137,12 @@ export const submitGuestApplication = async (req, res) => {
     });
 
     // 5. Gửi email OTP
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-        <h2 style="color: #0056b3; text-align: center;">XÁC MINH GỬI ĐƠN HỖ TRỢ</h2>
-        <p>Xin chào <strong>${guestHoTen}</strong>,</p>
-        <p>Hệ thống Quỹ Phát triển Trà Vinh (TVU Fund) đã nhận được yêu cầu nộp đơn hỗ trợ của bạn vào quỹ <strong>${fund.tenquy || fund.ten_quy}</strong>.</p>
-        <p>Để kích hoạt đơn và gửi tới hội đồng xét duyệt, vui lòng nhập mã xác thực (OTP) dưới đây trên trang web:</p>
-        <div style="background-color: #f8f9fa; padding: 15px; text-align: center; border-radius: 4px; border: 1px dashed #cccccc; margin: 20px 0;">
-          <span style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #d9534f;">${otpCode}</span>
-        </div>
-        <p style="color: #666666; font-size: 13px;">* Mã OTP này có giá trị trong vòng <strong>15 phút</strong>. Tuyệt đối không chia sẻ mã này cho người khác.</p>
-        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #999999; text-align: center;">Đây là email tự động từ hệ thống TVU Fund, vui lòng không phản hồi email này.</p>
-      </div>
-    `;
-
-    await sendEmail({
-      to: guestEmail.trim().toLowerCase(),
-      subject: "[TVU Fund] Mã xác thực OTP nộp đơn xin hỗ trợ",
-      html: emailHtml
-    });
+    await sendOTPEmail(
+      guestEmail.trim().toLowerCase(),
+      guestHoTen.trim(),
+      otpCode,
+      trackingUuid
+    );
 
     return res.status(201).json({
       success: true,
@@ -262,26 +253,12 @@ export const submitGuestDonation = async (req, res) => {
     });
 
     // 5. Gửi OTP qua email
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-        <h2 style="color: #28a745; text-align: center;">XÁC MINH THÔNG TIN TÀI TRỢ</h2>
-        <p>Xin chào <strong>${guestHoTen}</strong>,</p>
-        <p>Cảm ơn tấm lòng vàng của bạn đã quan tâm đóng góp tài trợ cho quỹ <strong>${fund.tenquy || fund.ten_quy}</strong> thuộc hệ thống TVU Fund.</p>
-        <p>Để hoàn tất đăng ký thông tin tài trợ, vui lòng nhập mã xác thực (OTP) dưới đây:</p>
-        <div style="background-color: #f8f9fa; padding: 15px; text-align: center; border-radius: 4px; border: 1px dashed #cccccc; margin: 20px 0;">
-          <span style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #28a745;">${otpCode}</span>
-        </div>
-        <p style="color: #666666; font-size: 13px;">* Mã OTP này có giá trị trong vòng <strong>15 phút</strong>. Tuyệt đối không chia sẻ mã này cho người khác.</p>
-        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
-        <p style="font-size: 12px; color: #999999; text-align: center;">Hệ thống TVU Fund chân thành cảm ơn sự đóng góp của quý nhà tài trợ.</p>
-      </div>
-    `;
-
-    await sendEmail({
-      to: guestEmail.trim().toLowerCase(),
-      subject: "[TVU Fund] Mã xác thực OTP đăng ký tài trợ",
-      html: emailHtml
-    });
+    await sendDonationOTPEmail(
+      guestEmail.trim().toLowerCase(),
+      guestHoTen.trim(),
+      otpCode,
+      trackingUuid
+    );
 
     return res.status(201).json({
       success: true,
@@ -344,32 +321,12 @@ export const verifyOtp = async (req, res) => {
       );
 
       // 3. Gửi email xác nhận kèm tài khoản mới
-      const loginUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/login`;
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-          <h2 style="color: #0056b3; text-align: center;">ĐƠN CỦA BẠN ĐÃ ĐƯỢC TIẾP NHẬN THÀNH CÔNG</h2>
-          <p>Xin chào <strong>${guestApp.guest_hoten}</strong>,</p>
-          <p>Mã OTP đã được xác minh thành công. Đơn yêu cầu hỗ trợ của bạn đã được chuyển tới Hội đồng xét duyệt ở trạng thái <strong>Chờ duyệt cấp 1</strong>.</p>
-          <p>Để giúp bạn dễ dàng theo dõi tiến độ xét duyệt và bổ sung thông tin khi được yêu cầu, hệ thống đã tự động tạo cho bạn một tài khoản thành viên:</p>
-          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>Email đăng nhập:</strong> ${email.trim().toLowerCase()}</p>
-            <p style="margin: 5px 0;"><strong>Mật khẩu tạm thời:</strong> <span style="font-family: monospace; font-size: 16px; color: #d9534f; font-weight: bold;">${plainPassword}</span></p>
-          </div>
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${loginUrl}" style="background-color: #0056b3; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">ĐĂNG NHẬP THEO DÕI ĐƠN</a>
-          </p>
-          <p style="color: #d9534f; font-size: 13px;">* Lưu ý: Vui lòng đăng nhập và tiến hành thay đổi mật khẩu ngay trong lần đầu tiên để đảm bảo bảo mật tài khoản.</p>
-          <p>Bạn cũng có thể tra cứu nhanh trạng thái đơn mà không cần đăng nhập bằng mã UUID sau: <br/><strong>${result.trackingUuid}</strong></p>
-          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #999999; text-align: center;">Chân thành cảm ơn bạn đã sử dụng hệ thống TVU Fund.</p>
-        </div>
-      `;
-
-      await sendEmail({
-        to: email.trim().toLowerCase(),
-        subject: "[TVU Fund] Đơn yêu cầu hỗ trợ đã được gửi thành công",
-        html: emailHtml
-      });
+      await sendAccountCreatedEmail(
+        email.trim().toLowerCase(),
+        guestApp.guest_hoten,
+        plainPassword,
+        result.trackingUuid
+      );
 
       return res.status(200).json({
         success: true,
@@ -400,32 +357,13 @@ export const verifyOtp = async (req, res) => {
       );
 
       // Gửi email xác nhận
-      const loginUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/login`;
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-          <h2 style="color: #28a745; text-align: center;">ĐĂNG KÝ ĐÓNG GÓP THÀNH CÔNG</h2>
-          <p>Xin chào <strong>${guestDon.guest_hoten}</strong>,</p>
-          <p>Mã OTP xác thực thành công. Khoản quyên góp tài trợ số tiền <strong>${parseFloat(guestDon.sotien).toLocaleString("vi-VN")} VNĐ</strong> của bạn đã được ghi nhận trên hệ thống ở trạng thái <strong>Chờ xác nhận giao dịch</strong>.</p>
-          <p>Chúng tôi đã tự động khởi tạo cho bạn tài khoản Nhà tài trợ để bạn có thể xem lại lịch sử đóng góp và cập nhật thông tin vinh danh:</p>
-          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #e0e0e0; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>Email đăng nhập:</strong> ${email.trim().toLowerCase()}</p>
-            <p style="margin: 5px 0;"><strong>Mật khẩu tạm thời:</strong> <span style="font-family: monospace; font-size: 16px; color: #d9534f; font-weight: bold;">${plainPassword}</span></p>
-          </div>
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${loginUrl}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">ĐĂNG NHẬP HỆ THỐNG</a>
-          </p>
-          <p style="color: #d9534f; font-size: 13px;">* Lưu ý: Vui lòng đăng nhập và đổi mật khẩu trong lần đầu tiên truy cập.</p>
-          <p>Mã tra cứu UUID của bạn: <strong>${result.trackingUuid}</strong></p>
-          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #999999; text-align: center;">Hội đồng quản lý TVU Fund xin chân thành cảm ơn tấm lòng hảo tâm của quý vị.</p>
-        </div>
-      `;
-
-      await sendEmail({
-        to: email.trim().toLowerCase(),
-        subject: "[TVU Fund] Xác nhận đăng ký đóng góp tài trợ thành công",
-        html: emailHtml
-      });
+      await sendDonationCreatedEmail(
+        email.trim().toLowerCase(),
+        guestDon.guest_hoten,
+        plainPassword,
+        guestDon.sotien,
+        result.trackingUuid
+      );
 
       return res.status(200).json({
         success: true,

@@ -12,6 +12,11 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    // Tự động đặt Content-Type về null khi truyền FormData để trình duyệt sinh boundary tự động
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = null
+    }
+
     const authStorage = localStorage.getItem('auth-storage')
     let token = null
     if (authStorage) {

@@ -8,6 +8,7 @@ import HeaderActions from '@components/common/HeaderActions';
 import useAuthStore from '@stores/authStore';
 import { authService } from '@services/authService';
 import api from '@services/api';
+import { HiChevronDown } from 'react-icons/hi2';
 import styles from './PublicHeader.module.scss';
 
 /**
@@ -78,8 +79,15 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
   // Navigation items
   const navItems = [
     { label: 'DANH MỤC QUỸ', path: '/funds' },
-    { label: 'HƯỚNG DẪN & QUY ĐỊNH', path: '/guidelines' },
-    { label: 'ĐỐI TÁC & NHÀ TÀI TRỢ', path: '/donors' },
+    {
+      label: 'TIN TỨC & HƯỚNG DẪN',
+      isDropdown: true,
+      children: [
+        { label: 'Tin tức & Sự kiện', path: '/news' },
+        { label: 'Hướng dẫn & Quy định', path: '/guidelines' },
+        { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
+      ],
+    },
     { label: 'TRA CỨU', path: '/track' },
     { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
     ...(isAuthenticated
@@ -126,6 +134,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
 
   const PATH_KEYS = {
     '/': 'landing_page',
+    '/news': 'news',
     '/funds': 'funds',
     '/guidelines': 'guidelines',
     '/donors': 'donors',
@@ -134,10 +143,18 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
     '/track': 'track',
   };
 
-  const filteredNavItems = navItems.filter((item) => {
-    const key = PATH_KEYS[item.path];
-    return checkPageAccess(key);
-  });
+  const filteredNavItems = navItems.map((item) => {
+    if (item.isDropdown) {
+      const filteredChildren = item.children.filter((child) => {
+        const key = PATH_KEYS[child.path];
+        return checkPageAccess(key);
+      });
+      return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null;
+    } else {
+      const key = PATH_KEYS[item.path];
+      return checkPageAccess(key) ? item : null;
+    }
+  }).filter(Boolean);
 
   const handleRegisterClick = () => {
     // Nếu có onRegisterClick callback (từ LandingPage), dùng nó để mở modal
@@ -189,20 +206,44 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
 
           {/* Navigation Menu (Center) - Desktop only */}
           <nav className={styles.nav}>
-            {filteredNavItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  item.highlight
-                    ? `${styles.navLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
-                    : `${styles.navLink} ${isActive ? styles.active : ''}`
-                }
-              >
-                {item.highlight && <span className={styles.highlightIcon}>✦</span>}
-                {item.label}
-              </NavLink>
-            ))}
+            {filteredNavItems.map((item) => {
+              if (item.isDropdown) {
+                return (
+                  <div className={styles.dropdown} key={item.label}>
+                    <span className={styles.dropdownToggle}>
+                      {item.label} <HiChevronDown className={styles.arrowIcon} />
+                    </span>
+                    <div className={styles.dropdownMenu}>
+                      {item.children.map((child) => (
+                        <NavLink
+                          key={child.path}
+                          to={child.path}
+                          className={({ isActive }) =>
+                            `${styles.dropdownItem} ${isActive ? styles.dropdownItemActive : ''}`
+                          }
+                        >
+                          {child.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    item.highlight
+                      ? `${styles.navLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
+                      : `${styles.navLink} ${isActive ? styles.active : ''}`
+                  }
+                >
+                  {item.highlight && <span className={styles.highlightIcon}>✦</span>}
+                  {item.label}
+                </NavLink>
+              );
+            })}
           </nav>
 
           {/* Action Buttons (Right) */}
@@ -254,21 +295,44 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
       {/* Mobile Menu Dropdown */}
       <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
         {/* Navigation Links */}
-        {filteredNavItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              item.highlight
-                ? `${styles.mobileNavLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
-                : `${styles.mobileNavLink} ${isActive ? styles.active : ''}`
-            }
-            onClick={closeMobileMenu}
-          >
-            {item.highlight && <span className={styles.highlightIcon}>✦</span>}
-            {item.label}
-          </NavLink>
-        ))}
+        {filteredNavItems.map((item) => {
+          if (item.isDropdown) {
+            return (
+              <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span className={styles.statusLabel} style={{ paddingLeft: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 600 }}>
+                  {item.label}
+                </span>
+                {item.children.map((child) => (
+                  <NavLink
+                    key={child.path}
+                    to={child.path}
+                    className={({ isActive }) =>
+                      `${styles.mobileNavLink} ${styles.mobileSubNavLink} ${isActive ? styles.active : ''}`
+                    }
+                    onClick={closeMobileMenu}
+                  >
+                    <span className={styles.subLinkPrefix}>↳</span> {child.label}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          }
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                item.highlight
+                  ? `${styles.mobileNavLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
+                  : `${styles.mobileNavLink} ${isActive ? styles.active : ''}`
+              }
+              onClick={closeMobileMenu}
+            >
+              {item.highlight && <span className={styles.highlightIcon}>✦</span>}
+              {item.label}
+            </NavLink>
+          );
+        })}
 
         {/* Divider */}
         <div className={styles.mobileDivider}></div>

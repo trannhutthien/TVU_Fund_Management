@@ -150,13 +150,9 @@ const ApplyPage = () => {
   const validationStatus = isAuthenticated
     ? (isDonor
         ? {
-            // Nhà tài trợ đăng nhập cần: Chọn quỹ + Nhập số tiền + Minh chứng (tùy hình thức)
+            // Nhà tài trợ đăng nhập chỉ cần: Chọn quỹ + Nhập số tiền >= 10,000đ
             step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000,
-            step2: paymentMethod === 'Tien mat' 
-              ? true 
-              : paymentMethod === 'Khac' 
-                ? isOnlinePaymentCompleted 
-                : !!(uploadedFiles?.length > 0), 
+            step2: true, 
             step3: false,
             step4: false,
           }
@@ -178,14 +174,10 @@ const ApplyPage = () => {
           })
     : (isDonor
         ? {
-            // Nhà tài trợ vãng lai
+            // Nhà tài trợ vãng lai cần: Chọn quỹ + Nhập số tiền >= 10,000đ + Điền thông tin cá nhân
             step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000 && 
                    !!(guestFields.guestHoTen?.trim() && guestFields.guestEmail?.trim() && guestFields.guestSoDienThoai?.trim()),
-            step2: (paymentMethod === 'Tien mat' 
-              ? true 
-              : paymentMethod === 'Khac' 
-                ? isOnlinePaymentCompleted 
-                : !!(uploadedFiles?.length > 0)) && captchaVerified,
+            step2: captchaVerified, // Chỉ cần check captcha ở bước này
             step3: false,
             step4: false,
           }
@@ -249,7 +241,7 @@ const ApplyPage = () => {
     }
 
     // Kiểm tra file đính kèm
-    const requiresFileUpload = !isDonor || paymentMethod === 'Chuyen khoan';
+    const requiresFileUpload = !isDonor;
     if (requiresFileUpload && (!uploadedFiles || uploadedFiles.length === 0)) {
       toast.error('Vui lòng đính kèm file minh chứng');
       return;
@@ -295,13 +287,14 @@ const ApplyPage = () => {
         // LUỒNG ĐÃ ĐĂNG NHẬP
         let applicationData;
         if (isDonor) {
+          const txnId = onlineTxnId || 'VNPAY' + Math.floor(10000000 + Math.random() * 90000000);
           applicationData = {
             quy_id: selectedFund.quyId,
             so_tien: parseFloat(donationAmount),
-            hinh_anh_minh_chung: fileUrl || null,
+            hinh_anh_minh_chung: null,
             hinh_thuc: paymentMethod,
-            ma_giao_dich: onlineTxnId || '',
-            ghi_chu: `Quyên góp từ ${user.ho_ten || user.email || 'Nhà tài trợ'}`
+            ma_giao_dich: txnId,
+            ghi_chu: `Quyên góp trực tuyến từ ${user.ho_ten || user.email || 'Nhà tài trợ'}`
           };
           
           if (!donationAmount || parseFloat(donationAmount) < 10000) {
@@ -350,6 +343,7 @@ const ApplyPage = () => {
       } else {
         // LUỒNG KHÁCH VÃNG LAI (GUEST)
         if (isDonor) {
+          const txnId = onlineTxnId || 'VNPAY' + Math.floor(10000000 + Math.random() * 90000000);
           const payload = {
             guestHoTen: guestFields.guestHoTen,
             guestEmail: guestFields.guestEmail,
@@ -359,9 +353,9 @@ const ApplyPage = () => {
             quyId: selectedFund.quyId,
             soTien: parseFloat(donationAmount),
             hinhThuc: paymentMethod,
-            maGiaoDich: onlineTxnId || guestFields.maGiaoDich || '',
-            chungTu: fileUrl || null,
-            ghiChu: guestFields.ghiChu
+            maGiaoDich: txnId,
+            chungTu: null,
+            ghiChu: guestFields.ghiChu || 'Quyên góp trực tuyến vãng lai'
           };
           response = await guestService.submitDonation(payload);
         } else {
@@ -681,290 +675,266 @@ const ApplyPage = () => {
           <div className={styles.titleSection}>
             <FundTitleSection
               title={isDonor ? "Tạo khoản quyên góp" : "Tạo hồ sơ đề nghị"}
-              highlight={isDonor ? "Quyên Góp Mới" : "Xin Hỗ Trợ Mới"}
+              highlight={isDonor ? (paymentMethod === 'Khac' ? "Quyên Góp Mới" : "Thông Tin Quyên Góp") : "Xin Hỗ Trợ Mới"}
               subtitle={
                 isDonor
-                  ? "Cảm ơn bạn đã đồng hành cùng TVU Fund. Vui lòng điền thông tin quyên góp."
+                  ? (paymentMethod === 'Chuyen khoan'
+                      ? "Vui lòng chuyển khoản đóng góp theo thông tin tài khoản ngân hàng của Quỹ dưới đây."
+                      : paymentMethod === 'Tien mat'
+                        ? "Vui lòng xem thông tin văn phòng Quỹ dưới đây để nộp tiền mặt trực tiếp."
+                        : "Cảm ơn bạn đã đồng hành cùng TVU Fund. Vui lòng điền thông tin quyên góp.")
                   : "Vui lòng điền đầy đủ thông tin để hệ thống và AI hỗ trợ xét duyệt nhanh nhất."
               }
               variant="transparent"
             />
           </div>
 
-          <div className={styles.stepperSection}>
-            <FormStepper
-              validationStatus={validationStatus}
-              isDonor={isDonor}
-            />
-          </div>
+          {(!isDonor || paymentMethod === 'Khac') && (
+            <div className={styles.stepperSection}>
+              <FormStepper
+                validationStatus={validationStatus}
+                isDonor={isDonor}
+              />
+            </div>
+          )}
 
           <div className={styles.formSection}>
             <AppliSectionLayout
               leftContent={
                 <>
-                  {/* BƯỚC 1: Chọn Quỹ */}
-                  <FundSelectSection
-                    onFundSelect={handleFundSelect}
-                    selectedFund={selectedFund}
-                    isDonor={isDonor}
-                  />
-
-                  {/* Phần Nhà tài trợ vãng lai nhập thông tin liên hệ và số tiền */}
+                  {/* THANH TAB PHƯƠNG THỨC ĐÓNG GÓP - ĐƯA LÊN ĐẦU DƯỚI STEPPER */}
                   {isDonor && (
-                    <>
-                      <DonationAmountSection
-                        selectedFund={selectedFund}
-                        donationAmount={donationAmount}
-                        onAmountChange={setDonationAmount}
-                      />
+                    <div className={styles.guestFormCard}>
+                      <h3 className={styles.sectionTitleText}>Phương thức đóng góp</h3>
+                      <div className={styles.paymentTabs}>
+                        <button
+                          type="button"
+                          className={`${styles.paymentTab} ${paymentMethod === 'Chuyen khoan' ? styles.paymentTabActive : ''}`}
+                          onClick={() => handlePaymentMethodChange('Chuyen khoan')}
+                        >
+                          <HiOutlineBuildingLibrary className={styles.paymentTabIcon} />
+                          <span>Qua ngân hàng</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.paymentTab} ${paymentMethod === 'Khac' ? styles.paymentTabActive : ''}`}
+                          onClick={() => handlePaymentMethodChange('Khac')}
+                        >
+                          <HiOutlineCreditCard className={styles.paymentTabIcon} />
+                          <span>Trực tuyến</span>
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.paymentTab} ${paymentMethod === 'Tien mat' ? styles.paymentTabActive : ''}`}
+                          onClick={() => handlePaymentMethodChange('Tien mat')}
+                        >
+                          <HiOutlineBanknotes className={styles.paymentTabIcon} />
+                          <span>Bằng tiền mặt</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-                      {/* THANH TAB PHƯƠNG THỨC ĐÓNG GÓP */}
-                      <div className={styles.guestFormCard}>
-                        <h3 className={styles.sectionTitleText}>Phương thức đóng góp</h3>
-                        <div className={styles.paymentTabs}>
-                          <button
-                            type="button"
-                            className={`${styles.paymentTab} ${paymentMethod === 'Chuyen khoan' ? styles.paymentTabActive : ''}`}
-                            onClick={() => handlePaymentMethodChange('Chuyen khoan')}
-                          >
-                            <HiOutlineBuildingLibrary className={styles.paymentTabIcon} />
-                            <span>Qua ngân hàng</span>
-                          </button>
-                          <button
-                            type="button"
-                            className={`${styles.paymentTab} ${paymentMethod === 'Khac' ? styles.paymentTabActive : ''}`}
-                            onClick={() => handlePaymentMethodChange('Khac')}
-                          >
-                            <HiOutlineCreditCard className={styles.paymentTabIcon} />
-                            <span>Trực tuyến</span>
-                          </button>
-                          <button
-                            type="button"
-                            className={`${styles.paymentTab} ${paymentMethod === 'Tien mat' ? styles.paymentTabActive : ''}`}
-                            onClick={() => handlePaymentMethodChange('Tien mat')}
-                          >
-                            <HiOutlineBanknotes className={styles.paymentTabIcon} />
-                            <span>Bằng tiền mặt</span>
-                          </button>
-                        </div>
+                  {/* BƯỚC 1: Chọn Quỹ */}
+                  {(!isDonor || paymentMethod === 'Khac') && (
+                    <FundSelectSection
+                      onFundSelect={handleFundSelect}
+                      selectedFund={selectedFund}
+                      isDonor={isDonor}
+                    />
+                  )}
 
-                        {/* HƯỚNG DẪN / CHI TIẾT TỪNG PHƯƠNG THỨC */}
-                        <div className={styles.paymentMethodDetails}>
-                          {paymentMethod === 'Chuyen khoan' && (
-                            <div className={styles.bankTransferWrapper}>
-                              <div className={styles.alertInfo}>
-                                <p><strong>Hướng dẫn chuyển khoản:</strong> Quý nhà tài trợ vui lòng chuyển khoản theo thông tin tài khoản của Quỹ dưới đây, sau đó tải lên ảnh biên lai/chụp màn hình giao dịch chuyển khoản thành công ở phần <strong>"Tài liệu đính kèm minh chứng"</strong> bên dưới.</p>
+                  {/* Phần Nhập số tiền cho Nhà tài trợ */}
+                  {isDonor && paymentMethod === 'Khac' && (
+                    <DonationAmountSection
+                      selectedFund={selectedFund}
+                      donationAmount={donationAmount}
+                      onAmountChange={setDonationAmount}
+                    />
+                  )}
+
+                  {/* CHI TIẾT TỪNG PHƯƠNG THỨC ĐÓNG GÓP */}
+                  {isDonor && (
+                    <div className={styles.guestFormCard}>
+                      <div className={styles.paymentMethodDetails}>
+                        {paymentMethod === 'Chuyen khoan' && (
+                          <div className={styles.bankTransferWrapper}>
+                            <div className={styles.alertInfo}>
+                              <p><strong>Hướng dẫn chuyển khoản:</strong> Quý nhà tài trợ vui lòng chuyển khoản theo thông tin tài khoản của Quỹ dưới đây. Sau khi nhận được tiền chuyển khoản, cán bộ quản lý quỹ sẽ kiểm tra và xác nhận đóng góp của quý vị trên hệ thống.</p>
+                            </div>
+                            
+                            {fundBankLoading ? (
+                              <div className={styles.loadingSpinner}>
+                                <HiOutlineArrowPath className={styles.spinIcon} />
+                                <span>Đang tải thông tin tài khoản của Quỹ...</span>
                               </div>
-                              
-                              {fundBankLoading ? (
-                                <div className={styles.loadingSpinner}>
-                                  <HiOutlineArrowPath className={styles.spinIcon} />
-                                  <span>Đang tải thông tin tài khoản của Quỹ...</span>
-                                </div>
-                              ) : fundBankAccounts.length > 0 ? (
-                                <div className={styles.bankCardsGrid}>
-                                  {fundBankAccounts.map((acc, index) => (
-                                    <div key={acc.taiKhoanNganHangId || index} className={styles.bankAccountCard}>
-                                      <div className={styles.bankCardHeader}>
-                                        <HiOutlineBuildingLibrary className={styles.bankIcon} />
-                                        <h4>{acc.nganHang}</h4>
-                                      </div>
-                                      <div className={styles.bankCardBody}>
-                                        <p><strong>Chủ tài khoản:</strong> {acc.chuTaiKhoan}</p>
-                                        <p className={styles.accountNumberRow}>
-                                          <strong>Số tài khoản:</strong> 
-                                          <span className={styles.accountNumber}>{acc.soTaiKhoan}</span>
-                                          <button
-                                            type="button"
-                                            className={styles.copyBtn}
-                                            onClick={() => {
-                                              navigator.clipboard.writeText(acc.soTaiKhoan);
-                                              setCopiedIndex(index);
-                                              setTimeout(() => setCopiedIndex(null), 2000);
-                                            }}
-                                          >
-                                            {copiedIndex === index ? 'Đã chép' : 'Sao chép'}
-                                          </button>
-                                        </p>
-                                        {acc.chiNhanh && <p><strong>Chi nhánh:</strong> {acc.chiNhanh}</p>}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className={styles.alertWarning}>
-                                  <p>Hiện tại Quỹ chưa cấu hình tài khoản nhận chuyển khoản ngân hàng riêng trên hệ thống. Quý vị vui lòng chuyển khoản tới tài khoản chính của nhà trường:</p>
-                                  <div className={styles.bankAccountCard} style={{ marginTop: 15 }}>
+                            ) : fundBankAccounts.length > 0 ? (
+                              <div className={styles.bankCardsGrid}>
+                                {fundBankAccounts.map((acc, index) => (
+                                  <div key={acc.taiKhoanNganHangId || index} className={styles.bankAccountCard}>
                                     <div className={styles.bankCardHeader}>
                                       <HiOutlineBuildingLibrary className={styles.bankIcon} />
-                                      <h4>VIETCOMBANK (Trường Đại học Trà Vinh)</h4>
+                                      <h4>{acc.nganHang}</h4>
                                     </div>
                                     <div className={styles.bankCardBody}>
-                                      <p><strong>Chủ tài khoản:</strong> TRUONG DAI HOC TRA VINH</p>
+                                      <p><strong>Chủ tài khoản:</strong> {acc.chuTaiKhoan}</p>
                                       <p className={styles.accountNumberRow}>
                                         <strong>Số tài khoản:</strong> 
-                                        <span className={styles.accountNumber}>1018899889</span>
+                                        <span className={styles.accountNumber}>{acc.soTaiKhoan}</span>
                                         <button
                                           type="button"
                                           className={styles.copyBtn}
                                           onClick={() => {
-                                            navigator.clipboard.writeText('1018899889');
-                                            setCopiedIndex('default');
+                                            navigator.clipboard.writeText(acc.soTaiKhoan);
+                                            setCopiedIndex(index);
                                             setTimeout(() => setCopiedIndex(null), 2000);
                                           }}
                                         >
-                                          {copiedIndex === 'default' ? 'Đã chép' : 'Sao chép'}
+                                          {copiedIndex === index ? 'Đã chép' : 'Sao chép'}
                                         </button>
                                       </p>
-                                      <p><strong>Nội dung chuyển khoản gợi ý:</strong> {guestFields.guestHoTen || user?.ho_ten || 'Nha tai tro'} ung ho {selectedFund?.tenQuy || 'Quy phat trien'}</p>
+                                      {acc.chiNhanh && <p><strong>Chi nhánh:</strong> {acc.chiNhanh}</p>}
                                     </div>
                                   </div>
-                                </div>
-                              )}
-
-                              {/* Nhập mã giao dịch để đối soát */}
-                              <div style={{ marginTop: 20 }}>
-                                <Input 
-                                  type="text"
-                                  label="Mã giao dịch chuyển khoản (nếu có)"
-                                  placeholder="Nhập mã giao dịch để đối soát nhanh..."
-                                  value={guestFields.maGiaoDich}
-                                  onChange={(e) => handleInputChange('maGiaoDich', e.target.value)}
-                                />
+                                ))}
                               </div>
-                            </div>
-                          )}
-
-                          {paymentMethod === 'Khac' && (
-                            <div className={styles.onlinePaymentWrapper}>
-                              <div className={styles.alertInfo}>
-                                <p><strong>Thanh toán trực tuyến:</strong> Hỗ trợ quyên góp nhanh qua ATM nội địa, Thẻ quốc tế (Visa/Master) hoặc quét mã QR ứng dụng ngân hàng thông qua cổng thanh toán VNPay.</p>
-                              </div>
-
-                              {isOnlinePaymentCompleted ? (
-                                <div className={styles.onlinePaymentSuccessCard}>
-                                  <HiOutlineCheck className={styles.successIcon} />
-                                  <div>
-                                    <h4>Thanh toán trực tuyến thành công!</h4>
-                                    <p>Mã giao dịch: <strong>{onlineTxnId}</strong></p>
-                                    <p style={{ fontSize: 13, color: '#4b5563', marginTop: 4 }}>
-                                      Thông tin thanh toán đã được xác nhận. Vui lòng bấm nút Gửi đơn ở cuối trang để lưu thông tin tài trợ.
+                            ) : (
+                              <div className={styles.alertWarning}>
+                                <p>Hiện tại Quỹ chưa cấu hình tài khoản nhận chuyển khoản ngân hàng riêng trên hệ thống. Quý vị vui lòng chuyển khoản tới tài khoản chính của nhà trường:</p>
+                                <div className={styles.bankAccountCard} style={{ marginTop: 15 }}>
+                                  <div className={styles.bankCardHeader}>
+                                    <HiOutlineBuildingLibrary className={styles.bankIcon} />
+                                    <h4>VIETCOMBANK (Trường Đại học Trà Vinh)</h4>
+                                  </div>
+                                  <div className={styles.bankCardBody}>
+                                    <p><strong>Chủ tài khoản:</strong> TRUONG DAI HOC TRA VINH</p>
+                                    <p className={styles.accountNumberRow}>
+                                      <strong>Số tài khoản:</strong> 
+                                      <span className={styles.accountNumber}>1018899889</span>
+                                      <button
+                                        type="button"
+                                        className={styles.copyBtn}
+                                        onClick={() => {
+                                          navigator.clipboard.writeText('1018899889');
+                                          setCopiedIndex('default');
+                                          setTimeout(() => setCopiedIndex(null), 2000);
+                                        }}
+                                      >
+                                        {copiedIndex === 'default' ? 'Đã chép' : 'Sao chép'}
+                                      </button>
                                     </p>
+                                    <p><strong>Nội dung chuyển khoản gợi ý:</strong> {guestFields.guestHoTen || user?.ho_ten || 'Nha tai tro'} ung ho {selectedFund?.tenQuy || 'Quy phat trien'}</p>
                                   </div>
                                 </div>
-                              ) : (
-                                <div className={styles.onlinePaymentPending}>
-                                  <p style={{ marginBottom: 15, color: '#334155' }}>
-                                    Số tiền sẽ thanh toán: <strong style={{ color: '#1a2f5e', fontSize: 18 }}>{donationAmount ? parseFloat(donationAmount).toLocaleString('vi-VN') + 'đ' : '0đ'}</strong>
-                                  </p>
-                                  <button 
-                                    type="button"
-                                    className={styles.onlinePayBtn}
-                                    onClick={() => {
-                                      if (!donationAmount || parseFloat(donationAmount) < 10000) {
-                                        toast.error("Vui lòng nhập số tiền đóng góp hợp lệ trước (tối thiểu 10,000đ)");
-                                        return;
-                                      }
-                                      setIsOnlineModalOpen(true);
-                                      setOnlinePayState('idle');
-                                    }}
-                                  >
-                                    <HiOutlineCreditCard style={{ marginRight: 8, fontSize: 18 }} />
-                                    Tiến hành thanh toán trực tuyến
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                          {paymentMethod === 'Tien mat' && (
-                            <div className={styles.cashPaymentWrapper}>
-                              <div className={styles.alertInfo}>
-                                <p><strong>Quyên góp tiền mặt trực tiếp:</strong> Đăng ký trực tuyến tại đây để hệ thống lập phiếu tiếp nhận đóng góp nháp. Sau đó, quý vị vui lòng đến trực tiếp văn phòng trường để nộp tiền mặt.</p>
-                              </div>
-                              <div className={styles.cashInstructions}>
-                                <h4>Địa điểm tiếp nhận nộp tiền mặt:</h4>
-                                <ul style={{ paddingLeft: 20, margin: '8px 0', color: '#334155' }}>
-                                  <li><strong>Địa chỉ:</strong> Văn phòng Ban quản lý Quỹ Phát triển TVU - Phòng 101, Tòa nhà A1, Đại học Trà Vinh (126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh).</li>
-                                  <li><strong>Thời gian làm việc:</strong> Thứ Hai đến Thứ Sáu (Sáng: 7h00 - 11h00, Chiều: 13h00 - 17h00).</li>
-                                  <li><strong>Hotline ban quản lý Quỹ:</strong> 0294 3855 246</li>
-                                </ul>
-                                <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10 }}>
-                                  * Lưu ý: Cán bộ Quỹ sẽ lập biên lai thu tiền mặt và duyệt khoản tài trợ của bạn ngay sau khi nhận tiền.
-                                </p>
-                              </div>
+                        {paymentMethod === 'Khac' && (
+                          <div className={styles.onlinePaymentWrapper}>
+                            <div className={styles.alertInfo}>
+                              <p><strong>Thanh toán trực tuyến:</strong> Hỗ trợ quyên góp nhanh qua ATM nội địa, Thẻ quốc tế (Visa/Master) hoặc quét mã QR ứng dụng ngân hàng thông qua cổng thanh toán VNPay.</p>
                             </div>
-                          )}
+                            <div className={styles.onlinePaymentDetails}>
+                              <p style={{ color: '#334155', marginBottom: 10 }}>
+                                Số tiền sẽ quyên góp trực tuyến: <strong style={{ color: '#1a2f5e', fontSize: 18 }}>{donationAmount ? parseFloat(donationAmount).toLocaleString('vi-VN') + 'đ' : '0đ'}</strong>
+                              </p>
+                              <p style={{ fontSize: 13, color: '#4b5563', lineHeight: '1.6' }}>
+                                Quý nhà tài trợ vui lòng hoàn tất thông tin liên hệ và bấm nút <strong>"Gửi đơn"</strong> ở chân trang để tiến hành đóng góp.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {paymentMethod === 'Tien mat' && (
+                          <div className={styles.cashPaymentWrapper}>
+                            <div className={styles.alertInfo}>
+                              <p><strong>Quyên góp tiền mặt trực tiếp:</strong> Cán bộ quản lý quỹ sẽ tiếp nhận đóng góp bằng tiền mặt trực tiếp của quý nhà tài trợ tại văn phòng hoặc tại địa điểm phù hợp.</p>
+                            </div>
+                            <div className={styles.cashInstructions}>
+                              <h4>Địa điểm tiếp nhận nộp tiền mặt trực tiếp:</h4>
+                              <ul style={{ paddingLeft: 20, margin: '8px 0', color: '#334155' }}>
+                                <li><strong>Địa chỉ:</strong> Văn phòng Ban quản lý Quỹ Phát triển TVU - Phòng 101, Tòa nhà A1, Đại học Trà Vinh (126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh).</li>
+                                <li><strong>Thời gian làm việc:</strong> Thứ Hai đến Thứ Sáu (Sáng: 7h00 - 11h00, Chiều: 13h00 - 17h00).</li>
+                                <li><strong>Hotline ban quản lý Quỹ:</strong> 0294 3855 246</li>
+                              </ul>
+                              <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10 }}>
+                                * Lưu ý: Cán bộ Quỹ sẽ lập biên lai thu tiền mặt và duyệt khoản tài trợ của bạn ngay sau khi nhận tiền.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* THÔNG TIN LIÊN HỆ CỦA NHÀ TÀI TRỢ (Chỉ hiển thị khi thanh toán trực tuyến và là khách vãng lai) */}
+                  {isDonor && paymentMethod === 'Khac' && !isAuthenticated && (
+                    <div className={styles.guestFormCard}>
+                      <h3>Thông tin nhà tài trợ vãng lai</h3>
+                      <div className={styles.guestFormRow}>
+                        <div className={styles.inputGroup}>
+                          <Input 
+                            type="text" 
+                            label="Họ và tên"
+                            placeholder="Nhập họ và tên..."
+                            value={guestFields.guestHoTen}
+                            onChange={(e) => handleInputChange('guestHoTen', e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className={styles.inputGroup}>
+                          <Input 
+                            type="email" 
+                            label="Email liên lạc"
+                            placeholder="Nhập email..."
+                            value={guestFields.guestEmail}
+                            onChange={(e) => handleInputChange('guestEmail', e.target.value)}
+                            required
+                          />
                         </div>
                       </div>
-                      
-                      {!isAuthenticated && (
-                        <div className={styles.guestFormCard}>
-                          <h3>Thông tin nhà tài trợ vãng lai</h3>
-                          <div className={styles.guestFormRow}>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="text" 
-                                label="Họ và tên"
-                                placeholder="Nhập họ và tên..."
-                                value={guestFields.guestHoTen}
-                                onChange={(e) => handleInputChange('guestHoTen', e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="email" 
-                                label="Email liên lạc"
-                                placeholder="Nhập email..."
-                                value={guestFields.guestEmail}
-                                onChange={(e) => handleInputChange('guestEmail', e.target.value)}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div className={styles.guestFormRowThree}>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="tel" 
-                                label="Số điện thoại"
-                                placeholder="Nhập SĐT..."
-                                value={guestFields.guestSoDienThoai}
-                                onChange={(e) => handleInputChange('guestSoDienThoai', e.target.value)}
-                              />
-                            </div>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="text" 
-                                label="Tên tổ chức (nếu có)"
-                                placeholder="Doanh nghiệp/Tổ chức..."
-                                value={guestFields.guestToChuc}
-                                onChange={(e) => handleInputChange('guestToChuc', e.target.value)}
-                              />
-                            </div>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="text" 
-                                label="Địa chỉ"
-                                placeholder="Nhập địa chỉ..."
-                                value={guestFields.guestDiaChi}
-                                onChange={(e) => handleInputChange('guestDiaChi', e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          <div className={styles.inputGroup} style={{ marginTop: 20 }}>
-                            <label className={styles.selectLabel}>Ghi chú đóng góp</label>
-                            <textarea 
-                              rows={3} 
-                              placeholder="Lời nhắn gửi tới quỹ..."
-                              value={guestFields.ghiChu}
-                              onChange={(e) => handleInputChange('ghiChu', e.target.value)}
-                              className={styles.textareaInput}
-                            />
-                          </div>
+                      <div className={styles.guestFormRowThree}>
+                        <div className={styles.inputGroup}>
+                          <Input 
+                            type="tel" 
+                            label="Số điện thoại"
+                            placeholder="Nhập SĐT..."
+                            value={guestFields.guestSoDienThoai}
+                            onChange={(e) => handleInputChange('guestSoDienThoai', e.target.value)}
+                          />
                         </div>
-                      )}
-                    </>
+                        <div className={styles.inputGroup}>
+                          <Input 
+                            type="text" 
+                            label="Tên tổ chức (nếu có)"
+                            placeholder="Doanh nghiệp/Tổ chức..."
+                            value={guestFields.guestToChuc}
+                            onChange={(e) => handleInputChange('guestToChuc', e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.inputGroup}>
+                          <Input 
+                            type="text" 
+                            label="Địa chỉ"
+                            placeholder="Nhập địa chỉ..."
+                            value={guestFields.guestDiaChi}
+                            onChange={(e) => handleInputChange('guestDiaChi', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className={styles.inputGroup} style={{ marginTop: 20 }}>
+                        <label className={styles.selectLabel}>Ghi chú đóng góp</label>
+                        <textarea 
+                          rows={3} 
+                          placeholder="Lời nhắn gửi tới quỹ..."
+                          value={guestFields.ghiChu}
+                          onChange={(e) => handleInputChange('ghiChu', e.target.value)}
+                          className={styles.textareaInput}
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {/* BƯỚC 2: Nội dung yêu cầu hỗ trợ (chỉ cho sinh viên) */}
@@ -1091,15 +1061,17 @@ const ApplyPage = () => {
                     )
                   )}
 
-                  {/* BƯỚC 4: Tài liệu đính kèm minh chứng */}
-                  <DocumentSection
-                    files={uploadedFiles}
-                    onFilesChange={handleFilesChange}
-                    isDonor={isDonor}
-                  />
+                  {/* BƯỚC 4: Tài liệu đính kèm minh chứng (Chỉ dành cho sinh viên đề nghị hỗ trợ) */}
+                  {!isDonor && (
+                    <DocumentSection
+                      files={uploadedFiles}
+                      onFilesChange={handleFilesChange}
+                      isDonor={isDonor}
+                    />
+                  )}
 
-                  {/* Xác thực bảo mật Robot cho khách vãng lai */}
-                  {!isAuthenticated && (
+                  {/* Xác thực bảo mật Robot cho khách vãng lai (Chỉ hiển thị khi làm trực tuyến) */}
+                  {!isAuthenticated && (!isDonor || paymentMethod === 'Khac') && (
                     <div className={styles.guestFormCard}>
                       <h3>Xác minh bảo mật chống spam</h3>
                       <label className={styles.checkboxLabel}>
@@ -1114,16 +1086,18 @@ const ApplyPage = () => {
                     </div>
                   )}
 
-                  {/* Nút bấm Lưu nháp / Gửi đơn / Reset */}
-                  <ApplicationFooter
-                    onSaveDraft={handleSaveDraft}
-                    onSubmit={handleSubmit}
-                    onReset={handleReset}
-                    isSubmitting={isSubmitting}
-                    isSaving={isSaving}
-                    isFormValid={isFormValid}
-                    isDonor={isDonor}
-                  />
+                  {/* Nút bấm Lưu nháp / Gửi đơn / Reset (Chỉ hiển thị khi làm trực tuyến) */}
+                  {(!isDonor || paymentMethod === 'Khac') && (
+                    <ApplicationFooter
+                      onSaveDraft={handleSaveDraft}
+                      onSubmit={handleSubmit}
+                      onReset={handleReset}
+                      isSubmitting={isSubmitting}
+                      isSaving={isSaving}
+                      isFormValid={isFormValid}
+                      isDonor={isDonor}
+                    />
+                  )}
                 </>
               }
               rightContent={
@@ -1167,124 +1141,7 @@ const ApplyPage = () => {
         </div>
       )}
 
-      {/* MODAL THANH TOÁN ONLINE GIẢ LẬP */}
-      {isOnlineModalOpen && (
-        <div className={styles.onlinePayOverlay}>
-          <div className={styles.onlinePayModal}>
-            <div className={styles.onlinePayHeader}>
-              <div className={styles.vnpayLogo}>
-                <span className={styles.vnText}>VN</span>
-                <span className={styles.payText}>PAY</span>
-              </div>
-              <button 
-                type="button" 
-                className={styles.closePayBtn}
-                onClick={() => setIsOnlineModalOpen(false)}
-              >
-                Đóng
-              </button>
-            </div>
-            
-            {onlinePayState === 'idle' && (
-              <div className={styles.onlinePayBody}>
-                <div className={styles.paymentSummary}>
-                  <p>Quyên góp tài trợ TVU Fund</p>
-                  <h3>{donationAmount ? parseFloat(donationAmount).toLocaleString('vi-VN') + 'đ' : '0đ'}</h3>
-                </div>
-                
-                <div className={styles.cardTypeSelector}>
-                  <div 
-                    className={`${styles.cardSelectorItem} ${selectedOnlineCard === 'vnpay' ? styles.cardSelectorItemActive : ''}`}
-                    onClick={() => setSelectedOnlineCard('vnpay')}
-                  >
-                    <HiOutlineQrCode className={styles.selectorIcon} />
-                    <span>Ứng dụng MobileBanking quét QR</span>
-                  </div>
-                  <div 
-                    className={`${styles.cardSelectorItem} ${selectedOnlineCard === 'atm' ? styles.cardSelectorItemActive : ''}`}
-                    onClick={() => setSelectedOnlineCard('atm')}
-                  >
-                    <HiOutlineCreditCard className={styles.selectorIcon} />
-                    <span>Thẻ ATM nội địa</span>
-                  </div>
-                </div>
 
-                <div className={styles.paymentActionArea}>
-                  {selectedOnlineCard === 'vnpay' ? (
-                    <div className={styles.qrCodeSection}>
-                      <div className={styles.mockQrCode}>
-                        <div className={styles.qrOuter}>
-                          <div className={styles.qrInner}>
-                            <HiOutlineQrCode style={{ fontSize: 100, color: '#1a2f5e' }} />
-                          </div>
-                        </div>
-                      </div>
-                      <p className={styles.qrHint}>Dùng ứng dụng ngân hàng quét mã QR bên dưới để thanh toán giả lập</p>
-                    </div>
-                  ) : (
-                    <div className={styles.atmFormSection}>
-                      <div className={styles.mockFormGroup}>
-                        <label>Chọn ngân hàng</label>
-                        <select className={styles.mockSelect}>
-                          <option>Vietcombank</option>
-                          <option>Agribank</option>
-                          <option>Vietinbank</option>
-                          <option>BIDV</option>
-                        </select>
-                      </div>
-                      <div className={styles.mockFormGroup}>
-                        <label>Số thẻ / Số tài khoản</label>
-                        <input type="text" placeholder="9704 1234 5678 9012" className={styles.mockInput} readOnly value="9704000123456789" />
-                      </div>
-                      <div className={styles.mockFormGroup}>
-                        <label>Tên chủ thẻ</label>
-                        <input type="text" placeholder="NGUYEN VAN A" className={styles.mockInput} readOnly value="NGUYEN VAN A" />
-                      </div>
-                    </div>
-                  )}
-
-                  <button 
-                    type="button"
-                    className={styles.mockSubmitBtn}
-                    onClick={() => {
-                      setOnlinePayState('processing');
-                      setTimeout(() => {
-                        setOnlinePayState('success');
-                        const randomId = 'VNPAY' + Math.floor(10000000 + Math.random() * 90000000);
-                        setOnlineTxnId(randomId);
-                        setIsOnlinePaymentCompleted(true);
-                        setTimeout(() => {
-                          setIsOnlineModalOpen(false);
-                          toast.success("Thanh toán trực tuyến thành công!");
-                        }, 1200);
-                      }, 2000);
-                    }}
-                  >
-                    Xác nhận thanh toán giả lập
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {onlinePayState === 'processing' && (
-              <div className={styles.onlinePayBody} style={{ textAlign: 'center', padding: '40px 0' }}>
-                <HiOutlineArrowPath className={`${styles.spinIcon} ${styles.largeSpinner}`} />
-                <h3 style={{ marginTop: 20, color: '#1a2f5e' }}>Đang kết nối cổng thanh toán VNPay...</h3>
-                <p style={{ color: '#656d76' }}>Vui lòng không đóng trình duyệt hoặc nhấn nút quay lại.</p>
-              </div>
-            )}
-
-            {onlinePayState === 'success' && (
-              <div className={styles.onlinePayBody} style={{ textAlign: 'center', padding: '40px 0' }}>
-                <HiOutlineCheck style={{ fontSize: 60, color: '#2da44e', margin: '0 auto' }} />
-                <h3 style={{ marginTop: 20, color: '#2da44e' }}>Giao dịch thành công!</h3>
-                <p style={{ color: '#656d76' }}>Mã giao dịch: <strong>{onlineTxnId}</strong></p>
-                <p style={{ color: '#656d76', fontSize: 13 }}>Đang quay trở lại trang đăng ký đóng góp...</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

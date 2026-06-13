@@ -19,10 +19,10 @@ import styles from './FundCard.module.scss';
 const FundCard = ({ fund }) => {
   const navigate = useNavigate();
 
-  // Helper functions
   const formatCurrency = (amount) => {
-    if (!amount) return null;
-    return amount.toLocaleString('vi-VN') + 'đ';
+    if (amount === undefined || amount === null) return null;
+    const num = Math.round(Number(amount) || 0);
+    return num.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' đ';
   };
 
   const formatDate = (date) => {

@@ -4,62 +4,74 @@ import pool from "../../config/db.js";
 // API MỚI: Lấy tin tức cho Landing Page (1 lần gọi duy nhất)
 // ═══════════════════════════════════════════════════════════════
 const getLandingNews = async () => {
-  const [featured] = await pool.query(
-    `SELECT 
-      tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban
-    FROM tintuc
-    WHERE trangthai = 'Da xuat ban' AND lanoibat = 1
-    ORDER BY ngayxuatban DESC, ngaytao DESC
-    LIMIT 1`
-  );
-
-  const [featuredSmall] = await pool.query(
-    `SELECT 
-      tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban
-    FROM tintuc
-    WHERE trangthai = 'Da xuat ban' AND lanoibat = 2
-    ORDER BY ngayxuatban DESC, ngaytao DESC
-    LIMIT 2`
-  );
-
-  const [sidebar] = await pool.query(
-    `SELECT 
-      tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban
-    FROM tintuc
-    WHERE trangthai = 'Da xuat ban' AND lanoibat = 3
-    ORDER BY ngayxuatban DESC, ngaytao DESC
-    LIMIT 5`
-  );
-
-  const [recent] = await pool.query(
-    `SELECT 
-      tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban
-    FROM tintuc
-    WHERE trangthai = 'Da xuat ban' AND lanoibat = 0
-    ORDER BY ngayxuatban DESC, ngaytao DESC
-    LIMIT 6`
-  );
-
-  // Fallback: Nếu không có featured lớn, lấy bài mới nhất
-  let featuredFinal = featured[0];
-  if (!featuredFinal) {
-    const [fallback] = await pool.query(
+  const getGroup = async (phanLoai) => {
+    const [featured] = await pool.query(
       `SELECT 
-        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban
+        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
       FROM tintuc
-      WHERE trangthai = 'Da xuat ban'
+      WHERE trangthai = 'Da xuat ban' AND lanoibat = 1 AND phanloai = ?
       ORDER BY ngayxuatban DESC, ngaytao DESC
-      LIMIT 1`
+      LIMIT 1`,
+      [phanLoai]
     );
-    featuredFinal = fallback[0] || null;
-  }
 
-  return {
-    featured: featuredFinal,
-    featuredSmall: featuredSmall || [],
-    sidebar: sidebar || [],
-    recent: recent || []
+    const [featuredSmall] = await pool.query(
+      `SELECT 
+        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+      FROM tintuc
+      WHERE trangthai = 'Da xuat ban' AND lanoibat = 2 AND phanloai = ?
+      ORDER BY ngayxuatban DESC, ngaytao DESC
+      LIMIT 2`,
+      [phanLoai]
+    );
+
+    const [sidebar] = await pool.query(
+      `SELECT 
+        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+      FROM tintuc
+      WHERE trangthai = 'Da xuat ban' AND lanoibat = 3 AND phanloai = ?
+      ORDER BY ngayxuatban DESC, ngaytao DESC
+      LIMIT 5`,
+      [phanLoai]
+    );
+
+    const [recent] = await pool.query(
+      `SELECT 
+        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+      FROM tintuc
+      WHERE trangthai = 'Da xuat ban' AND lanoibat = 0 AND phanloai = ?
+      ORDER BY ngayxuatban DESC, ngaytao DESC
+      LIMIT 6`,
+      [phanLoai]
+    );
+
+    // Fallback: Nếu không có featured lớn, lấy bài mới nhất của phân loại đó
+    let featuredFinal = featured[0];
+    if (!featuredFinal) {
+      const [fallback] = await pool.query(
+        `SELECT 
+          tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+        FROM tintuc
+        WHERE trangthai = 'Da xuat ban' AND phanloai = ?
+        ORDER BY ngayxuatban DESC, ngaytao DESC
+        LIMIT 1`,
+        [phanLoai]
+      );
+      featuredFinal = fallback[0] || null;
+    }
+
+    return {
+      featured: featuredFinal,
+      featuredSmall: featuredSmall || [],
+      sidebar: sidebar || [],
+      recent: recent || []
+    };
   };
+
+  const moi = await getGroup('Tin moi');
+  const noibat = await getGroup('Tin noi bat');
+
+  return { moi, noibat };
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -68,8 +80,27 @@ const getLandingNews = async () => {
 
 // Lấy tin tức đã xuất bản công khai với bộ lọc
 const getPublicNews = async (filters = {}) => {
-  const { limit = 10, category, excludeId } = filters;
-  
+  const { limit = 10, page = 1, category, excludeId } = filters;
+  const offset = (page - 1) * limit;
+
+  // 1. Đếm tổng số bài viết
+  let countQuery = "SELECT COUNT(*) as total FROM tintuc WHERE trangthai = 'Da xuat ban'";
+  const countParams = [];
+
+  if (category) {
+    countQuery += " AND danhmuc = ?";
+    countParams.push(category);
+  }
+
+  if (excludeId) {
+    countQuery += " AND tintuc_id != ?";
+    countParams.push(Number(excludeId));
+  }
+
+  const [countResult] = await pool.query(countQuery, countParams);
+  const total = countResult[0].total;
+
+  // 2. Lấy dữ liệu phân trang
   let query = `
     SELECT 
       tintuc_id,
@@ -95,11 +126,38 @@ const getPublicNews = async (filters = {}) => {
     params.push(Number(excludeId));
   }
 
-  query += ` ORDER BY lanoibat DESC, ngayxuatban DESC, ngaytao DESC LIMIT ?`;
+  query += ` ORDER BY lanoibat DESC, ngayxuatban DESC, ngaytao DESC LIMIT ? OFFSET ?`;
   params.push(Number(limit));
+  params.push(Number(offset));
 
   const [rows] = await pool.query(query, params);
-  return rows;
+  return { news: rows, total };
+};
+
+// Lấy số lượng bài viết của từng danh mục
+const getNewsCountByCategory = async () => {
+  const [rows] = await pool.query(
+    `SELECT danhmuc, COUNT(*) as total 
+     FROM tintuc 
+     WHERE trangthai = 'Da xuat ban'
+     GROUP BY danhmuc`
+  );
+
+  const result = {
+    'Tin hoc bong': 0,
+    'Tin giao duc': 0,
+    'Su kien': 0,
+    'Thong bao': 0,
+    'Khac': 0
+  };
+
+  rows.forEach(row => {
+    if (row.danhmuc in result) {
+      result[row.danhmuc] = row.total;
+    }
+  });
+
+  return result;
 };
 
 // Lấy tất cả tin tức (dành cho Admin/Cán bộ)
@@ -264,6 +322,7 @@ const updateNewsStatus = async (newsId, trangThai, ngayXuatBan = null) => {
 export default {
   getLandingNews,      // API mới
   getPublicNews,
+  getNewsCountByCategory,
   getAllNews,
   getNewsById,
   createNews,

@@ -36,10 +36,18 @@ export const getLandingNews = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        featured: mapNewsItem(data.featured),
-        featuredSmall: data.featuredSmall.map(mapNewsItem),
-        sidebar: data.sidebar.map(mapNewsItem),
-        recent: data.recent.map(mapNewsItem)
+        moi: {
+          featured: mapNewsItem(data.moi.featured),
+          featuredSmall: data.moi.featuredSmall.map(mapNewsItem),
+          sidebar: data.moi.sidebar.map(mapNewsItem),
+          recent: data.moi.recent.map(mapNewsItem)
+        },
+        noibat: {
+          featured: mapNewsItem(data.noibat.featured),
+          featuredSmall: data.noibat.featuredSmall.map(mapNewsItem),
+          sidebar: data.noibat.sidebar.map(mapNewsItem),
+          recent: data.noibat.recent.map(mapNewsItem)
+        }
       }
     });
   } catch (error) {
@@ -55,33 +63,58 @@ export const getLandingNews = async (req, res) => {
 // API CŨ: Giữ lại để tương thích ngược
 // ═══════════════════════════════════════════════════════════════
 
-// GET /api/news/public - Lấy danh sách tin tức công khai
+// GET /api/news/public - Lấy danh sách tin tức công khai có phân trang
 export const getPublicNews = async (req, res) => {
   try {
-    const { limit, category, excludeId } = req.query;
+    const { limit, page, category, excludeId } = req.query;
 
-    const newsList = await NewsModel.getPublicNews({
-      limit: limit ? parseInt(limit) : 10,
+    const parsedLimit = limit ? parseInt(limit) : 10;
+    const parsedPage = page ? parseInt(page) : 1;
+
+    const { news, total } = await NewsModel.getPublicNews({
+      limit: parsedLimit,
+      page: parsedPage,
       category: category || null,
       excludeId: excludeId ? parseInt(excludeId) : null
     });
 
+    const totalPages = Math.ceil(total / parsedLimit);
+
     return res.status(200).json({
       success: true,
-      total: newsList.length,
-      news: newsList.map(news => ({
-        id: news.tintuc_id,
-        title: news.tieude,
-        summary: news.motangan,
-        avatar: buildNewsImageUrl(news.avatar),
-        category: news.danhmuc,
-        isFeatured: news.lanoibat === 1,
-        publishDate: news.ngayxuatban,
-        createdAt: news.ngaytao
+      total,
+      page: parsedPage,
+      totalPages,
+      news: news.map(item => ({
+        id: item.tintuc_id,
+        title: item.tieude,
+        summary: item.motangan,
+        avatar: buildNewsImageUrl(item.avatar),
+        category: item.danhmuc,
+        isFeatured: item.lanoibat === 1,
+        publishDate: item.ngayxuatban,
+        createdAt: item.ngaytao
       }))
     });
   } catch (error) {
     console.error("Lỗi getPublicNews:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau"
+    });
+  }
+};
+
+// GET /api/news/count-by-category - Lấy số lượng tin của từng danh mục
+export const getNewsCountByCategory = async (req, res) => {
+  try {
+    const counts = await NewsModel.getNewsCountByCategory();
+    return res.status(200).json({
+      success: true,
+      data: counts
+    });
+  } catch (error) {
+    console.error("Lỗi getNewsCountByCategory:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau"
@@ -427,6 +460,7 @@ export const updateNewsStatus = async (req, res) => {
 export default {
   getLandingNews,    // API mới
   getPublicNews,
+  getNewsCountByCategory,
   getAllNews,
   getNewsById,
   createNews,

@@ -2,6 +2,7 @@ import express from "express";
 import {
   getLandingNews,    // API mới
   getPublicNews,
+  getNewsCountByCategory,
   getAllNews,
   getNewsById,
   createNews,
@@ -26,6 +27,9 @@ router.get("/landing", getLandingNews);
 
 // GET /api/news/public - Lấy danh sách tin tức hiển thị công khai (Landing Page)
 router.get("/public", getPublicNews);
+
+// GET /api/news/count-by-category - Lấy số lượng tin của từng danh mục
+router.get("/count-by-category", getNewsCountByCategory);
 
 // GET /api/news/:id - Xem chi tiết bài viết (Công khai cho mọi người)
 router.get("/:id", getNewsById);

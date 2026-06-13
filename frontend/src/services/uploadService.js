@@ -6,11 +6,7 @@ export const uploadService = {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await api.post('/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await api.post('/upload', formData)
     return response.data
   },
 
@@ -19,11 +15,7 @@ export const uploadService = {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await api.post('/upload/public', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await api.post('/upload/public', formData)
     return response.data
   },
 
@@ -32,11 +24,7 @@ export const uploadService = {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await api.post('/upload/avatar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await api.post('/upload/avatar', formData)
     return response.data
   },
 
@@ -45,11 +33,7 @@ export const uploadService = {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await api.post('/upload/fund', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await api.post('/upload/fund', formData)
     return response.data
   },
 
@@ -58,11 +42,7 @@ export const uploadService = {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await api.post('/upload/student', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await api.post('/upload/student', formData)
     return response.data
   },
 
@@ -73,11 +53,7 @@ export const uploadService = {
       formData.append('files', file)
     })
 
-    const response = await api.post('/upload/multiple', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    const response = await api.post('/upload/multiple', formData)
     return response.data
   },
 

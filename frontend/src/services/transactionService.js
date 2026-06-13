@@ -93,11 +93,7 @@ const importSaoKe = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await api.post('/transactions/import-sao-ke', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.post('/transactions/import-sao-ke', formData);
     return response.data;
   } catch (error) {
     console.error('Error importing sao ke:', error);

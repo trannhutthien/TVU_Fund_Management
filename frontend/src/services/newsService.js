@@ -37,6 +37,20 @@ const newsService = {
   },
 
   /**
+   * Lấy số lượng tin của từng danh mục
+   * GET /api/news/count-by-category
+   */
+  getNewsCountByCategory: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/news/count-by-category`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching news counts:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Lấy chi tiết một bài tin tức (công khai để người dùng đọc chi tiết)
    * GET /api/news/:id
    */

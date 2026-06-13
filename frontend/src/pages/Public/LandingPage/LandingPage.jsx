@@ -11,6 +11,7 @@ import TestimonialsSection from '@components/sections/LandingPage/TestimonialsSe
 import DonorWallSection from '@components/sections/LandingPage/DonorWallSection';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
+import newsService from '@services/newsService';
 import './LandingPage.scss';
 
 /**
@@ -23,6 +24,8 @@ import './LandingPage.scss';
 const LandingPage = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [landingNews, setLandingNews] = useState(null);
+  const [loadingNews, setLoadingNews] = useState(true);
 
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
@@ -30,12 +33,26 @@ const LandingPage = () => {
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
-  // Scroll to top khi component mount
+  // Scroll to top khi component mount & gọi API tin tức
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    // Hoặc dùng document
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
+
+    const fetchLandingNews = async () => {
+      try {
+        setLoadingNews(true);
+        const response = await newsService.getLandingNews();
+        if (response.success && response.data) {
+          setLandingNews(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching landing news:', error);
+      } finally {
+        setLoadingNews(false);
+      }
+    };
+    fetchLandingNews();
   }, []);
 
   // Handle ESC key to close modal
@@ -75,8 +92,23 @@ const LandingPage = () => {
           onLoginClick={openLoginModal}
           onRegisterClick={openRegisterModal}
         />
-        <NewsSection />
+        <NewsSection 
+          title="TIN MỚI" 
+          subtitle="Cập nhật những hoạt động mới nhất về quỹ hỗ trợ và học bổng tại Trường Đại học Trà Vinh"
+          data={landingNews?.moi} 
+          loading={loadingNews}
+          sidebarPosition="right"
+          type="moi"
+        />
         <FundProgressSection />
+        <NewsSection 
+          title="TIN NỔI BẬT" 
+          subtitle="Các bài viết nổi bật, sự kiện tiêu biểu và tin tức quan trọng được quan tâm nhiều nhất"
+          data={landingNews?.noibat} 
+          loading={loadingNews}
+          sidebarPosition="left"
+          type="noibat"
+        />
         <AISupportSection />
         <FundBreakdownSection />
         <CombinedProcessSection onLoginClick={openLoginModal} />

@@ -20,6 +20,7 @@ import DonorsPage from './pages/Public/DonorsPage/DonorsPage'
 import GuidelinesPage from './pages/Public/GuidelinesPage/GuidelinesPage'
 import TrackPage from './pages/Public/TrackPage/TrackPage'
 import NewsDetailPage from './pages/Public/NewsDetailPage/NewsDetailPage'
+import NewsPage from './pages/Public/NewsPage'
 
 // Pages - Auth
 import LoginPage from './pages/Auth/LoginPage'
@@ -83,7 +84,7 @@ function App() {
             <Route path="/track/:uuid" element={<TrackPage />} />
             <Route path="/track" element={<TrackPage />} />
             <Route path="/news/:id" element={<NewsDetailPage />} />
-            <Route path="/news" element={<Navigate to="/" replace />} />
+            <Route path="/news" element={<NewsPage />} />
           </Route>
           
           <Route element={<AuthLayout />}>
