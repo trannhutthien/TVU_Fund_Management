@@ -71,6 +71,20 @@ export const createLoaiQuy = async (maLoai, tenLoai) => {
   return response.data;
 };
 
+/**
+ * Lấy danh sách tài khoản ngân hàng của một quỹ
+ * GET /api/funds/:id/bank-accounts
+ */
+export const getFundBankAccounts = async (fundId) => {
+  try {
+    const response = await axios.get(`${API_URL}/funds/${fundId}/bank-accounts`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching fund bank accounts:', error);
+    throw error;
+  }
+};
+
 export default {
   getPublicFunds,
   getFundById,
@@ -79,4 +93,5 @@ export default {
   updateFundStatus,
   getAllLoaiQuy,
   createLoaiQuy,
+  getFundBankAccounts,
 };

@@ -188,6 +188,8 @@ export const createStaffDonation = async (req, res) => {
       quyId: quy_id,
       soTien: amount,
       ghiChu: ghi_chu ? String(ghi_chu).trim() : null,
+      hinhThuc: 'Chuyen khoan', // Cán bộ ghi nhận thường là chuyển khoản
+      chungTu: hinh_anh_minh_chung || null,
       hinhAnhMinhChung: hinh_anh_minh_chung || null,
       creatorId: req.user?.id || null,
       isStaff: true,
@@ -763,21 +765,25 @@ export const confirmDonation = async (req, res) => {
 // Tự động lấy thông tin từ req.user (đã đăng nhập)
 export const createAuthenticatedDonation = async (req, res) => {
   try {
-    const { quy_id, so_tien, hinh_anh_minh_chung } = req.body;
+    const { quy_id, so_tien, hinh_anh_minh_chung, hinh_thuc, ghi_chu } = req.body;
     const userId = req.user?.id; // ✅ Sửa từ user_id → id (theo middleware protect)
 
     console.log('🔍 DEBUG createAuthenticatedDonation:', {
       userId,
       quy_id,
       so_tien,
+      hinh_thuc,
       req_user: req.user
     });
 
     // Validation
-    if (!quy_id || !so_tien || !hinh_anh_minh_chung) {
+    const isCash = hinh_thuc === 'Tien mat';
+    if (!quy_id || !so_tien || (!isCash && !hinh_anh_minh_chung)) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập đầy đủ thông tin: quỹ, số tiền, minh chứng",
+        message: isCash 
+          ? "Vui lòng nhập đầy đủ thông tin: quỹ, số tiền" 
+          : "Vui lòng nhập đầy đủ thông tin: quỹ, số tiền, minh chứng",
       });
     }
 
@@ -866,8 +872,10 @@ export const createAuthenticatedDonation = async (req, res) => {
       nhaTaiTroId: donor.nhataitro_id,
       quyId: quy_id,
       soTien: Number(so_tien),
-      ghiChu: `Quyên góp từ ${donor.hoten || donor.tennhataitro}`,
-      hinhAnhMinhChung: hinh_anh_minh_chung,
+      ghiChu: ghi_chu || `Quyên góp từ ${donor.hoten || donor.tennhataitro}`,
+      hinhThuc: hinh_thuc || 'Chuyen khoan',
+      chungTu: hinh_anh_minh_chung || null,
+      hinhAnhMinhChung: hinh_anh_minh_chung || null,
       creatorId: userId,
       isStaff: false,
     });

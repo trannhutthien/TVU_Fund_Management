@@ -3,7 +3,8 @@ import {
   HiOutlineSparkles, 
   HiOutlineStar,
   HiOutlineTrophy,
-  HiOutlineBuildingOffice2
+  HiOutlineBuildingOffice2,
+  HiOutlineUser
 } from 'react-icons/hi2';
 import StatusBadge from '@components/common/StatusBadge';
 import Logo from '@components/common/Logo';
@@ -219,6 +220,7 @@ const SilverCard = ({ donor }) => {
  */
 const DonorWallSection = () => {
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('doi-tac'); // 'doi-tac' or 'nha-tai-tro'
   const [donorsData, setDonorsData] = useState({
     diamond: [],
     gold: [],
@@ -265,9 +267,29 @@ const DonorWallSection = () => {
     );
   }
 
-  const hasDonors = donorsData.diamond.length > 0 || 
-                    donorsData.gold.length > 0 || 
-                    donorsData.silver.length > 0;
+  // Filter donor arrays based on activeTab
+  const filteredDiamond = donorsData.diamond.filter((donor) =>
+    activeTab === 'doi-tac'
+      ? donor.loai === 'To chuc' || donor.loai === 'Doanh nghiep'
+      : donor.loai === 'Ca nhan'
+  );
+
+  const filteredGold = donorsData.gold.filter((donor) =>
+    activeTab === 'doi-tac'
+      ? donor.loai === 'To chuc' || donor.loai === 'Doanh nghiep'
+      : donor.loai === 'Ca nhan'
+  );
+
+  const filteredSilver = donorsData.silver.filter((donor) =>
+    activeTab === 'doi-tac'
+      ? donor.loai === 'To chuc' || donor.loai === 'Doanh nghiep'
+      : donor.loai === 'Ca nhan'
+  );
+
+  const hasFilteredDonors =
+    filteredDiamond.length > 0 ||
+    filteredGold.length > 0 ||
+    filteredSilver.length > 0;
 
   return (
     <section className={styles.donorWallSection}>
@@ -291,29 +313,49 @@ const DonorWallSection = () => {
           </div>
         </div>
 
-        {!hasDonors ? (
+        {/* Tab Navigation */}
+        <div className={styles.tabContainer}>
+          <div className={styles.tabNavigation}>
+            <button
+              className={`${styles.navTab} ${activeTab === 'doi-tac' ? styles.navTabActive : ''}`}
+              onClick={() => setActiveTab('doi-tac')}
+            >
+              <HiOutlineBuildingOffice2 className={styles.tabIcon} />
+              Đối tác (Tổ chức & Doanh nghiệp)
+            </button>
+            <button
+              className={`${styles.navTab} ${activeTab === 'nha-tai-tro' ? styles.navTabActive : ''}`}
+              onClick={() => setActiveTab('nha-tai-tro')}
+            >
+              <HiOutlineUser className={styles.tabIcon} />
+              Nhà tài trợ (Cá nhân)
+            </button>
+          </div>
+        </div>
+
+        {!hasFilteredDonors ? (
           <div className={styles.emptyState}>
             <HiOutlineBuildingOffice2 className={styles.emptyIcon} />
-            <p>Chưa có dữ liệu nhà tài trợ</p>
+            <p>Chưa có dữ liệu {activeTab === 'doi-tac' ? 'đối tác' : 'nhà tài trợ'}</p>
           </div>
         ) : (
           <>
             {/* Tier 1 & 2: Diamond + Gold */}
-            {(donorsData.diamond.length > 0 || donorsData.gold.length > 0) && (
+            {(filteredDiamond.length > 0 || filteredGold.length > 0) && (
               <div className={styles.topTierRow}>
                 {/* Diamond Tier */}
-                {donorsData.diamond.length > 0 && (
+                {filteredDiamond.length > 0 && (
                   <div className={styles.diamondSection}>
-                    {donorsData.diamond.map((donor) => (
+                    {filteredDiamond.map((donor) => (
                       <DiamondCard key={donor.id} donor={donor} />
                     ))}
                   </div>
                 )}
 
                 {/* Gold Tier */}
-                {donorsData.gold.length > 0 && (
+                {filteredGold.length > 0 && (
                   <div className={styles.goldSection}>
-                    {donorsData.gold.map((donor) => (
+                    {filteredGold.map((donor) => (
                       <GoldCard key={donor.id} donor={donor} />
                     ))}
                   </div>
@@ -322,9 +364,9 @@ const DonorWallSection = () => {
             )}
 
             {/* Tier 3: Silver */}
-            {donorsData.silver.length > 0 && (
+            {filteredSilver.length > 0 && (
               <div className={styles.silverSection}>
-                {donorsData.silver.map((donor) => (
+                {filteredSilver.map((donor) => (
                   <SilverCard key={donor.id} donor={donor} />
                 ))}
               </div>

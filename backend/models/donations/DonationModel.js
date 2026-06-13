@@ -111,16 +111,18 @@ const createPublicDonation = async (donationData) => {
 // HÀM: createStaffDonation
 // MỤC ĐÍCH: Cán bộ Quỹ ghi nhận 1 khoản tài trợ mới (đã biết nhà tài trợ)
 // ─────────────────────────────────────────────────────────────────────────────
-const createStaffDonation = async ({ nhaTaiTroId, quyId, soTien, hinhThuc, ghiChu, chungTu }) => {
+const createStaffDonation = async ({ nhaTaiTroId, quyId, soTien, hinhThuc, ghiChu, chungTu, hinhAnhMinhChung }) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+
+    const proofDoc = chungTu || hinhAnhMinhChung || null;
 
     const [insertRes] = await connection.execute(
       `INSERT INTO khoantaitro (
          nhataitro_id, quy_id, sotien, hinhthuc, ngaytaitro, trangthai, ghichu, chungtu
        ) VALUES (?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?)`,
-      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Tien mat', ghiChu || null, chungTu || null]
+      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Tien mat', ghiChu || null, proofDoc]
     );
     const khoanTaiTroId = insertRes.insertId;
 

@@ -24,6 +24,9 @@ const router = express.Router();
 // Yêu cầu: Token hợp lệ, FormData với key 'file'
 router.post('/', protect, uploadMiddleware, uploadFile);
 
+// POST /api/upload/public - Upload 1 file cho khách vãng lai (KHÔNG CẦN TOKEN)
+router.post('/public', uploadMiddleware, uploadFile);
+
 // POST /api/upload/multiple - Upload nhiều files (tối đa 5)
 // Yêu cầu: Token hợp lệ, FormData với key 'files'
 router.post('/multiple', protect, uploadMultipleMiddleware, uploadMultipleFiles);

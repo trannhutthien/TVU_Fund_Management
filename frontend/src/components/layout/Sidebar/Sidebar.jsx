@@ -68,7 +68,7 @@ const NAV_CONFIG = [
         roles: ['admin', 'ketoan'],
       },
       {
-        label: 'Nhà hảo tâm & Vinh danh',
+        label: 'Đối tác & Nhà tài trợ',
         path: '/donors',
         icon: <HiOutlineHeart />,
         roles: ['admin', 'ketoan'],

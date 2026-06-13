@@ -20,7 +20,7 @@ const PAGE_GROUPS = [
       { key: 'landing_page', label: 'Trang chủ (Landing Page)', path: '/' },
       { key: 'funds', label: 'Danh mục quỹ', path: '/funds' },
       { key: 'guidelines', label: 'Hướng dẫn & Quy định', path: '/guidelines' },
-      { key: 'donors', label: 'Vinh danh', path: '/donors' },
+      { key: 'donors', label: 'Đối tác & Nhà tài trợ', path: '/donors' },
       { key: 'profile', label: 'Cá nhân (Profile)', path: '/profile' },
       { key: 'apply', label: 'Tạo đơn hỗ trợ', path: '/apply' },
     ]

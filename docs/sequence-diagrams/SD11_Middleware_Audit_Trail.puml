@@ -1,0 +1,74 @@
+@startuml SD11_Middleware_Audit_Trail
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequenceMessageAlign center
+
+title **SD11: MIDDLEWARE AUDIT TRAIL - TỰ ĐỘNG GHI LOG**
+
+actor "User" as User
+participant "API" as API
+participant "Audit\nMiddleware" as Audit
+database "DB" as DB
+participant "JSON Diff" as Diff
+database "Nhật ký" as Log
+
+== CẬP NHẬT DỮ LIỆU ==
+
+User -> API: PUT /api/users/123\n{"hoten": "Nguyễn Văn B"}
+
+API -> Audit: **[BEFORE]** Snapshot
+Audit -> DB: Lấy dữ liệu CŨ
+DB --> Audit: Old: {"hoten": "Nguyễn Văn A"}
+
+API -> DB: UPDATE dữ liệu
+DB --> API: ✓ Cập nhật OK
+
+API -> Audit: **[AFTER]** Snapshot
+Audit -> DB: Lấy dữ liệu MỚI
+DB --> Audit: New: {"hoten": "Nguyễn Văn B"}
+
+Audit -> Diff: So sánh Old vs New
+
+note over Diff
+**JSON DIFF**
+━━━━━━━━━━━━━━━━
+{
+  "changed": {
+    "hoten": {
+      "old": "Nguyễn Văn A",
+      "new": "Nguyễn Văn B"
+    }
+  },
+  "unchanged": ["email", "phone"]
+}
+end note
+
+Diff --> Audit: Kết quả Diff
+
+Audit -> Log: **Ghi log:**\n- User ID\n- Action: UPDATE\n- Old/New Data\n- Diff\n- Timestamp
+Log --> Audit: ✓ Log ID: 789
+
+Audit --> API: ✓ Hoàn tất
+API --> User: 200 OK
+
+== XEM LỊCH SỬ ==
+
+User -> API: GET /api/logs/123
+API -> Log: Truy vấn lịch sử
+Log --> API: Danh sách thay đổi
+API --> User: Hiển thị timeline
+
+legend right
+**Lợi ích:**
+✅ Tự động ghi log
+✅ Truy vết thay đổi
+✅ Rollback dữ liệu
+✅ Audit compliance
+
+**Công nghệ:**
+• Middleware interceptor
+• JSON Diff engine
+• MySQL JSON columns
+endlegend
+
+@enduml

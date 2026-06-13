@@ -47,7 +47,7 @@ export const createAuthenticatedDonation = async (donationData) => {
  */
 export const createStaffDonation = async (donationData) => {
   try {
-    const response = await api.post('/donations/staff', donationData);
+    const response = await api.post('/donations', donationData);
     return response.data;
   } catch (error) {
     console.error('Error creating staff donation:', error);

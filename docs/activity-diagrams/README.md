@@ -2,7 +2,7 @@
 
 ## 📝 Tổng quan
 
-Thư mục này chứa **10 Activity Diagrams** mô tả các luồng hoạt động quan trọng của hệ thống quản lý quỹ hỗ trợ sinh viên TVU.
+Thư mục này chứa **14 Activity Diagrams** mô tả các luồng hoạt động quan trọng của hệ thống quản lý quỹ hỗ trợ sinh viên TVU.
 
 Tất cả các diagrams được viết bằng **PlantUML** và có thể render thành ảnh bằng các công cụ hỗ trợ PlantUML.
 
@@ -10,7 +10,7 @@ Tất cả các diagrams được viết bằng **PlantUML** và có thể rende
 
 ## 📂 Danh sách Activity Diagrams
 
-Thư mục này chứa **13 Activity Diagrams** (cập nhật từ 12 diagrams - tách AD08 thành AD08a và AD08b).
+Thư mục này chứa **14 Activity Diagrams** (bao gồm AD08a/AD08b và AD13 mới).
 
 ### 🔐 NHÓM 1: XÁC THỰC & PHÂN LOẠI
 
@@ -240,6 +240,52 @@ Thư mục này chứa **13 Activity Diagrams** (cập nhật từ 12 diagrams -
 
 ---
 
+### 🔍 NHÓM 6: KỸ THUẬT HỆ THỐNG
+
+#### ✅ AD13: Luồng hoạt động JSON Diff trong Audit Trail ⭐⭐⭐
+- **File**: `AD13_JSON_Diff_Flow.puml`
+- **Mô tả**: Chi tiết cách hệ thống tự động ghi log thay đổi dữ liệu với JSON Diff
+- **Actors**: System (tự động, không có user)
+- **Components**:
+  - Auth Middleware
+  - Audit Middleware (Before & After)
+  - JSON Diff Engine
+  - Database
+  - Log Table
+- **Đặc điểm nổi bật**:
+  - ⭐ **Tự động hoàn toàn**: Không cần code thủ công
+  - ⭐ **Before Snapshot**: Lưu dữ liệu cũ trước khi update
+  - ⭐ **After Snapshot**: Lấy dữ liệu mới sau khi update
+  - ⭐ **JSON Diff Algorithm**: So sánh chi tiết từng field
+  - ⭐ **Changelog JSON**: Ghi rõ changed/unchanged/added/removed
+  - ⭐ **Non-blocking**: Log fail không làm request fail
+- **JSON Diff Output**:
+  ```json
+  {
+    "changed": {
+      "hoten": { "old": "Nguyễn Văn A", "new": "Nguyễn Văn B" },
+      "email": { "old": "nva@...", "new": "nvb@..." }
+    },
+    "unchanged": ["sodienthoai", "diachi"],
+    "added": [],
+    "removed": [],
+    "summary": { "changedCount": 2 }
+  }
+  ```
+- **Use Cases**:
+  - Audit compliance (tuân thủ)
+  - Security investigation (điều tra)
+  - Data recovery (rollback)
+  - Debug & troubleshooting
+- **Performance Tips**:
+  - Cache snapshot trong Redis
+  - Async logging (không chặn request)
+  - Index log table đúng cách
+- **Kết hợp với**: AD11 (Nhật ký hệ thống), SD11 (Sequence Diagram tương ứng)
+- **Độ ưu tiên**: ⭐⭐⭐ (QUAN TRỌNG - Thể hiện kỹ thuật cao)
+
+---
+
 ## 🎯 Mức độ ưu tiên và tầm quan trọng
 
 ### ⭐⭐⭐ QUAN TRỌNG NHẤT (Bắt buộc đưa vào báo cáo)
@@ -248,21 +294,22 @@ Thư mục này chứa **13 Activity Diagrams** (cập nhật từ 12 diagrams -
 2. **AD07 - Tài trợ công khai**: Luồng chính cho nhà tài trợ
 3. **AD08a - Xác nhận tài trợ (Kế toán)**: Kiểm soát nguồn thu quan trọng
 4. **AD08b - Kiểm soát tài trợ (Admin)**: Giám sát và thống kê tài trợ
+5. **AD13 - JSON Diff trong Audit Trail**: Thể hiện kỹ thuật cao, tự động hóa
 
 ### ⭐⭐ QUAN TRỌNG (Nên đưa vào báo cáo)
 
-4. **AD03 - Sinh viên nộp đơn**: Điểm bắt đầu của quy trình
-5. **AD04 - Phê duyệt cấp 1**: Phê duyệt đầu tiên
-6. **AD05 - Phê duyệt cấp 2**: Phê duyệt thứ hai
-7. **AD10 - Xuất báo cáo**: Chức năng báo cáo quan trọng
-8. **AD11 - Nhật ký hệ thống**: Audit trail, bảo mật
-9. **AD12 - Lịch sử phê duyệt**: Timeline trực quan
+6. **AD03 - Sinh viên nộp đơn**: Điểm bắt đầu của quy trình
+7. **AD04 - Phê duyệt cấp 1**: Phê duyệt đầu tiên
+8. **AD05 - Phê duyệt cấp 2**: Phê duyệt thứ hai
+9. **AD10 - Xuất báo cáo**: Chức năng báo cáo quan trọng
+10. **AD11 - Nhật ký hệ thống**: Audit trail, bảo mật
+11. **AD12 - Lịch sử phê duyệt**: Timeline trực quan
 
 ### ⭐ BỔ TRỢ (Có thể đưa vào nếu cần)
 
-10. **AD01 - Đăng ký tài khoản**: Chức năng cơ bản
-11. **AD02 - Đăng nhập**: Chức năng cơ bản
-12. **AD09 - Quản lý quỹ**: Quản trị hệ thống
+12. **AD01 - Đăng ký tài khoản**: Chức năng cơ bản
+13. **AD02 - Đăng nhập**: Chức năng cơ bản
+14. **AD09 - Quản lý quỹ**: Quản trị hệ thống
 
 ---
 

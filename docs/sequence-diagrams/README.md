@@ -24,6 +24,11 @@ Tất cả các diagrams được viết bằng **PlantUML** với format **rút
 
 ## 📂 Danh sách Sequence Diagrams
 
+Hệ thống có **12 Sequence Diagrams** bao gồm:
+- 10 diagrams nghiệp vụ chính
+- 1 diagram AI hỗ trợ
+- 1 diagram Middleware Audit Trail
+
 ### 🔐 NHÓM 1: XÁC THỰC (1 diagram)
 
 #### ✅ SD01: Đăng nhập hệ thống
@@ -181,7 +186,54 @@ Tất cả các diagrams được viết bằng **PlantUML** với format **rút
 
 ---
 
-### 📊 NHÓM 5: BÁO CÁO (1 diagram)
+### 🔍 NHÓM 5: AUDIT TRAIL & LOGGING (1 diagram)
+
+#### ✅ SD11: Middleware Audit Trail - Nhật ký tự động ⭐⭐⭐
+- **File**: `SD11_Middleware_Audit_Trail.puml`
+- **Mô tả**: Mô phỏng cơ chế tự động ghi log thay đổi dữ liệu qua Middleware
+- **Components**: 
+  - API Endpoint
+  - Auth Middleware
+  - Audit Middleware
+  - JSON Diff Engine
+  - Nhật ký hệ thống
+- **Đặc điểm nổi bật**:
+  - ⭐ **Before Update**: Snapshot dữ liệu cũ trước khi cập nhật
+  - ⭐ **After Update**: Lấy dữ liệu mới sau khi cập nhật
+  - ⭐ **JSON Diff**: So sánh chi tiết từng field thay đổi
+  - ⭐ **Auto Logging**: Tự động ghi log không cần code thủ công
+  - ⭐ **Traceability**: Truy vết được ai, làm gì, khi nào, thay đổi gì
+- **Luồng hoạt động**:
+  1. Request → Auth → Audit (Before)
+  2. Snapshot dữ liệu cũ
+  3. Thực hiện UPDATE
+  4. Audit (After) → Lấy dữ liệu mới
+  5. JSON Diff Engine so sánh
+  6. Ghi log chi tiết vào database
+- **JSON Diff Structure**:
+  ```json
+  {
+    "changed": {
+      "field1": { "old": "...", "new": "..." },
+      "field2": { "old": "...", "new": "..." }
+    },
+    "unchanged": ["field3", "field4"],
+    "added": ["field5"],
+    "removed": ["field6"],
+    "summary": { "changedCount": 2, ... }
+  }
+  ```
+- **Use Cases**:
+  - Audit compliance (tuân thủ quy định)
+  - Security investigation (điều tra an ninh)
+  - Data recovery (phục hồi dữ liệu)
+  - Debug & troubleshooting
+- **Bảng database**: `nhatky` (System Logs)
+- **Độ ưu tiên**: ⭐⭐⭐ (QUAN TRỌNG NHẤT)
+
+---
+
+### 📊 NHÓM 6: BÁO CÁO (1 diagram)
 
 #### ✅ SD10: Xuất báo cáo tài chính
 - **File**: `SD10_Xuat_Bao_Cao.puml`
@@ -218,12 +270,13 @@ Tất cả các diagrams được viết bằng **PlantUML** với format **rút
 | SD07b | Từ chối tài trợ | SD07b_Tu_Choi_Tai_Tro.puml | Kế toán | ⭐⭐ |
 | SD09 | AI hỗ trợ viết đơn | SD09_AI_Ho_Tro_Viet_Don.puml | Sinh viên | ⭐⭐⭐ |
 | SD10 | Xuất báo cáo | SD10_Xuat_Bao_Cao.puml | Kế toán | ⭐⭐ |
+| **SD11** | **Middleware Audit Trail** | **SD11_Middleware_Audit_Trail.puml** | **System** | **⭐⭐⭐** |
 
 ---
 
 ## 🎯 Mức độ ưu tiên
 
-### ⭐⭐⭐ QUAN TRỌNG NHẤT (8 diagrams)
+### ⭐⭐⭐ QUAN TRỌNG NHẤT (9 diagrams)
 1. **SD01 - Đăng nhập**: Điểm vào hệ thống, xác thực phân quyền
 2. **SD02 - Sinh viên nộp đơn**: Bắt đầu quy trình, tạo 3 cấp phê duyệt
 3. **SD05a - Giải ngân đủ tiền**: Trừ tiền quỹ, tạo giao dịch CHI
@@ -231,6 +284,7 @@ Tất cả các diagrams được viết bằng **PlantUML** với format **rút
 5. **SD06 - Tài trợ công khai**: Thu hút tài trợ, tự động tạo donor
 6. **SD07a - Xác nhận tài trợ**: Cộng tiền vào quỹ, nguồn thu chính
 7. **SD09 - AI hỗ trợ viết đơn**: Tích hợp AI Gemini, đổi mới sáng tạo
+8. **SD11 - Middleware Audit Trail**: Tự động ghi log, truy vết thay đổi, JSON Diff
 
 ### ⭐⭐ QUAN TRỌNG (3 diagrams)
 8. **SD03 - Phê duyệt cấp 1**: Thể hiện phê duyệt đa cấp
@@ -329,13 +383,15 @@ puml generate *.puml -o output/
 
 | Tiêu chí | Số lượng |
 |----------|----------|
-| Tổng số Sequence Diagrams | **10** |
-| Diagrams ưu tiên cao (⭐⭐⭐) | **7** |
+| Tổng số Sequence Diagrams | **12** |
+| Diagrams ưu tiên cao (⭐⭐⭐) | **9** |
 | Diagrams ưu tiên trung bình (⭐⭐) | **3** |
-| Actors | **5** (Admin, Kế toán, Cán bộ, Sinh viên, Nhà tài trợ) |
-| Components | **5** (Browser, API, Database, Email, Template) |
+| Actors | **6** (Admin, Kế toán, Cán bộ, Sinh viên, Nhà tài trợ, System) |
+| Components | **7** (Browser, API, Database, Email, Template, Middleware, AI) |
 | Luồng có giao dịch database | **8** |
-| Luồng có xử lý lỗi (alt blocks) | **10** (100%) |
+| Luồng có xử lý lỗi (alt blocks) | **10** (83%) |
+| Luồng có Middleware | **1** (SD11) |
+| Luồng có AI Integration | **1** (SD09) |
 
 ---
 

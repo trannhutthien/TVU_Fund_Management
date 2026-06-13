@@ -9,8 +9,8 @@ import FundTitleSection from '../FundsPage/FundTitleSection/FundTitleSection';
 const DonorTitleSection = () => {
   return (
     <FundTitleSection
-      title="Bảng"
-      highlight="Tri ân Nhà tài trợ"
+      title="Bảng vinh danh"
+      highlight="Đối tác & Nhà tài trợ"
       subtitle="Vinh danh những nhà hảo tâm và đối tác chiến lược đã đồng hành cùng Quỹ TVU để thắp sáng tương lai cho các thế hệ sinh viên Đại học Trà Vinh."
     />
   );

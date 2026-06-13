@@ -1,0 +1,301 @@
+@use '../../../styles/variables' as *;
+
+.trackPage {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $bg-page;
+  color: $text-body;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 60px 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.headerSection {
+  text-align: center;
+  margin-bottom: 40px;
+
+  .pageTitle {
+    color: #1a2f5e !important; // TVU Navy Blue
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+  }
+
+  .pageSubtitle {
+    color: #64748b !important;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+.searchCard {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  margin-bottom: 30px;
+
+  :global(.ant-card-body) {
+    padding: 8px;
+  }
+}
+
+// Custom search bar layout using common Input component
+.searchBarWrapper {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  width: 100%;
+  
+  .searchInputContainer {
+    flex: 1;
+    
+    :global(.input-container) {
+      margin-bottom: 0;
+      
+      :global(.input-wrapper) {
+        background: #ffffff !important;
+        border: 2px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        height: 54px !important;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          border-color: #94a3b8 !important;
+        }
+        
+        :global(.input-field) {
+          font-size: 1rem !important;
+          color: #0f172a !important;
+        }
+      }
+      
+      &.input-focused :global(.input-wrapper) {
+        border-color: #3b6ff5 !important;
+        box-shadow: 0 0 0 4px rgba(59, 111, 245, 0.1) !important;
+      }
+    }
+  }
+  
+  .searchBtn {
+    height: 54px !important;
+    border-radius: 12px !important;
+    background: #1a2f5e !important; // TVU Blue
+    border-color: #1a2f5e !important;
+    font-weight: 600 !important;
+    padding: 0 32px !important;
+    font-size: 1rem !important;
+    box-shadow: 0 4px 12px rgba(26, 47, 94, 0.15) !important;
+    transition: all 0.2s ease !important;
+    
+    &:hover {
+      background: #2b457e !important;
+      border-color: #2b457e !important;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  :global(.ant-spin-text) {
+    color: #1a2f5e !important;
+    margin-top: 15px;
+    font-weight: 500;
+  }
+}
+
+.resultWrapper {
+  margin-top: 20px;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.statusCard {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+
+  :global(.ant-card-body) {
+    padding: 30px;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  .titleInfo {
+    .badge {
+      display: inline-block;
+      background: rgba(26, 47, 94, 0.08);
+      border: 1px solid rgba(26, 47, 94, 0.15);
+      color: #1a2f5e;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    :global(.ant-typography) {
+      color: #1a2f5e !important;
+      font-weight: 700;
+    }
+  }
+
+  .metaInfo {
+    text-align: right;
+    
+    :global(.ant-typography) {
+      font-size: 0.95rem;
+      color: #64748b !important;
+    }
+
+    strong {
+      color: #0f172a !important;
+    }
+  }
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid #f1f5f9;
+  margin: 24px 0;
+}
+
+.cardBody {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 2fr 3fr;
+  }
+}
+
+.infoSection {
+  background: #f8fafc;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  h4 {
+    color: #1a2f5e !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+    text-align: left;
+  }
+
+  :global(.ant-typography) {
+    color: #334155 !important;
+    font-size: 0.95rem;
+  }
+
+  strong {
+    color: #64748b;
+  }
+
+  .amountText {
+    color: #16a34a;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+}
+
+.statusSection {
+  text-align: left;
+  h4 {
+    color: #1a2f5e !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+}
+
+.otpCard {
+  background: #fffbeb !important;
+  border: 1px dashed #f59e0b !important;
+  border-radius: 12px !important;
+  margin-top: 15px;
+  padding: 18px !important;
+
+  h5 {
+    color: #d97706 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    margin-top: 0;
+  }
+
+  p {
+    color: #92400e !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 12px;
+  }
+}
+
+.timelineWrapper {
+  margin-top: 25px;
+  background: #f8fafc;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  :global(.ant-timeline-item-tail) {
+    border-left: 2px solid #e2e8f0 !important;
+  }
+
+  :global(.ant-timeline-item-head) {
+    background-color: transparent !important;
+  }
+
+  :global(.ant-timeline-item-content) {
+    color: #334155 !important;
+    
+    strong {
+      color: #0f172a !important;
+      font-size: 1rem;
+    }
+    
+    p {
+      color: #64748b !important;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

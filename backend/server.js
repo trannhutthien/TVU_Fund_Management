@@ -19,6 +19,7 @@ import pheDuyetRoutes from "./routes/applications/pheDuyetRoutes.js";
 import studentShowcaseRoutes from "./routes/showcase/studentShowcaseRoutes.js";
 import loaiQuyRoutes from "./routes/funds/loaiQuyRoutes.js";
 import { vaiTroRouter, nguoiDungRouter, nhatKyRouter, settingsRouter } from "./routes/system/systemRoutes.js";
+import guestRoutes from "./routes/guest/guestRoutes.js";
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use("/api/vaitro", vaiTroRouter);
 app.use("/api/nguoidung", nguoiDungRouter);
 app.use("/api/nhat-ky", nhatKyRouter);
 app.use("/api/system/settings", settingsRouter);
+app.use("/api/guest", guestRoutes);
 
 // Test route
 app.get("/", (req, res) => {

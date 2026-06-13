@@ -45,4 +45,10 @@ export const API_ENDPOINTS = {
 
   // Roles
   ROLES: '/roles',
+
+  // Guest APIs
+  GUEST_SUBMIT_APPLICATION: '/guest/yeu-cau',
+  GUEST_SUBMIT_DONATION: '/guest/tai-tro',
+  GUEST_VERIFY_OTP: '/guest/verify-otp',
+  GUEST_TRACK: (uuid) => `/guest/track/${uuid}`,
 }

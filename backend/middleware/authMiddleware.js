@@ -80,3 +80,22 @@ export const requireRole = (...roles) => {
     next();
   };
 };
+
+// Middleware kiểm tra JWT token tùy chọn — dùng cho các route cả khách vãng lai và user
+export const optionalProtect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = {
+        id: decoded.user_id,
+        vai_tro: decoded.vai_tro,
+        roleId: decoded.vai_tro
+      };
+    }
+  } catch (error) {
+    // Bỏ qua lỗi token, coi như khách vãng lai (không gán req.user)
+  }
+  next();
+};

@@ -64,6 +64,73 @@
 }
 
 // ============================================
+// Tab Navigation
+// ============================================
+.tabContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.tabNavigation {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  gap: 4px;
+
+  @media (max-width: 576px) {
+    width: 100%;
+    flex-direction: column;
+    padding: 8px;
+    border-radius: 16px;
+  }
+}
+
+.navTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: $font-semibold;
+  color: #64748b;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+
+  &:hover {
+    color: var(--color-primary, $color-navy-blue);
+  }
+
+  @media (max-width: 576px) {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+.navTabActive {
+  color: var(--color-primary, $color-navy-blue) !important;
+  background: var(--color-white, #ffffff);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+
+  .tabIcon {
+    color: var(--color-primary, $color-navy-blue);
+  }
+}
+
+.tabIcon {
+  font-size: 18px;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+// ============================================
 // Top Tier Row (Diamond + Gold)
 // ============================================
 .topTierRow {

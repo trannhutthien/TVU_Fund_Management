@@ -14,6 +14,19 @@ export const uploadService = {
     return response.data
   },
 
+  // Upload 1 file public (cho khách vãng lai)
+  uploadFilePublic: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post('/upload/public', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
   // Upload ảnh đại diện
   uploadAvatar: async (file) => {
     const formData = new FormData()

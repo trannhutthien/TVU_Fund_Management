@@ -47,9 +47,18 @@
   "apply": {
     "label": "Tạo đơn",
     "path": "/apply",
-    "admin": false,
+    "admin": true,
     "canbo": false,
     "ketoan": false,
+    "sinhvien": true,
+    "nhataitro": true
+  },
+  "track": {
+    "label": "Tra cứu",
+    "path": "/track",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
     "sinhvien": true,
     "nhataitro": true
   },

@@ -1,0 +1,209 @@
+@startuml AD13_JSON_Diff_Flow
+!theme plain
+skinparam backgroundColor #FFFFFF
+
+title **AD13: LUỒNG HOẠT ĐỘNG JSON DIFF TRONG AUDIT TRAIL**
+
+start
+
+:Admin gửi request\ncập nhật dữ liệu;
+
+note right
+**Ví dụ:**
+PUT /api/users/123
+Body: {
+  "hoten": "Nguyễn Văn B",
+  "email": "nvb@tvu.edu.vn"
+}
+end note
+
+:Auth Middleware\nxác thực token;
+
+if (Token hợp lệ?) then (✓ Có)
+  :Lưu thông tin user\nvào req.user;
+else (✗ Không)
+  :Trả về 401 Unauthorized;
+  stop
+endif
+
+partition "**AUDIT MIDDLEWARE - BEFORE UPDATE**" {
+  :Lưu metadata request:\n- User ID\n- Action type\n- Target resource\n- Timestamp\n- IP address;
+  
+  :Truy vấn DB lấy\n**dữ liệu CŨ**;
+  
+  note right
+    SELECT * FROM nguoidung
+    WHERE nguoidung_id = 123
+  end note
+  
+  :Lưu snapshot dữ liệu cũ\nvào **req.audit.oldData**;
+  
+  note right
+    req.audit = {
+      oldData: {
+        hoten: "Nguyễn Văn A",
+        email: "nva@tvu.edu.vn",
+        sodienthoai: "0123456789",
+        diachi: "TP.HCM"
+      }
+    }
+  end note
+}
+
+:Controller xử lý\nvà cập nhật DB;
+
+note right
+  UPDATE nguoidung
+  SET hoten = 'Nguyễn Văn B',
+      email = 'nvb@tvu.edu.vn'
+  WHERE nguoidung_id = 123
+end note
+
+partition "**AUDIT MIDDLEWARE - AFTER UPDATE**" {
+  :Truy vấn DB lấy\n**dữ liệu MỚI**;
+  
+  :Lưu dữ liệu mới\nvào **req.audit.newData**;
+  
+  note right
+    req.audit.newData = {
+      hoten: "Nguyễn Văn B",
+      email: "nvb@tvu.edu.vn",
+      sodienthoai: "0123456789",
+      diachi: "TP.HCM"
+    }
+  end note
+  
+  partition "**JSON DIFF ENGINE**" #LightBlue {
+    :Khởi tạo diff object\nrỗng;
+    
+    :Lấy tất cả keys\ntrong oldData và newData;
+    
+    repeat :Duyệt từng field
+    
+      if (Field tồn tại\nở cả 2 JSON?) then (✓ Có)
+        if (Giá trị thay đổi?) then (✓ Có)
+          :Thêm vào **changed**:\n{\n  field: {\n    old: value1,\n    new: value2\n  }\n};
+        else (✗ Không)
+          :Thêm vào **unchanged**:\nfield name;
+        endif
+      else (✗ Không)
+        if (Field chỉ có\ntrong oldData?) then (✓ Có)
+          :Thêm vào **removed**:\nfield name;
+        else
+          :Thêm vào **added**:\nfield name;
+        endif
+      endif
+    
+    repeat while (Còn field?) is (✓ Có)
+    ->✗ Không;
+    
+    :Tạo summary:\n- Số field thay đổi\n- Số field thêm/xóa\n- Timestamp;
+    
+    :Tạo changelog JSON\nhoàn chỉnh;
+    
+    note right
+      **Kết quả JSON Diff:**
+      {
+        "changed": {
+          "hoten": {
+            "old": "Nguyễn Văn A",
+            "new": "Nguyễn Văn B"
+          },
+          "email": {
+            "old": "nva@tvu.edu.vn",
+            "new": "nvb@tvu.edu.vn"
+          }
+        },
+        "unchanged": ["sodienthoai", "diachi"],
+        "added": [],
+        "removed": [],
+        "summary": {
+          "changedCount": 2,
+          "addedCount": 0,
+          "removedCount": 0
+        }
+      }
+    end note
+  }
+  
+  :Chuẩn bị log entry;
+  
+  note right
+    logEntry = {
+      nguoidung_id: req.user.id,
+      hanhdong: "CAP_NHAT_NGUOI_DUNG",
+      loaidoituong: "nguoidung",
+      doituong_id: 123,
+      dulieucu: JSON.stringify(oldData),
+      dulieumoi: JSON.stringify(newData),
+      diff: JSON.stringify(diffResult),
+      ip: req.ip,
+      mota: "Cập nhật thông tin người dùng"
+    }
+  end note
+  
+  :INSERT log vào\nbảng **nhatky**;
+  
+  if (Ghi log thành công?) then (✓ Có)
+    :Lưu log ID\nvào response;
+  else (✗ Không)
+    :Log error nhưng\nkhông chặn request;
+    note right
+      Lỗi audit không làm
+      fail request chính
+    end note
+  endif
+}
+
+:Trả response thành công\ncho client;
+
+note right
+  {
+    "success": true,
+    "message": "Cập nhật thành công",
+    "data": {...},
+    "auditLogId": 789
+  }
+end note
+
+stop
+
+legend right
+**Các trường hợp đặc biệt:**
+
+**1. Nested Object:**
+```
+old: { address: { city: "HCM" } }
+new: { address: { city: "HN" } }
+→ Diff: address.city changed
+```
+
+**2. Array:**
+```
+old: { roles: [1, 2, 3] }
+new: { roles: [1, 2, 4] }
+→ Diff: roles[2]: 3 → 4
+```
+
+**3. Null/Undefined:**
+```
+old: { phone: "0123" }
+new: { phone: null }
+→ Diff: phone removed
+```
+
+**4. Type Change:**
+```
+old: { age: "25" }
+new: { age: 25 }
+→ Diff: age type: string → number
+```
+
+**Performance Tips:**
+• Cache snapshot trong Redis
+• Chỉ diff changed fields
+• Async logging (non-blocking)
+• Index log table properly
+endlegend
+
+@enduml

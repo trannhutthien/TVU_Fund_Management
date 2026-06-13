@@ -18,6 +18,7 @@ import LandingPage from './pages/Public/LandingPage/LandingPage'
 import FundsPage from './pages/Public/FundsPage/FundsPage'
 import DonorsPage from './pages/Public/DonorsPage/DonorsPage'
 import GuidelinesPage from './pages/Public/GuidelinesPage/GuidelinesPage'
+import TrackPage from './pages/Public/TrackPage/TrackPage'
 
 // Pages - Auth
 import LoginPage from './pages/Auth/LoginPage'
@@ -26,7 +27,7 @@ import GoogleAuthCallbackPage from './pages/Auth/GoogleAuthCallbackPage'
 
 // Pages - Student (Role 4)
 import ProfilePage from './pages/User/Student/ProfilePage/ProfilePage'
-import ApplyPage from './pages/User/Student/ApplyPage/ApplyPage'
+import ApplyPage from './pages/Public/ApplyPage/ApplyPage'
 import DashboardPage from './pages/User/Student/Dashboard/DashboardPage'
 
 // Pages - Staff (Role 1, 2, 3)
@@ -78,6 +79,8 @@ function App() {
             <Route path="/guidelines" element={<GuidelinesPage />} />
             <Route path="/profile" element={<ProfilePage />} /> {/* Trang cá nhân - chỉ hiện menu khi đã đăng nhập */}
             <Route path="/apply" element={<ApplyPage />} />  {/* Nộp đơn - tự redirect về login nếu chưa đăng nhập */}
+            <Route path="/track/:uuid" element={<TrackPage />} />
+            <Route path="/track" element={<TrackPage />} />
           </Route>
           
           <Route element={<AuthLayout />}>

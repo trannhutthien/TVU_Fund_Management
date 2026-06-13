@@ -1,0 +1,172 @@
+@startuml UseCase_Tong_Quan
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam usecaseBackgroundColor #FFF9E6
+skinparam actorBackgroundColor #D6E8FF
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F5F5F5
+skinparam packageBorderColor #AAAAAA
+skinparam arrowColor #555555
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 40
+
+title **USE CASE DIAGRAM — TVU Fund Management System**
+
+left to right direction
+
+' ═══════════════════════════
+' ACTORS TRÁI (khai báo trước rectangle)
+' ═══════════════════════════
+actor "Sinh viên"   as SV
+actor "Nhà tài trợ" as NTT
+SV -[hidden]down- NTT
+
+rectangle "Hệ thống TVU Fund Management" {
+
+  package "Xác thực & Hồ sơ" as PKG_AUTH {
+    (Đăng ký tài khoản) as UC01
+    (Đăng nhập)         as UC02
+    (Đổi mật khẩu)     as UC03
+    (Quản lý hồ sơ)    as UC04
+  }
+
+  package "Hỗ trợ sinh viên" as PKG_SV {
+    (Nộp đơn xin hỗ trợ) as UC05
+    (AI hỗ trợ viết đơn) as UC06
+    (Xem đơn & lịch sử)  as UC07
+  }
+
+  package "Phê duyệt & Giải ngân" as PKG_PHE {
+    (Phê duyệt đơn cấp 1)         as UC09
+    (Phê duyệt đơn cấp 2)         as UC10
+    (Phê duyệt cấp 3 & Giải ngân) as UC11
+    (Từ chối đơn)                 as UC12
+  }
+
+  package "Tài trợ" as PKG_TT {
+    (Quyên góp / Tài trợ)  as UC13
+    (Xác nhận tài trợ)     as UC14
+    (Từ chối tài trợ)      as UC15
+    (Xem lịch sử tài trợ) as UC16
+  }
+
+  package "Quản lý quỹ" as PKG_QUY {
+    (Tạo quỹ mới)            as UC17
+    (Xem danh sách quỹ)      as UC18
+    (Cập nhật quỹ)           as UC19
+    (Theo dõi sức khỏe quỹ) as UC20
+  }
+
+  package "Tài chính & Báo cáo" as PKG_TC {
+    (Xem giao dịch)     as UC21
+    (Đối soát chứng từ) as UC22
+    (Xuất báo cáo)      as UC23
+    (Xem thống kê)      as UC24
+  }
+
+  package "Quản trị hệ thống" as PKG_AD {
+    (Quản lý người dùng)         as UC25
+    (Quản lý vai trò)            as UC26
+    (Xem nhật ký hệ thống)      as UC27
+    (Cài đặt hệ thống)          as UC28
+    (Xem lịch sử hoạt động)     as UC29
+    (Ma trận phân quyền)        as UC30
+    (Quản lý sinh viên nổi bật) as UC31
+  }
+
+  UC05 ..> UC06 : <<extend>>
+  UC09 ..> UC02 : <<include>>
+  UC11 ..> UC21 : <<include>>
+  UC14 ..> UC16 : <<include>>
+}
+
+' ═══════════════════════════
+' ACTORS PHẢI (khai báo sau rectangle)
+' ═══════════════════════════
+actor "Cán bộ quỹ" as CBQ
+actor "Kế toán"    as KT
+actor "Admin"      as AD
+CBQ -[hidden]down- KT
+KT  -[hidden]down- AD
+
+' ═══════════════════════════════════════════════
+' SINH VIÊN
+' ═══════════════════════════════════════════════
+SV --> UC01
+SV --> UC02
+SV --> UC03
+SV --> UC04
+SV --> UC05
+SV --> UC07
+SV --> UC18
+' ═══════════════════════════════════════════════
+' NHÀ TÀI TRỢ
+' ═══════════════════════════════════════════════
+NTT --> UC01
+NTT --> UC02
+NTT --> UC03
+NTT --> UC04
+NTT --> UC13
+NTT --> UC16
+
+' ═══════════════════════════════════════════════
+' CÁN BỘ QUỸ
+' ═══════════════════════════════════════════════
+CBQ --> UC02
+CBQ --> UC03
+CBQ --> UC07
+CBQ --> UC09
+CBQ --> UC12
+CBQ --> UC16
+CBQ --> UC17
+CBQ --> UC18
+CBQ --> UC19
+CBQ --> UC20
+CBQ --> UC23
+CBQ --> UC25
+CBQ --> UC31
+
+' ═══════════════════════════════════════════════
+' KẾ TOÁN
+' ═══════════════════════════════════════════════
+KT --> UC02
+KT --> UC03
+KT --> UC11
+KT --> UC12
+KT --> UC14
+KT --> UC15
+KT --> UC16
+KT --> UC21
+KT --> UC22
+KT --> UC23
+KT --> UC24
+
+' ═══════════════════════════════════════════════
+' ADMIN
+' ═══════════════════════════════════════════════
+AD --> UC02
+AD --> UC03
+AD --> UC07
+AD --> UC10
+AD --> UC12
+AD --> UC14
+AD --> UC15
+AD --> UC16
+AD --> UC17
+AD --> UC18
+AD --> UC19
+AD --> UC20
+AD --> UC21
+AD --> UC23
+AD --> UC24
+AD --> UC25
+AD --> UC26
+AD --> UC27
+AD --> UC28
+AD --> UC29
+AD --> UC30
+AD --> UC31
+
+@enduml

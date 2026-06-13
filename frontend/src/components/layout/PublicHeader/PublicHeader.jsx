@@ -79,12 +79,12 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
   const navItems = [
     { label: 'DANH MỤC QUỸ', path: '/funds' },
     { label: 'HƯỚNG DẪN & QUY ĐỊNH', path: '/guidelines' },
-    { label: 'VINH DANH', path: '/donors' },
-    // Menu "CÁ NHÂN" và "TẠO ĐƠN" chỉ hiện khi đã đăng nhập
+    { label: 'ĐỐI TÁC & NHÀ TÀI TRỢ', path: '/donors' },
+    { label: 'TRA CỨU', path: '/track' },
+    { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
     ...(isAuthenticated
       ? [
           { label: 'CÁ NHÂN', path: '/profile' },
-          { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
         ]
       : []),
   ];
@@ -131,6 +131,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
     '/donors': 'donors',
     '/profile': 'profile',
     '/apply': 'apply',
+    '/track': 'track',
   };
 
   const filteredNavItems = navItems.filter((item) => {

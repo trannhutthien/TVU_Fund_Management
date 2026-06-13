@@ -417,4 +417,138 @@ CREATE TABLE `donvihoc` (
 
 
 
+-- ============================================================
+-- BẢNG TẠM CHO KHÁCH VÃNG LAI
+-- Mục đích: Hứng dữ liệu trước khi xác minh OTP.
+-- Sau khi OTP xác minh thành công, hệ thống tự động:
+--   1. Tạo tài khoản nguoidung mới
+--   2. Migrate dữ liệu sang bảng chính (yeucauhotro / khoantaitro)
+--   3. Đánh dấu trang_thai_staging = 'DA_CHUYEN'
+-- KHÔNG có khóa ngoại nào liên kết bảng chính → tránh FK constraint lỗi
+-- ============================================================
 
+
+-- ------------------------------------------------------------
+-- 1. Bảng tạm: Đơn xin hỗ trợ của Sinh viên vãng lai
+--    Map từ: yeucauhotro (bỏ nguoidung_id, thêm thông tin cá nhân guest)
+-- ------------------------------------------------------------
+CREATE TABLE guest_yeucauhotro (
+    guest_yeucauhotro_id    INT AUTO_INCREMENT PRIMARY KEY,
+
+    -- Thông tin cá nhân (thay thế cho nguoidung_id)
+    guest_hoten             VARCHAR(100)    NOT NULL,
+    guest_email             VARCHAR(100)    NOT NULL,
+    guest_sodienthoai       VARCHAR(15)     NULL,
+    guest_mssv              VARCHAR(20)     NULL        COMMENT 'Mã số sinh viên',
+    guest_khoa              VARCHAR(100)    NULL,
+    guest_lop               VARCHAR(50)     NULL,
+
+    -- Thông tin tài khoản ngân hàng nhận tiền hỗ trợ
+    guest_sotaikhoan        VARCHAR(50)     NULL,
+    guest_nganhang          VARCHAR(100)    NULL,
+    guest_chutaikhoan       VARCHAR(100)    NULL,
+
+    -- Thông tin đơn (map 1-1 với yeucauhotro, không đặt FK)
+    quy_id                  INT             NOT NULL    COMMENT 'Tham chiếu quy(quy_id), không đặt FK',
+    lydo                    TEXT            NOT NULL,
+    sotiendenghi            DECIMAL(15,2)   NOT NULL,
+    tailieudinhkem          TEXT            NULL,
+
+    -- Trạng thái bảng tạm (khác với trangthai của đơn chính)
+    trang_thai_staging      ENUM(
+                                'CHO_XAC_MINH',  -- Mới tạo, chờ khách nhập OTP
+                                'DA_CHUYEN',     -- Đã migrate sang yeucauhotro
+                                'HET_HAN'        -- OTP hết hạn, chưa xác minh (cron job đánh dấu)
+                            ) DEFAULT 'CHO_XAC_MINH',
+
+    -- Cột sau migrate: lưu lại ID bản ghi đã tạo ở bảng chính để tra cứu
+    yeucauhotro_id_ref      INT             NULL        COMMENT 'ID trong yeucauhotro sau khi migrate',
+    nguoidung_id_ref        INT             NULL        COMMENT 'ID trong nguoidung sau khi tạo tài khoản tự động',
+
+    -- Bảo mật & Tracking
+    otp_code                VARCHAR(6)      NULL,
+    otp_expires_at          DATETIME        NULL,
+    is_email_verified       TINYINT(1)      DEFAULT 0,
+    tracking_uuid           VARCHAR(64)     NOT NULL    UNIQUE,
+
+    -- Timestamps
+    ngaytao                 TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    ngaycapnhat             TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    -- Index tìm kiếm thường dùng
+    INDEX idx_guest_email       (guest_email),
+    INDEX idx_tracking_uuid     (tracking_uuid),
+    INDEX idx_staging_status    (trang_thai_staging),
+    INDEX idx_otp_expires       (otp_expires_at)   COMMENT 'Dùng cho cron job dọn dẹp bản ghi hết hạn'
+);
+
+
+-- ------------------------------------------------------------
+-- 2. Bảng tạm: Khoản tài trợ của Nhà tài trợ vãng lai
+--    Map từ: khoantaitro (bỏ nhataitro_id, thêm thông tin cá nhân guest)
+--    Lưu ý: nhataitro cũng cần được tạo tự động sau khi xác minh OTP
+-- ------------------------------------------------------------
+CREATE TABLE guest_khoantaitro (
+    guest_khoantaitro_id    INT AUTO_INCREMENT PRIMARY KEY,
+
+    -- Thông tin cá nhân nhà tài trợ (thay thế cho nhataitro_id)
+    guest_hoten             VARCHAR(100)    NOT NULL,
+    guest_email             VARCHAR(100)    NOT NULL,
+    guest_sodienthoai       VARCHAR(15)     NULL,
+    guest_tochuc            VARCHAR(200)    NULL        COMMENT 'Tên tổ chức / doanh nghiệp nếu có',
+    guest_diachi            VARCHAR(255)    NULL,
+
+    -- Thông tin khoản tài trợ (map 1-1 với khoantaitro, không đặt FK)
+    quy_id                  INT             NOT NULL    COMMENT 'Tham chiếu quy(quy_id), không đặt FK',
+    sotien                  DECIMAL(15,2)   NOT NULL,
+    hinhthuc                ENUM(
+                                'Tien mat',
+                                'Chuyen khoan',
+                                'Khac'
+                            ) NOT NULL,
+    magiaodich              VARCHAR(100)    NULL,
+    ngaytaitro              DATE            NOT NULL,
+    chungtu                 VARCHAR(255)    NULL,
+    ghichu                  TEXT            NULL,
+
+    -- Trạng thái bảng tạm
+    trang_thai_staging      ENUM(
+                                'CHO_XAC_MINH',
+                                'DA_CHUYEN',
+                                'HET_HAN'
+                            ) DEFAULT 'CHO_XAC_MINH',
+
+    -- Cột sau migrate
+    khoantaitro_id_ref      INT             NULL        COMMENT 'ID trong khoantaitro sau khi migrate',
+    nhataitro_id_ref        INT             NULL        COMMENT 'ID trong nhataitro sau khi tạo tự động',
+
+    -- Bảo mật & Tracking
+    otp_code                VARCHAR(6)      NULL,
+    otp_expires_at          DATETIME        NULL,
+    is_email_verified       TINYINT(1)      DEFAULT 0,
+    tracking_uuid           VARCHAR(64)     NOT NULL    UNIQUE,
+
+    -- Timestamps
+    ngaytao                 TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    ngaycapnhat             TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_guest_email       (guest_email),
+    INDEX idx_tracking_uuid     (tracking_uuid),
+    INDEX idx_staging_status    (trang_thai_staging),
+    INDEX idx_otp_expires       (otp_expires_at)
+);
+
+
+-- ------------------------------------------------------------
+-- Ghi chú triển khai
+-- ------------------------------------------------------------
+-- Cron job dọn dẹp (chạy mỗi đêm):
+--   UPDATE guest_yeucauhotro
+--   SET trang_thai_staging = 'HET_HAN'
+--   WHERE trang_thai_staging = 'CHO_XAC_MINH'
+--     AND otp_expires_at < NOW() - INTERVAL 24 HOUR;
+--
+--   (Làm tương tự cho guest_khoantaitro)
+--
+-- Sau 7 ngày có thể DELETE các bản ghi HET_HAN để dọn bảng.
+-- ------------------------------------------------------------
