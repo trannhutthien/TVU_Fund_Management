@@ -36,6 +36,10 @@ const mapTransactionRow = (tx) => {
     } : null,
     minhChung: tx.chungtu,
     ghiChu: tx.ghichu,
+    soTienThucTe: tx.sotienthucte ? parseFloat(tx.sotienthucte) : null,
+    doiSoatLuc: tx.doisoatluc,
+    doiSoatGhiChu: tx.doisoatghichu,
+    doiSoatBoiTen: tx.doisoat_boi_ten || null,
     ngayGiaoDich: tx.ngaygiaodich,
     ngayCapNhat: tx.ngaycapnhat
   };
@@ -399,7 +403,7 @@ export const exportTransactions = async (req, res) => {
 export const updateDoiSoatStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { doiSoatTrangThai, ghiChu } = req.body;
+    const { doiSoatTrangThai, ghiChu, soTienThucTe } = req.body;
 
     if (!id || isNaN(id)) {
       return res.status(400).json({
@@ -424,7 +428,19 @@ export const updateDoiSoatStatus = async (req, res) => {
       });
     }
 
-    await TransactionModel.updateDoiSoatStatus(id, doiSoatTrangThai, ghiChu);
+    let finalSoTienThucTe = soTienThucTe !== undefined ? soTienThucTe : transaction.sotienthucte;
+    let finalGhiChu = ghiChu !== undefined ? ghiChu : transaction.doisoatghichu;
+    let finalDoiSoatBoiId = req.user.id;
+
+    if (doiSoatTrangThai === 'Chua_doi_soat') {
+      finalSoTienThucTe = null;
+      finalGhiChu = null;
+      finalDoiSoatBoiId = null;
+    } else if (doiSoatTrangThai === 'Da_doi_soat' && finalSoTienThucTe === null) {
+      finalSoTienThucTe = transaction.sotien;
+    }
+
+    await TransactionModel.updateDoiSoatStatus(id, doiSoatTrangThai, finalSoTienThucTe, finalDoiSoatBoiId, finalGhiChu);
 
     return res.status(200).json({
       success: true,

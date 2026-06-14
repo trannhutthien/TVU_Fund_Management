@@ -319,8 +319,111 @@
   color: #cbd5e1;
 }
 
+// ── Additional Details ──────────────────────
+.detailsSection {
+  padding: 16px 24px 8px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.detailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #f1f5f9;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  gap: 12px;
+}
+
+.detailLabel {
+  color: #64748b;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.detailValue {
+  color: var(--color-navy-blue, #1a2f5e);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-all;
+}
+
+.webLink {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.statusActive {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.statusInactive {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.linkedUser {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-navy-blue, #1a2f5e);
+  font-weight: 600;
+}
+
+.motaBox {
+  margin-top: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid #f1f5f9;
+}
+
+.motaLabel {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.motaText {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 @media (max-width: 640px) {
   .drawer {
     width: 100vw;
   }
 }
+

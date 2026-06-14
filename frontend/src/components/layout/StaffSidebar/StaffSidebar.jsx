@@ -11,6 +11,7 @@ import {
   HiOutlineArrowsRightLeft,
   HiOutlineStar,
   HiOutlineMegaphone,
+  HiOutlinePencilSquare,
   HiOutlineChartPie,
   HiOutlineBanknotes,
   HiOutlineDocumentText,
@@ -72,6 +73,7 @@ const NAV_CONFIG = [
     items: [
       { label: 'Sinh viên nổi bật', path: '/admin/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [1] },
       { label: 'Tin tức & Sự kiện', path: '/admin/tin-tuc', icon: HiOutlineMegaphone, roles: [1] },
+      { label: 'Tạo bài viết', path: '/admin/tintuc/tao', icon: HiOutlinePencilSquare, roles: [1] },
     ]
   },
   {
@@ -138,6 +140,7 @@ const NAV_CONFIG = [
     items: [
       { label: 'Sinh viên nổi bật', path: '/can-bo/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [3] },
       { label: 'Tin tức & Sự kiện', path: '/can-bo/tin-tuc', icon: HiOutlineMegaphone, roles: [3] },
+      { label: 'Tạo bài viết', path: '/can-bo/tintuc/tao', icon: HiOutlinePencilSquare, roles: [3] },
     ]
   },
   {

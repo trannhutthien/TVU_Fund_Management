@@ -10,7 +10,9 @@ import {
   uploadFundMiddleware,
   uploadFund,
   uploadStudentShowcaseMiddleware,
-  uploadStudentShowcase
+  uploadStudentShowcase,
+  uploadNewsMiddleware,
+  uploadNews
 } from '../../controllers/uploads/uploadController.js';
 import { protect } from '../../middleware/authMiddleware.js';
 
@@ -42,6 +44,10 @@ router.post('/fund', protect, uploadFundMiddleware, uploadFund);
 // POST /api/upload/student - Upload ảnh sinh viên nổi bật
 // Yêu cầu: Token hợp lệ, FormData với key 'file'
 router.post('/student', protect, uploadStudentShowcaseMiddleware, uploadStudentShowcase);
+
+// POST /api/upload/news - Upload ảnh tin tức
+// Yêu cầu: Token hợp lệ, FormData với key 'file'
+router.post('/news', protect, uploadNewsMiddleware, uploadNews);
 
 // DELETE /api/upload/:filename - Xóa file
 // Yêu cầu: Token hợp lệ

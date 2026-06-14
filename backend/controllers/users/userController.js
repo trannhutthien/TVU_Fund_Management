@@ -258,7 +258,10 @@ export const updateUserInfo = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
     }
 
-    if (Number(existing.vaitro_id) !== 4 && Number(req.user.id) !== Number(id)) {
+    const callerRole = Number(req.user.roleId ?? req.user.vai_tro);
+
+    // Chỉ Admin (role 1) mới được sửa nhân viên hệ thống (role != 4)
+    if (callerRole !== 1 && Number(existing.vaitro_id) !== 4 && Number(req.user.id) !== Number(id)) {
       return res.status(403).json({
         success: false,
         message: "Chỉ có thể chỉnh sửa tài khoản người dùng (sinh viên / nhà tài trợ)",
@@ -267,8 +270,8 @@ export const updateUserInfo = async (req, res) => {
 
     // Kiểm tra quyền sở hữu hoặc vai trò cán bộ/admin
     if (
-      Number(req.user.role_id) !== 1 &&
-      Number(req.user.role_id) !== 3 &&
+      callerRole !== 1 &&
+      callerRole !== 3 &&
       Number(req.user.id) !== Number(id)
     ) {
       return res.status(403).json({
@@ -470,7 +473,7 @@ export const updateUserStatus = async (req, res) => {
     }
 
     // 4b. Cán bộ Quỹ (role 3) chỉ được khóa/mở user role_id = 4
-    const callerRole = Number(req.user?.vaiTro ?? req.user?.role_id ?? req.user?.vai_tro);
+    const callerRole = Number(req.user.roleId ?? req.user.vai_tro);
     if (callerRole === 3 && Number(existingUser.vaitro_id) !== 4) {
       return res.status(403).json({
         success: false,
@@ -525,6 +528,68 @@ export const updateUserStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi updateUserStatus:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ─── DELETE /api/users/:id ───────────────────────────────────────────────────
+// Yêu cầu: phải có access token hợp lệ và quyền admin (role_id: 1)
+// Xóa vĩnh viễn tài khoản người dùng
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID không hợp lệ",
+      });
+    }
+
+    if (Number(req.user.id) === Number(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Bạn không thể xóa tài khoản của chính mình",
+      });
+    }
+
+    const existingUser = await UserModel.getUserById(id);
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    if (existingUser.loaitaikhoan === 'NHA_TAI_TRO') {
+      await pool.execute("DELETE FROM nhataitro WHERE nguoidung_id = ?", [id]);
+    }
+
+    await pool.execute("DELETE FROM nguoidung WHERE nguoidung_id = ?", [id]);
+
+    await logSystemActivity(req, {
+      hanhdong: "XOA_NGUOI_DUNG",
+      loaidoituong: "nguoidung",
+      doituong_id: id,
+      mota: `Xóa vĩnh viễn tài khoản ${existingUser.email} (Họ tên: ${existingUser.hoten})`,
+      dulieucu: existingUser
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa tài khoản người dùng thành công",
+    });
+  } catch (error) {
+    console.error("Lỗi deleteUser:", error);
+    if (error.errno === 1451) {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể xóa tài khoản này vì đã có dữ liệu giao dịch hoặc đơn từ liên quan. Vui lòng khóa tài khoản thay vì xóa.",
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",

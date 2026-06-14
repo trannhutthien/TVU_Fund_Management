@@ -7,9 +7,11 @@ import {
   HiOutlineAcademicCap,
   HiOutlineHandRaised,
   HiOutlineShieldCheck,
+  HiOutlineTrash,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import useAuthStore from '@stores/authStore';
 import styles from './UserTable.module.scss';
 
 const ROLE_BADGES = {
@@ -43,7 +45,8 @@ const getRoleBadge = (user) => {
   return ROLE_BADGES[user.role_id] || { label: user.ten_vai_tro || '—', color: '#64748b', bg: '#f1f5f9' };
 };
 
-const UserTable = ({ data, loading, activeTab, onViewDetail, onEdit, onToggleStatus }) => {
+const UserTable = ({ data, loading, activeTab, onViewDetail, onEdit, onToggleStatus, isAdmin = false, onDelete }) => {
+  const { user: currentUser } = useAuthStore();
   const showStudentCols = activeTab === 'sinh_vien';
   const showDonorCols = activeTab === 'nha_tai_tro';
 
@@ -107,7 +110,7 @@ const UserTable = ({ data, loading, activeTab, onViewDetail, onEdit, onToggleSta
         return (
           <div
             key={u.user_id}
-            className={`${styles.row} ${!isUser ? styles.rowReadonly : ''}`}
+            className={`${styles.row} ${(!isUser && !isAdmin) ? styles.rowReadonly : ''}`}
           >
             <div className={styles.colUser}>
               <div className={styles.userCell}>
@@ -186,7 +189,7 @@ const UserTable = ({ data, loading, activeTab, onViewDetail, onEdit, onToggleSta
                 Xem
               </Button>
 
-              {isUser && (
+              {(isUser || (isAdmin && currentUser?.id !== u.user_id)) && (
                 <>
                   <Button
                     variant="ghost"
@@ -207,6 +210,18 @@ const UserTable = ({ data, loading, activeTab, onViewDetail, onEdit, onToggleSta
                     <span>{isLocked ? 'Mở khóa' : 'Khóa'}</span>
                   </button>
                 </>
+              )}
+
+              {isAdmin && currentUser?.id !== u.user_id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<HiOutlineTrash />}
+                  onClick={() => onDelete?.(u)}
+                  className={styles.deleteBtn}
+                >
+                  Xóa
+                </Button>
               )}
             </div>
           </div>

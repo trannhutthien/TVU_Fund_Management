@@ -5,6 +5,12 @@
 // ============================================
 @use './variables' as *;
 
+:root {
+  --color-primary: #1a2f5e;
+  --color-white: #ffffff;
+  --color-gold: #f0a500;
+}
+
 // ── BODY STYLES ─────────────────────────────
 // Áp dụng font, màu, background cho toàn trang
 body {

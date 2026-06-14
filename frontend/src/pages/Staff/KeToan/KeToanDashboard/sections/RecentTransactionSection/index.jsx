@@ -11,9 +11,19 @@ import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import styles from './RecentTransactionSection.module.scss';
 
 const STATUS_TO_BADGE = {
+  // Khoản tài trợ (Thu)
+  'Cho duyet': 'pending',
+  'Da duyet': 'approved',
+  'Da nhan': 'completed',
+  'Tu choi': 'rejected',
+
+  // Giao dịch (Chi)
+  'Dang xu ly': 'processing',
   'Thanh cong': 'completed',
-  'Cho xu ly': 'pending',
   'That bai': 'rejected',
+
+  // Fallback cũ
+  'Cho xu ly': 'pending',
   'Hoan tien': 'cancelled',
 };
 

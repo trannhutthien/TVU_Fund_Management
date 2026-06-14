@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Typography, Card, Result, Button } from 'antd';
 import { ClockCircleOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
@@ -48,6 +48,7 @@ const { Title, Paragraph, Text } = Typography;
  */
 const ApplyPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user } = useAuthStore();
   
   // Trạng thái phương thức đóng góp tài trợ mới
@@ -64,7 +65,23 @@ const ApplyPage = () => {
   const [selectedOnlineCard, setSelectedOnlineCard] = useState('vnpay'); // 'vnpay' | 'atm' | 'visa'
 
   // Trạng thái cho khách vãng lai (Public Guest)
-  const [guestRole, setGuestRole] = useState(null); // 'student' | 'donor'
+  const [guestRole, setGuestRole] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get('role');
+    if (roleParam === 'student' || roleParam === 'donor') {
+      return roleParam;
+    }
+    return null;
+  });
+
+  // Đồng bộ guestRole từ query parameter (?role=student hoặc ?role=donor)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const roleParam = params.get('role');
+    if (roleParam === 'student' || roleParam === 'donor') {
+      setGuestRole(roleParam);
+    }
+  }, [location.search]);
   const [guestFields, setGuestFields] = useState({
     guestHoTen: '',
     guestEmail: '',

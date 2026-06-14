@@ -7,6 +7,7 @@ import {
   getUserStats,
   updateUserInfo,
   getUserGrowth,
+  deleteUser,
 } from "../../controllers/users/userController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
@@ -33,5 +34,8 @@ router.patch("/:id", protect, updateUserInfo);
 
 // PUT /api/users/:id/status — Admin / Cán bộ (khóa/mở khóa)
 router.put("/:id/status", protect, authorizeRoles(1, 3), updateUserStatus);
+
+// DELETE /api/users/:id — Admin (xóa tài khoản vĩnh viễn)
+router.delete("/:id", protect, authorizeRoles(1), deleteUser);
 
 export default router;

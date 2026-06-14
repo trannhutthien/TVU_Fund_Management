@@ -8,6 +8,32 @@ import {
 } from './constants';
 import { daysUntil, formatCurrency, monthLabel } from './utils';
 
+// Helper status checks matching database values
+const isPending = (status) => ['Cho duyet', 'Cho duyet cap 1'].includes(status);
+
+const isProcessing = (status) => [
+  'Cho duyet cap 2',
+  'Cho duyet cap 3',
+  'Da duyet cap 1',
+  'Da duyet cap 2',
+  'Da duyet cap 3',
+  'Dang xu ly',
+  'Cho giai ngan',
+].includes(status);
+
+const isRejected = (status) => [
+  'Tu choi',
+  'Tu choi cap 1',
+  'Tu choi cap 2',
+  'Tu choi cap 3',
+].includes(status);
+
+const isApproved = (status) => [
+  'Da giai ngan',
+  'Da duyet',
+  'Hoan thanh',
+].includes(status);
+
 const useDashboardData = (selectedYear) => {
   const [loading, setLoading] = useState(true);
   const [funds, setFunds] = useState([]);
@@ -24,7 +50,7 @@ const useDashboardData = (selectedYear) => {
         .getAll({ page: 1, limit: 500 })
         .catch(() => ({ data: [] })),
       applicationService
-        .getAll({ page: 1, limit: 5, trangThai: 'Cho duyet' })
+        .getAll({ page: 1, limit: 5, trangThai: 'Cho duyet cap 1' })
         .catch(() => ({ data: [] })),
     ])
       .then(([fundsRes, appsRes, pendingRes]) => {
@@ -44,10 +70,10 @@ const useDashboardData = (selectedYear) => {
 
   const stats = useMemo(() => {
     const choDuyet = applications.filter(
-      (a) => a.trangThai === 'Cho duyet',
+      (a) => isPending(a.trangThai),
     ).length;
     const dangXuLy = applications.filter(
-      (a) => a.trangThai === 'Dang xu ly',
+      (a) => isProcessing(a.trangThai),
     ).length;
 
     const soQuyHoatDong = funds.filter(
@@ -66,14 +92,12 @@ const useDashboardData = (selectedYear) => {
       return (
         d.getMonth() === thangNay &&
         d.getFullYear() === namNay &&
-        ['Da duyet', 'Da giai ngan', 'Tu choi', 'Dang xu ly'].includes(
-          a.trangThai,
-        )
+        !isPending(a.trangThai)
       );
     });
 
     const daDuyet = processedThisMonth.filter((a) =>
-      ['Da duyet', 'Da giai ngan', 'Dang xu ly'].includes(a.trangThai),
+      !isRejected(a.trangThai),
     ).length;
     const daXuLyThangNay = processedThisMonth.length;
     const tyLeDuyet =
@@ -114,14 +138,10 @@ const useDashboardData = (selectedYear) => {
         (b) => b.month === d.getMonth() && b.year === d.getFullYear(),
       );
       if (!bucket) return;
-      if (a.trangThai === 'Cho duyet') bucket.choDuyet += 1;
-      else if (a.trangThai === 'Dang xu ly') bucket.dangXuLy += 1;
-      else if (a.trangThai === 'Tu choi') bucket.tuChoi += 1;
-      else if (
-        a.trangThai === 'Da duyet' ||
-        a.trangThai === 'Da giai ngan'
-      )
-        bucket.daGiaiNgan += 1;
+      if (isPending(a.trangThai)) bucket.choDuyet += 1;
+      else if (isProcessing(a.trangThai)) bucket.dangXuLy += 1;
+      else if (isRejected(a.trangThai)) bucket.tuChoi += 1;
+      else if (isApproved(a.trangThai)) bucket.daGiaiNgan += 1;
     });
 
     return result;
@@ -163,7 +183,7 @@ const useDashboardData = (selectedYear) => {
       const bucket = result[d.getMonth()];
       const amount = Number(a.soTienYeuCau || 0);
       bucket.tong += amount;
-      if (['Da duyet', 'Da giai ngan'].includes(a.trangThai)) {
+      if (isApproved(a.trangThai) || a.trangThai === 'Cho giai ngan' || a.trangThai === 'Da duyet cap 3') {
         bucket.daDuyet += amount;
       }
     });
@@ -221,7 +241,7 @@ const useDashboardData = (selectedYear) => {
     });
 
     applications.forEach((a) => {
-      if (a.trangThai !== 'Cho duyet') return;
+      if (!isPending(a.trangThai)) return;
       const d = daysUntil(
         new Date(new Date(a.ngayNop).getTime() + 7 * 24 * 60 * 60 * 1000),
       );

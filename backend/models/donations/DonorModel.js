@@ -75,9 +75,9 @@ const getDonorById = async (nhaTaiTroId) => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
-      nt.email,
-      nt.sodienthoai,
-      nt.diachi,
+      COALESCE(nt.email, nd.email) AS email,
+      COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
+      COALESCE(nt.diachi, nd.diachi) AS diachi,
       nt.website,
       nt.mota,
       nt.logo,
@@ -109,10 +109,11 @@ const getAllDonors = async () => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
-      nt.email,
-      nt.sodienthoai,
-      nt.diachi,
+      COALESCE(nt.email, nd.email) AS email,
+      COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
+      COALESCE(nt.diachi, nd.diachi) AS diachi,
       nt.website,
+      nt.mota,
       nt.logo,
       nt.trangthai,
       nt.ngaytao,
@@ -136,7 +137,7 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
 
   if (keyword) {
     conditions.push(
-      `(nt.tennhataitro LIKE ? OR nt.email LIKE ? OR nt.sodienthoai LIKE ? OR nd.hoten LIKE ?)`
+      `(nt.tennhataitro LIKE ? OR COALESCE(nt.email, nd.email) LIKE ? OR COALESCE(nt.sodienthoai, nd.sodienthoai) LIKE ? OR nd.hoten LIKE ?)`
     );
     const like = `%${keyword}%`;
     params.push(like, like, like, like);
@@ -184,9 +185,13 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
         nt.nhataitro_id,
         nt.tennhataitro,
         nt.loainhataitro,
-        nt.email,
-        nt.sodienthoai,
-        nt.diachi,
+        COALESCE(nt.email, nd.email) AS email,
+        COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
+        COALESCE(nt.diachi, nd.diachi) AS diachi,
+        nt.website,
+        nt.mota,
+        nt.trangthai,
+        nt.nguoidung_id,
         nt.logo,
         nt.ngaytao,
         nd.hoten,
@@ -218,9 +223,9 @@ const getDonorWithStats = async (nhaTaiTroId) => {
         nt.nguoidung_id,
         nt.tennhataitro,
         nt.loainhataitro,
-        nt.email,
-        nt.sodienthoai,
-        nt.diachi,
+        COALESCE(nt.email, nd.email) AS email,
+        COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
+        COALESCE(nt.diachi, nd.diachi) AS diachi,
         nt.website,
         nt.mota,
         nt.logo,

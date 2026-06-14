@@ -54,7 +54,10 @@ const initialForm = (user) => ({
 
 const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
   const isEdit = !!user;
-  const [loaiTaiKhoan, setLoaiTaiKhoan] = useState(user?.loai_tai_khoan || 'SINH_VIEN');
+  const isStaff = user && Number(user.role_id) !== 4;
+  const [loaiTaiKhoan, setLoaiTaiKhoan] = useState(
+    isStaff ? 'NHAN_VIEN' : (user?.loai_tai_khoan || 'SINH_VIEN')
+  );
   const [form, setForm] = useState(initialForm(user));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +65,8 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
 
   useEffect(() => {
     if (isOpen) {
-      setLoaiTaiKhoan(user?.loai_tai_khoan || 'SINH_VIEN');
+      const staffCheck = user && Number(user.role_id) !== 4;
+      setLoaiTaiKhoan(staffCheck ? 'NHAN_VIEN' : (user?.loai_tai_khoan || 'SINH_VIEN'));
       setForm(initialForm(user));
       setErrors({});
       setShowPassword(false);

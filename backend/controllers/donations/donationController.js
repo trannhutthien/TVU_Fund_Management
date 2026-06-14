@@ -1,4 +1,5 @@
 import DonationModel from "../../models/donations/DonationModel.js";
+import pool from "../../config/db.js";
 import FundModel from "../../models/funds/FundModel.js";
 import DonorModel from "../../models/donations/DonorModel.js";
 import BankAccountModel from "../../models/funds/BankAccountModel.js";
@@ -841,8 +842,12 @@ export const createAuthenticatedDonation = async (req, res) => {
     if (!donor) {
       console.log(`User ${userId} chưa có trong NhaTaiTro, tự động tạo...`);
       
-      // Lấy thông tin user từ req.user
-      const userName = req.user?.ho_ten || req.user?.hoTen || 'Nhà tài trợ';
+      // Lấy thông tin user từ database (do req.user từ middleware protect không chứa ho_ten)
+      const [[userRow]] = await pool.query(
+        `SELECT hoten FROM nguoidung WHERE nguoidung_id = ?`,
+        [userId]
+      );
+      const userName = userRow?.hoten || req.user?.ho_ten || req.user?.hoTen || 'Nhà tài trợ';
       
       // Tạo nhà tài trợ mới
       const newDonorData = {

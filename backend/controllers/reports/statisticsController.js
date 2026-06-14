@@ -433,6 +433,7 @@ export const getKeToanRecentTransactions = async (req, res) => {
             q.tenquy AS ten_quy
          FROM giaodich gd
          INNER JOIN quy q ON gd.quy_id = q.quy_id
+         WHERE (gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)
        ) AS combined
        ORDER BY ngay_giao_dich DESC
        LIMIT ?`,
@@ -483,7 +484,7 @@ export const getKeToanFundHealth = async (req, res) => {
        ORDER BY q.sodu ASC`
     );
 
-    // Trả về data với snake_case keys như frontend expect
+    // Trả về data với cả snake_case (tương thích cũ) và camelCase (frontend expect)
     const data = rows.map((f) => ({
       quy_id: f.quy_id,
       ten_quy: f.ten_quy,
@@ -491,6 +492,13 @@ export const getKeToanFundHealth = async (req, res) => {
       so_du: parseFloat(f.so_du || 0),
       so_tien_toi_da: parseFloat(f.so_tien_toi_da || 0),
       trang_thai: f.trang_thai,
+
+      quyId: f.quy_id,
+      tenQuy: f.ten_quy,
+      loaiQuy: f.loai_quy,
+      soDu: parseFloat(f.so_du || 0),
+      soTienToiDa: parseFloat(f.so_tien_toi_da || 0),
+      trangThai: f.trang_thai,
     }));
 
     return res.status(200).json({
@@ -522,11 +530,16 @@ export const getKeToanPendingDonations = async (req, res) => {
          kt.sotien AS so_tien,
          kt.ngaytaitro AS ngay_tai_tro,
          kt.trangthai AS trang_thai,
-         ntt.tennhataitro AS ten_nha_tai_tro,
+         CASE 
+           WHEN ntt.tennhataitro = 'Nhà tài trợ' AND nd.hoten IS NOT NULL AND nd.hoten != '' 
+           THEN nd.hoten 
+           ELSE ntt.tennhataitro 
+         END AS ten_nha_tai_tro,
          q.tenquy AS ten_quy,
          q.quy_id
        FROM khoantaitro kt
        INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+       LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
        INNER JOIN quy q ON kt.quy_id = q.quy_id
        WHERE kt.trangthai = 'Da duyet'
        ORDER BY kt.ngaytaitro DESC
@@ -687,23 +700,25 @@ export const getKeToanReportStats = async (req, res) => {
     const [[thuRow]] = await pool.query(
       `SELECT COALESCE(SUM(sotien), 0) AS total
        FROM khoantaitro
-       WHERE trangthai = 'Da nhan' AND ${currentCondKT.sql}`,
+       WHERE trangthai IN ('Da duyet', 'Da nhan') AND ${currentCondKT.sql}`,
       currentCondKT.params
     );
 
     const [[chiRow]] = await pool.query(
       `SELECT COALESCE(SUM(sotien), 0) AS total
        FROM giaodich
-       WHERE trangthai = 'Thanh cong' AND ${currentCondGD.sql}`,
+       WHERE trangthai = 'Thanh cong'
+         AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+         AND ${currentCondGD.sql}`,
       currentCondGD.params
     );
 
     const [[gdRow]] = await pool.query(
       `SELECT COUNT(*) AS total
        FROM (
-         SELECT ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai = 'Da nhan'
+         SELECT ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai IN ('Da duyet', 'Da nhan')
          UNION ALL
-         SELECT ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong'
+         SELECT ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
        ) AS combined
        WHERE ${currentCondGD.sql}`,
       currentCondGD.params
@@ -731,23 +746,25 @@ export const getKeToanReportStats = async (req, res) => {
       const [[prevThuRow]] = await pool.query(
         `SELECT COALESCE(SUM(sotien), 0) AS total
          FROM khoantaitro
-         WHERE trangthai = 'Da nhan' AND ${prevCondKT.sql}`,
+         WHERE trangthai IN ('Da duyet', 'Da nhan') AND ${prevCondKT.sql}`,
         prevCondKT.params
       );
 
       const [[prevChiRow]] = await pool.query(
         `SELECT COALESCE(SUM(sotien), 0) AS total
          FROM giaodich
-         WHERE trangthai = 'Thanh cong' AND ${prevCondGD.sql}`,
+         WHERE trangthai = 'Thanh cong'
+           AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+           AND ${prevCondGD.sql}`,
         prevCondGD.params
       );
 
       const [[prevGdRow]] = await pool.query(
         `SELECT COUNT(*) AS total
          FROM (
-           SELECT ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai = 'Da nhan'
+           SELECT ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai IN ('Da duyet', 'Da nhan')
            UNION ALL
-           SELECT ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong'
+           SELECT ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
          ) AS combined
          WHERE ${prevCondGD.sql}`,
         prevCondGD.params
@@ -776,11 +793,11 @@ export const getKeToanReportStats = async (req, res) => {
            FROM (
              SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
              FROM khoantaitro
-             WHERE trangthai = 'Da nhan'
+             WHERE trangthai IN ('Da duyet', 'Da nhan')
              UNION ALL
              SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
              FROM giaodich
-             WHERE trangthai = 'Thanh cong'
+             WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
            ) AS combined
            WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
           [d.getFullYear(), d.getMonth() + 1]
@@ -802,11 +819,11 @@ export const getKeToanReportStats = async (req, res) => {
            FROM (
              SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
              FROM khoantaitro
-             WHERE trangthai = 'Da nhan'
+             WHERE trangthai IN ('Da duyet', 'Da nhan')
              UNION ALL
              SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
              FROM giaodich
-             WHERE trangthai = 'Thanh cong'
+             WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
            ) AS combined
            WHERE YEAR(ngay_date) = ? AND QUARTER(ngay_date) = ?`,
           [year, q]
@@ -827,11 +844,11 @@ export const getKeToanReportStats = async (req, res) => {
            FROM (
              SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
              FROM khoantaitro
-             WHERE trangthai = 'Da nhan'
+             WHERE trangthai IN ('Da duyet', 'Da nhan')
              UNION ALL
              SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
              FROM giaodich
-             WHERE trangthai = 'Thanh cong'
+             WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
            ) AS combined
            WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
           [year, m]
@@ -862,11 +879,11 @@ export const getKeToanReportStats = async (req, res) => {
              FROM (
                SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
                FROM khoantaitro
-               WHERE trangthai = 'Da nhan'
+               WHERE trangthai IN ('Da duyet', 'Da nhan')
                UNION ALL
                SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
                FROM giaodich
-               WHERE trangthai = 'Thanh cong'
+               WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
              ) AS combined
              WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
             [d.getFullYear(), d.getMonth() + 1]
@@ -889,11 +906,11 @@ export const getKeToanReportStats = async (req, res) => {
              FROM (
                SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
                FROM khoantaitro
-               WHERE trangthai = 'Da nhan'
+               WHERE trangthai IN ('Da duyet', 'Da nhan')
                UNION ALL
                SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
                FROM giaodich
-               WHERE trangthai = 'Thanh cong'
+               WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
              ) AS combined
              WHERE YEAR(ngay_date) = ? AND QUARTER(ngay_date) = ?`,
             [prevYear, q]
@@ -915,11 +932,11 @@ export const getKeToanReportStats = async (req, res) => {
              FROM (
                SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
                FROM khoantaitro
-               WHERE trangthai = 'Da nhan'
+               WHERE trangthai IN ('Da duyet', 'Da nhan')
                UNION ALL
                SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
                FROM giaodich
-               WHERE trangthai = 'Thanh cong'
+               WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
              ) AS combined
              WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
             [prevYear, m]
@@ -936,11 +953,18 @@ export const getKeToanReportStats = async (req, res) => {
 
     // 5. Breakdown Thu (Top Nhà tài trợ)
     const [thuBreakdownRows] = await pool.query(
-      `SELECT ntt.tennhataitro AS name, SUM(kt.sotien) AS value
+      `SELECT 
+         CASE 
+           WHEN ntt.tennhataitro = 'Nhà tài trợ' AND nd.hoten IS NOT NULL AND nd.hoten != '' 
+           THEN nd.hoten 
+           ELSE ntt.tennhataitro 
+         END AS name, 
+         SUM(kt.sotien) AS value
        FROM khoantaitro kt
        INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
-       WHERE kt.trangthai = 'Da nhan' AND ${currentCondKT.sql}
-       GROUP BY ntt.tennhataitro
+       LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
+       WHERE kt.trangthai IN ('Da duyet', 'Da nhan') AND ${currentCondKT.sql}
+       GROUP BY name
        ORDER BY value DESC
        LIMIT 5`,
       currentCondKT.params
@@ -958,7 +982,9 @@ export const getKeToanReportStats = async (req, res) => {
       `SELECT q.tenquy AS name, SUM(gd.sotien) AS value
        FROM giaodich gd
        INNER JOIN quy q ON gd.quy_id = q.quy_id
-       WHERE gd.trangthai = 'Thanh cong' AND ${currentCondGD.sql}
+       WHERE gd.trangthai = 'Thanh cong'
+         AND (gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)
+         AND ${currentCondGD.sql}
        GROUP BY q.tenquy
        ORDER BY value DESC
        LIMIT 5`,
@@ -973,19 +999,18 @@ export const getKeToanReportStats = async (req, res) => {
     }));
 
     // 7. Fund Table data
-    const [activeFunds] = await pool.query(
-      `SELECT quy_id, tenquy AS ten_quy, sodu AS so_du, sotienhotrotoida AS so_tien_toi_da, trangthai AS trang_thai
-       FROM quy
-       WHERE trangthai = 'Dang hoat dong'`
+    const [funds] = await pool.query(
+      `SELECT quy_id, tenquy AS ten_quy, sodu AS so_du, sotienmuctieu AS so_tien_toi_da, trangthai AS trang_thai
+       FROM quy`
     );
 
     const fundTableData = [];
-    for (const f of activeFunds) {
+    for (const f of funds) {
       // successful Thu in period for this fund
       const [[fundThuRow]] = await pool.query(
         `SELECT COALESCE(SUM(sotien), 0) AS total
          FROM khoantaitro
-         WHERE quy_id = ? AND trangthai = 'Da nhan' AND ${currentCondKT.sql}`,
+         WHERE quy_id = ? AND trangthai IN ('Da duyet', 'Da nhan') AND ${currentCondKT.sql}`,
         [f.quy_id, ...currentCondKT.params]
       );
 
@@ -993,7 +1018,7 @@ export const getKeToanReportStats = async (req, res) => {
       const [[fundChiRow]] = await pool.query(
         `SELECT COALESCE(SUM(sotien), 0) AS total
          FROM giaodich
-         WHERE quy_id = ? AND trangthai = 'Thanh cong' AND ${currentCondGD.sql}`,
+         WHERE quy_id = ? AND trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL) AND ${currentCondGD.sql}`,
         [f.quy_id, ...currentCondGD.params]
       );
 
@@ -1001,11 +1026,11 @@ export const getKeToanReportStats = async (req, res) => {
       const [[fundGdRow]] = await pool.query(
         `SELECT COUNT(*) AS total
          FROM (
-           SELECT quy_id, ngaycapnhat AS ngaygiaodich, trangthai FROM khoantaitro
+           SELECT quy_id, ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai IN ('Da duyet', 'Da nhan')
            UNION ALL
-           SELECT quy_id, ngaygiaodich, trangthai FROM giaodich
+           SELECT quy_id, ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
          ) AS combined
-         WHERE quy_id = ? AND trangthai IN ('Thanh cong', 'Da nhan') AND ${currentCondGD.sql}`,
+         WHERE quy_id = ? AND ${currentCondGD.sql}`,
         [f.quy_id, ...currentCondGD.params]
       );
 
@@ -1013,7 +1038,7 @@ export const getKeToanReportStats = async (req, res) => {
       const [trendRows] = await pool.query(
         `SELECT sotien AS value
          FROM giaodich
-         WHERE quy_id = ? AND trangthai = 'Thanh cong'
+         WHERE quy_id = ? AND trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
          ORDER BY ngaygiaodich DESC
          LIMIT 6`,
         [f.quy_id]
@@ -1029,7 +1054,9 @@ export const getKeToanReportStats = async (req, res) => {
         soDu: parseFloat(f.so_du),
         soTienToiDa: parseFloat(f.so_tien_toi_da || 0),
         soGiaoDich: fundGdRow.total,
-        trangThai: f.trang_thai === 'Dang hoat dong' ? 'Đang hoạt động' : f.trang_thai,
+        trangThai: f.trang_thai === 'Dang hoat dong' ? 'Đang hoạt động' : 
+                   f.trang_thai === 'Tam dung' ? 'Tạm dừng' : 
+                   f.trang_thai === 'Da dong' ? 'Đã đóng' : f.trang_thai,
         trendData
       });
     }
@@ -1128,13 +1155,18 @@ export const getAdminAdvancedStats = async (req, res) => {
     // 3. Phân tích Nhà tài trợ đóng góp nhiều nhất (Top 10)
     const [donorRows] = await pool.query(
       `SELECT
-         ntt.tennhataitro AS ten_nha_tai_tro,
+         CASE 
+           WHEN ntt.tennhataitro = 'Nhà tài trợ' AND nd.hoten IS NOT NULL AND nd.hoten != '' 
+           THEN nd.hoten 
+           ELSE ntt.tennhataitro 
+         END AS ten_nha_tai_tro,
          ntt.loainhataitro AS loai,
          COALESCE(SUM(kt.sotien), 0) AS tong_tai_tro,
          COUNT(kt.khoantaitro_id) AS so_lan_tai_tro
        FROM nhataitro ntt
+       LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
        LEFT JOIN khoantaitro kt ON ntt.nhataitro_id = kt.nhataitro_id AND kt.trangthai = 'Da nhan'
-       GROUP BY ntt.nhataitro_id, ntt.tennhataitro, ntt.loainhataitro
+       GROUP BY ntt.nhataitro_id, ten_nha_tai_tro, ntt.loainhataitro
        ORDER BY tong_tai_tro DESC
        LIMIT 10`
     );

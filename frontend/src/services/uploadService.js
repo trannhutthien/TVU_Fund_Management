@@ -57,6 +57,15 @@ export const uploadService = {
     return response.data
   },
 
+  // Upload ảnh tin tức
+  uploadNewsImage: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post('/upload/news', formData)
+    return response.data
+  },
+
   // Xóa file
   deleteFile: async (filename) => {
     const response = await api.delete(`/upload/${filename}`)

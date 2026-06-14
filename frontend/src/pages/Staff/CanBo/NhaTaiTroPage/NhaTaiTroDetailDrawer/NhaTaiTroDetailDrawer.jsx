@@ -147,6 +147,67 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro }) => {
 
         <div className={styles.divider} />
 
+        {/* Additional Details */}
+        <section className={styles.detailsSection}>
+          <div className={styles.sectionTitle}>THÔNG TIN BỔ SUNG</div>
+          <div className={styles.detailsGrid}>
+            {data.website && (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Website:</span>
+                <span className={styles.detailValue}>
+                  <a
+                    href={data.website.startsWith('http') ? data.website : `https://${data.website}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={styles.webLink}
+                  >
+                    {data.website}
+                  </a>
+                </span>
+              </div>
+            )}
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Trạng thái:</span>
+              <span className={styles.detailValue}>
+                <span
+                  className={
+                    data.trangthai === 'Hoat dong' || data.trangthai === 'Active'
+                      ? styles.statusActive
+                      : styles.statusInactive
+                  }
+                >
+                  {data.trangthai === 'Hoat dong' || data.trangthai === 'Active'
+                    ? 'Đang hoạt động'
+                    : 'Ngừng hoạt động'}
+                </span>
+              </span>
+            </div>
+            {data.nguoidung_id ? (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Tài khoản liên kết:</span>
+                <span className={styles.detailValue}>
+                  <span className={styles.linkedUser}>
+                    {data.ho_ten} (ID: {data.nguoidung_id})
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>Tài khoản liên kết:</span>
+                <span className={styles.detailValue}>Không có (Nhà tài trợ vãng lai)</span>
+              </div>
+            )}
+          </div>
+          {data.mota && (
+            <div className={styles.motaBox}>
+              <div className={styles.motaLabel}>Giới thiệu / Mô tả:</div>
+              <div className={styles.motaText}>{data.mota}</div>
+            </div>
+          )}
+        </section>
+
+        <div className={styles.divider} />
+
         {/* Lịch sử */}
         <section className={styles.historySection}>
           <div className={styles.historyHead}>

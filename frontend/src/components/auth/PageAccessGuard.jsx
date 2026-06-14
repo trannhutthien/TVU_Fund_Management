@@ -9,6 +9,35 @@ const getPageKey = (pathname) => {
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length === 0) return 'landing_page';
   
+  // Nếu có segment tin-tuc hoặc tintuc, trả về tin_tuc luôn
+  if (segments.some(seg => seg === 'tin-tuc' || seg === 'tintuc')) {
+    return 'tin_tuc';
+  }
+  
+  // Đi từ phải qua trái tìm segment hợp lệ
+  for (let i = segments.length - 1; i >= 0; i--) {
+    let segment = segments[i];
+    // Bỏ qua các segment là số (ID) hoặc các hành động chung chung như 'tao', 'sua'
+    if (!isNaN(segment) || segment === 'tao' || segment === 'sua' || segment === 'edit' || segment === 'create') {
+      continue;
+    }
+    
+    // Chuyển đổi các dạng gạch ngang sang gạch dưới
+    let key = segment.replace(/-/g, '_');
+    
+    // Danh sách các key hợp lệ từ page_permissions.json
+    const validKeys = [
+      'landing_page', 'funds', 'guidelines', 'donors', 'profile', 'apply', 'track',
+      'dashboard', 'users', 'xet_duyet', 'quy', 'nha_tai_tro', 'sinh_vien_noi_bat',
+      'tin_tuc', 'bao_cao', 'khoan_tai_tro', 'giao_dich', 'giai_ngan', 'chung_tu',
+      'phe_duyet', 'roles', 'nhat_ky'
+    ];
+    
+    if (validKeys.includes(key)) {
+      return key;
+    }
+  }
+  
   let key = segments[segments.length - 1];
   
   // Nếu segment cuối là một số (ví dụ ID của bản ghi xét duyệt /xet-duyet/15)

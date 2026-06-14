@@ -79,6 +79,20 @@ const newsService = {
   },
 
   /**
+   * Lấy chi tiết bài viết bất kể trạng thái (dùng cho trang edit)
+   * GET /api/news/admin/:id
+   */
+  getNewsAdminById: async (id) => {
+    try {
+      const response = await api.get(`/news/admin/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching admin news detail ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
    * Tạo mới tin tức (cần token và vai trò Cán bộ/Admin)
    * POST /api/news
    */

@@ -68,7 +68,7 @@ const getRoleBadge = (user) => {
   return ROLE_BADGES[user.role_id] || { label: user.ten_vai_tro || '—', color: '#64748b', bg: '#f1f5f9' };
 };
 
-const UserDetailDrawer = ({ user, onClose, onEdit }) => {
+const UserDetailDrawer = ({ user, onClose, onEdit, isAdmin = false }) => {
   const [bankAccounts, setBankAccounts] = useState([]);
   const [bankLoading, setBankLoading] = useState(false);
 
@@ -101,7 +101,7 @@ const UserDetailDrawer = ({ user, onClose, onEdit }) => {
         <header className={styles.header}>
           <h2 className={styles.title}>Chi tiết người dùng</h2>
           <div className={styles.headerActions}>
-            {isRoleUser && (
+            {(isRoleUser || isAdmin) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -273,8 +273,9 @@ const UserDetailDrawer = ({ user, onClose, onEdit }) => {
               <div>
                 <div className={styles.staffBannerTitle}>Tài khoản hệ thống</div>
                 <div className={styles.staffBannerText}>
-                  Không thể chỉnh sửa thông tin từ trang này. Liên hệ Quản trị viên
-                  nếu cần điều chỉnh.
+                  {isAdmin
+                    ? 'Bạn có thể chỉnh sửa thông tin tài khoản này với quyền Quản trị viên.'
+                    : 'Không thể chỉnh sửa thông tin từ trang này. Liên hệ Quản trị viên nếu cần điều chỉnh.'}
                 </div>
               </div>
             </div>

@@ -34,7 +34,7 @@ const INITIAL_FILTERS = {
   loai_ntt: '',
 };
 
-const UserManagementPage = () => {
+const UserManagementPage = ({ isAdmin = false }) => {
   const [activeTab, setActiveTab] = useState('tat_ca');
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -125,6 +125,19 @@ const UserManagementPage = () => {
     }
   };
 
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(`Xác nhận xóa vĩnh viễn tài khoản "${user.ho_ten}"? Hành động này không thể hoàn tác.`)) return;
+    try {
+      await userService.delete(user.user_id);
+      toast.success('Xóa tài khoản thành công');
+      fetchData();
+      fetchStats();
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Không thể xóa tài khoản';
+      toast.error(msg);
+    }
+  };
+
   const handleOpenCreate = () => {
     setEditUser(null);
     setShowModal(true);
@@ -158,7 +171,7 @@ const UserManagementPage = () => {
               Quản lý tài khoản sinh viên và nhà tài trợ
             </p>
           </div>
-          {activeTab !== 'nhan_vien' && (
+          {(activeTab !== 'nhan_vien' || isAdmin) && (
             <Button
               variant="primary"
               leftIcon={<HiOutlineUserPlus />}
@@ -202,6 +215,8 @@ const UserManagementPage = () => {
           onViewDetail={setSelectedUser}
           onEdit={handleOpenEdit}
           onToggleStatus={handleToggleStatus}
+          isAdmin={isAdmin}
+          onDelete={handleDeleteUser}
         />
 
         {totalPages > 1 && (
@@ -238,6 +253,7 @@ const UserManagementPage = () => {
             setSelectedUser(null);
             handleOpenEdit(u);
           }}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -249,6 +265,8 @@ const UserManagementPage = () => {
           setEditUser(null);
         }}
         onSuccess={handleModalSuccess}
+        isAdmin={isAdmin}
+        defaultTab={activeTab}
       />
     </div>
   );

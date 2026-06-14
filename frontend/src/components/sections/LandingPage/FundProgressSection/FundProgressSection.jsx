@@ -106,7 +106,7 @@ const FundProgressSection = () => {
             const calculatedDonors = Math.floor(currentBalance / 10000000) + 5;
             // Phần trăm tiến trình = (số dư / mục tiêu) * 100
             const progressPercent = calculatedGoal > 0
-              ? Math.min(100, Math.round((currentBalance / calculatedGoal) * 100))
+              ? Math.round((currentBalance / calculatedGoal) * 100)
               : 0;
 
             return {
@@ -248,7 +248,7 @@ const FundProgressSection = () => {
                   <div className={styles.progressTrack}>
                     <div 
                       className={styles.progressBar} 
-                      style={{ width: `${fund.progress}%`, background: fundTheme.gradient }}
+                      style={{ width: `${Math.min(100, fund.progress)}%`, background: fundTheme.gradient }}
                     />
                   </div>
                   <div className={styles.fundBalanceSummary}>
@@ -279,7 +279,7 @@ const FundProgressSection = () => {
                 <div className={styles.largeProgressTrack}>
                   <div 
                     className={styles.largeProgressBar}
-                    style={{ width: `${selectedFund.progress}%` }}
+                    style={{ width: `${Math.min(100, selectedFund.progress)}%` }}
                   />
                   
                   {/* Vẽ các điểm mốc trên thanh tiến trình */}

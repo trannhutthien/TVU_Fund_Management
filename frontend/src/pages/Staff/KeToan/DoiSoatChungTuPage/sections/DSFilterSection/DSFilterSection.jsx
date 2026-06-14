@@ -5,6 +5,7 @@ import {
   HiXMark,
 } from 'react-icons/hi2';
 import styles from './DSFilterSection.module.scss';
+import Button from '@components/common/Button/Button';
 
 const DSFilterSection = ({
   activeTab,
@@ -40,13 +41,14 @@ const DSFilterSection = ({
     <div className={styles.card}>
       {/* Tab Row */}
       <div className={styles.tabRow}>
-        <button
+        <Button
+          variant={activeTab === 'can_doi_soat' ? 'primary' : 'ghost'}
+          onClick={() => setActiveTab('can_doi_soat')}
+          leftIcon={<HiClock size={15} />}
           className={
             activeTab === 'can_doi_soat' ? styles.tabActive : styles.tab
           }
-          onClick={() => setActiveTab('can_doi_soat')}
         >
-          <HiClock size={15} />
           Chưa đối soát
           <span
             className={
@@ -57,15 +59,16 @@ const DSFilterSection = ({
           >
             {statsData.chuaDoiSoat}
           </span>
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant={activeTab === 'da_doi_soat' ? 'primary' : 'ghost'}
+          onClick={() => setActiveTab('da_doi_soat')}
+          leftIcon={<HiCheckCircle size={15} />}
           className={
             activeTab === 'da_doi_soat' ? styles.tabActive : styles.tab
           }
-          onClick={() => setActiveTab('da_doi_soat')}
         >
-          <HiCheckCircle size={15} />
           Đã đối soát
           <span
             className={
@@ -76,15 +79,16 @@ const DSFilterSection = ({
           >
             {statsData.daDoiSoat}
           </span>
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant={activeTab === 'bat_thuong' ? 'primary' : 'ghost'}
+          onClick={() => setActiveTab('bat_thuong')}
+          leftIcon={<HiExclamationTriangle size={15} />}
           className={
             activeTab === 'bat_thuong' ? styles.tabActive : styles.tab
           }
-          onClick={() => setActiveTab('bat_thuong')}
         >
-          <HiExclamationTriangle size={15} />
           Bất thường
           <span
             className={
@@ -95,7 +99,7 @@ const DSFilterSection = ({
           >
             {statsData.batThuong}
           </span>
-        </button>
+        </Button>
       </div>
 
       {/* Filter Row */}

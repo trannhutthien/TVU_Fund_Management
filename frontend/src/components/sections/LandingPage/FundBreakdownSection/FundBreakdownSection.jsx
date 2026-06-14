@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { HiArrowRight } from 'react-icons/hi2';
 import statisticsService from '@services/statisticsService';
@@ -52,6 +53,7 @@ const getFundColor = (loaiQuy, index) => {
  * Dữ liệu lấy từ API backend
  */
 const FundBreakdownSection = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [shouldAnimate, setShouldAnimate] = useState(false); // ← State riêng cho animation
   const [loading, setLoading] = useState(true);
@@ -316,8 +318,12 @@ const FundBreakdownSection = () => {
             <p className={styles.note}>
               * Dữ liệu tính đến thời điểm hiện tại. Cập nhật: Tháng 5/2025
             </p>
-            <a href="#" className={styles.link}>
-              Xem báo cáo tài chính đầy đủ
+            <a 
+              href="/funds" 
+              onClick={(e) => { e.preventDefault(); navigate('/funds'); }} 
+              className={styles.link}
+            >
+              Xem danh mục quỹ đầy đủ
               <HiArrowRight className={styles.linkIcon} />
             </a>
           </div>

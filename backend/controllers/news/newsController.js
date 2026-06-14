@@ -207,6 +207,45 @@ export const getNewsById = async (req, res) => {
   }
 };
 
+// GET /api/news/admin/:id - Admin/Cán bộ lấy chi tiết bài viết (kể cả Draft/Hidden) dùng cho trang edit
+export const getNewsAdminById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID không hợp lệ" });
+    }
+
+    const news = await NewsModel.getNewsById(id);
+    if (!news) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy tin tức" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      news: {
+        id: news.tintuc_id,
+        title: news.tieude,
+        summary: news.motangan,
+        content: news.noidung,
+        avatar: news.avatar ? buildNewsImageUrl(news.avatar) : null,
+        avatarPath: news.avatar || null,
+        category: news.danhmuc,
+        lanoibat: news.lanoibat,
+        isFeatured: news.lanoibat === 1,
+        status: news.trangthai,
+        publishDate: news.ngayxuatban,
+        createdAt: news.ngaytao,
+        updatedAt: news.ngaycapnhat,
+        creatorName: news.nguoi_tao,
+        editorName: news.nguoi_sua
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getNewsAdminById:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
+  }
+};
+
 // POST /api/news - Admin/Cán bộ tạo mới tin tức
 export const createNews = async (req, res) => {
   try {
@@ -218,7 +257,8 @@ export const createNews = async (req, res) => {
       category,
       isFeatured,
       status,
-      publishDate
+      publishDate,
+      lanoibat
     } = req.body;
 
     // Validate bắt buộc
@@ -250,7 +290,7 @@ export const createNews = async (req, res) => {
       noidung: content,
       avatar: avatar || null,
       danhmuc: category || 'Thong bao',
-      lanoibat: isFeatured ? 1 : 0,
+      lanoibat: lanoibat !== undefined ? Number(lanoibat) : (isFeatured ? 1 : 0),
       trangthai: status || 'Ban nhap',
       ngayxuatban: finalPublishDate,
       nguoitao_id: creatorId
@@ -293,7 +333,8 @@ export const updateNews = async (req, res) => {
       category,
       isFeatured,
       status,
-      publishDate
+      publishDate,
+      lanoibat
     } = req.body;
 
     if (!id || isNaN(id)) {
@@ -342,7 +383,7 @@ export const updateNews = async (req, res) => {
       noidung: content,
       avatar: avatar || null,
       danhmuc: category || 'Thong bao',
-      lanoibat: isFeatured ? 1 : 0,
+      lanoibat: lanoibat !== undefined ? Number(lanoibat) : (isFeatured ? 1 : 0),
       trangthai: status || 'Ban nhap',
       ngayxuatban: finalPublishDate,
       nguoisua_id: editorId
@@ -463,6 +504,7 @@ export default {
   getNewsCountByCategory,
   getAllNews,
   getNewsById,
+  getNewsAdminById,
   createNews,
   updateNews,
   deleteNews,

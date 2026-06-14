@@ -57,6 +57,7 @@ import CanBoTaoQuyPage from './pages/Staff/CanBo/TaoQuyPage/TaoQuyPage'
 import CanBoNhaTaiTroPage from './pages/Staff/CanBo/NhaTaiTroPage/NhaTaiTroPage'
 import CanBoUserManagementPage from './pages/Staff/CanBo/UserManagementPage/UserManagementPage'
 import CanBoBaoCaoPage from './pages/Staff/CanBo/BaoCaoPage'
+import TaoTinTucPage from './pages/Admin/TinTuc/TaoTinTucPage'
 // Protected Route: Bảo vệ routes cần đăng nhập
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()
@@ -122,6 +123,8 @@ function App() {
             <Route path="/admin/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
             <Route path="/admin/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
             <Route path="/admin/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
+            <Route path="/admin/tintuc/tao" element={<TaoTinTucPage />} />
+            <Route path="/admin/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
             <Route path="/admin/bao-cao" element={<AdminBaoCaoPage />} />
 
             {/* Kế toán Routes (role_id = 2) */}
@@ -143,6 +146,8 @@ function App() {
             <Route path="/can-bo/users" element={<CanBoUserManagementPage />} />
             <Route path="/can-bo/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
             <Route path="/can-bo/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
+            <Route path="/can-bo/tintuc/tao" element={<TaoTinTucPage />} />
+            <Route path="/can-bo/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
             <Route path="/can-bo/bao-cao" element={<CanBoBaoCaoPage />} />
           </Route>
 

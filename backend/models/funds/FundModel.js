@@ -167,10 +167,10 @@ const getAllFunds = async () => {
       q.ngaytao AS ngay_tao,
       q.ngaycapnhat AS ngay_cap_nhat,
       q.trangthai AS trang_thai,
-      COUNT(CASE WHEN yc.trangthai = 'Da duyet cap 3' THEN 1 END) as so_don_da_nop,
+      COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) as so_don_da_nop,
       CASE 
         WHEN q.soluonghotrotoida IS NOT NULL AND q.soluonghotrotoida > 0 
-        THEN ROUND((COUNT(CASE WHEN yc.trangthai = 'Da duyet cap 3' THEN 1 END) / q.soluonghotrotoida) * 100, 0)
+        THEN ROUND((COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) / q.soluonghotrotoida) * 100, 0)
         ELSE 0
       END as phan_tram_da_nhan
      FROM quy q
@@ -206,11 +206,11 @@ const getPublicFunds = async () => {
         q.ngaycapnhat AS ngay_cap_nhat,
         q.trangthai AS trang_thai,
         -- Đếm số đơn đã được duyệt (bao gồm cả đang chờ giải ngân và đã giải ngân)
-        COUNT(CASE WHEN yc.trangthai IN ('Cho giai ngan', 'Da giai ngan') THEN 1 END) as so_don_da_nop,
+        COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) as so_don_da_nop,
         -- Tính phần trăm dựa trên số đơn đã được duyệt
         CASE 
           WHEN q.soluonghotrotoida IS NOT NULL AND q.soluonghotrotoida > 0 
-          THEN ROUND((COUNT(CASE WHEN yc.trangthai IN ('Cho giai ngan', 'Da giai ngan') THEN 1 END) / q.soluonghotrotoida) * 100, 0)
+          THEN ROUND((COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) / q.soluonghotrotoida) * 100, 0)
           ELSE 0
         END as phan_tram_da_nhan
        FROM quy q

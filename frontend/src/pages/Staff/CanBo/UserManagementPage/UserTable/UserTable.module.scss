@@ -43,10 +43,10 @@
 .colKhoa { width: 150px; min-width: 0; }
 .colLoai { width: 110px; }
 .colTong { width: 130px; }
-.colRole { width: 130px; }
-.colStatus { width: 120px; }
-.colDate { width: 100px; font-size: 13px; color: #475569; }
-.colActions { width: 220px; text-align: right; }
+.colRole { width: 110px; }
+.colStatus { width: 110px; }
+.colDate { width: 110px; font-size: 13px; color: #475569; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.colActions { width: 290px; text-align: right; }
 
 .userCell {
   display: flex;
@@ -136,6 +136,15 @@
 
 .editBtn {}
 
+.deleteBtn {
+  color: #ef4444;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+  }
+}
+
 .toggleBtn {
   display: inline-flex;
   align-items: center;
@@ -205,7 +214,7 @@
 
 @media (max-width: 1200px) {
   .colDate { display: none; }
-  .colActions { width: 200px; }
+  .colActions { width: 240px; }
 }
 
 @media (max-width: 1024px) {

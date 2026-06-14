@@ -79,6 +79,7 @@ const getTransactionById = async (giaoDichId) => {
       gd.doisoatboiid,
       gd.doisoatluc,
       gd.doisoatghichu,
+      nd_doisoat.hoten as doisoat_boi_ten,
       q.tenquy,
       q.loaiquy_id,
       nd.hoten as nguoinhan_hoten,
@@ -86,7 +87,8 @@ const getTransactionById = async (giaoDichId) => {
       nd.masodinhdanh as nguoinhan_mssv
      FROM giaodich gd
      INNER JOIN quy q ON gd.quy_id = q.quy_id
-     INNER JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+     LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
      WHERE gd.giaodich_id = ?
      LIMIT 1`,
     [giaoDichId]
@@ -119,6 +121,7 @@ const getTransactionByIdDetailed = async (giaoDichId) => {
       gd.doisoatboiid,
       gd.doisoatluc,
       gd.doisoatghichu,
+      nd_doisoat.hoten as doisoat_boi_ten,
       q.tenquy,
       q.loaiquy_id,
       nd.hoten as nguoinhan_hoten,
@@ -129,10 +132,11 @@ const getTransactionByIdDetailed = async (giaoDichId) => {
       nd_thuchien.hoten as nguoithuchien_hoten
      FROM giaodich gd
      INNER JOIN quy q ON gd.quy_id = q.quy_id
-     INNER JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
      LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
      LEFT JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
      LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
+     LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
      WHERE gd.giaodich_id = ?
      LIMIT 1`,
     [giaoDichId]
@@ -301,6 +305,7 @@ const getAllTransactions = async (filters, limit, offset) => {
       gd.doisoatboiid,
       gd.doisoatluc,
       gd.doisoatghichu,
+      nd_doisoat.hoten as doisoat_boi_ten,
       q.tenquy,
       q.loaiquy_id,
       nd.hoten as nguoinhan_hoten,
@@ -315,6 +320,7 @@ const getAllTransactions = async (filters, limit, offset) => {
     LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
     LEFT JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
     LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
+    LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
     ${whereClause}
     ORDER BY gd.ngaygiaodich DESC
     LIMIT ? OFFSET ?
@@ -435,14 +441,16 @@ const getTransactionsSummary = async (filters) => {
 // HÀM: updateDoiSoatStatus
 // MỤC ĐÍCH: Cập nhật trạng thái đối soát giao dịch
 // ─────────────────────────────────────────────────────────────────────────────
-const updateDoiSoatStatus = async (giaoDichId, doiSoatTrangThai, ghiChu = null) => {
+const updateDoiSoatStatus = async (giaoDichId, doiSoatTrangThai, soTienThucTe = null, doiSoatBoiId = null, ghiChu = null) => {
   const [result] = await pool.execute(
     `UPDATE giaodich 
      SET doisoattrangthai = ?,
-         doisoatghichu = COALESCE(?, doisoatghichu),
+         sotienthucte = ?,
+         doisoatboiid = ?,
+         doisoatghichu = ?,
          doisoatluc = CURRENT_TIMESTAMP
      WHERE giaodich_id = ?`,
-    [doiSoatTrangThai, ghiChu, giaoDichId]
+    [doiSoatTrangThai, soTienThucTe, doiSoatBoiId, ghiChu, giaoDichId]
   );
   return result;
 };

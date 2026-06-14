@@ -139,6 +139,10 @@ const DoiSoatChungTuPage = () => {
             doi_soat_trang_thai: item.doiSoatTrangThai,
             minh_chung_url: item.minhChung,
             ghi_chu: item.ghiChu,
+            so_tien_thuc_te: item.soTienThucTe,
+            doi_soat_luc: item.doiSoatLuc,
+            doi_soat_ghi_chu: item.doiSoatGhiChu,
+            doi_soat_boi_ten: item.doiSoatBoiTen,
           }));
           
           setList(mappedData);
@@ -165,8 +169,11 @@ const DoiSoatChungTuPage = () => {
   const handleDoiSoat = async (item) => {
     try {
       setIsSubmitting(true);
-      await transactionService.updateDoiSoatStatus(item.transactionId, {
+      const transactionId = item.transaction_id || item.transactionId;
+      await transactionService.updateDoiSoatStatus(transactionId, {
         doiSoatTrangThai: 'Da_doi_soat',
+        soTienThucTe: item.so_tien_thuc_te !== undefined ? item.so_tien_thuc_te : (item.soTienThucTe !== undefined ? item.soTienThucTe : null),
+        ghiChu: item.ghi_chu || item.ghiChu || '',
       });
       alert('Đã đối soát thành công');
       // Refresh list + stats
@@ -182,8 +189,10 @@ const DoiSoatChungTuPage = () => {
   const handleGanCo = async (item) => {
     try {
       setIsSubmitting(true);
-      await transactionService.updateDoiSoatStatus(item.transactionId, {
+      const transactionId = item.transaction_id || item.transactionId;
+      await transactionService.updateDoiSoatStatus(transactionId, {
         doiSoatTrangThai: 'Bat_thuong',
+        ghiChu: item.ghi_chu || item.ghiChu || '',
       });
       alert('Đã gắn cờ bất thường');
       // Refresh list + stats
@@ -199,8 +208,10 @@ const DoiSoatChungTuPage = () => {
   const handleResolve = async (item) => {
     try {
       setIsSubmitting(true);
-      await transactionService.updateDoiSoatStatus(item.transactionId, {
+      const transactionId = item.transaction_id || item.transactionId;
+      await transactionService.updateDoiSoatStatus(transactionId, {
         doiSoatTrangThai: 'Da_doi_soat',
+        ghiChu: item.ghi_chu || item.ghiChu || 'Đã xử lý bất thường',
       });
       alert('Đã xử lý, chuyển sang Đã đối soát');
       // Refresh list + stats
@@ -216,8 +227,10 @@ const DoiSoatChungTuPage = () => {
   const handleRemoveFlag = async (item) => {
     try {
       setIsSubmitting(true);
-      await transactionService.updateDoiSoatStatus(item.transactionId, {
+      const transactionId = item.transaction_id || item.transactionId;
+      await transactionService.updateDoiSoatStatus(transactionId, {
         doiSoatTrangThai: 'Chua_doi_soat',
+        ghiChu: '',
       });
       alert('Đã xóa flag bất thường');
       // Refresh list + stats

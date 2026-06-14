@@ -5,6 +5,7 @@ import {
   getNewsCountByCategory,
   getAllNews,
   getNewsById,
+  getNewsAdminById,
   createNews,
   updateNews,
   deleteNews,
@@ -43,8 +44,11 @@ router.post("/", protect, authorizeRoles(1, 3), createNews);
 // PUT /api/news/:id - Cập nhật tin tức (Cán bộ: 3, Admin: 1)
 router.put("/:id", protect, authorizeRoles(1, 3), updateNews);
 
-// DELETE /api/news/:id - Xóa tin tức (Cán bộ: 3, Admin: 1)
-router.delete("/:id", protect, authorizeRoles(1, 3), deleteNews);
+// GET /api/news/admin/:id - Lấy chi tiết bài viết dùng cho trang edit (Admin/Cán bộ, không check trạng thái)
+router.get("/admin/:id", protect, authorizeRoles(1, 3), getNewsAdminById);
+
+// DELETE /api/news/:id - Xóa tin tức (chỉ Admin: 1)
+router.delete("/:id", protect, authorizeRoles(1), deleteNews);
 
 // PUT /api/news/:id/status - Cập nhật trạng thái hiển thị (Cán bộ: 3, Admin: 1)
 router.put("/:id/status", protect, authorizeRoles(1, 3), updateNewsStatus);

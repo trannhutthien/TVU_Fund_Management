@@ -92,22 +92,12 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
   
   // Handle "Bắt đầu ngay" (Sinh viên)
   const handleStudentClick = () => {
-    if (isAuthenticated) {
-      navigate('/apply');
-    } else {
-      if (onLoginClick) {
-        onLoginClick();
-      }
-    }
+    navigate('/apply?role=student');
   };
 
   // Handle "Trở thành nhà tài trợ" (Nhà tài trợ)
   const handleDonorClick = () => {
-    if (onContactClick) {
-      onContactClick();
-    } else {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
+    navigate('/apply?role=donor');
   };
 
   return (
