@@ -35,7 +35,7 @@ export const createUser = async (req, res) => {
     }
 
     // 2. Validate loaiTaiKhoan chỉ được set khi roleId = 4
-    if (loaiTaiKhoan && roleId !== 4) {
+    if (loaiTaiKhoan && Number(roleId) !== 4) {
       return res.status(400).json({
         success: false,
         message: "Loại tài khoản chỉ được set khi vai trò là người dùng (role_id = 4)",
@@ -95,16 +95,17 @@ export const createUser = async (req, res) => {
       hoTen: hoTen.trim(),
       email: email.trim().toLowerCase(),
       matKhau: hashedPassword,
-      roleId: roleId,
+      roleId: Number(roleId),
       khoaphong: khoaphong ? khoaphong.trim() : null,
       trangThai: trangThai || 'HOAT_DONG',
       soDienThoai: soDienThoai || null,
       diaChi: diaChi || null,
-      loaiTaiKhoan: (roleId === 4 && loaiTaiKhoan) ? loaiTaiKhoan : null,
+      loaiTaiKhoan: (Number(roleId) === 4 && loaiTaiKhoan) ? loaiTaiKhoan : null,
       avatar: avatar || null
     };
 
     const userId = await UserModel.createUser(userData);
+    console.log('✅ User created with ID:', userId);
 
     // Nếu là NHA_TAI_TRO, tự tạo record trong nhataitro (FK user_id UNIQUE NOT NULL)
     if (Number(roleId) === 4 && loaiTaiKhoan === 'NHA_TAI_TRO') {
@@ -113,43 +114,49 @@ export const createUser = async (req, res) => {
          VALUES (?, ?, ?)`,
         [userId, tenNhaTaiTro?.trim() || hoTen.trim(), loaiNhaTaiTro || 'Ca nhan']
       );
+      console.log('✅ Donor record created for user:', userId);
     }
 
-    // 10. Lấy thông tin user vừa tạo (không bao gồm mật khẩu)
-    const newUser = await UserModel.getUserById(userId);
+    // Ghi nhật ký hệ thống (không block response nếu fail)
+    try {
+      await logSystemActivity(req, {
+        hanhdong: "THEM_MOI_NGUOI_DUNG",
+        loaidoituong: "nguoidung",
+        doituong_id: userId,
+        mota: `Tạo người dùng mới: ${userData.email} (Họ tên: ${userData.hoTen}, Vai trò ID: ${userData.roleId})`,
+        dulieumoi: { ...userData, matKhau: undefined }
+      });
+      console.log('✅ System log created');
+    } catch (logError) {
+      console.error('⚠️ Warning: Failed to create system log:', logError);
+    }
 
-    // Ghi nhật ký hệ thống
-    await logSystemActivity(req, {
-      hanhdong: "THEM_MOI_NGUOI_DUNG",
-      loaidoituong: "nguoidung",
-      doituong_id: userId,
-      mota: `Tạo người dùng mới: ${userData.email} (Họ tên: ${userData.hoTen}, Vai trò ID: ${userData.roleId})`,
-      dulieumoi: { ...userData, matKhau: undefined }
-    });
-
+    // Trả về response ngay lập tức với dữ liệu từ userData
     return res.status(201).json({
       success: true,
       message: "Tạo người dùng thành công",
       user: {
-        id: newUser.nguoidung_id,
-        maSoDinhDanh: newUser.masodinhdanh,
-        hoTen: newUser.hoten,
-        email: newUser.email,
-        avatar: buildUserAvatarUrl(newUser.avatar), // ✅ Build full URL
-        soDienThoai: newUser.sodienthoai,
-        diaChi: newUser.diachi,
-        vaiTro: newUser.vaitro_id,
-        loaiTaiKhoan: newUser.loaitaikhoan,
-        khoaPhong: newUser.khoaphong,
-        trangThai: newUser.trangthai,
-        createdAt: newUser.ngaytao
+        id: userId,
+        maSoDinhDanh: userData.maSoDinhDanh,
+        hoTen: userData.hoTen,
+        email: userData.email,
+        avatar: buildUserAvatarUrl(userData.avatar),
+        soDienThoai: userData.soDienThoai,
+        diaChi: userData.diaChi,
+        vaiTro: userData.roleId,
+        loaiTaiKhoan: userData.loaiTaiKhoan,
+        khoaPhong: userData.khoaphong,
+        trangThai: userData.trangThai,
+        createdAt: new Date().toISOString()
       }
     });
   } catch (error) {
-    console.error("Lỗi createUser:", error);
+    console.error("❌ Lỗi createUser:", error);
+    console.error("Stack trace:", error.stack);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

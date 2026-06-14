@@ -52,12 +52,12 @@ const initialForm = (user) => ({
   mat_khau: '',
 });
 
-const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
+const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false, defaultTab = 'tat_ca' }) => {
   const isEdit = !!user;
   const isStaff = user && Number(user.role_id) !== 4;
-  const [loaiTaiKhoan, setLoaiTaiKhoan] = useState(
-    isStaff ? 'NHAN_VIEN' : (user?.loai_tai_khoan || 'SINH_VIEN')
-  );
+  
+  const [selectedRole, setSelectedRole] = useState(4);
+  const [loaiTaiKhoan, setLoaiTaiKhoan] = useState('SINH_VIEN');
   const [form, setForm] = useState(initialForm(user));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -66,13 +66,16 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
   useEffect(() => {
     if (isOpen) {
       const staffCheck = user && Number(user.role_id) !== 4;
+      const initialRole = isEdit ? Number(user.role_id) : (isAdmin && defaultTab === 'nhan_vien' ? 2 : 4);
+      
+      setSelectedRole(initialRole);
       setLoaiTaiKhoan(staffCheck ? 'NHAN_VIEN' : (user?.loai_tai_khoan || 'SINH_VIEN'));
       setForm(initialForm(user));
       setErrors({});
       setShowPassword(false);
       setSubmitting(false);
     }
-  }, [isOpen, user?.user_id]);
+  }, [isOpen, user?.user_id, isAdmin, defaultTab]);
 
   if (!isOpen) return null;
 
@@ -93,7 +96,8 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
     if (form.so_dien_thoai && !PHONE_REGEX.test(form.so_dien_thoai.trim())) {
       errs.so_dien_thoai = 'SĐT phải có 10-11 chữ số';
     }
-    if (loaiTaiKhoan === 'NHA_TAI_TRO' && !form.ten_nha_tai_tro.trim()) {
+    // Chỉ validate tên nhà tài trợ khi role = 4 và loại = NHA_TAI_TRO
+    if (selectedRole === 4 && loaiTaiKhoan === 'NHA_TAI_TRO' && !form.ten_nha_tai_tro.trim()) {
       errs.ten_nha_tai_tro = 'Bắt buộc nhập tên tổ chức / nhà tài trợ';
     }
     setErrors(errs);
@@ -102,7 +106,9 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
 
   const handleSubmit = async () => {
     if (!validate() || submitting) return;
+    
     setSubmitting(true);
+    
     try {
       if (isEdit) {
         await userService.update(user.user_id, {
@@ -115,28 +121,34 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
         });
         toast.success('Cập nhật người dùng thành công');
       } else {
-        await userService.create({
+        const payload = {
           maSoDinhDanh: form.ma_so_dinh_danh.trim(),
           hoTen: form.ho_ten.trim(),
           email: form.email.trim().toLowerCase(),
           matKhau: form.mat_khau,
-          roleId: 4,
-          loaiTaiKhoan,
+          roleId: selectedRole,
           soDienThoai: form.so_dien_thoai.trim() || null,
           diaChi: form.dia_chi.trim() || null,
-          khoaphong: loaiTaiKhoan === 'SINH_VIEN' ? form.khoa_phong || null : null,
-          tenNhaTaiTro: loaiTaiKhoan === 'NHA_TAI_TRO' ? form.ten_nha_tai_tro.trim() : null,
-          loaiNhaTaiTro: loaiTaiKhoan === 'NHA_TAI_TRO' ? form.loai_ntt : null,
-        });
+        };
+
+        // Chỉ thêm các field liên quan đến người dùng (role 4)
+        if (selectedRole === 4) {
+          payload.loaiTaiKhoan = loaiTaiKhoan;
+          payload.khoaphong = loaiTaiKhoan === 'SINH_VIEN' ? form.khoa_phong || null : null;
+          payload.tenNhaTaiTro = loaiTaiKhoan === 'NHA_TAI_TRO' ? form.ten_nha_tai_tro.trim() : null;
+          payload.loaiNhaTaiTro = loaiTaiKhoan === 'NHA_TAI_TRO' ? form.loai_ntt : null;
+        }
+
+        await userService.create(payload);
         toast.success('Tạo tài khoản thành công');
       }
       onSuccess?.();
     } catch (err) {
       const msg = err?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại';
       toast.error(msg);
-    } finally {
-      setSubmitting(false);
+      setSubmitting(false); // ← Chỉ reset khi lỗi
     }
+    // Không reset submitting ở đây - để modal close trước
   };
 
   const strength = passwordStrength(form.mat_khau);
@@ -161,8 +173,35 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
         </header>
 
         <div className={styles.body}>
-          {/* Type selector — chỉ khi tạo mới */}
-          {!isEdit && (
+          {/* Role selector — chỉ khi Admin tạo mới */}
+          {!isEdit && isAdmin && (
+            <div className={styles.field}>
+              <label className={styles.label}>
+                Vai trò <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <select
+                className={styles.select}
+                value={selectedRole}
+                onChange={(e) => {
+                  const newRole = Number(e.target.value);
+                  setSelectedRole(newRole);
+                  // Reset loaiTaiKhoan khi đổi vai trò
+                  if (newRole !== 4) {
+                    setLoaiTaiKhoan('NHAN_VIEN');
+                  } else {
+                    setLoaiTaiKhoan('SINH_VIEN');
+                  }
+                }}
+              >
+                <option value={4}>Người dùng (Sinh viên / Nhà tài trợ)</option>
+                <option value={2}>Kế toán</option>
+                <option value={3}>Cán bộ Quỹ</option>
+              </select>
+            </div>
+          )}
+
+          {/* Type selector — chỉ khi tạo mới và role = 4 */}
+          {!isEdit && selectedRole === 4 && (
             <div className={styles.typeSelector}>
               <button
                 type="button"
@@ -201,7 +240,13 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
           />
 
           <Input
-            label={loaiTaiKhoan === 'SINH_VIEN' ? 'MSSV' : 'Mã số định danh'}
+            label={
+              selectedRole === 4 && loaiTaiKhoan === 'SINH_VIEN'
+                ? 'MSSV'
+                : selectedRole !== 4
+                ? 'Mã nhân viên'
+                : 'Mã số định danh'
+            }
             required
             value={form.ma_so_dinh_danh}
             onChange={setField('ma_so_dinh_danh')}
@@ -241,8 +286,8 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
             leftIcon={<HiOutlineMapPin />}
           />
 
-          {/* SINH_VIEN field */}
-          {loaiTaiKhoan === 'SINH_VIEN' && (
+          {/* SINH_VIEN field — chỉ hiện khi role = 4 và loại = SINH_VIEN */}
+          {selectedRole === 4 && loaiTaiKhoan === 'SINH_VIEN' && (
             <div className={styles.field}>
               <label className={styles.label}>Khoa / Ngành</label>
               <select
@@ -258,8 +303,8 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* NHA_TAI_TRO fields */}
-          {loaiTaiKhoan === 'NHA_TAI_TRO' && (
+          {/* NHA_TAI_TRO fields — chỉ hiện khi role = 4 và loại = NHA_TAI_TRO */}
+          {selectedRole === 4 && loaiTaiKhoan === 'NHA_TAI_TRO' && (
             <>
               <Input
                 label="Tên tổ chức / nhà tài trợ"
