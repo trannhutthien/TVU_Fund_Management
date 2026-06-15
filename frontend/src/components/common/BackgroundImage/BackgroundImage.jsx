@@ -10,18 +10,23 @@ import styles from './BackgroundImage.module.scss';
  * @param {ReactNode} children - Nội dung bên trong
  * @param {string} className - Custom class cho wrapper
  * @param {string} overlayType - Loại overlay: 'dark' | 'light' | 'none'
+ * @param {string} imageUrl - URL ảnh nền tùy chỉnh (optional, mặc định dùng ảnh khuôn viên trường)
  */
 const BackgroundImage = ({ 
   children, 
   className = '', 
-  overlayType = 'dark' 
+  overlayType = 'dark',
+  imageUrl = null
 }) => {
   const overlayClass = overlayType !== 'none' ? styles[`overlay-${overlayType}`] : '';
 
   return (
     <div className={`${styles.backgroundWrapper} ${className}`}>
       {/* Background Image */}
-      <div className={styles.backgroundImage} />
+      <div 
+        className={styles.backgroundImage}
+        style={imageUrl ? { backgroundImage: `url(${imageUrl})` } : {}}
+      />
       
       {/* Overlay */}
       {overlayType !== 'none' && (
@@ -40,6 +45,7 @@ BackgroundImage.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
   overlayType: PropTypes.oneOf(['dark', 'light', 'none']),
+  imageUrl: PropTypes.string,
 };
 
 export default BackgroundImage;

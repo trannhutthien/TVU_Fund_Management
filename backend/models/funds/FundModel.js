@@ -13,46 +13,53 @@ const checkFundNameExists = async (tenQuy) => {
 const createFund = async (fundData) => {
   const {
     tenQuy,
-    loaiQuy, // string 'Tu thien', 'Hoc bong', etc.
+    loaiQuy, // string 'DT', 'NC', etc. (mã loại quỹ)
     moTa,
     hinhAnh,
-    soTienToiThieu, // maps to sotienmuctieu
-    soTienToiDa, // maps to sotienhotrotoida
-    soLuongChiTieu, // maps to soluonghotrotoida
-    dieuKienTomTat, // maps to dieukienhotro
-    hanNopDon, // maps to ngayketthuc
+    soTienMucTieu,
+    soTienHoTroToiDa,
+    soLuongChiTieu,
+    dieuKienTomTat,
+    hanNopDon,
     soDu,
-    nguoiTaoId,
-    trangThai
+    nguoiTao,
+    trangThai,
+    ngayBatDau
   } = fundData;
 
   const [result] = await pool.execute(
     `INSERT INTO quy (
-      tenquy, 
-      loaiquy_id, 
+      tenquy,
+      loaiquy_id,
       mota, 
       hinhanh,
       sotienmuctieu,
       sotienhotrotoida,
       soluonghotrotoida,
       dieukienhotro,
+      ngaybatdau,
       ngayketthuc,
       sodu, 
       nguoitao_id,
       trangthai
-    ) VALUES (?, (SELECT loaiquy_id FROM loaiquy WHERE maloai = ? LIMIT 1), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (
+      ?, 
+      (SELECT loaiquy_id FROM loaiquy WHERE maloai = ? LIMIT 1),
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+    )`,
     [
       tenQuy,
-      loaiQuy,
+      loaiQuy, // mã loại quỹ (DT, NC, ...)
       moTa || null,
       hinhAnh || null,
-      soTienToiThieu || null,
-      soTienToiDa || null,
+      soTienMucTieu || null,
+      soTienHoTroToiDa || null,
       soLuongChiTieu || null,
       dieuKienTomTat || null,
+      ngayBatDau || null,
       hanNopDon || null,
       soDu || 0.00,
-      nguoiTaoId || null,
+      nguoiTao || null,
       trangThai || 'Dang hoat dong'
     ]
   );
@@ -66,10 +73,14 @@ const getFundById = async (quyId) => {
     `SELECT 
       q.quy_id,
       q.tenquy AS ten_quy,
+      lq.loaiquy_id,
       lq.maloai AS loai_quy,
+      lq.tenloai AS ten_loai_quy,
       q.mota AS mo_ta,
       q.hinhanh AS hinh_anh,
+      q.sotienmuctieu AS so_tien_muc_tieu,
       q.sotienmuctieu AS so_tien_toi_thieu,
+      q.sotienhotrotoida AS so_tien_ho_tro_toi_da,
       q.sotienhotrotoida AS so_tien_toi_da,
       q.soluonghotrotoida AS so_luong_chi_tieu,
       q.dieukienhotro AS dieu_kien_tom_tat,
@@ -102,14 +113,14 @@ const checkFundNameExistsForOther = async (tenQuy, quyId) => {
 const updateFund = async (quyId, fundData) => {
   const {
     tenQuy,
-    loaiQuy, // string 'Tu thien', 'Hoc bong', etc.
+    loaiQuy, // string 'DT', 'NC', etc.
     moTa,
     hinhAnh,
-    soTienToiThieu, // maps to sotienmuctieu
-    soTienToiDa, // maps to sotienhotrotoida
-    soLuongChiTieu, // maps to soluonghotrotoida
-    dieuKienTomTat, // maps to dieukienhotro
-    hanNopDon, // maps to ngayketthuc
+    soTienMucTieu,
+    soTienHoTroToiDa,
+    soLuongChiTieu,
+    dieuKienTomTat,
+    hanNopDon,
     soDu,
     trangThai
   } = fundData;
@@ -134,8 +145,8 @@ const updateFund = async (quyId, fundData) => {
       loaiQuy,
       moTa || null,
       hinhAnh || null,
-      soTienToiThieu || null,
-      soTienToiDa || null,
+      soTienMucTieu || null,
+      soTienHoTroToiDa || null,
       soLuongChiTieu || null,
       dieuKienTomTat || null,
       hanNopDon || null,
@@ -153,10 +164,14 @@ const getAllFunds = async () => {
     `SELECT 
       q.quy_id,
       q.tenquy AS ten_quy,
+      lq.loaiquy_id,
       lq.maloai AS loai_quy,
+      lq.tenloai AS ten_loai_quy,
       q.mota AS mo_ta,
       q.hinhanh AS hinh_anh,
+      q.sotienmuctieu AS so_tien_muc_tieu,
       q.sotienmuctieu AS so_tien_toi_thieu,
+      q.sotienhotrotoida AS so_tien_ho_tro_toi_da,
       q.sotienhotrotoida AS so_tien_toi_da,
       q.soluonghotrotoida AS so_luong_chi_tieu,
       q.dieukienhotro AS dieu_kien_tom_tat,
@@ -176,7 +191,7 @@ const getAllFunds = async () => {
      FROM quy q
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
      LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
-     GROUP BY q.quy_id, lq.maloai, q.ngaytao
+     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao
      ORDER BY q.ngaytao DESC`
   );
   return rows;
@@ -189,10 +204,14 @@ const getPublicFunds = async () => {
       `SELECT 
         q.quy_id,
         q.tenquy AS ten_quy,
+        lq.loaiquy_id,
         lq.maloai AS loai_quy,
+        lq.tenloai AS ten_loai_quy,
         q.mota AS mo_ta,
         q.hinhanh AS hinh_anh,
+        q.sotienmuctieu AS so_tien_muc_tieu,
         q.sotienmuctieu AS so_tien_toi_thieu,
+        q.sotienhotrotoida AS so_tien_ho_tro_toi_da,
         q.sotienhotrotoida AS so_tien_toi_da,
         q.soluonghotrotoida AS so_luong_chi_tieu,
         q.dieukienhotro AS dieu_kien_tom_tat,
@@ -217,7 +236,7 @@ const getPublicFunds = async () => {
        LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
        LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
        WHERE q.trangthai IN ('Dang hoat dong', 'Tam dung')
-       GROUP BY q.quy_id, lq.maloai, q.ngaytao
+       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao
        ORDER BY q.ngaytao DESC`
     );
     return rows;
@@ -239,6 +258,70 @@ const updateFundStatus = async (quyId, trangThai) => {
   return result;
 };
 
+// Lấy thống kê của quỹ (số khoản tài trợ + số đơn đã hỗ trợ)
+const getFundStats = async (quyId) => {
+  const [rows] = await pool.query(
+    `SELECT 
+      -- Số khoản tài trợ đã được xác nhận nhận tiền
+      (SELECT COUNT(*) FROM khoantaitro WHERE quy_id = ? AND trangthai = 'Da nhan') as soKhoanTaiTro,
+      -- Số đơn đã hỗ trợ công khai
+      (SELECT COUNT(*) FROM yeucauhotro 
+       WHERE quy_id = ? 
+       AND trangthai = 'Da giai ngan') as soDonDaHoTro
+    `,
+    [quyId, quyId]
+  );
+  return rows[0] || { soKhoanTaiTro: 0, soDonDaHoTro: 0 };
+};
+
+// Lấy danh sách khoản tài trợ đã nhận của một quỹ để hiển thị công khai
+const getReceivedDonationsByFundId = async (quyId) => {
+  const [rows] = await pool.query(
+    `SELECT
+      kt.khoantaitro_id,
+      kt.nhataitro_id,
+      kt.quy_id,
+      kt.sotien,
+      kt.hinhthuc,
+      kt.ngaytaitro,
+      kt.trangthai,
+      kt.ghichu,
+      ntt.tennhataitro,
+      ntt.loainhataitro,
+      ntt.logo
+     FROM khoantaitro kt
+     INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+     WHERE kt.quy_id = ?
+       AND kt.trangthai = 'Da nhan'
+     ORDER BY kt.ngaytaitro DESC, kt.ngaytao DESC`,
+    [quyId]
+  );
+  return rows;
+};
+
+// Lấy danh sách đơn đã giải ngân của một quỹ để hiển thị công khai
+const getDisbursedApplicationsByFundId = async (quyId) => {
+  const [rows] = await pool.query(
+    `SELECT
+      yc.yeucauhotro_id,
+      yc.nguoidung_id,
+      yc.quy_id,
+      yc.sotiendenghi,
+      yc.trangthai,
+      yc.ngaynop,
+      yc.ngaycapnhat,
+      nd.hoten AS hoten_sinhvien,
+      nd.masodinhdanh
+     FROM yeucauhotro yc
+     INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
+     WHERE yc.quy_id = ?
+       AND yc.trangthai = 'Da giai ngan'
+     ORDER BY yc.ngaycapnhat DESC, yc.ngaynop DESC`,
+    [quyId]
+  );
+  return rows;
+};
+
 export default {
   checkFundNameExists,
   createFund,
@@ -247,5 +330,8 @@ export default {
   getPublicFunds,
   updateFundStatus,
   checkFundNameExistsForOther,
-  updateFund
+  updateFund,
+  getFundStats,
+  getReceivedDonationsByFundId,
+  getDisbursedApplicationsByFundId
 };

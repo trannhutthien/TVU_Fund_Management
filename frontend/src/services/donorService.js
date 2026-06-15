@@ -1,5 +1,9 @@
 import api from './api';
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// PUBLIC APIS (Không cần token)
+// ═══════════════════════════════════════════════════════════════════════════════
+
 // Lấy danh sách public phân tier diamond/gold/silver
 export const getDonorWall = async () => {
   try {
@@ -13,6 +17,26 @@ export const getDonorWall = async () => {
     return { diamond: [], gold: [], silver: [], total: 0 };
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DONOR USER APIS (Nhà tài trợ xem profile của mình - CẦN TOKEN)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Lấy thống kê tổng quan của nhà tài trợ hiện tại
+export const getMyDonorStats = async () => {
+  const response = await api.get('/donors/my-stats');
+  return response.data;
+};
+
+// Lấy danh sách các khoản quyên góp của nhà tài trợ hiện tại
+export const getMyDonations = async (params = {}) => {
+  const response = await api.get('/donors/my-donations', { params });
+  return response.data;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STAFF APIS (Cán bộ Quỹ/Admin - CẦN TOKEN)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 // Cán bộ Quỹ: danh sách nhà tài trợ + filter + sort + phân trang
 export const getStaffDonors = async (params = {}) => {
@@ -33,7 +57,12 @@ export const getDonorDetail = async (id) => {
 };
 
 export default {
+  // Public
   getDonorWall,
+  // Donor user
+  getMyDonorStats,
+  getMyDonations,
+  // Staff
   getStaffDonors,
   getDonorStats,
   getDonorDetail,

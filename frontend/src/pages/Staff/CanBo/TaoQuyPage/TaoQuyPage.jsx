@@ -15,6 +15,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
+import useAuthStore from '@stores/authStore';
 import { createFund, getFundById, updateFund, getAllLoaiQuy } from '@services/fundService';
 import { uploadService } from '@services/uploadService';
 import styles from './TaoQuyPage.module.scss';
@@ -36,8 +37,8 @@ const INITIAL_FORM = {
   loai_quy: '',
   mo_ta: '',
   hinh_anh: '',
-  so_tien_toi_thieu: '',
-  so_tien_toi_da: '',
+  so_tien_muc_tieu: '', // Số tiền mục tiêu (target amount)
+  so_tien_ho_tro_toi_da: '', // Số tiền hỗ trợ tối đa/sinh viên
   so_luong_chi_tieu: '',
   han_nop_don: '',
   dieu_kien_tom_tat: '',
@@ -54,6 +55,7 @@ const buildImageUrl = (path) => {
 const TaoQuyPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuthStore(); // Lấy thông tin user hiện tại
   const isEditMode = !!id;
   const fileInputRef = useRef(null);
 
@@ -91,8 +93,8 @@ const TaoQuyPage = () => {
             loai_quy: fund.loaiQuy || '',
             mo_ta: fund.moTa || '',
             hinh_anh: fund.hinhAnh ? fund.hinhAnh.replace(`${API_BASE}/`, '').replace(/^\//, '') : '',
-            so_tien_toi_thieu: fund.soTienToiThieu !== null ? String(fund.soTienToiThieu) : '',
-            so_tien_toi_da: fund.soTienToiDa !== null ? String(fund.soTienToiDa) : '',
+            so_tien_muc_tieu: fund.soTienMucTieu !== null ? String(fund.soTienMucTieu) : '',
+            so_tien_ho_tro_toi_da: fund.soTienHoTroToiDa !== null ? String(fund.soTienHoTroToiDa) : '',
             so_luong_chi_tieu: fund.soLuongChiTieu !== null ? String(fund.soLuongChiTieu) : '',
             han_nop_don: fund.hanNopDon ? fund.hanNopDon.split('T')[0] : '',
             dieu_kien_tom_tat: fund.dieuKienTomTat || '',
@@ -187,16 +189,14 @@ const TaoQuyPage = () => {
       next.so_du = 'Số dư phải là số ≥ 0';
     }
 
-    const min = form.so_tien_toi_thieu === '' ? null : Number(form.so_tien_toi_thieu);
-    const max = form.so_tien_toi_da === '' ? null : Number(form.so_tien_toi_da);
-    if (min !== null && (Number.isNaN(min) || min < 0)) {
-      next.so_tien_toi_thieu = 'Số tiền tối thiểu phải ≥ 0';
+    const mucTieu = form.so_tien_muc_tieu === '' ? null : Number(form.so_tien_muc_tieu);
+    const hoTroToiDa = form.so_tien_ho_tro_toi_da === '' ? null : Number(form.so_tien_ho_tro_toi_da);
+    
+    if (mucTieu !== null && (Number.isNaN(mucTieu) || mucTieu < 0)) {
+      next.so_tien_muc_tieu = 'Số tiền mục tiêu phải ≥ 0';
     }
-    if (max !== null && (Number.isNaN(max) || max < 0)) {
-      next.so_tien_toi_da = 'Số tiền tối đa phải ≥ 0';
-    }
-    if (min !== null && max !== null && max < min) {
-      next.so_tien_toi_da = 'Số tiền tối đa phải ≥ số tiền tối thiểu';
+    if (hoTroToiDa !== null && (Number.isNaN(hoTroToiDa) || hoTroToiDa < 0)) {
+      next.so_tien_ho_tro_toi_da = 'Số tiền hỗ trợ tối đa phải ≥ 0';
     }
 
     if (form.so_luong_chi_tieu !== '') {
@@ -223,22 +223,34 @@ const TaoQuyPage = () => {
       return;
     }
 
+    // Debug: Kiểm tra user object
+    console.log('=== DEBUG USER INFO ===');
+    console.log('Full user object:', user);
+    console.log('user?.id:', user?.id);
+    console.log('=======================');
+
     const payload = {
       tenQuy: form.ten_quy.trim(),
       loaiQuy: form.loai_quy,
       moTa: form.mo_ta?.trim() || null,
       hinhAnh: form.hinh_anh || null,
-      soTienToiThieu:
-        form.so_tien_toi_thieu === '' ? null : Number(form.so_tien_toi_thieu),
-      soTienToiDa:
-        form.so_tien_toi_da === '' ? null : Number(form.so_tien_toi_da),
+      soTienMucTieu:
+        form.so_tien_muc_tieu === '' ? null : Number(form.so_tien_muc_tieu),
+      soTienHoTroToiDa:
+        form.so_tien_ho_tro_toi_da === '' ? null : Number(form.so_tien_ho_tro_toi_da),
       soLuongChiTieu:
         form.so_luong_chi_tieu === '' ? null : Number(form.so_luong_chi_tieu),
       hanNopDon: form.han_nop_don || null,
       dieuKienTomTat: form.dieu_kien_tom_tat?.trim() || null,
       soDu: form.so_du === '' ? 0 : Number(form.so_du),
       trangThai: form.trang_thai,
+      nguoiTao: user?.id || null, // Thêm ID người tạo từ user hiện tại
     };
+
+    console.log('=== DEBUG PAYLOAD ===');
+    console.log('Full payload:', payload);
+    console.log('payload.nguoiTao:', payload.nguoiTao);
+    console.log('====================');
 
     try {
       setSubmitting(true);
@@ -480,31 +492,37 @@ const TaoQuyPage = () => {
 
               <div className={styles.col}>
                 <label className={styles.label}>
-                  Số tiền tối thiểu/suất (đ)
+                  Số tiền mục tiêu (đ)
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400, marginLeft: '4px' }}>
+                    (Tổng số tiền cần quyên góp)
+                  </span>
                 </label>
                 <Input
                   type="number"
                   min="0"
                   placeholder="Để trống nếu không quy định"
-                  value={form.so_tien_toi_thieu}
-                  onChange={handleChange('so_tien_toi_thieu')}
-                  error={!!errors.so_tien_toi_thieu}
-                  errorMessage={errors.so_tien_toi_thieu}
+                  value={form.so_tien_muc_tieu}
+                  onChange={handleChange('so_tien_muc_tieu')}
+                  error={!!errors.so_tien_muc_tieu}
+                  errorMessage={errors.so_tien_muc_tieu}
                 />
               </div>
 
               <div className={styles.col}>
                 <label className={styles.label}>
-                  Số tiền tối đa/suất (đ)
+                  Số tiền hỗ trợ tối đa/sinh viên (đ)
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 400, marginLeft: '4px' }}>
+                    (Mức hỗ trợ tối đa cho mỗi SV)
+                  </span>
                 </label>
                 <Input
                   type="number"
                   min="0"
                   placeholder="Để trống nếu không quy định"
-                  value={form.so_tien_toi_da}
-                  onChange={handleChange('so_tien_toi_da')}
-                  error={!!errors.so_tien_toi_da}
-                  errorMessage={errors.so_tien_toi_da}
+                  value={form.so_tien_ho_tro_toi_da}
+                  onChange={handleChange('so_tien_ho_tro_toi_da')}
+                  error={!!errors.so_tien_ho_tro_toi_da}
+                  errorMessage={errors.so_tien_ho_tro_toi_da}
                 />
               </div>
             </div>

@@ -77,11 +77,13 @@ const ApplyPage = () => {
   // Đồng bộ guestRole từ query parameter (?role=student hoặc ?role=donor)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const roleParam = params.get('role');
+    const roleParam = params.get('role') || location.state?.guestRole || location.state?.role;
     if (roleParam === 'student' || roleParam === 'donor') {
       setGuestRole(roleParam);
+    } else if (roleParam === 'sponsor') {
+      setGuestRole('donor');
     }
-  }, [location.search]);
+  }, [location.search, location.state]);
   const [guestFields, setGuestFields] = useState({
     guestHoTen: '',
     guestEmail: '',
@@ -134,6 +136,27 @@ const ApplyPage = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const fundIdFromNavigation =
+      location.state?.quy_id ||
+      location.state?.quyId ||
+      location.state?.fundId ||
+      params.get('quy_id') ||
+      params.get('quyId') ||
+      params.get('fundId');
+
+    if (!fundIdFromNavigation) return;
+
+    const fundId = Number(fundIdFromNavigation);
+    if (!Number.isFinite(fundId)) return;
+
+    setSelectedFund((prev) => {
+      if (prev?.quyId === fundId) return prev;
+      return { quyId: fundId };
+    });
+  }, [location.search, location.state]);
 
   const handleFundSelect = (fund) => {
     setSelectedFund(fund);

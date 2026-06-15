@@ -368,6 +368,139 @@ const updateDonorStatus = async (nhaTaiTroId, trangThai) => {
   return result;
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── CHO API USER DONOR (Nhà tài trợ xem profile của mình) ────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getDonorByNguoiDungId
+// MỤC ĐÍCH: Lấy thông tin nhà tài trợ theo nguoidung_id
+// ─────────────────────────────────────────────────────────────────────────────
+const getDonorByNguoiDungId = async (nguoiDungId) => {
+  const [rows] = await pool.query(
+    `SELECT 
+      nt.nhataitro_id,
+      nt.nguoidung_id,
+      nt.tennhataitro,
+      nt.loainhataitro,
+      COALESCE(nt.email, nd.email) AS email,
+      COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
+      COALESCE(nt.diachi, nd.diachi) AS diachi,
+      nt.website,
+      nt.mota,
+      nt.logo,
+      nt.trangthai,
+      nt.ngaytao,
+      nt.ngaycapnhat,
+      nd.hoten,
+      nd.avatar
+     FROM nhataitro nt
+     INNER JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
+     WHERE nt.nguoidung_id = ?
+     LIMIT 1`,
+    [nguoiDungId]
+  );
+  return rows[0] || null;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getMyStats
+// MỤC ĐÍCH: Thống kê cho nhà tài trợ (tổng đóng góp, số lần, số quỹ, khoản gần nhất)
+// ─────────────────────────────────────────────────────────────────────────────
+const getMyStats = async (nhaTaiTroId) => {
+  // Tổng số tiền đã quyên góp (chỉ tính các khoản đã nhận)
+  const [[{ tongSoTien }]] = await pool.query(
+    `SELECT COALESCE(SUM(sotien), 0) AS tongSoTien
+     FROM khoantaitro
+     WHERE nhataitro_id = ? AND trangthai = 'Da nhan'`,
+    [nhaTaiTroId]
+  );
+
+  // Số lần quyên góp (tính cả chờ duyệt, đã duyệt, đã nhận)
+  const [[{ soLanQuyenGop }]] = await pool.query(
+    `SELECT COUNT(*) AS soLanQuyenGop
+     FROM khoantaitro
+     WHERE nhataitro_id = ?`,
+    [nhaTaiTroId]
+  );
+
+  // Số quỹ đã hỗ trợ (distinct quy_id)
+  const [[{ soQuyDaHoTro }]] = await pool.query(
+    `SELECT COUNT(DISTINCT quy_id) AS soQuyDaHoTro
+     FROM khoantaitro
+     WHERE nhataitro_id = ? AND trangthai = 'Da nhan'`,
+    [nhaTaiTroId]
+  );
+
+  // Khoản tài trợ gần nhất
+  const [khoanGanNhat] = await pool.query(
+    `SELECT 
+      kt.khoantaitro_id,
+      kt.sotien,
+      kt.ngaytaitro,
+      kt.trangthai,
+      q.quy_id,
+      q.tenquy
+     FROM khoantaitro kt
+     INNER JOIN quy q ON kt.quy_id = q.quy_id
+     WHERE kt.nhataitro_id = ?
+     ORDER BY kt.ngaytaitro DESC
+     LIMIT 1`,
+    [nhaTaiTroId]
+  );
+
+  return {
+    tongSoTien: Number(tongSoTien) || 0,
+    soLanQuyenGop: Number(soLanQuyenGop) || 0,
+    soQuyDaHoTro: Number(soQuyDaHoTro) || 0,
+    khoanTaiTroGanNhat: khoanGanNhat[0] || null
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getMyDonations
+// MỤC ĐÍCH: Lấy danh sách các khoản quyên góp của nhà tài trợ (có phân trang)
+// ─────────────────────────────────────────────────────────────────────────────
+const getMyDonations = async (nhaTaiTroId, { page = 1, pageSize = 10 }) => {
+  const offset = (page - 1) * pageSize;
+
+  // Đếm tổng
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) as total
+     FROM khoantaitro
+     WHERE nhataitro_id = ?`,
+    [nhaTaiTroId]
+  );
+
+  // Lấy danh sách
+  const [rows] = await pool.query(
+    `SELECT 
+      kt.khoantaitro_id,
+      kt.sotien,
+      kt.hinhthuc,
+      kt.trangthai,
+      kt.ngaytaitro,
+      kt.ghichu,
+      kt.chungtu,
+      kt.nguoixacnhan_id,
+      q.quy_id,
+      q.tenquy,
+      lq.tenloai as loai_quy
+     FROM khoantaitro kt
+     INNER JOIN quy q ON kt.quy_id = q.quy_id
+     LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+     WHERE kt.nhataitro_id = ?
+     ORDER BY kt.ngaytaitro DESC
+     LIMIT ? OFFSET ?`,
+    [nhaTaiTroId, pageSize, offset]
+  );
+
+  return {
+    rows,
+    total: Number(total) || 0
+  };
+};
+
 export default {
   checkNguoiDungIdExists,
   createDonor,
@@ -379,4 +512,8 @@ export default {
   getStats,
   updateDonor,
   updateDonorStatus,
+  // Thêm functions mới cho donor user
+  getDonorByNguoiDungId,
+  getMyStats,
+  getMyDonations,
 };

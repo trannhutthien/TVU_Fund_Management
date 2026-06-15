@@ -9,19 +9,33 @@ import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 // Tạo quỹ mới trong hệ thống
 export const createFund = async (req, res) => {
   try {
+    // Debug: Log toàn bộ request body
+    console.log('=== CREATE FUND DEBUG ===');
+    console.log('Full request body:', JSON.stringify(req.body, null, 2));
+    
     const {
       tenQuy,
       loaiQuy,
       moTa,
       hinhAnh,
-      soTienToiThieu,
-      soTienToiDa,
+      soTienMucTieu,
+      soTienHoTroToiDa,
       soLuongChiTieu,
       hanNopDon,
       dieuKienTomTat,
       soDu,
-      trangThai
+      trangThai,
+      nguoiTao
     } = req.body;
+
+    // Debug: Log từng field quan trọng
+    console.log('Extracted fields:');
+    console.log('- tenQuy:', tenQuy);
+    console.log('- soTienMucTieu:', soTienMucTieu, 'type:', typeof soTienMucTieu);
+    console.log('- soTienHoTroToiDa:', soTienHoTroToiDa, 'type:', typeof soTienHoTroToiDa);
+    console.log('- soDu:', soDu, 'type:', typeof soDu);
+    console.log('- nguoiTao:', nguoiTao, 'type:', typeof nguoiTao);
+    console.log('========================');
 
     // 1. Validate dữ liệu đầu vào
     if (!tenQuy || !loaiQuy) {
@@ -90,13 +104,15 @@ export const createFund = async (req, res) => {
       loaiQuy: loaiQuy,
       moTa: moTa ? moTa.trim() : null,
       hinhAnh: hinhAnh || null,
-      soTienToiThieu: soTienToiThieu !== undefined && soTienToiThieu !== '' ? parseFloat(soTienToiThieu) : null,
-      soTienToiDa: soTienToiDa !== undefined && soTienToiDa !== '' ? parseFloat(soTienToiDa) : null,
+      soTienMucTieu: soTienMucTieu !== undefined && soTienMucTieu !== '' ? parseFloat(soTienMucTieu) : null,
+      soTienHoTroToiDa: soTienHoTroToiDa !== undefined && soTienHoTroToiDa !== '' ? parseFloat(soTienHoTroToiDa) : null,
       soLuongChiTieu: soLuongChiTieu !== undefined && soLuongChiTieu !== '' ? parseInt(soLuongChiTieu, 10) : null,
       hanNopDon: hanNopDon || null,
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
       soDu: soDu ? parseFloat(soDu) : 0.00,
-      trangThai: trangThai || 'Dang hoat dong'
+      trangThai: trangThai || 'Dang hoat dong',
+      nguoiTao: nguoiTao || null,
+      ngayBatDau: new Date().toISOString().split('T')[0] // Tự động set ngày hôm nay (YYYY-MM-DD)
     };
 
     const result = await FundModel.createFund(fundData);
@@ -122,12 +138,15 @@ export const createFund = async (req, res) => {
         loaiQuy: newFund.loai_quy,
         moTa: newFund.mo_ta,
         hinhAnh: buildFundImageUrl(newFund.hinh_anh),
-        soTienToiThieu: newFund.so_tien_toi_thieu,
-        soTienToiDa: newFund.so_tien_toi_da,
+        soTienMucTieu: newFund.so_tien_muc_tieu,
+        soTienHoTroToiDa: newFund.so_tien_ho_tro_toi_da,
+        soTienToiThieu: null,
+        soTienToiDa: newFund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: newFund.so_luong_chi_tieu,
         hanNopDon: newFund.han_nop_don,
         dieuKienTomTat: newFund.dieu_kien_tom_tat,
         soDu: newFund.so_du,
+        nguoiTao: newFund.nguoitao_id,
         ngayTao: newFund.ngay_tao,
         ngayCapNhat: newFund.ngay_cap_nhat,
         trangThai: newFund.trang_thai
@@ -158,14 +177,22 @@ export const getFunds = async (req, res) => {
         quyId: fund.quy_id,
         tenQuy: fund.ten_quy,
         loaiQuy: fund.loai_quy,
+        loaiquy: {
+          loaiQuyId: fund.loaiquy_id,
+          maLoai: fund.loai_quy,
+          tenLoai: fund.ten_loai_quy || fund.loai_quy,
+        },
         moTa: fund.mo_ta,
         hinhAnh: buildFundImageUrl(fund.hinh_anh), // Build full URL
-        soTienToiThieu: fund.so_tien_toi_thieu,
-        soTienToiDa: fund.so_tien_toi_da,
+        soTienMucTieu: fund.so_tien_muc_tieu,
+        soTienHoTroToiDa: fund.so_tien_ho_tro_toi_da,
+        soTienToiThieu: null,
+        soTienToiDa: fund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: fund.so_luong_chi_tieu,
         hanNopDon: fund.han_nop_don,
         dieuKienTomTat: fund.dieu_kien_tom_tat,
         soDu: fund.so_du,
+        nguoiTao: fund.nguoitao_id,
         ngayTao: fund.ngay_tao,
         ngayCapNhat: fund.ngay_cap_nhat,
         trangThai: fund.trang_thai,
@@ -197,15 +224,23 @@ export const getPublicFunds = async (req, res) => {
         quyId: fund.quy_id,
         tenQuy: fund.ten_quy,
         loaiQuy: fund.loai_quy,
+        loaiquy: {
+          loaiQuyId: fund.loaiquy_id,
+          maLoai: fund.loai_quy,
+          tenLoai: fund.ten_loai_quy || fund.loai_quy,
+        },
         moTa: fund.mo_ta,
         hinhAnh: buildFundImageUrl(fund.hinh_anh), // Build full URL
-        soTienToiThieu: fund.so_tien_toi_thieu,
-        soTienToiDa: fund.so_tien_toi_da,
+        soTienMucTieu: fund.so_tien_muc_tieu,
+        soTienHoTroToiDa: fund.so_tien_ho_tro_toi_da,
+        soTienToiThieu: null,
+        soTienToiDa: fund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: fund.so_luong_chi_tieu,
         hanNopDon: fund.han_nop_don,
         dieuKienTomTat: fund.dieu_kien_tom_tat,
         soDu: fund.so_du,
         soDuThucTe: fund.so_du_thuc_te, // Số dư thực tế sau khi trừ các khoản chờ giải ngân
+        nguoiTao: fund.nguoitao_id,
         ngayTao: fund.ngay_tao,
         ngayCapNhat: fund.ngay_cap_nhat,
         trangThai: fund.trang_thai,
@@ -318,23 +353,77 @@ export const getFundDetail = async (req, res) => {
       });
     }
 
+    // Dữ liệu công khai đi kèm trang chi tiết quỹ
+    const [stats, khoanTaiTro, yeuCauHoTro, bankAccounts] = await Promise.all([
+      FundModel.getFundStats(id),
+      FundModel.getReceivedDonationsByFundId(id),
+      FundModel.getDisbursedApplicationsByFundId(id),
+      BankAccountModel.getBankAccountsByFundId(id),
+    ]);
+    const activeBankAccounts = bankAccounts.filter(acc => acc.trangthai === 'Hoat dong');
+
     return res.status(200).json({
       success: true,
       fund: {
         quyId: fund.quy_id,
         tenQuy: fund.ten_quy,
         loaiQuy: fund.loai_quy,
+        loaiquy: {
+          loaiQuyId: fund.loaiquy_id,
+          maLoai: fund.loai_quy,
+          tenLoai: fund.ten_loai_quy || fund.loai_quy,
+        },
         moTa: fund.mo_ta,
         hinhAnh: buildFundImageUrl(fund.hinh_anh),
-        soTienToiThieu: fund.so_tien_toi_thieu,
-        soTienToiDa: fund.so_tien_toi_da,
+        soTienMucTieu: fund.so_tien_muc_tieu,
+        soTienHoTroToiDa: fund.so_tien_ho_tro_toi_da,
+        soTienToiThieu: null,
+        soTienToiDa: fund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: fund.so_luong_chi_tieu,
         hanNopDon: fund.han_nop_don,
+        ngayKetThuc: fund.han_nop_don,
         dieuKienTomTat: fund.dieu_kien_tom_tat,
         soDu: fund.so_du,
+        nguoiTao: fund.nguoitao_id,
+        ngayBatDau: fund.ngaybatdau,
         ngayTao: fund.ngay_tao,
         ngayCapNhat: fund.ngay_cap_nhat,
-        trangThai: fund.trang_thai
+        trangThai: fund.trang_thai,
+        // Thêm thống kê
+        soKhoanTaiTro: stats.soKhoanTaiTro || 0,
+        soDonDaHoTro: stats.soDonDaHoTro || 0,
+        khoantaitro: khoanTaiTro.map(item => ({
+          khoanTaiTroId: item.khoantaitro_id,
+          nhaTaiTroId: item.nhataitro_id,
+          quyId: item.quy_id,
+          tenNhaTaiTro: item.tennhataitro,
+          loaiNhaTaiTro: item.loainhataitro,
+          logo: item.logo,
+          soTien: item.sotien,
+          hinhThuc: item.hinhthuc,
+          ngayTaiTro: item.ngaytaitro,
+          trangThai: item.trangthai,
+          ghiChu: item.ghichu,
+        })),
+        yeucauhotro: yeuCauHoTro.map(item => ({
+          yeuCauHoTroId: item.yeucauhotro_id,
+          nguoiDungId: item.nguoidung_id,
+          quyId: item.quy_id,
+          hoTenSinhVien: item.hoten_sinhvien,
+          maSoDinhDanh: item.masodinhdanh,
+          soTienDeNghi: item.sotiendenghi,
+          trangThai: item.trangthai,
+          ngayNop: item.ngaynop,
+          ngayCapNhat: item.ngaycapnhat,
+        })),
+        bankAccounts: activeBankAccounts.map(acc => ({
+          taiKhoanNganHangId: acc.taikhoannganhang_id,
+          soTaiKhoan: acc.sotaikhoan,
+          nganHang: acc.nganhang,
+          chiNhanh: acc.chinhanh,
+          chuTaiKhoan: acc.chutaikhoan,
+          trangThai: acc.trangthai,
+        })),
       }
     });
   } catch (error) {
@@ -355,8 +444,8 @@ export const updateFund = async (req, res) => {
       loaiQuy,
       moTa,
       hinhAnh,
-      soTienToiThieu,
-      soTienToiDa,
+      soTienMucTieu,
+      soTienHoTroToiDa,
       soLuongChiTieu,
       hanNopDon,
       dieuKienTomTat,
@@ -421,8 +510,8 @@ export const updateFund = async (req, res) => {
       loaiQuy: loaiQuy,
       moTa: moTa ? moTa.trim() : null,
       hinhAnh: hinhAnh || null,
-      soTienToiThieu: soTienToiThieu !== undefined && soTienToiThieu !== '' ? parseFloat(soTienToiThieu) : null,
-      soTienToiDa: soTienToiDa !== undefined && soTienToiDa !== '' ? parseFloat(soTienToiDa) : null,
+      soTienMucTieu: soTienMucTieu !== undefined && soTienMucTieu !== '' ? parseFloat(soTienMucTieu) : null,
+      soTienHoTroToiDa: soTienHoTroToiDa !== undefined && soTienHoTroToiDa !== '' ? parseFloat(soTienHoTroToiDa) : null,
       soLuongChiTieu: soLuongChiTieu !== undefined && soLuongChiTieu !== '' ? parseInt(soLuongChiTieu, 10) : null,
       hanNopDon: hanNopDon || null,
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
@@ -454,12 +543,15 @@ export const updateFund = async (req, res) => {
         loaiQuy: updatedFund.loai_quy,
         moTa: updatedFund.mo_ta,
         hinhAnh: buildFundImageUrl(updatedFund.hinh_path || updatedFund.hinh_anh),
-        soTienToiThieu: updatedFund.so_tien_toi_thieu,
-        soTienToiDa: updatedFund.so_tien_toi_da,
+        soTienMucTieu: updatedFund.so_tien_muc_tieu,
+        soTienHoTroToiDa: updatedFund.so_tien_ho_tro_toi_da,
+        soTienToiThieu: null,
+        soTienToiDa: updatedFund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: updatedFund.so_luong_chi_tieu,
         hanNopDon: updatedFund.han_nop_don,
         dieuKienTomTat: updatedFund.dieu_kien_tom_tat,
         soDu: updatedFund.so_du,
+        nguoiTao: updatedFund.nguoitao_id,
         ngayTao: updatedFund.ngay_tao,
         ngayCapNhat: updatedFund.ngay_cap_nhat,
         trangThai: updatedFund.trang_thai

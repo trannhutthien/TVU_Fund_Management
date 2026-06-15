@@ -5,25 +5,29 @@ import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
 
 const router = express.Router();
 
-// GET /api/funds/public — API công khai, KHÔNG CẦN TOKEN
+// ─── PUBLIC ROUTES (không cần authentication) ────────────────────────────────
+
+// GET /api/funds/public — Lấy danh sách quỹ công khai
 router.get("/public", getPublicFunds);
 
-// GET /api/funds/:id/bank-accounts — API công khai, lấy tài khoản ngân hàng của quỹ
+// GET /api/funds/:id/bank-accounts — Lấy tài khoản ngân hàng của quỹ
 router.get("/:id/bank-accounts", getFundBankAccounts);
 
-// GET /api/funds — cần access token hợp lệ và quyền admin/giáo vụ
+// GET /api/funds/:id — Lấy chi tiết một quỹ (PUBLIC - không cần token)
+router.get("/:id", getFundDetail);
+
+// ─── PROTECTED ROUTES (cần authentication + authorization) ───────────────────
+
+// GET /api/funds — Lấy tất cả quỹ (admin/giáo vụ/kế toán)
 router.get("/", protect, authorizeRoles(1, 2, 3), getFunds);
 
-// GET /api/funds/:id — lấy chi tiết một quỹ
-router.get("/:id", protect, authorizeRoles(1, 2, 3), getFundDetail);
-
-// POST /api/funds — cần access token hợp lệ và quyền admin/giáo vụ
+// POST /api/funds — Tạo quỹ mới (admin/giáo vụ)
 router.post("/", protect, authorizeRoles(1, 3), createFund);
 
-// PUT /api/funds/:id — cập nhật thông tin quỹ
+// PUT /api/funds/:id — Cập nhật thông tin quỹ (admin/giáo vụ)
 router.put("/:id", protect, authorizeRoles(1, 3), updateFund);
 
-// PUT /api/funds/:id/status — cần access token hợp lệ và quyền admin/giáo vụ
+// PUT /api/funds/:id/status — Cập nhật trạng thái quỹ (admin/giáo vụ)
 router.put("/:id/status", protect, authorizeRoles(1, 3), updateFundStatus);
 
 export default router;

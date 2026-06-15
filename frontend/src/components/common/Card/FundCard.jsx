@@ -56,7 +56,7 @@ const FundCard = ({ fund }) => {
 
   // Handlers
   const handleViewDetail = () => {
-    navigate(`/quy/${fund.quy_id}`);
+    navigate(`/funds/${fund.quy_id}`);
   };
 
   const handleRegister = () => {

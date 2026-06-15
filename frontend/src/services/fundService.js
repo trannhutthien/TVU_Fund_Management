@@ -18,12 +18,17 @@ export const getPublicFunds = async () => {
 };
 
 /**
- * Lấy chi tiết một quỹ theo ID
- * GET /api/funds/:id (cần token + role admin/giáo vụ)
+ * Lấy chi tiết một quỹ theo ID (PUBLIC - không cần authentication)
+ * GET /api/quy/:id
  */
 export const getFundById = async (fundId) => {
-  const response = await api.get(`/funds/${fundId}`);
-  return response.data;
+  try {
+    const response = await axios.get(`${API_URL}/quy/${fundId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching fund detail:', error);
+    throw error;
+  }
 };
 
 /**

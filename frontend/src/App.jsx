@@ -16,6 +16,7 @@ import PublicLayoutWithSidebar from './components/layout/PublicLayoutWithSidebar
 // Pages - Public
 import LandingPage from './pages/Public/LandingPage/LandingPage'
 import FundsPage from './pages/Public/FundsPage/FundsPage'
+import FundDetailPage from './pages/Public/FundDetailPage'
 import DonorsPage from './pages/Public/DonorsPage/DonorsPage'
 import GuidelinesPage from './pages/Public/GuidelinesPage/GuidelinesPage'
 import TrackPage from './pages/Public/TrackPage/TrackPage'
@@ -77,6 +78,7 @@ function App() {
           <Route element={<PublicLayoutWithSidebar />}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/funds" element={<FundsPage />} />
+            <Route path="/funds/:id" element={<FundDetailPage />} />
             <Route path="/donors" element={<DonorsPage />} />
             <Route path="/honors" element={<DonorsPage />} /> {/* Redirect old path to DonorsPage */}
             <Route path="/guidelines" element={<GuidelinesPage />} />

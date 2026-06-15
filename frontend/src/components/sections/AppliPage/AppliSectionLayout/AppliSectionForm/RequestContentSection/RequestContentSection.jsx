@@ -10,7 +10,8 @@ import styles from './RequestContentSection.module.scss';
 const suggestTitle = (fund) => {
   const hocKy = new Date().getMonth() < 6 ? 'I' : 'II';
   const namHoc = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
-  return `Đơn xin ${fund.ten_quy} học kỳ ${hocKy} năm học ${namHoc}`;
+  const fundName = fund?.tenQuy || fund?.ten_quy || 'hỗ trợ';
+  return `Đơn xin ${fundName} học kỳ ${hocKy} năm học ${namHoc}`;
 };
 
 const getQuality = (length) => {
@@ -63,7 +64,7 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI }) => 
 
   // Format số tiền hiển thị
   const formatCurrency = (value) => {
-    if (!value) return '';
+    if (value === null || value === undefined || value === '') return '';
     // Nếu value là string, loại bỏ dấu phẩy trước khi parse
     const cleanValue = typeof value === 'string' ? value.replace(/,/g, '') : value;
     const num = parseFloat(cleanValue);

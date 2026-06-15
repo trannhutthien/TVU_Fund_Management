@@ -255,9 +255,128 @@ export const getDonorDetail = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── DONOR USER APIs (NHÀ TÀI TRỢ XEM PROFILE CỦA MÌNH) ───────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/donors/my-stats
+// CÔNG DỤNG: Lấy thống kê tổng quan của nhà tài trợ hiện tại (dùng cho DonorProfile)
+// YÊU CẦU: Token hợp lệ, user có role NHA_TAI_TRO
+// ─────────────────────────────────────────────────────────────────────────────
+export const getMyDonorStats = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Chưa đăng nhập" });
+    }
+
+    // Lấy thông tin donor từ nguoidung_id
+    const donor = await DonorModel.getDonorByNguoiDungId(userId);
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin nhà tài trợ"
+      });
+    }
+
+    // Lấy thống kê
+    const stats = await DonorModel.getMyStats(donor.nhataitro_id);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tongSoTien: stats.tongSoTien,
+        soLanQuyenGop: stats.soLanQuyenGop,
+        soQuyDaHoTro: stats.soQuyDaHoTro,
+        khoanTaiTroGanNhat: stats.khoanTaiTroGanNhat ? {
+          khoanTaiTroId: stats.khoanTaiTroGanNhat.khoantaitro_id,
+          soTien: Number(stats.khoanTaiTroGanNhat.sotien) || 0,
+          ngayTaiTro: stats.khoanTaiTroGanNhat.ngaytaitro,
+          trangThai: stats.khoanTaiTroGanNhat.trangthai,
+          quyId: stats.khoanTaiTroGanNhat.quy_id,
+          tenQuy: stats.khoanTaiTroGanNhat.tenquy
+        } : null
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getMyDonorStats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy thống kê nhà tài trợ"
+    });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/donors/my-donations
+// CÔNG DỤNG: Lấy danh sách các khoản quyên góp của nhà tài trợ hiện tại
+// YÊU CẦU: Token hợp lệ, user có role NHA_TAI_TRO
+// QUERY: ?page=1&page_size=10
+// ─────────────────────────────────────────────────────────────────────────────
+export const getMyDonations = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Chưa đăng nhập" });
+    }
+
+    // Lấy thông tin donor từ nguoidung_id
+    const donor = await DonorModel.getDonorByNguoiDungId(userId);
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin nhà tài trợ"
+      });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const pageSize = Math.min(50, Math.max(1, parseInt(req.query.page_size, 10) || 10));
+
+    const { rows, total } = await DonorModel.getMyDonations(donor.nhataitro_id, {
+      page,
+      pageSize
+    });
+
+    const data = rows.map(r => ({
+      khoanTaiTroId: r.khoantaitro_id,
+      soTien: Number(r.sotien) || 0,
+      hinhThuc: r.hinhthuc,
+      trangThai: r.trangthai,
+      ngayTaiTro: r.ngaytaitro,
+      ghiChu: r.ghichu,
+      chungTu: r.chungtu,
+      nguoiXacNhanId: r.nguoixacnhan_id,
+      quyId: r.quy_id,
+      tenQuy: r.tenquy,
+      loaiQuy: r.loai_quy
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: Math.ceil(total / pageSize)
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getMyDonations:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy danh sách quyên góp"
+    });
+  }
+};
+
 export default {
   getDonorWall,
   getStaffDonors,
   getDonorStats,
   getDonorDetail,
+  // Thêm APIs mới cho donor user
+  getMyDonorStats,
+  getMyDonations,
 };

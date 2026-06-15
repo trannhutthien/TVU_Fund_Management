@@ -289,6 +289,12 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
   const displayRole = displayUser.tenVaiTro || ROLE_LABELS[displayUser.vaiTro] || 'Người dùng';
   const displayAvatar = displayUser.avatar;
 
+  // Debug log
+  useEffect(() => {
+    console.log('[StaffSidebar] isOpen prop changed:', isOpen);
+    console.log('[StaffSidebar] Applied class:', isOpen ? 'open' : 'closed');
+  }, [isOpen]);
+
   return (
     <aside className={`${styles.staffSidebar} ${isOpen ? styles.open : ''}`}>
       {/* Mobile Close Button – chỉ hiện trên mobile */}

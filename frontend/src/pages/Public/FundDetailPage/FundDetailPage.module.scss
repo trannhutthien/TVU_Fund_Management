@@ -1,0 +1,643 @@
+@import '@styles/variables';
+
+.page {
+  min-height: 100vh;
+  background: $bg-page;
+  color: $text-body;
+}
+
+.container {
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.banner {
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  padding: 56px 0 72px;
+}
+
+.bannerContent {
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 32px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: $text-sm;
+}
+
+.breadcrumbLink {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.breadcrumbSep {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.breadcrumbCurrent {
+  color: #fff;
+  font-weight: $font-semibold;
+}
+
+.bannerInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 860px;
+}
+
+.bannerTitle {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: $leading-tight;
+  font-weight: $font-extrabold;
+  text-shadow: 0 3px 18px rgba(15, 23, 42, 0.36);
+}
+
+.typeBadge {
+  background: rgba(224, 242, 254, 0.94) !important;
+}
+
+.statsBar {
+  position: relative;
+  z-index: 2;
+  margin-top: -48px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.statsCard {
+  height: 100%;
+  min-width: 0;
+  border-radius: $radius-md !important;
+
+  :global(.stat-card-value) {
+    font-size: 1.35rem;
+    word-break: break-word;
+  }
+
+  :global(.stat-card-title) {
+    letter-spacing: 0;
+  }
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 65%) minmax(300px, 35%);
+  gap: 24px;
+  align-items: start;
+  padding-top: 32px;
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  background: $bg-card;
+  border: 1px solid $border-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  padding: 24px;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  color: $text-heading;
+  font-size: $text-2xl;
+  line-height: $leading-snug;
+  font-weight: $font-bold;
+
+  svg {
+    flex: 0 0 auto;
+    color: $color-navy-blue;
+    font-size: 24px;
+  }
+}
+
+.progressHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+
+  span:first-child {
+    color: $color-navy-blue;
+    font-size: 2rem;
+    font-weight: $font-extrabold;
+    line-height: 1;
+  }
+
+  span:last-child {
+    color: $text-secondary;
+    font-weight: $font-semibold;
+  }
+}
+
+.progressBar {
+  height: 14px;
+  overflow: hidden;
+  border-radius: $radius-full;
+  background: $bg-input;
+  border: 1px solid $border-light;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, $color-navy-blue, $color-success);
+  transition: width $duration-slow $ease-default;
+}
+
+.progressMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  color: $text-secondary;
+  font-size: $text-sm;
+  font-weight: $font-medium;
+}
+
+.richText {
+  margin: 0;
+  color: $text-body;
+  line-height: $leading-relaxed;
+  white-space: pre-wrap;
+}
+
+.supportFacts,
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+
+  div {
+    padding: 16px;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-input;
+  }
+
+  span {
+    display: block;
+    margin-bottom: 6px;
+    color: $text-secondary;
+    font-size: $text-sm;
+    font-weight: $font-medium;
+  }
+
+  strong {
+    color: $text-heading;
+    font-size: $text-lg;
+    line-height: $leading-snug;
+  }
+}
+
+.ctaCard {
+  border-color: rgba(26, 47, 94, 0.18);
+
+  h2 {
+    margin: 0 0 10px;
+    color: $text-heading;
+    font-size: $text-xl;
+    font-weight: $font-bold;
+  }
+
+  p {
+    margin: 0;
+    color: $text-secondary;
+    line-height: $leading-relaxed;
+  }
+}
+
+.ctaActive {
+  border-color: rgba(26, 47, 94, 0.42);
+  box-shadow: 0 10px 26px rgba(26, 47, 94, 0.1);
+}
+
+.ctaActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.navyButton {
+  background: $color-navy-blue !important;
+  box-shadow: 0 4px 14px rgba(26, 47, 94, 0.3) !important;
+
+  &:hover {
+    background: #102149 !important;
+    box-shadow: 0 6px 20px rgba(26, 47, 94, 0.36) !important;
+  }
+}
+
+.closedNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bankCard {
+  padding: 0;
+  overflow: hidden;
+
+  :global(.fundBankInfo) {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: #f8fafc;
+  }
+
+  :global(.noBankInfo) {
+    border: none;
+    border-radius: 0;
+  }
+}
+
+.contactFallback {
+  padding: 24px;
+
+  h2 {
+    margin: 10px 0 8px;
+    color: $text-heading;
+    font-size: $text-xl;
+    font-weight: $font-bold;
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: $text-secondary;
+    line-height: $leading-relaxed;
+  }
+
+  dl {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+  }
+
+  div {
+    padding: 12px;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    background: $bg-input;
+  }
+
+  dt {
+    margin-bottom: 4px;
+    color: $text-secondary;
+    font-size: $text-sm;
+    font-weight: $font-medium;
+  }
+
+  dd {
+    margin: 0;
+    color: $text-heading;
+    font-weight: $font-semibold;
+    line-height: $leading-snug;
+    word-break: break-word;
+  }
+}
+
+.contactIcon {
+  color: $color-navy-blue;
+  font-size: 32px;
+}
+
+.shareLinks {
+  justify-content: flex-start;
+}
+
+.fullWidthSection {
+  margin-top: 28px;
+  padding: 24px;
+  background: $bg-card;
+  border: 1px solid $border-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+
+  h2 {
+    margin: 0;
+    color: $text-heading;
+    font-size: $text-2xl;
+    font-weight: $font-bold;
+  }
+
+  span {
+    color: $text-secondary;
+    font-size: $text-sm;
+    font-weight: $font-medium;
+  }
+}
+
+.donorGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.donorCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 172px;
+  padding: 18px;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  background: $bg-card;
+
+  h3 {
+    margin: 0 0 6px;
+    color: $text-heading;
+    font-size: $text-lg;
+    font-weight: $font-bold;
+    line-height: $leading-snug;
+  }
+
+  p {
+    margin: 0;
+    color: $text-secondary;
+    font-size: $text-sm;
+  }
+
+  strong {
+    color: $color-navy-blue;
+    font-size: $text-xl;
+    line-height: $leading-snug;
+  }
+}
+
+.emptyState {
+  padding: 24px;
+  border: 1px dashed $border-default;
+  border-radius: $radius-md;
+  background: $bg-input;
+  color: $text-secondary;
+  text-align: center;
+  font-weight: $font-medium;
+}
+
+.bottomActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 32px 0 56px;
+}
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 640px;
+  margin: 80px auto;
+  padding: 40px 24px;
+  background: $bg-card;
+  border: 1px solid $border-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  text-align: center;
+
+  h1 {
+    margin: 0;
+    color: $text-heading;
+    font-size: $text-3xl;
+  }
+
+  p {
+    margin: 0;
+    color: $text-secondary;
+    line-height: $leading-relaxed;
+  }
+}
+
+.errorIcon {
+  color: $color-danger;
+  font-size: 56px;
+}
+
+.skeletonBanner {
+  min-height: 320px;
+  padding: 56px 0;
+  background: $color-navy-blue;
+}
+
+.skeletonStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: -48px;
+}
+
+.skeletonStatCard {
+  display: flex;
+  gap: 14px;
+  padding: 24px;
+  background: $bg-card;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+}
+
+.skeletonIcon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  border-radius: $radius-md;
+  background: linear-gradient(90deg, $bg-input 25%, $border-light 50%, $bg-input 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+.skeletonTextGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.skeletonLine,
+.skeletonParagraph,
+.skeletonParagraphShort {
+  height: 14px;
+  border-radius: $radius-xs;
+  background: linear-gradient(90deg, $bg-input 25%, $border-light 50%, $bg-input 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+.skeletonParagraph {
+  height: 74px;
+}
+
+.skeletonParagraphShort {
+  width: 70%;
+  height: 18px;
+  margin-top: 12px;
+}
+
+.skeletonBreadcrumb {
+  width: 280px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.skeletonBadge {
+  width: 120px;
+  height: 28px;
+  margin-top: 32px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.skeletonTitle {
+  width: min(680px, 80%);
+  height: 52px;
+  margin-top: 18px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.skeletonShort {
+  width: 66%;
+}
+
+.skeletonHeading {
+  width: 46%;
+  height: 22px;
+  margin-bottom: 18px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .statsGrid,
+  .skeletonStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .rightColumn {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rightColumn .bankCard,
+  .rightColumn .card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .donorGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .container,
+  .bannerContent {
+    width: min(100% - 24px, 1200px);
+  }
+
+  .banner {
+    min-height: 300px;
+    padding: 40px 0 60px;
+  }
+
+  .breadcrumb {
+    margin-bottom: 24px;
+  }
+
+  .statsGrid,
+  .skeletonStats,
+  .rightColumn,
+  .donorGrid,
+  .supportFacts,
+  .timeline {
+    grid-template-columns: 1fr;
+  }
+
+  .statsBar,
+  .skeletonStats {
+    margin-top: -32px;
+  }
+
+  .mainGrid {
+    padding-top: 24px;
+    gap: 20px;
+  }
+
+  .card,
+  .fullWidthSection {
+    padding: 18px;
+  }
+
+  .cardTitle,
+  .sectionHeader h2 {
+    font-size: $text-xl;
+  }
+
+  .progressMeta,
+  .sectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bottomActions {
+    align-items: stretch;
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      white-space: normal;
+      line-height: $leading-snug;
+    }
+  }
+}

@@ -54,6 +54,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/funds", fundRoutes);
+app.use("/api/quy", fundRoutes);
 app.use("/api/donors", donorRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/transactions", transactionRoutes);

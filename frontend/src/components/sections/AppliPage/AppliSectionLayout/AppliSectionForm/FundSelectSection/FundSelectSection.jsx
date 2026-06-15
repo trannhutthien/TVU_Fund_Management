@@ -80,6 +80,23 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
     fetchAllFundsAndTypes();
   }, []);
 
+  useEffect(() => {
+    if (!selectedFund?.quyId || allFunds.length === 0) return;
+
+    const matchedFund = allFunds.find((fund) => fund.quyId === Number(selectedFund.quyId));
+    if (!matchedFund) return;
+
+    setSelectedLoaiQuy(matchedFund.loaiQuy);
+    setFundList((currentList) => {
+      const existsInCurrentList = currentList.some((fund) => fund.quyId === matchedFund.quyId);
+      if (existsInCurrentList) return currentList;
+      return allFunds.filter(
+        (fund) => fund.loaiQuy === matchedFund.loaiQuy && fund.trangThai === 'Dang hoat dong'
+      );
+    });
+    setSelectedFundId(matchedFund.quyId);
+  }, [selectedFund?.quyId, allFunds]);
+
   // Format label cho loại quỹ
   const formatLoaiQuyLabel = (loaiQuy) => {
     const mapping = {
@@ -106,9 +123,14 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
       f => f.loaiQuy === selectedLoaiQuy && f.trangThai === 'Dang hoat dong'
     );
     setFundList(filtered);
-    setSelectedFundId(null);
-    setFundDetail(null);
-  }, [selectedLoaiQuy, allFunds]);
+    const shouldKeepSelectedFund = selectedFund?.quyId &&
+      filtered.some((fund) => fund.quyId === Number(selectedFund.quyId));
+
+    if (!shouldKeepSelectedFund) {
+      setSelectedFundId(null);
+      setFundDetail(null);
+    }
+  }, [selectedLoaiQuy, allFunds, selectedFund]);
 
   useEffect(() => {
     if (!selectedFundId || fundList.length === 0) {

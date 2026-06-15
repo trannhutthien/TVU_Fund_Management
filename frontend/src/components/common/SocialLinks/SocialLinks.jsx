@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import './SocialLinks.scss';
 
 /**
@@ -106,6 +107,11 @@ const SocialLinks = ({
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
         </svg>
       ),
+      copy: (
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+        </svg>
+      ),
       tiktok: (
         <svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
@@ -128,6 +134,7 @@ const SocialLinks = ({
       email: '#EA4335',
       phone: '#34A853',
       website: '#4285F4',
+      copy: '#1a2f5e',
       tiktok: '#000000',
     };
 
@@ -147,16 +154,28 @@ const SocialLinks = ({
     .filter(Boolean)
     .join(' ');
 
+  const handleClick = (event, link) => {
+    if (link.type !== 'copy') return;
+
+    event.preventDefault();
+    navigator.clipboard.writeText(link.url).then(() => {
+      toast.success('Đã copy link chia sẻ');
+    }).catch(() => {
+      toast.error('Không thể copy link');
+    });
+  };
+
   return (
     <div className={containerClasses}>
       {socialLinks.map((link, index) => (
         <a
           key={index}
           href={link.url}
-          target={link.type === 'email' || link.type === 'phone' ? '_self' : '_blank'}
-          rel={link.type === 'email' || link.type === 'phone' ? '' : 'noopener noreferrer'}
+          target={link.type === 'email' || link.type === 'phone' || link.type === 'copy' ? '_self' : '_blank'}
+          rel={link.type === 'email' || link.type === 'phone' || link.type === 'copy' ? '' : 'noopener noreferrer'}
           className="social-link"
           aria-label={link.label || link.type}
+          onClick={(event) => handleClick(event, link)}
           style={
             color === 'brand'
               ? { '--brand-color': getBrandColor(link.type) }
@@ -184,6 +203,7 @@ SocialLinks.propTypes = {
         'email',
         'phone',
         'website',
+        'copy',
         'tiktok',
       ]).isRequired,
       url: PropTypes.string.isRequired,
