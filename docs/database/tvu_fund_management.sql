@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th6 14, 2026 lúc 06:16 PM
+-- Thời gian đã tạo: Th6 15, 2026 lúc 09:05 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.1.25
 
@@ -24,85 +24,71 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `nguoidung`
+-- Cấu trúc bảng cho bảng `tintuc`
 --
 
-DROP TABLE IF EXISTS `nguoidung`;
-CREATE TABLE `nguoidung` (
-  `nguoidung_id` int(11) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `matkhau` varchar(255) DEFAULT NULL,
-  `hoten` varchar(100) NOT NULL,
-  `masodinhdanh` varchar(20) DEFAULT NULL,
-  `ngaysinh` date DEFAULT NULL,
-  `gioitinh` enum('Nam','Nu','Khac') DEFAULT NULL,
-  `sodienthoai` varchar(15) DEFAULT NULL,
-  `diachi` text DEFAULT NULL,
-  `donvihoc_id` int(11) DEFAULT NULL,
-  `avatar` varchar(255) DEFAULT NULL,
-  `vaitro_id` int(11) NOT NULL,
-  `loaitaikhoan` enum('Sinh vien','Nha tai tro') DEFAULT NULL,
-  `trangthai` enum('Hoat dong','Khoa','Cho duyet') DEFAULT 'Hoat dong',
+DROP TABLE IF EXISTS `tintuc`;
+CREATE TABLE `tintuc` (
+  `tintuc_id` int(11) NOT NULL,
+  `tieude` varchar(255) NOT NULL,
+  `motangan` varchar(500) DEFAULT NULL,
+  `noidung` longtext NOT NULL COMMENT 'Nội dung đầy đủ bài viết (có thể chứa HTML/Markdown)',
+  `avatar` varchar(255) DEFAULT NULL COMMENT 'Đường dẫn ảnh thumbnail hiển thị ở card tin tức',
+  `danhmuc` enum('Tin hoc bong','Tin giao duc','Su kien','Thong bao','Khac') DEFAULT 'Thong bao',
+  `phanloai` enum('Tin moi','Tin noi bat') DEFAULT 'Tin moi' COMMENT 'Tin moi = hiển thị section Tin Mới, Tin noi bat = hiển thị section Tin Nổi Bật',
+  `lanoibat` tinyint(4) DEFAULT 0 COMMENT '0=Bình thường, 1=Featured lớn, 2=Featured nhỏ hàng dưới, 3=Sidebar',
+  `trangthai` enum('Ban nhap','Da xuat ban','Da an') DEFAULT 'Ban nhap',
+  `ngayxuatban` timestamp NULL DEFAULT NULL,
+  `nguoitao_id` int(11) NOT NULL COMMENT 'Admin hoặc Cán bộ tạo bài viết',
+  `nguoisua_id` int(11) DEFAULT NULL COMMENT 'Người chỉnh sửa lần cuối',
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
-  `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `taikhoannganhang_id` int(11) DEFAULT NULL
+  `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `nguoidung`
+-- Đang đổ dữ liệu cho bảng `tintuc`
 --
 
-INSERT INTO `nguoidung` (`nguoidung_id`, `email`, `matkhau`, `hoten`, `masodinhdanh`, `ngaysinh`, `gioitinh`, `sodienthoai`, `diachi`, `donvihoc_id`, `avatar`, `vaitro_id`, `loaitaikhoan`, `trangthai`, `ngaytao`, `ngaycapnhat`, `taikhoannganhang_id`) VALUES
-(1, 'admin@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Nguyễn Văn Admin', 'ADMIN001', NULL, NULL, NULL, NULL, 1, NULL, 1, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-06-02 11:54:44', NULL),
-(2, 'ketoan@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Trần Thị Kế Toán', 'KT001', NULL, NULL, NULL, NULL, 2, NULL, 2, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-06-02 11:54:44', NULL),
-(3, 'canboquy@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Le Van Can Bo Mod', 'CB001', NULL, NULL, NULL, NULL, 3, NULL, 3, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-06-14 15:02:18', NULL),
-(4, 'sinhvien@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Nguyễn Văn Sinh Viên', 'SV001', NULL, NULL, NULL, NULL, 4, NULL, 4, 'Sinh vien', 'Hoat dong', '2026-06-02 11:40:34', '2026-06-02 13:35:12', 4),
-(5, 'nhataitro@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Công ty Cổ phần Nhà tài trợ TVU', 'NTT001', NULL, NULL, NULL, NULL, NULL, NULL, 4, 'Nha tai tro', 'Hoat dong', '2026-06-02 11:40:34', '2026-06-02 12:50:47', NULL),
-(6, 'dienmayxanh@gmail.com', '$2b$10$oRlqjqBdw3W5Um/hSsI9huELwoEjTT7HQw3AzPxqfEY3HyU.JO8Zy', 'Điện máy xinh TV', 'NTT1781224561828', NULL, NULL, '0782884717', NULL, 5, NULL, 4, 'Nha tai tro', 'Hoat dong', '2026-06-12 00:36:01', '2026-06-12 00:36:01', NULL),
-(7, 'can@gmail.com', '$2b$10$98fgzJPfOLf7wu6kVuVkEelYl6wGXdzgairpUlyPpPeE1Gry0O.g2', 'Lê minh cần', '110122172', NULL, NULL, NULL, NULL, 6, NULL, 4, 'Sinh vien', 'Hoat dong', '2026-06-12 00:40:22', '2026-06-12 00:57:43', 8),
-(8, 'trannhutthien012345@gmail.com', NULL, 'thiên nhựt', 'GG1781228341312', NULL, NULL, NULL, NULL, NULL, 'https://lh3.googleusercontent.com/a/ACg8ocJxVSoZLkHbaHj8WQQ6GsObHn6yvmm8vQXbM4x44P-Cay05Lm3N=s96-c', 4, 'Sinh vien', 'Hoat dong', '2026-06-12 01:39:01', '2026-06-12 01:39:01', NULL),
-(9, 'anhben3122@gmail.com', '$2b$10$3u16nHWGUCFpxIn0nW.6suF9.RfBE/bMu7m6/elaTjkFcGw2YBSBu', 'Thạch Phan dựng', '110122678', NULL, NULL, '0397942310', NULL, 7, NULL, 4, 'Sinh vien', 'Hoat dong', '2026-06-13 15:19:44', '2026-06-13 15:19:44', 9),
-(10, 'kimhong@gmail.com', '$2b$10$r7IaNPAS.qOrop01N840I.N3v35l7FlG1H208X47O1P0ehp0XW6CW', 'trần thị kim hồng', '123456789', NULL, NULL, '0789456323', 'ấp 10 long hữu duyên hải trà vinh', NULL, NULL, 2, NULL, 'Hoat dong', '2026-06-14 15:31:32', '2026-06-14 15:31:32', NULL),
-(11, 'vanthang@gmail.com', '$2b$10$2LhNMT3j/MvupgGhHqz4UukNAibYsvk8PZoQEzGCvx9qlfQxVl6MK', 'trần Văn Thắng', '1234567654', NULL, NULL, '12345678902', 'ấp 10 long hữu duyên hải trà vinh', NULL, NULL, 2, NULL, 'Hoat dong', '2026-06-14 15:38:41', '2026-06-14 15:38:41', NULL),
-(12, 'nhutkhanh@gmail.com', '$2b$10$sBgjPxChmNL537gH5z/4..UN1JsoBlnEcl97T0QWi8SloSu/dZyOm', 'Trần Nhựt khánh', '0987654321', NULL, NULL, '1324534657', 'ấp 11 xã long hữu thị xã duyên hải trà vinh', NULL, NULL, 3, NULL, 'Hoat dong', '2026-06-14 15:44:40', '2026-06-14 15:44:40', NULL),
-(13, 'nhutquang@gmail.com', '$2b$10$MiplL/COBpXVKAYvbl3itOqX52FuTYTFQpIyjndO.oXxXndbSDdkC', 'Trần Nhựt Quang', '0987654321', NULL, NULL, NULL, 'ấp 11 xã long hữu thị xã duyên hải trà vinh', NULL, NULL, 3, NULL, 'Hoat dong', '2026-06-14 15:45:41', '2026-06-14 15:45:41', NULL),
-(14, 'tansang@gmail.com', '$2b$10$73KPQ8uXsV8VT.mgeO/Sm.TAxILHvdWLmXKd8Tj/OyBiHyLWargCW', 'Nguyễn tấn sang', '233135432345', NULL, NULL, '09382736382', 'âp 12 xã long hữu thị xã duyên hải tỉnh trà vinh', NULL, NULL, 3, NULL, 'Hoat dong', '2026-06-14 15:51:45', '2026-06-14 15:51:45', NULL);
+INSERT INTO `tintuc` (`tintuc_id`, `tieude`, `motangan`, `noidung`, `avatar`, `danhmuc`, `phanloai`, `lanoibat`, `trangthai`, `ngayxuatban`, `nguoitao_id`, `nguoisua_id`, `ngaytao`, `ngaycapnhat`) VALUES
+(10, 'Thông báo mở đăng ký Quỹ Hỗ trợ Sinh viên Khó khăn năm 2026', 'Sinh viên có hoàn cảnh khó khăn có thể nộp hồ sơ trực tuyến từ ngày 01/08/2026.', '<p>Nhà trường chính thức mở tiếp nhận hồ sơ đăng ký Quỹ Hỗ trợ Sinh viên Khó khăn. Sinh viên vui lòng chuẩn bị đầy đủ giấy tờ và nộp hồ sơ đúng thời hạn.</p>', 'uploads/tintuc/HB-tieuso_1781548503878_996005885.jpg', 'Thong bao', 'Tin moi', 3, 'Da xuat ban', '2026-06-15 11:34:00', 1, NULL, '2026-06-15 18:35:08', '2026-06-15 18:42:50'),
+(11, 'Trao 100 suất học bổng khuyến học cho sinh viên xuất sắc', 'Chương trình học bổng khuyến học học kỳ II năm học 2025-2026', '<p>Trường Đại học Trà Vinh đã trao 100 suất học bổng cho các sinh viên có thành tích học tập xuất sắc.</p>', 'uploads/tintuc/HB-hk2-2025_1781548781011_48626826.jpg', 'Tin hoc bong', 'Tin moi', 1, 'Da xuat ban', '2026-06-15 11:39:00', 1, NULL, '2026-06-15 18:39:44', '2026-06-15 18:39:44');
 
 --
 -- Chỉ mục cho các bảng đã đổ
 --
 
 --
--- Chỉ mục cho bảng `nguoidung`
+-- Chỉ mục cho bảng `tintuc`
 --
-ALTER TABLE `nguoidung`
-  ADD PRIMARY KEY (`nguoidung_id`),
-  ADD UNIQUE KEY `uk_email` (`email`),
-  ADD KEY `vaitro_id` (`vaitro_id`),
-  ADD KEY `fk_nguoidung_donvihoc` (`donvihoc_id`),
-  ADD KEY `fk_nguoidung_taikhoannganhang` (`taikhoannganhang_id`);
+ALTER TABLE `tintuc`
+  ADD PRIMARY KEY (`tintuc_id`),
+  ADD KEY `idx_trangthai` (`trangthai`),
+  ADD KEY `idx_danhmuc` (`danhmuc`),
+  ADD KEY `idx_noi_bat` (`lanoibat`),
+  ADD KEY `idx_ngayxuatban` (`ngayxuatban`),
+  ADD KEY `idx_nguoitao` (`nguoitao_id`),
+  ADD KEY `nguoisua_id` (`nguoisua_id`);
 
 --
 -- AUTO_INCREMENT cho các bảng đã đổ
 --
 
 --
--- AUTO_INCREMENT cho bảng `nguoidung`
+-- AUTO_INCREMENT cho bảng `tintuc`
 --
-ALTER TABLE `nguoidung`
-  MODIFY `nguoidung_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+ALTER TABLE `tintuc`
+  MODIFY `tintuc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
 --
 
 --
--- Các ràng buộc cho bảng `nguoidung`
+-- Các ràng buộc cho bảng `tintuc`
 --
-ALTER TABLE `nguoidung`
-  ADD CONSTRAINT `fk_nguoidung_donvihoc` FOREIGN KEY (`donvihoc_id`) REFERENCES `donvihoc` (`donvihoc_id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_nguoidung_taikhoannganhang` FOREIGN KEY (`taikhoannganhang_id`) REFERENCES `taikhoannganhang` (`taikhoannganhang_id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `nguoidung_ibfk_1` FOREIGN KEY (`vaitro_id`) REFERENCES `vaitro` (`vaitro_id`) ON UPDATE CASCADE;
+ALTER TABLE `tintuc`
+  ADD CONSTRAINT `tintuc_ibfk_1` FOREIGN KEY (`nguoitao_id`) REFERENCES `nguoidung` (`nguoidung_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `tintuc_ibfk_2` FOREIGN KEY (`nguoisua_id`) REFERENCES `nguoidung` (`nguoidung_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
