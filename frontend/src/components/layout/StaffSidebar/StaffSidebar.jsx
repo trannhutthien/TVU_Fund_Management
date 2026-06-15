@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { HiXMark } from 'react-icons/hi2';
+import PropTypes from 'prop-types';
 import {
   HiOutlineChartBarSquare,
   HiOutlineUsers,
@@ -155,7 +157,7 @@ const NAV_CONFIG = [
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── STAFF SIDEBAR COMPONENT ───────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-const StaffSidebar = () => {
+const StaffSidebar = ({ isOpen = false, onClose }) => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuthStore();
   const [pendingCount] = useState(0); // TODO: Fetch from API
@@ -196,19 +198,11 @@ const StaffSidebar = () => {
   }, [user?.id, updateUser]);
 
   // ─── LOGIC HIỂN THỊ ────────────────────────────────────
-  // Debug: Kiểm tra user structure
-  console.log('🔍 StaffSidebar - User:', user);
-  console.log('🔍 StaffSidebar - UserProfile:', userProfile);
-  console.log('🔍 StaffSidebar - vaiTro:', user?.vaiTro);
-  
   // Chỉ hiển thị cho staff (vaiTro 1, 2, 3)
   // vaiTro = 4 là người dùng thường → return null
   if (!user || !user.vaiTro || user.vaiTro === 4) {
-    console.log('❌ StaffSidebar - Không hiển thị (user.vaiTro:', user?.vaiTro, ')');
     return null;
   }
-  
-  console.log('✅ StaffSidebar - Hiển thị cho role:', user.vaiTro);
 
   const [permissions, setPermissions] = useState({});
 
@@ -266,6 +260,11 @@ const StaffSidebar = () => {
     }))
     .filter(group => group.items.length > 0);
 
+  // ─── HANDLE SIDEBAR CLOSE ─────────────────────────────────
+  const handleClose = () => {
+    if (onClose) onClose();
+  };
+
   // ─── GET AVATAR INITIAL ─────────────────────────────────
   const getInitial = (name) => {
     if (!name) return '?';
@@ -291,7 +290,16 @@ const StaffSidebar = () => {
   const displayAvatar = displayUser.avatar;
 
   return (
-    <aside className={styles.staffSidebar}>
+    <aside className={`${styles.staffSidebar} ${isOpen ? styles.open : ''}`}>
+      {/* Mobile Close Button – chỉ hiện trên mobile */}
+      <button
+        className={styles.closeMobileBtn}
+        onClick={handleClose}
+        aria-label="Đóng menu"
+      >
+        <HiXMark size={22} />
+      </button>
+
       {/* Logo Section */}
       <div className={styles.logoSection}>
         <Logo
@@ -396,6 +404,11 @@ const StaffSidebar = () => {
       </div>
     </aside>
   );
+};
+
+StaffSidebar.propTypes = {
+  isOpen: PropTypes.bool,
+  onClose: PropTypes.func,
 };
 
 export default StaffSidebar;

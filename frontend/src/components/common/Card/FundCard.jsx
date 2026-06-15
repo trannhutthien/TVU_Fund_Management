@@ -172,7 +172,7 @@ const FundCard = ({ fund }) => {
       {/* Paused Overlay */}
       {isPaused && (
         <div className={styles.pausedOverlay}>
-          <StatusBadge status="processing" text="Tạm dừng" />
+          <StatusBadge status="processing" label="Tạm dừng" />
         </div>
       )}
     </div>

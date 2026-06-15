@@ -398,7 +398,7 @@ const NhatKySection = () => {
 
                       {/* Result */}
                       <td>
-                        <StatusBadge status={badgeStatus} text={badgeLabel} />
+                        <StatusBadge status={badgeStatus} label={badgeLabel} />
                       </td>
                     </tr>
                   );

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { HiXMark, HiDocumentArrowDown } from 'react-icons/hi2';
+import { HiDocumentArrowDown } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import CloseButton from '@components/common/CloseButton';
 import Dropdown from '@components/common/Dropdown/Dropdown';
 import useAuthStore from '@stores/authStore';
 import styles from './DSExportModal.module.scss';
@@ -63,29 +64,7 @@ const DSExportModal = ({ onClose, activeTab, filterLoai, filterDateRange, filter
   const handleExport = async (format) => {
     try {
       setIsExporting(true);
-
-      // TODO: Call API to export
-      // const response = await api.post('/api/bao-cao/doi-soat/xuat', {
-      //   thang: selectedMonth,
-      //   nam: selectedYear,
-      //   options: exportOptions,
-      //   nguoi_lap: nguoiLap,
-      //   ngay_lap: ngayLap,
-      //   ghi_chu: ghiChu,
-      //   format, // 'excel' | 'pdf'
-      // }, {
-      //   responseType: 'blob',
-      // });
-
-      // // Download file
-      // const url = window.URL.createObjectURL(new Blob([response.data]));
-      // const link = document.createElement('a');
-      // link.href = url;
-      // link.setAttribute('download', `bien_ban_doi_soat_${selectedMonth}_${selectedYear}.${format === 'excel' ? 'xlsx' : 'pdf'}`);
-      // document.body.appendChild(link);
-      // link.click();
-      // link.remove();
-
+      // Chức năng xuất file sẽ được tích hợp khi có API
       alert(`Xuất ${format === 'excel' ? 'Excel' : 'PDF'} thành công`);
       onClose();
     } catch (error) {
@@ -110,9 +89,12 @@ const DSExportModal = ({ onClose, activeTab, filterLoai, filterDateRange, filter
             <HiDocumentArrowDown size={24} className={styles.headerIcon} />
             <h3 className={styles.title}>Xuất biên bản đối soát</h3>
           </div>
-          <button className={styles.closeButton} onClick={onClose}>
-            <HiXMark size={24} />
-          </button>
+          <CloseButton
+            onClick={onClose}
+            variant="light"
+            size="md"
+            className={styles.closeButton}
+          />
         </div>
 
         {/* Body */}

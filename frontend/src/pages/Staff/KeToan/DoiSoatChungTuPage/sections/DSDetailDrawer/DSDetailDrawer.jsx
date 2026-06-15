@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { HiXMark, HiPaperClip, HiArrowDownTray } from 'react-icons/hi2';
+import { HiPaperClip, HiArrowDownTray } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import CloseButton from '@components/common/CloseButton';
 import styles from './DSDetailDrawer.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -135,9 +136,12 @@ const DSDetailDrawer = ({
             <h3 className={styles.title}>Đối soát giao dịch</h3>
             <p className={styles.subtitle}>Mã GD: {giaoDich.transaction_id}</p>
           </div>
-          <button className={styles.closeButton} onClick={onClose}>
-            <HiXMark size={24} />
-          </button>
+          <CloseButton
+            onClick={onClose}
+            variant="light"
+            size="md"
+            className={styles.closeButton}
+          />
         </div>
 
         {/* Body */}

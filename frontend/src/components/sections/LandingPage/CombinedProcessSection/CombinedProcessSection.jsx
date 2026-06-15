@@ -201,8 +201,9 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
                       <div className={styles.stepHeader}>
                         <h4 className={styles.stepTitle}>{step.title}</h4>
                         <StatusBadge 
-                          text={step.duration}
-                          status="success"
+                          label={step.duration}
+                          variant="success"
+                          showIcon={false}
                           className={styles.durationBadgeGold}
                         />
                       </div>

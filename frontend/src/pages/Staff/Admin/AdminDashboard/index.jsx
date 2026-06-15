@@ -233,7 +233,6 @@ const AdminDashboard = () => {
 
       } catch (error) {
         console.error('Lỗi fetch dashboard data:', error);
-        // Keep mock data on error
       } finally {
         setIsLoading(false);
       }

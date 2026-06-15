@@ -21,6 +21,7 @@ import {
   HiOutlineXMark,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import newsService from '@services/newsService';
 import { uploadService } from '@services/uploadService';
 import useAuthStore from '@stores/authStore';
@@ -97,14 +98,13 @@ const INITIAL_FORM = {
 };
 
 // ─── Badge helpers ───────────────────────────────────────────────
-const StatusBadge = ({ status }) => {
+const getStatusBadgeProps = (status) => {
   const map = {
-    'Da xuat ban': { label: 'Đã xuất bản', cls: styles.badgeGreen },
-    'Ban nhap': { label: 'Bản nháp', cls: styles.badgeGray },
-    'Da an': { label: 'Đã ẩn', cls: styles.badgeRed },
+    'Da xuat ban': { variant: 'success', label: 'Đã xuất bản' },
+    'Ban nhap': { variant: 'default', label: 'Bản nháp' },
+    'Da an': { variant: 'danger', label: 'Đã ẩn' },
   };
-  const cfg = map[status] || { label: status, cls: styles.badgeGray };
-  return <span className={`${styles.badge} ${cfg.cls}`}>{cfg.label}</span>;
+  return map[status] || { variant: 'default', label: status };
 };
 
 const CategoryBadge = ({ category }) => {
@@ -746,7 +746,13 @@ const TaoTinTucPage = () => {
                             </td>
                             <td><CategoryBadge category={item.category} /></td>
                             <td><LanoibatBadge value={item.lanoibat ?? (item.isFeatured ? 1 : 0)} /></td>
-                            <td><StatusBadge status={item.status} /></td>
+                            <td>
+                              <StatusBadge
+                                {...getStatusBadgeProps(item.status)}
+                                showIcon={false}
+                                size="sm"
+                              />
+                            </td>
                             <td className={styles.dateCell}>{formatDate(item.publishDate)}</td>
                             <td>
                               <div className={styles.actionButtons}>

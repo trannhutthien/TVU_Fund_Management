@@ -127,7 +127,7 @@ const VaiTroSection = () => {
                     <span className={styles.technicalName}>({role.ten_vai_tro})</span>
                   </div>
                 </div>
-                <StatusBadge status={badgeStatus} text={badgeLabel} />
+                <StatusBadge status={badgeStatus} label={badgeLabel} />
               </div>
 
               <p className={styles.roleDesc}>{role.mo_ta || config.desc}</p>

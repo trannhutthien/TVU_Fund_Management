@@ -22,7 +22,7 @@ import styles from './PublicHeader.module.scss';
  * @param {function} onLoginClick - Callback khi click nút Đăng nhập
  * @param {function} onRegisterClick - Callback khi click nút Đăng ký
  */
-const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
+const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   const navigate = useNavigate();
   const { isAuthenticated, user, token, logout: logoutStore } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -66,9 +66,14 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Toggle mobile menu
+  // Toggle mobile menu (chỉ dùng khi không có onToggleSidebar)
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+    if (onToggleSidebar) {
+      // Ở StaffLayout: gọi toggle sidebar thay vì mở mobile menu
+      onToggleSidebar();
+    } else {
+      setIsMobileMenuOpen(!isMobileMenuOpen);
+    }
   };
 
   // Close mobile menu khi click link
@@ -292,84 +297,86 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
         </div>
       </header>
 
-      {/* Mobile Menu Dropdown */}
-      <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
-        {/* Navigation Links */}
-        {filteredNavItems.map((item) => {
-          if (item.isDropdown) {
+      {/* Mobile Menu Dropdown - CHỈ hiện khi KHÔNG có sidebar (trang Public) */}
+      {!onToggleSidebar && (
+        <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
+          {/* Navigation Links */}
+          {filteredNavItems.map((item) => {
+            if (item.isDropdown) {
+              return (
+                <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <span className={styles.statusLabel} style={{ paddingLeft: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 600 }}>
+                    {item.label}
+                  </span>
+                  {item.children.map((child) => (
+                    <NavLink
+                      key={child.path}
+                      to={child.path}
+                      className={({ isActive }) =>
+                        `${styles.mobileNavLink} ${styles.mobileSubNavLink} ${isActive ? styles.active : ''}`
+                      }
+                      onClick={closeMobileMenu}
+                    >
+                      <span className={styles.subLinkPrefix}>↳</span> {child.label}
+                    </NavLink>
+                  ))}
+                </div>
+              );
+            }
             return (
-              <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span className={styles.statusLabel} style={{ paddingLeft: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 600 }}>
-                  {item.label}
-                </span>
-                {item.children.map((child) => (
-                  <NavLink
-                    key={child.path}
-                    to={child.path}
-                    className={({ isActive }) =>
-                      `${styles.mobileNavLink} ${styles.mobileSubNavLink} ${isActive ? styles.active : ''}`
-                    }
-                    onClick={closeMobileMenu}
-                  >
-                    <span className={styles.subLinkPrefix}>↳</span> {child.label}
-                  </NavLink>
-                ))}
-              </div>
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  item.highlight
+                    ? `${styles.mobileNavLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
+                    : `${styles.mobileNavLink} ${isActive ? styles.active : ''}`
+                }
+                onClick={closeMobileMenu}
+              >
+                {item.highlight && <span className={styles.highlightIcon}>✦</span>}
+                {item.label}
+              </NavLink>
             );
-          }
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                item.highlight
-                  ? `${styles.mobileNavLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
-                  : `${styles.mobileNavLink} ${isActive ? styles.active : ''}`
-              }
-              onClick={closeMobileMenu}
-            >
-              {item.highlight && <span className={styles.highlightIcon}>✦</span>}
-              {item.label}
-            </NavLink>
-          );
-        })}
+          })}
 
-        {/* Divider */}
-        <div className={styles.mobileDivider}></div>
+          {/* Divider */}
+          <div className={styles.mobileDivider}></div>
 
-        {/* Mobile Action Buttons */}
-        <div className={styles.mobileActions}>
-          {isAuthenticated ? (
-            <>
-              <HeaderActions
-                user={user}
-                onLogout={handleLogout}
-                size="sm"
-                showNotifications={true}
-              />
-            </>
-          ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={handleRegisterClick}
-                className={styles.btnRegister}
-              >
-                Đăng ký
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={handleLoginClick}
-                className={styles.btnLogin}
-              >
-                Đăng nhập
-              </Button>
-            </>
-          )}
+          {/* Mobile Action Buttons */}
+          <div className={styles.mobileActions}>
+            {isAuthenticated ? (
+              <>
+                <HeaderActions
+                  user={user}
+                  onLogout={handleLogout}
+                  size="sm"
+                  showNotifications={true}
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={handleRegisterClick}
+                  className={styles.btnRegister}
+                >
+                  Đăng ký
+                </Button>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleLoginClick}
+                  className={styles.btnLogin}
+                >
+                  Đăng nhập
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
@@ -377,6 +384,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick }) => {
 PublicHeader.propTypes = {
   onLoginClick: PropTypes.func,
   onRegisterClick: PropTypes.func,
+  onToggleSidebar: PropTypes.func,
 };
 
 export default PublicHeader;

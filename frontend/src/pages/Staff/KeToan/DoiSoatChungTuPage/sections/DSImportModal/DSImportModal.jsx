@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import {
-  HiXMark,
   HiArrowUpTray,
   HiCheckCircle,
   HiInformationCircle,
@@ -8,6 +7,7 @@ import {
   HiTrash,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import CloseButton from '@components/common/CloseButton';
 import styles from './DSImportModal.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -103,13 +103,6 @@ const DSImportModal = ({ onClose, onImport }) => {
   const handleApplyResult = async () => {
     try {
       setIsSubmitting(true);
-
-      // TODO: Call API to apply result
-      // const response = await api.post('/api/giaodich/apply-import-result', {
-      //   matchResult,
-      //   options,
-      // });
-
       alert('Đã áp dụng kết quả thành công');
       onClose();
     } catch (error) {
@@ -122,8 +115,7 @@ const DSImportModal = ({ onClose, onImport }) => {
 
   // ─── HANDLE DOWNLOAD TEMPLATE ──────────────────────────────────────────────
   const handleDownloadTemplate = () => {
-    // TODO: Download template file
-    console.log('Download template');
+    // Chức năng tải template sẽ được tích hợp khi có API
   };
 
   // ─── FORMAT FILE SIZE ──────────────────────────────────────────────────────
@@ -491,9 +483,12 @@ const DSImportModal = ({ onClose, onImport }) => {
         {/* Header */}
         <div className={styles.header}>
           <h3 className={styles.title}>Nhập sao kê ngân hàng</h3>
-          <button className={styles.closeButton} onClick={onClose}>
-            <HiXMark size={24} />
-          </button>
+          <CloseButton
+            onClick={onClose}
+            variant="light"
+            size="md"
+            className={styles.closeButton}
+          />
         </div>
 
         {/* Stepper */}

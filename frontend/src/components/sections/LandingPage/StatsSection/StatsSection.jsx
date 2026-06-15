@@ -38,15 +38,7 @@ const StatsSection = () => {
         setStats(data);
       } catch (error) {
         console.error('Error fetching statistics:', error);
-        
-        // Fallback to mock data if API fails
-        const mockData = {
-          supportedRequests: 1,      
-          totalFundAmount: 1, 
-          totalDonors: 1,              
-          totalFunds: 1,               
-        };
-        setStats(mockData);
+        // Giữ nguyên giá trị mặc định {0,0,0,0} khi API lỗi
       } finally {
         setLoading(false);
       }

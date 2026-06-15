@@ -312,8 +312,7 @@
   }
   
   @media (max-width: 768px) {
-    padding: 8px 16px !important;
-    font-size: 13px !important;
+    display: none !important; // Ẩn trên mobile, hiện trong mobile menu
   }
 }
 
@@ -333,8 +332,7 @@
   }
   
   @media (max-width: 768px) {
-    padding: 8px 16px !important;
-    font-size: 13px !important;
+    display: none !important; // Ẩn trên mobile, hiện trong mobile menu
   }
 }
 
@@ -406,6 +404,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  z-index: 1100; // Cao hơn tất cả để nổi lên trên
   
   // Animation
   max-height: 0;
