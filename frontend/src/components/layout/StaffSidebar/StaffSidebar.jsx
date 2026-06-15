@@ -12,6 +12,7 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlineArrowsRightLeft,
   HiOutlineStar,
+  HiOutlineChatBubbleLeftRight,
   HiOutlineMegaphone,
   HiOutlinePencilSquare,
   HiOutlineChartPie,
@@ -74,6 +75,7 @@ const NAV_CONFIG = [
     roles: [1],
     items: [
       { label: 'Sinh viên nổi bật', path: '/admin/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [1] },
+      { label: 'Cảm nhận sinh viên', path: '/admin/danhgia', icon: HiOutlineChatBubbleLeftRight, roles: [1] },
       { label: 'Tin tức & Sự kiện', path: '/admin/tin-tuc', icon: HiOutlineMegaphone, roles: [1] },
       { label: 'Tạo bài viết', path: '/admin/tintuc/tao', icon: HiOutlinePencilSquare, roles: [1] },
     ]
@@ -141,6 +143,7 @@ const NAV_CONFIG = [
     roles: [3],
     items: [
       { label: 'Sinh viên nổi bật', path: '/can-bo/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [3] },
+      { label: 'Cảm nhận sinh viên', path: '/can-bo/danhgia', icon: HiOutlineChatBubbleLeftRight, roles: [3] },
       { label: 'Tin tức & Sự kiện', path: '/can-bo/tin-tuc', icon: HiOutlineMegaphone, roles: [3] },
       { label: 'Tạo bài viết', path: '/can-bo/tintuc/tao', icon: HiOutlinePencilSquare, roles: [3] },
     ]
@@ -228,6 +231,7 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
     if (key === 'xet-duyet') key = 'xet_duyet';
     if (key === 'nha-tai-tro') key = 'nha_tai_tro';
     if (key === 'sinh-vien-noi-bat') key = 'sinh_vien_noi_bat';
+    if (key === 'danhgia') key = 'danhgia';
     if (key === 'tin-tuc') key = 'tin_tuc';
     if (key === 'bao-cao') key = 'bao_cao';
     if (key === 'khoan-tai-tro') key = 'khoan_tai_tro';

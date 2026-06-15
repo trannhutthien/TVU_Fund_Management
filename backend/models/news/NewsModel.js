@@ -109,6 +109,7 @@ const getPublicNews = async (filters = {}) => {
       avatar,
       danhmuc,
       lanoibat,
+      phanloai,
       ngayxuatban,
       ngaytao
     FROM tintuc
@@ -170,6 +171,7 @@ const getAllNews = async () => {
       t.avatar,
       t.danhmuc,
       t.lanoibat,
+      t.phanloai,
       t.trangthai,
       t.ngayxuatban,
       t.ngaytao,
@@ -193,6 +195,7 @@ const getNewsById = async (newsId) => {
       t.avatar,
       t.danhmuc,
       t.lanoibat,
+      t.phanloai,
       t.trangthai,
       t.ngayxuatban,
       t.nguoitao_id,
@@ -220,6 +223,7 @@ const createNews = async (data) => {
     avatar,
     danhmuc,
     lanoibat,
+    phanloai,
     trangthai,
     ngayxuatban,
     nguoitao_id
@@ -233,10 +237,11 @@ const createNews = async (data) => {
       avatar,
       danhmuc,
       lanoibat,
+      phanloai,
       trangthai,
       ngayxuatban,
       nguoitao_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       tieude,
       motangan || null,
@@ -244,6 +249,7 @@ const createNews = async (data) => {
       avatar || null,
       danhmuc || 'Thong bao',
       lanoibat || 0,
+      phanloai || 'Tin moi',
       trangthai || 'Ban nhap',
       ngayxuatban || null,
       nguoitao_id
@@ -262,6 +268,7 @@ const updateNews = async (newsId, data) => {
     avatar,
     danhmuc,
     lanoibat,
+    phanloai,
     trangthai,
     ngayxuatban,
     nguoisua_id
@@ -275,6 +282,7 @@ const updateNews = async (newsId, data) => {
          avatar = ?,
          danhmuc = ?,
          lanoibat = ?,
+         phanloai = ?,
          trangthai = ?,
          ngayxuatban = ?,
          nguoisua_id = ?,
@@ -287,6 +295,7 @@ const updateNews = async (newsId, data) => {
       avatar || null,
       danhmuc || 'Thong bao',
       lanoibat || 0,
+      phanloai || 'Tin moi',
       trangthai || 'Ban nhap',
       ngayxuatban || null,
       nguoisua_id,

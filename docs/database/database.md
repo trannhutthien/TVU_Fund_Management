@@ -604,3 +604,53 @@ CREATE TABLE tintuc (
         ON DELETE SET NULL
         ON UPDATE CASCADE
 );
+
+
+
+CREATE TABLE danhgia (
+    danhgia_id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Mã đánh giá',
+
+    -- Thông tin người chia sẻ
+    nguoidung_id INT NULL COMMENT 'Người gửi (NULL nếu gửi với tư cách khách)',
+    hoten VARCHAR(100) NOT NULL COMMENT 'Họ tên hiển thị',
+    khoa VARCHAR(100) NULL COMMENT 'Tên khoa',
+    nienkhoa VARCHAR(20) NULL COMMENT 'Ví dụ: Khóa 2022-2026',
+    avatar VARCHAR(255) NULL COMMENT 'Ảnh đại diện, NULL thì dùng ảnh mặc định',
+
+    -- Nội dung chia sẻ
+    noidung TEXT NOT NULL COMMENT 'Lời chia sẻ',
+
+    -- Kiểm duyệt
+    trangthai ENUM('Cho duyet', 'Da duyet', 'Tu choi')
+        NOT NULL DEFAULT 'Cho duyet'
+        COMMENT 'Trạng thái kiểm duyệt',
+
+    lydotuchoi TEXT NULL COMMENT 'Lý do từ chối (nếu có)',
+
+    nguoiduyet_id INT NULL COMMENT 'Người duyệt',
+    ngayduyet TIMESTAMP NULL DEFAULT NULL COMMENT 'Ngày duyệt',
+
+    noibat TINYINT(1) NOT NULL DEFAULT 0
+    COMMENT '1 = Hiển thị nổi bật trên Landing Page, 0 = Bình thường',
+     thutu INT NOT NULL DEFAULT 0
+    COMMENT 'Thứ tự hiển thị thủ công',
+    ngaycapnhat TIMESTAMP NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+    COMMENT 'Ngày cập nhật cuối cùng';
+    -- Thời gian tạo
+    ngaytao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Ngày gửi đánh giá',
+
+    -- Khóa ngoại
+    CONSTRAINT fk_danhgia_nguoidung
+        FOREIGN KEY (nguoidung_id)
+        REFERENCES nguoidung(nguoidung_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_danhgia_nguoiduyet
+        FOREIGN KEY (nguoiduyet_id)
+        REFERENCES nguoidung(nguoidung_id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);

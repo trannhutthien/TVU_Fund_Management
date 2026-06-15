@@ -59,8 +59,9 @@ const FundCard = ({ fund }) => {
     navigate(`/funds/${fund.quy_id}`);
   };
 
-  const handleRegister = () => {
-    navigate(`/quy/${fund.quy_id}/dang-ky`);
+  const handleApply = () => {
+    // Điều hướng đến trang tạo đơn xin hỗ trợ public với quy_id
+    navigate(`/apply?fund=${fund.quy_id}`);
   };
 
   return (
@@ -161,10 +162,10 @@ const FundCard = ({ fund }) => {
           <Button
             variant="primary"
             size="md"
-            onClick={handleRegister}
+            onClick={handleApply}
             disabled={isFull || isPaused}
           >
-            {isFull ? 'Đã đủ suất' : isPaused ? 'Tạm dừng' : 'Đăng ký ngay'}
+            {isFull ? 'Đã đủ suất' : isPaused ? 'Tạm dừng' : 'Nộp đơn ngay'}
           </Button>
         </div>
       </div>

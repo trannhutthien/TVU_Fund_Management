@@ -22,6 +22,7 @@ import GuidelinesPage from './pages/Public/GuidelinesPage/GuidelinesPage'
 import TrackPage from './pages/Public/TrackPage/TrackPage'
 import NewsDetailPage from './pages/Public/NewsDetailPage/NewsDetailPage'
 import NewsPage from './pages/Public/NewsPage'
+import TestimonialsPage from './pages/Public/TestimonialsPage'
 
 // Pages - Auth
 import LoginPage from './pages/Auth/LoginPage'
@@ -40,6 +41,7 @@ import HiThongPhanQuyenPage from './pages/Staff/Admin/HiThongPhanQuyenPage/HiTho
 import AdminApplicationsPage from './pages/Staff/Admin/ApplicationsPage'
 import PheDuyetPage from './pages/Staff/Admin/PheDuyetPage/PheDuyetPage'
 import StudentShowcasePage from './pages/Staff/Admin/StudentShowcasePage/StudentShowcasePage'
+import DanhGiaPage from './pages/Staff/Admin/DanhGiaPage'
 import AdminBaoCaoPage from './pages/Staff/Admin/BaoCaoPage'
 import NhatKyPage from './pages/Staff/Admin/NhatKyPage/NhatKyPage'
 
@@ -88,6 +90,7 @@ function App() {
             <Route path="/track" element={<TrackPage />} />
             <Route path="/news/:id" element={<NewsDetailPage />} />
             <Route path="/news" element={<NewsPage />} />
+            <Route path="/testimonials" element={<TestimonialsPage />} />
           </Route>
           
           <Route element={<AuthLayout />}>
@@ -124,6 +127,7 @@ function App() {
             <Route path="/admin/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
             <Route path="/admin/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
             <Route path="/admin/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
+            <Route path="/admin/danhgia" element={<DanhGiaPage />} />
             <Route path="/admin/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
             <Route path="/admin/tintuc/tao" element={<TaoTinTucPage />} />
             <Route path="/admin/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
@@ -147,6 +151,7 @@ function App() {
             <Route path="/can-bo/nha-tai-tro" element={<CanBoNhaTaiTroPage />} />
             <Route path="/can-bo/users" element={<CanBoUserManagementPage />} />
             <Route path="/can-bo/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
+            <Route path="/can-bo/danhgia" element={<DanhGiaPage />} />
             <Route path="/can-bo/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
             <Route path="/can-bo/tintuc/tao" element={<TaoTinTucPage />} />
             <Route path="/can-bo/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />

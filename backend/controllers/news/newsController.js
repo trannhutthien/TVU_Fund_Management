@@ -13,6 +13,11 @@ const buildNewsImageUrl = (imagePath) => {
   return `${BASE_URL}/uploads/avatars/news/${cleanPath}`;
 };
 
+const PHANLOAI_VALUES = ['Tin moi', 'Tin noi bat'];
+const normalizePhanloai = (value) => (
+  PHANLOAI_VALUES.includes(value) ? value : 'Tin moi'
+);
+
 // ═══════════════════════════════════════════════════════════════
 // API MỚI: GET /api/news/landing - Lấy tin tức cho Landing Page
 // ═══════════════════════════════════════════════════════════════
@@ -29,6 +34,7 @@ export const getLandingNews = async (req, res) => {
         summary: news.motangan,
         avatar: buildNewsImageUrl(news.avatar),
         category: news.danhmuc,
+        phanloai: normalizePhanloai(news.phanloai),
         publishDate: news.ngayxuatban
       };
     };
@@ -91,6 +97,8 @@ export const getPublicNews = async (req, res) => {
         summary: item.motangan,
         avatar: buildNewsImageUrl(item.avatar),
         category: item.danhmuc,
+        phanloai: normalizePhanloai(item.phanloai),
+        lanoibat: item.lanoibat,
         isFeatured: item.lanoibat === 1,
         publishDate: item.ngayxuatban,
         createdAt: item.ngaytao
@@ -136,6 +144,8 @@ export const getAllNews = async (req, res) => {
         summary: news.motangan,
         avatar: buildNewsImageUrl(news.avatar),
         category: news.danhmuc,
+        phanloai: normalizePhanloai(news.phanloai),
+        lanoibat: news.lanoibat,
         isFeatured: news.lanoibat === 1,
         status: news.trangthai,
         publishDate: news.ngayxuatban,
@@ -189,6 +199,8 @@ export const getNewsById = async (req, res) => {
         content: news.noidung,
         avatar: buildNewsImageUrl(news.avatar),
         category: news.danhmuc,
+        phanloai: normalizePhanloai(news.phanloai),
+        lanoibat: news.lanoibat,
         isFeatured: news.lanoibat === 1,
         status: news.trangthai,
         publishDate: news.ngayxuatban,
@@ -230,6 +242,7 @@ export const getNewsAdminById = async (req, res) => {
         avatar: news.avatar ? buildNewsImageUrl(news.avatar) : null,
         avatarPath: news.avatar || null,
         category: news.danhmuc,
+        phanloai: normalizePhanloai(news.phanloai),
         lanoibat: news.lanoibat,
         isFeatured: news.lanoibat === 1,
         status: news.trangthai,
@@ -258,7 +271,8 @@ export const createNews = async (req, res) => {
       isFeatured,
       status,
       publishDate,
-      lanoibat
+      lanoibat,
+      phanloai
     } = req.body;
 
     // Validate bắt buộc
@@ -291,6 +305,7 @@ export const createNews = async (req, res) => {
       avatar: avatar || null,
       danhmuc: category || 'Thong bao',
       lanoibat: lanoibat !== undefined ? Number(lanoibat) : (isFeatured ? 1 : 0),
+      phanloai: normalizePhanloai(phanloai),
       trangthai: status || 'Ban nhap',
       ngayxuatban: finalPublishDate,
       nguoitao_id: creatorId
@@ -307,6 +322,8 @@ export const createNews = async (req, res) => {
         summary: newNews.motangan,
         avatar: buildNewsImageUrl(newNews.avatar),
         category: newNews.danhmuc,
+        phanloai: normalizePhanloai(newNews.phanloai),
+        lanoibat: newNews.lanoibat,
         isFeatured: newNews.lanoibat === 1,
         status: newNews.trangthai,
         publishDate: newNews.ngayxuatban
@@ -334,7 +351,8 @@ export const updateNews = async (req, res) => {
       isFeatured,
       status,
       publishDate,
-      lanoibat
+      lanoibat,
+      phanloai
     } = req.body;
 
     if (!id || isNaN(id)) {
@@ -384,6 +402,7 @@ export const updateNews = async (req, res) => {
       avatar: avatar || null,
       danhmuc: category || 'Thong bao',
       lanoibat: lanoibat !== undefined ? Number(lanoibat) : (isFeatured ? 1 : 0),
+      phanloai: normalizePhanloai(phanloai),
       trangthai: status || 'Ban nhap',
       ngayxuatban: finalPublishDate,
       nguoisua_id: editorId
@@ -400,6 +419,8 @@ export const updateNews = async (req, res) => {
         summary: updatedNews.motangan,
         avatar: buildNewsImageUrl(updatedNews.avatar),
         category: updatedNews.danhmuc,
+        phanloai: normalizePhanloai(updatedNews.phanloai),
+        lanoibat: updatedNews.lanoibat,
         isFeatured: updatedNews.lanoibat === 1,
         status: updatedNews.trangthai,
         publishDate: updatedNews.ngayxuatban

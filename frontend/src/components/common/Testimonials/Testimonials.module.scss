@@ -1,0 +1,373 @@
+@use '@styles/variables' as *;
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  padding: 30px;
+  overflow: hidden;
+  background: $bg-card;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  transition: transform $duration-base $ease-default, box-shadow $duration-base $ease-default;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-md;
+  }
+}
+
+.cardCompact {
+  min-height: 260px;
+  padding: 28px;
+}
+
+.cardFixedHeight {
+  height: 100%;
+}
+
+.quoteIcon {
+  position: absolute;
+  top: 8px;
+  left: 22px;
+  color: rgba(240, 165, 0, 0.18);
+  font-family: Georgia, serif;
+  font-size: 82px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.message {
+  position: relative;
+  z-index: 1;
+  display: -webkit-box;
+  flex: 1;
+  min-height: 82px;
+  margin: 0 0 22px;
+  overflow: hidden;
+  color: $text-body;
+  font-size: $text-md;
+  font-style: italic;
+  line-height: $leading-relaxed;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.readMore {
+  display: inline;
+  padding: 0;
+  margin-left: 3px;
+  color: $color-navy-blue;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-style: normal;
+  font-weight: $font-bold;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin-bottom: 18px;
+  background: $border-light;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.avatarWrapper,
+.prefillAvatar {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(26, 47, 94, 0.12);
+}
+
+.avatar,
+.prefillAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder,
+.prefillAvatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: $color-navy-blue;
+  background: $color-gold;
+  font-weight: $font-bold;
+}
+
+.meta {
+  min-width: 0;
+}
+
+.name {
+  margin: 0 0 4px;
+  overflow: hidden;
+  color: $color-navy-blue;
+  font-size: $text-md;
+  font-weight: $font-bold;
+  line-height: $leading-snug;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.major {
+  margin: 0;
+  color: $text-secondary;
+  font-size: $text-sm;
+  line-height: $leading-normal;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: min(640px, 100%);
+  max-height: min(92vh, 780px);
+  overflow-y: auto;
+  background: $bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid $border-light;
+
+  h2 {
+    margin: 0;
+    color: $text-heading;
+    font-size: $text-2xl;
+    font-weight: $font-bold;
+    line-height: $leading-snug;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: $text-secondary;
+    font-size: $text-sm;
+    line-height: $leading-normal;
+  }
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  color: $text-secondary;
+  background: $bg-input;
+  border: 0;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    color: $color-navy-blue;
+    background: $bg-tag;
+  }
+}
+
+.form {
+  padding: 24px;
+}
+
+.formInline {
+  padding: 0;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 16px;
+
+  > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.prefillBox {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+  background: $bg-input;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+
+  strong {
+    display: block;
+    color: $text-heading;
+    font-size: $text-md;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: $text-secondary;
+    font-size: $text-sm;
+    line-height: $leading-normal;
+  }
+}
+
+.textareaGroup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.textareaLabel {
+  margin-bottom: 8px;
+  color: $text-heading;
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+
+  span {
+    color: $color-danger;
+  }
+}
+
+.textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 14px 14px 34px;
+  color: $text-body;
+  background: $bg-input;
+  border: 2px solid transparent;
+  border-radius: $radius-md;
+  font: inherit;
+  line-height: $leading-relaxed;
+  outline: none;
+  resize: vertical;
+  transition: $transition-fast;
+
+  &:focus {
+    background: $bg-card;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 4px rgba(59, 111, 245, 0.1);
+  }
+}
+
+.counter {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  color: $text-muted;
+  font-size: $text-xs;
+  font-weight: $font-medium;
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.navyButton {
+  background: $color-navy-blue !important;
+  box-shadow: 0 4px 14px rgba(26, 47, 94, 0.28) !important;
+
+  &:hover {
+    background: #102149 !important;
+  }
+}
+
+.detailBody {
+  padding: 24px;
+
+  > p {
+    margin: 0;
+    color: $text-body;
+    font-size: $text-md;
+    line-height: $leading-relaxed;
+    white-space: pre-wrap;
+  }
+}
+
+.detailProfile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 18px;
+  margin-top: 18px;
+  border-top: 1px solid $border-light;
+
+  strong {
+    color: $text-heading;
+  }
+
+  span {
+    color: $text-secondary;
+    font-size: $text-sm;
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    min-height: 250px;
+    padding: 24px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .modalHeader,
+  .form,
+  .detailBody {
+    padding: 20px;
+  }
+
+  .formActions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}
