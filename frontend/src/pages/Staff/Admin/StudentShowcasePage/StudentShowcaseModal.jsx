@@ -47,7 +47,7 @@ const StudentShowcaseModal = ({ student, onClose, onSuccess }) => {
         hoTen: student.hoTen || '',
         khoaPhong: student.khoaPhong || '',
         namHoc: student.namHoc || '',
-        hinhAnh: student.hinhAnh || '',
+        hinhAnh: student.hinhAnhLuuTru || '',
         thanhTich: student.thanhTich || '',
         thuTu: student.thuTu || 0,
         trangThai: student.trangThai || 'Hien thi',

@@ -31,6 +31,7 @@
 
 .table {
   width: 100%;
+  min-width: 1180px;
   border-collapse: collapse;
 }
 
@@ -48,14 +49,15 @@
   white-space: nowrap;
 }
 
-.colCode { width: 10%; }
-.colType { width: 8%; }
-.colTarget { width: 22%; }
-.colFund { width: 18%; }
-.colAmount { width: 13%; text-align: right; }
-.colStatus { width: 12%; }
-.colCreator { width: 10%; }
-.colDate { width: 7%; }
+.colCode { width: 8%; }
+.colType { width: 7%; }
+.colTarget { width: 12%; }
+.colFund { width: 16%; }
+.colAmount { width: 12%; text-align: right; }
+.colStatus { width: 11%; }
+.colApprover { width: 12%; }
+.colCreator { width: 12%; }
+.colDate { width: 10%; }
 
 .table tbody tr {
   border-bottom: 1px solid #f1f5f9;
@@ -124,17 +126,6 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--color-navy-blue, #1a2f5e);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 240px;
-}
-
-.targetSub {
-  font-family: 'Inter', sans-serif;
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import { HiHeart } from 'react-icons/hi2';
 import { message } from 'antd';
 import Button from '@components/common/Button';
-import Logo from '@components/common/Logo';
 import useAuthStore from '@stores/authStore';
 import donorService from '@services/donorService';
 import styles from './DonorWallSection.module.scss';
@@ -13,27 +12,31 @@ import styles from './DonorWallSection.module.scss';
  * DonorCard Component - Card hiển thị thông tin nhà tài trợ
  */
 const DonorCard = ({ donor, isFeatured = false }) => {
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const avatarUrl = donor.avatar || donor.logo;
+
   const getInitial = (name) => {
     if (!name || typeof name !== 'string') return '?';
     return name.charAt(0).toUpperCase();
   };
 
   const renderAvatar = () => {
-    // Nếu có avatar URL, dùng Logo component với imageSrc
-    if (donor.avatar || donor.logo) {
+    if (avatarUrl && !avatarFailed) {
       return (
-        <Logo
-          size={isFeatured ? "xxl" : "xl"}
-          variant="icon-only"
-          imageVariant="circular"
-          imageSrc={donor.avatar || donor.logo}
-          imageAlt={donor.name || donor.ten || 'Nhà tài trợ'}
-          className={isFeatured ? styles.featuredDonorLogo : styles.donorLogo}
+        <img
+          src={avatarUrl}
+          alt={donor.name || donor.ten || 'Nhà tài trợ'}
+          className={
+            isFeatured
+              ? styles.featuredDonorAvatarImage
+              : styles.donorAvatarImage
+          }
+          loading="lazy"
+          onError={() => setAvatarFailed(true)}
         />
       );
     }
 
-    // Nếu không có avatar, hiển thị chữ cái đầu trong circle Gold
     return (
       <div className={isFeatured ? styles.featuredAvatarLetter : styles.avatarLetter}>
         {getInitial(donor.name || donor.ten)}

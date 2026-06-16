@@ -11,8 +11,6 @@
   background: $color-navy-blue;
 
   :global([class*='backgroundImage']) {
-    background: $color-navy-blue !important;
-    background-image: none !important;
     background-attachment: scroll;
   }
 }
@@ -21,6 +19,64 @@
   width: min(1120px, calc(100% - 32px));
   margin: auto;
   padding: 72px 0;
+
+  .bannerNav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px 18px;
+    margin-bottom: 24px;
+  }
+
+  .backButton,
+  .breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: $text-sm;
+    font-weight: $font-semibold;
+  }
+
+  .backButton {
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: $radius-sm;
+    cursor: pointer;
+    transition: $transition-base;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.36);
+    }
+  }
+
+  .breadcrumb {
+    gap: 8px;
+
+    a {
+      color: rgba(255, 255, 255, 0.86);
+      text-decoration: none;
+      transition: $transition-base;
+
+      &:hover {
+        color: #fff;
+      }
+    }
+
+    span {
+      color: #fff;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+      color: rgba(255, 255, 255, 0.64);
+      flex: 0 0 auto;
+    }
+  }
 
   h1 {
     max-width: 760px;

@@ -192,7 +192,7 @@ const ApplyPage = () => {
         ? {
             // Nhà tài trợ đăng nhập chỉ cần: Chọn quỹ + Nhập số tiền >= 10,000đ
             step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000,
-            step2: true, 
+            step2: !!(uploadedFiles?.length > 0),
             step3: false,
             step4: false,
           }
@@ -217,7 +217,7 @@ const ApplyPage = () => {
             // Nhà tài trợ vãng lai cần: Chọn quỹ + Nhập số tiền >= 10,000đ + Điền thông tin cá nhân
             step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000 && 
                    !!(guestFields.guestHoTen?.trim() && guestFields.guestEmail?.trim() && guestFields.guestSoDienThoai?.trim()),
-            step2: captchaVerified, // Chỉ cần check captcha ở bước này
+            step2: !!(uploadedFiles?.length > 0) && captchaVerified,
             step3: false,
             step4: false,
           }
@@ -244,8 +244,10 @@ const ApplyPage = () => {
             step4: !!(uploadedFiles?.length > 0) && captchaVerified,
           });
 
+  const hasRequiredProof = paymentMethod !== 'Khac' || uploadedFiles.length > 0;
+
   const isFormValid = isDonor
-    ? validationStatus.step1 && validationStatus.step2
+    ? validationStatus.step1 && validationStatus.step2 && hasRequiredProof
     : validationStatus.step1 && 
       validationStatus.step2 && 
       validationStatus.step3 && 
@@ -281,7 +283,7 @@ const ApplyPage = () => {
     }
 
     // Kiểm tra file đính kèm
-    const requiresFileUpload = !isDonor;
+    const requiresFileUpload = !isDonor || paymentMethod === 'Khac';
     if (requiresFileUpload && (!uploadedFiles || uploadedFiles.length === 0)) {
       toast.error('Vui lòng đính kèm file minh chứng');
       return;
@@ -331,7 +333,7 @@ const ApplyPage = () => {
           applicationData = {
             quy_id: selectedFund.quyId,
             so_tien: parseFloat(donationAmount),
-            hinh_anh_minh_chung: null,
+            hinh_anh_minh_chung: fileUrl || null,
             hinh_thuc: paymentMethod,
             ma_giao_dich: txnId,
             ghi_chu: `Quyên góp trực tuyến từ ${user.ho_ten || user.email || 'Nhà tài trợ'}`
@@ -394,7 +396,7 @@ const ApplyPage = () => {
             soTien: parseFloat(donationAmount),
             hinhThuc: paymentMethod,
             maGiaoDich: txnId,
-            chungTu: null,
+            chungTu: fileUrl || null,
             ghiChu: guestFields.ghiChu || 'Quyên góp trực tuyến vãng lai'
           };
           response = await guestService.submitDonation(payload);
@@ -1103,6 +1105,14 @@ const ApplyPage = () => {
 
                   {/* BƯỚC 4: Tài liệu đính kèm minh chứng (Chỉ dành cho sinh viên đề nghị hỗ trợ) */}
                   {!isDonor && (
+                    <DocumentSection
+                      files={uploadedFiles}
+                      onFilesChange={handleFilesChange}
+                      isDonor={isDonor}
+                    />
+                  )}
+
+                  {isDonor && paymentMethod === 'Khac' && (
                     <DocumentSection
                       files={uploadedFiles}
                       onFilesChange={handleFilesChange}

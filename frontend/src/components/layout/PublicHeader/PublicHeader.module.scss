@@ -543,25 +543,35 @@
   &:hover {
     .dropdownToggle {
       color: var(--color-gold);
-      
-      .arrowIcon {
-        transform: rotate(180deg);
-      }
-    }
-    
-    .dropdownMenu {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) translateY(0);
-      pointer-events: auto;
     }
   }
 }
 
+.dropdownOpen {
+  .dropdownToggle {
+    color: var(--color-gold);
+
+    .arrowIcon {
+      transform: rotate(180deg);
+    }
+  }
+
+  .dropdownMenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+}
+
 .dropdownToggle {
+  appearance: none;
+  border: 0;
+  background: transparent;
   color: var(--color-white);
   font-size: 13px;
   font-weight: 600;
+  font-family: inherit;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 8px 4px;

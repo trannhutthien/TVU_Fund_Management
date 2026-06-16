@@ -129,13 +129,51 @@ const getTransactionByIdDetailed = async (giaoDichId) => {
       nd.masodinhdanh as nguoinhan_mssv,
       dv.tenkhoa as nguoinhan_khoaphong,
       yc.sotiendenghi as yeucau_sotien,
-      nd_thuchien.hoten as nguoithuchien_hoten
+      yc.nguoidung_id as yeucau_nguoitao_id,
+      nd_yeucau_tao.hoten as yeucau_nguoitao_hoten,
+      vt_yeucau_tao.tenvaitro as yeucau_nguoitao_vaitro,
+      kt.khoantaitro_id,
+      kt.nhataitro_id,
+      ntt.tennhataitro,
+      ntt.loainhataitro,
+      nd_donation_tao.nguoidung_id as donation_nguoitao_id,
+      nd_donation_tao.hoten as donation_nguoitao_hoten,
+      vt_donation_tao.tenvaitro as donation_nguoitao_vaitro,
+      nd_thuchien.hoten as nguoithuchien_hoten,
+      vt_thuchien.tenvaitro as nguoithuchien_vaitro
      FROM giaodich gd
      INNER JOIN quy q ON gd.quy_id = q.quy_id
      LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
      LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
      LEFT JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
+     LEFT JOIN nguoidung nd_yeucau_tao ON yc.nguoidung_id = nd_yeucau_tao.nguoidung_id
+     LEFT JOIN vaitro vt_yeucau_tao ON nd_yeucau_tao.vaitro_id = vt_yeucau_tao.vaitro_id
+     LEFT JOIN khoantaitro kt ON kt.khoantaitro_id = (
+       SELECT kt_match.khoantaitro_id
+       FROM khoantaitro kt_match
+       WHERE gd.yeucauhotro_id IS NULL
+        AND gd.nguoinhan_id IS NULL
+        AND kt_match.quy_id = gd.quy_id
+        AND kt_match.sotien = gd.sotien
+        AND kt_match.trangthai IN ('Da duyet', 'Da nhan')
+        AND (
+          gd.ghichu REGEXP CONCAT('(^|[^0-9])#', kt_match.khoantaitro_id, '([^0-9]|$)')
+          OR DATE(kt_match.ngaycapnhat) = DATE(gd.ngaygiaodich)
+        )
+       ORDER BY
+        CASE
+          WHEN gd.ghichu REGEXP CONCAT('(^|[^0-9])#', kt_match.khoantaitro_id, '([^0-9]|$)')
+          THEN 0
+          ELSE 1
+        END,
+        ABS(TIMESTAMPDIFF(SECOND, kt_match.ngaycapnhat, gd.ngaygiaodich))
+       LIMIT 1
+     )
+     LEFT JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+     LEFT JOIN nguoidung nd_donation_tao ON ntt.nguoidung_id = nd_donation_tao.nguoidung_id
+     LEFT JOIN vaitro vt_donation_tao ON nd_donation_tao.vaitro_id = vt_donation_tao.vaitro_id
      LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
+     LEFT JOIN vaitro vt_thuchien ON nd_thuchien.vaitro_id = vt_thuchien.vaitro_id
      LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
      WHERE gd.giaodich_id = ?
      LIMIT 1`,
@@ -313,13 +351,51 @@ const getAllTransactions = async (filters, limit, offset) => {
       nd.masodinhdanh as nguoinhan_mssv,
       dv.tenkhoa as nguoinhan_khoaphong,
       yc.sotiendenghi as yeucau_sotien,
-      nd_thuchien.hoten as nguoithuchien_hoten
+      yc.nguoidung_id as yeucau_nguoitao_id,
+      nd_yeucau_tao.hoten as yeucau_nguoitao_hoten,
+      vt_yeucau_tao.tenvaitro as yeucau_nguoitao_vaitro,
+      kt.khoantaitro_id,
+      kt.nhataitro_id,
+      ntt.tennhataitro,
+      ntt.loainhataitro,
+      nd_donation_tao.nguoidung_id as donation_nguoitao_id,
+      nd_donation_tao.hoten as donation_nguoitao_hoten,
+      vt_donation_tao.tenvaitro as donation_nguoitao_vaitro,
+      nd_thuchien.hoten as nguoithuchien_hoten,
+      vt_thuchien.tenvaitro as nguoithuchien_vaitro
     FROM giaodich gd
     INNER JOIN quy q ON gd.quy_id = q.quy_id
     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
     LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
     LEFT JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
+    LEFT JOIN nguoidung nd_yeucau_tao ON yc.nguoidung_id = nd_yeucau_tao.nguoidung_id
+    LEFT JOIN vaitro vt_yeucau_tao ON nd_yeucau_tao.vaitro_id = vt_yeucau_tao.vaitro_id
+    LEFT JOIN khoantaitro kt ON kt.khoantaitro_id = (
+      SELECT kt_match.khoantaitro_id
+      FROM khoantaitro kt_match
+      WHERE gd.yeucauhotro_id IS NULL
+        AND gd.nguoinhan_id IS NULL
+        AND kt_match.quy_id = gd.quy_id
+        AND kt_match.sotien = gd.sotien
+        AND kt_match.trangthai IN ('Da duyet', 'Da nhan')
+        AND (
+          gd.ghichu REGEXP CONCAT('(^|[^0-9])#', kt_match.khoantaitro_id, '([^0-9]|$)')
+          OR DATE(kt_match.ngaycapnhat) = DATE(gd.ngaygiaodich)
+        )
+      ORDER BY
+        CASE
+          WHEN gd.ghichu REGEXP CONCAT('(^|[^0-9])#', kt_match.khoantaitro_id, '([^0-9]|$)')
+          THEN 0
+          ELSE 1
+        END,
+        ABS(TIMESTAMPDIFF(SECOND, kt_match.ngaycapnhat, gd.ngaygiaodich))
+      LIMIT 1
+    )
+    LEFT JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+    LEFT JOIN nguoidung nd_donation_tao ON ntt.nguoidung_id = nd_donation_tao.nguoidung_id
+    LEFT JOIN vaitro vt_donation_tao ON nd_donation_tao.vaitro_id = vt_donation_tao.vaitro_id
     LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
+    LEFT JOIN vaitro vt_thuchien ON nd_thuchien.vaitro_id = vt_thuchien.vaitro_id
     LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
     ${whereClause}
     ORDER BY gd.ngaygiaodich DESC

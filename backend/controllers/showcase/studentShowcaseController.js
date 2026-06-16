@@ -1,5 +1,13 @@
 import StudentShowcaseModel from "../../models/showcase/StudentShowcaseModel.js";
-import { buildStudentShowcaseImageUrl } from "../../utils/helpers/imageHelper.js";
+import { buildStudentShowcaseImageUrl, buildUserAvatarUrl } from "../../utils/helpers/imageHelper.js";
+
+const resolveShowcaseImageUrl = (student) => {
+  if (student?.nguoidung_id) {
+    return buildUserAvatarUrl(student.nguoidung_avatar) || buildStudentShowcaseImageUrl(student.hinhanh);
+  }
+
+  return buildStudentShowcaseImageUrl(student?.hinhanh);
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── STUDENT SHOWCASE CONTROLLER ──────────────────────────────────────────────
@@ -19,7 +27,8 @@ export const getPublicStudentShowcase = async (req, res) => {
         hoTen: student.hoten,
         khoaPhong: student.khoaphong,
         namHoc: student.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(student.hinhanh),
+        hinhAnh: resolveShowcaseImageUrl(student),
+        hinhAnhLuuTru: buildStudentShowcaseImageUrl(student.hinhanh),
         thanhTich: student.thanhtich,
         thuTu: student.thutu,
         soLanHoTro: student.so_lan_ho_tro > 0 ? student.so_lan_ho_tro : ((student.sinhviennoibat_id % 2) + 1),
@@ -49,7 +58,8 @@ export const getAllStudentShowcase = async (req, res) => {
         hoTen: student.hoten,
         khoaPhong: student.khoaphong,
         namHoc: student.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(student.hinhanh),
+        hinhAnh: resolveShowcaseImageUrl(student),
+        hinhAnhLuuTru: buildStudentShowcaseImageUrl(student.hinhanh),
         thanhTich: student.thanhtich,
         thuTu: student.thutu,
         trangThai: student.trangthai,
@@ -95,7 +105,8 @@ export const getStudentShowcaseById = async (req, res) => {
         hoTen: student.hoten,
         khoaPhong: student.khoaphong,
         namHoc: student.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(student.hinhanh),
+        hinhAnh: resolveShowcaseImageUrl(student),
+        hinhAnhLuuTru: buildStudentShowcaseImageUrl(student.hinhanh),
         thanhTich: student.thanhtich,
         thuTu: student.thutu,
         trangThai: student.trangthai,
@@ -170,7 +181,8 @@ export const createStudentShowcase = async (req, res) => {
         hoTen: newStudent.hoten,
         khoaPhong: newStudent.khoaphong,
         namHoc: newStudent.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(newStudent.hinhanh),
+        hinhAnh: resolveShowcaseImageUrl(newStudent),
+        hinhAnhLuuTru: buildStudentShowcaseImageUrl(newStudent.hinhanh),
         thanhTich: newStudent.thanhtich,
         thuTu: newStudent.thutu,
         trangThai: newStudent.trangthai
@@ -253,7 +265,8 @@ export const updateStudentShowcase = async (req, res) => {
         hoTen: updatedStudent.hoten,
         khoaPhong: updatedStudent.khoaphong,
         namHoc: updatedStudent.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(updatedStudent.hinhanh),
+        hinhAnh: resolveShowcaseImageUrl(updatedStudent),
+        hinhAnhLuuTru: buildStudentShowcaseImageUrl(updatedStudent.hinhanh),
         thanhTich: updatedStudent.thanhtich,
         thuTu: updatedStudent.thutu,
         trangThai: updatedStudent.trangthai

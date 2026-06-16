@@ -221,7 +221,7 @@ export const getMyApplications = async (req, res) => {
     const limitNum = parseInt(limit);
     const offset = (pageNum - 1) * limitNum;
 
-    const applications = await ApplicationModel.getApplicationsByUser(
+    const { applications, total } = await ApplicationModel.getApplicationsByUser(
       userId,
       limitNum,
       offset
@@ -253,6 +253,10 @@ export const getMyApplications = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Lấy danh sách đơn thành công",
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
       data: applications.map(app => ({
         requestId: app.yeucauhotro_id,
         tieuDe: app.lydo ? (app.lydo.substring(0, 50) + (app.lydo.length > 50 ? '...' : '')) : '',

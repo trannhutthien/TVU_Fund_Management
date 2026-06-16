@@ -11,19 +11,21 @@ import pool from "../../config/db.js";
 const getAllStudentShowcase = async () => {
   const [rows] = await pool.query(
     `SELECT 
-      sinhviennoibat_id,
-      nguoidung_id,
-      hoten,
-      khoaphong,
-      namhoc,
-      hinhanh,
-      thanhtich,
-      thutu,
-      trangthai,
-      ngaytao,
-      ngaycapnhat
-     FROM sinhviennoibat
-     ORDER BY thutu ASC, ngaytao DESC`
+      sv.sinhviennoibat_id,
+      sv.nguoidung_id,
+      sv.hoten,
+      sv.khoaphong,
+      sv.namhoc,
+      sv.hinhanh,
+      nd.avatar AS nguoidung_avatar,
+      sv.thanhtich,
+      sv.thutu,
+      sv.trangthai,
+      sv.ngaytao,
+      sv.ngaycapnhat
+     FROM sinhviennoibat sv
+     LEFT JOIN nguoidung nd ON sv.nguoidung_id = nd.nguoidung_id
+     ORDER BY sv.thutu ASC, sv.ngaytao DESC`
   );
   return rows;
 };
@@ -41,11 +43,13 @@ const getPublicStudentShowcase = async () => {
       sv.khoaphong,
       sv.namhoc,
       sv.hinhanh,
+      nd.avatar AS nguoidung_avatar,
       sv.thanhtich,
       sv.thutu,
       COALESCE(yc.so_lan_ho_tro, 0) AS so_lan_ho_tro,
       COALESCE(yc.tong_tien_ho_tro, 0) AS tong_tien_ho_tro
      FROM sinhviennoibat sv
+     LEFT JOIN nguoidung nd ON sv.nguoidung_id = nd.nguoidung_id
      LEFT JOIN (
        SELECT 
          nguoidung_id,
@@ -69,19 +73,21 @@ const getPublicStudentShowcase = async () => {
 const getStudentShowcaseById = async (sinhviennoibatId) => {
   const [rows] = await pool.query(
     `SELECT 
-      sinhviennoibat_id,
-      nguoidung_id,
-      hoten,
-      khoaphong,
-      namhoc,
-      hinhanh,
-      thanhtich,
-      thutu,
-      trangthai,
-      ngaytao,
-      ngaycapnhat
-     FROM sinhviennoibat
-     WHERE sinhviennoibat_id = ?
+      sv.sinhviennoibat_id,
+      sv.nguoidung_id,
+      sv.hoten,
+      sv.khoaphong,
+      sv.namhoc,
+      sv.hinhanh,
+      nd.avatar AS nguoidung_avatar,
+      sv.thanhtich,
+      sv.thutu,
+      sv.trangthai,
+      sv.ngaytao,
+      sv.ngaycapnhat
+     FROM sinhviennoibat sv
+     LEFT JOIN nguoidung nd ON sv.nguoidung_id = nd.nguoidung_id
+     WHERE sv.sinhviennoibat_id = ?
      LIMIT 1`,
     [sinhviennoibatId]
   );

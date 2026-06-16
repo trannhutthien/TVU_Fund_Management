@@ -84,6 +84,13 @@ const getApplicationById = async (yeucauhotroId) => {
 // CÔNG DỤNG: Lấy danh sách đơn của 1 sinh viên
 // ─────────────────────────────────────────────────────────────────────────────
 const getApplicationsByUser = async (nguoiDungId, limit = 20, offset = 0) => {
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM yeucauhotro
+     WHERE nguoidung_id = ?`,
+    [nguoiDungId]
+  );
+
   const [rows] = await pool.query(
     `SELECT 
       yc.yeucauhotro_id,
@@ -101,7 +108,10 @@ const getApplicationsByUser = async (nguoiDungId, limit = 20, offset = 0) => {
     [nguoiDungId, limit, offset]
   );
 
-  return rows;
+  return {
+    applications: rows,
+    total: Number(total) || 0
+  };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

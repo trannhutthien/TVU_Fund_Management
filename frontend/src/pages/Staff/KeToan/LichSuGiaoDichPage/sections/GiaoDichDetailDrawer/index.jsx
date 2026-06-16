@@ -213,6 +213,21 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose }) => {
                 </div>
               </div>
               <div className={styles.metaItem}>
+                <div className={styles.metaLabel}>Đối tượng</div>
+                <div className={styles.metaValue}>
+                  {tx.doiTuong?.tenVaiTro ||
+                    tx.nguoiTao?.tenVaiTro ||
+                    tx.nguoiDuyet?.tenVaiTro ||
+                    '—'}
+                </div>
+              </div>
+              <div className={styles.metaItem}>
+                <div className={styles.metaLabel}>Người duyệt</div>
+                <div className={styles.metaValue}>
+                  {tx.nguoiDuyet?.hoTen || '—'}
+                </div>
+              </div>
+              <div className={styles.metaItem}>
                 <div className={styles.metaLabel}>Người tạo</div>
                 <div className={styles.metaValue}>
                   {tx.nguoiTao?.hoTen || '—'}

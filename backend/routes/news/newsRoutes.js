@@ -32,6 +32,9 @@ router.get("/public", getPublicNews);
 // GET /api/news/count-by-category - Lấy số lượng tin của từng danh mục
 router.get("/count-by-category", getNewsCountByCategory);
 
+// GET /api/news/admin/:id - Lấy chi tiết bài viết dùng cho trang edit (Admin/Cán bộ, không check trạng thái)
+router.get("/admin/:id", protect, authorizeRoles(1, 3), getNewsAdminById);
+
 // GET /api/news/:id - Xem chi tiết bài viết (Công khai cho mọi người)
 router.get("/:id", getNewsById);
 
@@ -43,9 +46,6 @@ router.post("/", protect, authorizeRoles(1, 3), createNews);
 
 // PUT /api/news/:id - Cập nhật tin tức (Cán bộ: 3, Admin: 1)
 router.put("/:id", protect, authorizeRoles(1, 3), updateNews);
-
-// GET /api/news/admin/:id - Lấy chi tiết bài viết dùng cho trang edit (Admin/Cán bộ, không check trạng thái)
-router.get("/admin/:id", protect, authorizeRoles(1, 3), getNewsAdminById);
 
 // DELETE /api/news/:id - Xóa tin tức (chỉ Admin: 1)
 router.delete("/:id", protect, authorizeRoles(1), deleteNews);
