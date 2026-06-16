@@ -7,7 +7,6 @@ import BankAccountSection from './sections/BankAccountSection';
 import ApplicationHistorySection from './sections/ApplicationHistorySection';
 import StudentOverviewSection from './sections/StudentOverviewSection';
 import { bankAccountService } from '@services/bankAccountService';
-import { applicationService } from '@services/applicationService';
 import styles from './StudentProfile.module.scss';
 
 /**
@@ -37,27 +36,8 @@ const StudentProfile = ({ user, onLogout }) => {
   useEffect(() => {
     if (isSinhVien) {
       fetchBankAccounts();
-      fetchApplicationOverview();
     }
   }, [isSinhVien]);
-
-  const fetchApplicationOverview = async () => {
-    try {
-      const response = await applicationService.getMyApplications({
-        page: 1,
-        limit: 1,
-      });
-
-      if (response.success) {
-        setProfileOverview(prev => ({
-          ...prev,
-          soHoSoDaNop: Number(response.total ?? response.data?.length ?? 0),
-        }));
-      }
-    } catch (error) {
-      console.error('Fetch application overview error:', error);
-    }
-  };
 
   const fetchBankAccounts = async () => {
     try {

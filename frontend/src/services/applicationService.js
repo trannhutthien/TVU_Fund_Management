@@ -15,8 +15,8 @@ export const applicationService = {
   },
 
   // Lấy đơn yêu cầu của tôi
-  getMyApplications: async (params = {}) => {
-    const response = await api.get(API_ENDPOINTS.MY_APPLICATIONS, { params })
+  getMyApplications: async () => {
+    const response = await api.get(API_ENDPOINTS.MY_APPLICATIONS)
     return response.data
   },
 

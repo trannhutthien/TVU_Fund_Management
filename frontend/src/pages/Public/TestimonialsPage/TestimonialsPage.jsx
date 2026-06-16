@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import {
-  HiOutlineArrowLeft,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlineMagnifyingGlass,
@@ -16,13 +14,11 @@ import {
   TestimonialModal,
 } from '@components/common/Testimonials';
 import danhGiaService from '@services/danhGiaService';
-import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './TestimonialsPage.module.scss';
 
 const PAGE_SIZE = 12;
 
 const TestimonialsPage = () => {
-  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [khoaOptions, setKhoaOptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,29 +82,8 @@ const TestimonialsPage = () => {
 
   return (
     <div className={styles.page}>
-      <BackgroundImage
-        className={styles.banner}
-        overlayType="dark"
-        imageUrl={khuonVienImage}
-      >
+      <BackgroundImage className={styles.banner} overlayType="dark">
         <div className={styles.bannerContent}>
-          <div className={styles.bannerNav}>
-            <button
-              type="button"
-              className={styles.backButton}
-              onClick={() => navigate(-1)}
-            >
-              <HiOutlineArrowLeft />
-              Quay lại
-            </button>
-
-            <nav className={styles.breadcrumb} aria-label="Vi tri trang">
-              <Link to="/">Trang chủ</Link>
-              <HiOutlineChevronRight aria-hidden="true" />
-              <span>Sinh viên nói gì về TVU Fund</span>
-            </nav>
-          </div>
-
           <h1>Sinh viên nói gì về TVU Fund</h1>
           <p>Những cảm nhận đã được kiểm duyệt từ sinh viên và cộng đồng TVU Fund.</p>
         </div>

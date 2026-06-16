@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
@@ -27,8 +27,6 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   const { isAuthenticated, user, token, logout: logoutStore } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const navRef = useRef(null);
 
   const handleLogout = async () => {
     try {
@@ -82,37 +80,6 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
-
-  const closeDropdown = () => {
-    setOpenDropdown(null);
-  };
-
-  const toggleDropdown = (label) => {
-    setOpenDropdown((current) => (current === label ? null : label));
-  };
-
-  // Đóng dropdown desktop khi click ra ngoài hoặc nhấn Escape
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (navRef.current && !navRef.current.contains(event.target)) {
-        closeDropdown();
-      }
-    };
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        closeDropdown();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   // Navigation items
   const navItems = [
@@ -243,26 +210,15 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
           </div>
 
           {/* Navigation Menu (Center) - Desktop only */}
-          <nav className={styles.nav} ref={navRef}>
+          <nav className={styles.nav}>
             {filteredNavItems.map((item) => {
               if (item.isDropdown) {
-                const isDropdownOpen = openDropdown === item.label;
-
                 return (
-                  <div
-                    className={`${styles.dropdown} ${isDropdownOpen ? styles.dropdownOpen : ''}`}
-                    key={item.label}
-                  >
-                    <button
-                      type="button"
-                      className={styles.dropdownToggle}
-                      onClick={() => toggleDropdown(item.label)}
-                      aria-haspopup="menu"
-                      aria-expanded={isDropdownOpen}
-                    >
+                  <div className={styles.dropdown} key={item.label}>
+                    <span className={styles.dropdownToggle}>
                       {item.label} <HiChevronDown className={styles.arrowIcon} />
-                    </button>
-                    <div className={styles.dropdownMenu} role="menu">
+                    </span>
+                    <div className={styles.dropdownMenu}>
                       {item.children.map((child) => (
                         <NavLink
                           key={child.path}
@@ -270,8 +226,6 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
                           className={({ isActive }) =>
                             `${styles.dropdownItem} ${isActive ? styles.dropdownItemActive : ''}`
                           }
-                          onClick={closeDropdown}
-                          role="menuitem"
                         >
                           {child.label}
                         </NavLink>
@@ -289,7 +243,6 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
                       ? `${styles.navLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
                       : `${styles.navLink} ${isActive ? styles.active : ''}`
                   }
-                  onClick={closeDropdown}
                 >
                   {item.highlight && <span className={styles.highlightIcon}>✦</span>}
                   {item.label}

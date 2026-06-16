@@ -1,5 +1,5 @@
 import pool from "../../config/db.js";
-import { buildDonorAvatarUrl, buildUserAvatarUrl } from "../../utils/helpers/imageHelper.js";
+import { buildDonorAvatarUrl } from "../../utils/helpers/imageHelper.js";
 import DonorModel from "../../models/donations/DonorModel.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -19,7 +19,6 @@ export const getDonorWall = async (req, res) => {
         nt.nhataitro_id,
         nt.tennhataitro,
         nt.loainhataitro,
-        nt.logo,
         nd.avatar,
         nd.email,
         nd.sodienthoai,
@@ -32,7 +31,7 @@ export const getDonorWall = async (req, res) => {
        FROM nhataitro nt
        INNER JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
        LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
-       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo, nd.avatar, nd.email, nd.sodienthoai
+       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nd.avatar, nd.email, nd.sodienthoai
        HAVING tong_dong_gop > 0
        ORDER BY tong_dong_gop DESC`
     );
@@ -70,10 +69,6 @@ export const getDonorWall = async (req, res) => {
     const silver = [];
 
     donors.forEach(donor => {
-      const donorImage = donor.logo
-        ? buildDonorAvatarUrl(donor.logo)
-        : buildUserAvatarUrl(donor.avatar);
-
       const donorData = {
         id: donor.nhataitro_id,
         ten: donor.tennhataitro,
@@ -85,8 +80,7 @@ export const getDonorWall = async (req, res) => {
         totalAmount: parseFloat(donor.tong_dong_gop),
         soQuyHoTro: donor.so_quy_ho_tro,
         cacQuyHoTro: fundsMap[donor.nhataitro_id] || [],
-        logo: donorImage,
-        avatar: donorImage,
+        logo: buildDonorAvatarUrl(donor.avatar),
         quote: null
       };
 

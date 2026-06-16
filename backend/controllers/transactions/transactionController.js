@@ -9,9 +9,6 @@ const mapTransactionRow = (tx) => {
   // - Giao dịch THU: yeucauhotro_id = NULL và nguoinhan_id = NULL (từ tài trợ vào quỹ)
   // - Giao dịch CHI: yeucauhotro_id != NULL và nguoinhan_id != NULL (từ quỹ ra sinh viên)
   const loai = (tx.yeucauhotro_id === null && tx.nguoinhan_id === null) ? 'Thu' : 'Chi';
-  const nguoiTaoId = tx.yeucau_nguoitao_id || tx.donation_nguoitao_id || null;
-  const nguoiTaoHoTen = tx.yeucau_nguoitao_hoten || tx.donation_nguoitao_hoten || null;
-  const nguoiTaoVaiTro = tx.yeucau_nguoitao_vaitro || tx.donation_nguoitao_vaitro || null;
   
   return {
     transactionId: tx.giaodich_id,
@@ -24,14 +21,7 @@ const mapTransactionRow = (tx) => {
       tenQuy: tx.tenquy,
       loaiQuy: tx.loaiquy_id
     },
-    khoanTaiTro: tx.khoantaitro_id ? {
-      id: tx.khoantaitro_id,
-      nhaTaiTro: {
-        id: tx.nhataitro_id,
-        ten: tx.tennhataitro,
-        loai: tx.loainhataitro
-      }
-    } : null,
+    khoanTaiTro: null,
     requestId: tx.yeucauhotro_id,
     sinhVien: tx.nguoinhan_id ? {
       id: tx.nguoinhan_id,
@@ -40,18 +30,9 @@ const mapTransactionRow = (tx) => {
       khoaPhong: tx.nguoinhan_khoaphong,
       tieuDeDon: tx.ghichu || ''
     } : null,
-    doiTuong: {
-      tenVaiTro: nguoiTaoVaiTro || tx.nguoithuchien_vaitro || null
-    },
-    nguoiDuyet: tx.nguoithuchien_id ? {
+    nguoiTao: tx.nguoithuchien_id ? {
       id: tx.nguoithuchien_id,
-      hoTen: tx.nguoithuchien_hoten,
-      tenVaiTro: tx.nguoithuchien_vaitro || null
-    } : null,
-    nguoiTao: (nguoiTaoId || nguoiTaoHoTen) ? {
-      id: nguoiTaoId,
-      hoTen: nguoiTaoHoTen,
-      tenVaiTro: nguoiTaoVaiTro
+      hoTen: tx.nguoithuchien_hoten
     } : null,
     minhChung: tx.chungtu,
     ghiChu: tx.ghichu,
@@ -285,7 +266,7 @@ export const exportTransactions = async (req, res) => {
     const sheet = workbook.addWorksheet("Lịch sử giao dịch");
 
     // Tiêu đề báo cáo
-    sheet.mergeCells("A1:J1");
+    sheet.mergeCells("A1:I1");
     const titleCell = sheet.getCell("A1");
     titleCell.value = "DANH SÁCH GIAO DỊCH GIẢI NGÂN";
     titleCell.font = { size: 16, bold: true, color: { argb: "FF1A2F5E" } };
@@ -304,13 +285,12 @@ export const exportTransactions = async (req, res) => {
     const headers = [
       "Mã GD",
       "Loại",
-      "Đối tượng",
-      "Quỹ",
+      "Sinh viên nhận",
+      "Quỹ giải ngân",
       "Số tiền",
       "Trạng thái GD",
       "Trạng thái đối soát",
-      "Người duyệt",
-      "Người tạo",
+      "Ghi chú",
       "Ngày tạo"
     ];
 
@@ -335,17 +315,20 @@ export const exportTransactions = async (req, res) => {
 
     // Data rows
     transactions.forEach((tx, idx) => {
+      const sinhVien = tx.sinhVien
+        ? `${tx.sinhVien.hoTen} (${tx.sinhVien.maSoDinhDanh || "—"})`
+        : "—";
+
       const row = sheet.getRow(7 + idx);
       row.values = [
         `GD${tx.transactionId}`,
         tx.loai,
-        tx.doiTuong?.tenVaiTro || tx.nguoiTao?.tenVaiTro || tx.nguoiDuyet?.tenVaiTro || "—",
+        sinhVien,
         tx.quy?.tenQuy || "—",
         Number(tx.soTien || 0),
         tx.trangThai,
         tx.doiSoatTrangThai,
-        tx.nguoiDuyet?.hoTen || "—",
-        tx.nguoiTao?.hoTen || "—",
+        tx.ghiChu || "",
         new Date(tx.ngayGiaoDich).toLocaleString("vi-VN")
       ];
 

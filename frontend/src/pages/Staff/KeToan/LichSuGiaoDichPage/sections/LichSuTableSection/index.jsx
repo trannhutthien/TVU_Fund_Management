@@ -34,6 +34,22 @@ const formatDate = (v) => {
   return d.toLocaleDateString('vi-VN');
 };
 
+const getDoiTuong = (tx) => {
+  if (tx.loai === 'Thu') {
+    const ntt = tx.khoanTaiTro?.nhaTaiTro;
+    return {
+      name: ntt?.ten || 'Nhà tài trợ',
+      sub: ntt?.loai || 'Tài trợ',
+    };
+  }
+  // Chi
+  const sv = tx.sinhVien;
+  return {
+    name: sv?.hoTen || 'Sinh viên',
+    sub: sv?.maSoDinhDanh || '—',
+  };
+};
+
 const LichSuTableSection = ({
   data,
   isLoading,
@@ -81,7 +97,6 @@ const LichSuTableSection = ({
                   <th className={styles.colFund}>QUỸ</th>
                   <th className={styles.colAmount}>SỐ TIỀN</th>
                   <th className={styles.colStatus}>TRẠNG THÁI</th>
-                  <th className={styles.colApprover}>NGƯỜI DUYỆT</th>
                   <th className={styles.colCreator}>NGƯỜI TẠO</th>
                   <th className={styles.colDate}>NGÀY TẠO</th>
                 </tr>
@@ -92,11 +107,7 @@ const LichSuTableSection = ({
                   const isBatThuong =
                     tx.trangThai === 'That bai' ||
                     tx.trangThai === 'Hoan tien';
-                  const doiTuongVaiTro =
-                    tx.doiTuong?.tenVaiTro ||
-                    tx.nguoiTao?.tenVaiTro ||
-                    tx.nguoiDuyet?.tenVaiTro ||
-                    '—';
+                  const doiTuong = getDoiTuong(tx);
 
                   return (
                     <tr
@@ -126,7 +137,10 @@ const LichSuTableSection = ({
                       <td>
                         <div className={styles.targetCell}>
                           <div className={styles.targetName}>
-                            {doiTuongVaiTro}
+                            {doiTuong.name}
+                          </div>
+                          <div className={styles.targetSub}>
+                            {doiTuong.sub}
                           </div>
                         </div>
                       </td>
@@ -146,9 +160,6 @@ const LichSuTableSection = ({
                           status={STATUS_TO_BADGE[tx.trangThai] || 'pending'}
                           size="sm"
                         />
-                      </td>
-                      <td className={styles.cellCreator}>
-                        {tx.nguoiDuyet?.hoTen || '—'}
                       </td>
                       <td className={styles.cellCreator}>
                         {tx.nguoiTao?.hoTen || '—'}
