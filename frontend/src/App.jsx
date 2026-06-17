@@ -36,9 +36,7 @@ import DashboardPage from './pages/User/Student/Dashboard/DashboardPage'
 
 // Pages - Staff (Role 1, 2, 3)
 import AdminDashboard from './pages/Staff/Admin/AdminDashboard'
-import AdminUsersPage from './pages/Staff/Admin/UsersPage'
 import HiThongPhanQuyenPage from './pages/Staff/Admin/HiThongPhanQuyenPage/HiThongPhanQuyenPage'
-import AdminApplicationsPage from './pages/Staff/Admin/ApplicationsPage'
 import PheDuyetPage from './pages/Staff/Admin/PheDuyetPage/PheDuyetPage'
 import StudentShowcasePage from './pages/Staff/Admin/StudentShowcasePage/StudentShowcasePage'
 import DanhGiaPage from './pages/Staff/Admin/DanhGiaPage'
@@ -126,6 +124,7 @@ function App() {
             <Route path="/admin/nha-tai-tro" element={<CanBoNhaTaiTroPage isAdmin={true} />} />
             <Route path="/admin/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
             <Route path="/admin/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
+            <Route path="/admin/chung-tu" element={<DoiSoatChungTuPage />} />
             <Route path="/admin/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
             <Route path="/admin/danhgia" element={<DanhGiaPage />} />
             <Route path="/admin/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />

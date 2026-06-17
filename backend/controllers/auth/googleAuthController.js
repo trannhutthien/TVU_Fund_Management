@@ -80,8 +80,6 @@ export const googleCallback = async (req, res) => {
         avatar: picture || null,
       });
       user = await NguoiDungModel.getUserForProfile(newUserId);
-      
-      console.log(`✅ Tạo tài khoản mới từ Google: ${email} (ID: ${newUserId})`);
     } else {
       // 4b. User đã tồn tại - kiểm tra trạng thái
       if (user.trangthai === "KHOA") {

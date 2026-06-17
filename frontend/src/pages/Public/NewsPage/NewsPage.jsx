@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   HiOutlineCalendarDays, 
@@ -27,7 +27,18 @@ const CATEGORIES_CONFIG = [
   { key: 'Khac', label: 'Khác', class: 'other' }
 ];
 
+const PHANLOAI_CONFIG = [
+  { key: 'all', label: 'Tất cả tin' },
+  { key: 'Tin moi', label: 'Tin mới' },
+  { key: 'Tin noi bat', label: 'Tin nổi bật' }
+];
+
 const ITEMS_PER_PAGE = 6;
+
+const createCategoryState = (valueFactory) => CATEGORIES_CONFIG.reduce((acc, cat) => {
+  acc[cat.key] = typeof valueFactory === 'function' ? valueFactory(cat) : valueFactory;
+  return acc;
+}, {});
 
 const NewsPage = () => {
   const navigate = useNavigate();
@@ -38,48 +49,20 @@ const NewsPage = () => {
 
   // Filter & Page States
   const [activeCategory, setActiveCategory] = useState('all');
-  const [categoryCounts, setCategoryCounts] = useState({
-    'Tin hoc bong': 0,
-    'Tin giao duc': 0,
-    'Su kien': 0,
-    'Thong bao': 0,
-    'Khac': 0
-  });
+  const [activePhanloai, setActivePhanloai] = useState('all');
+  const [categoryCounts, setCategoryCounts] = useState(createCategoryState(0));
 
   // Independent state per category
-  const [categoryPages, setCategoryPages] = useState({
-    'Tin hoc bong': 1,
-    'Tin giao duc': 1,
-    'Su kien': 1,
-    'Thong bao': 1,
-    'Khac': 1
-  });
+  const [categoryPages, setCategoryPages] = useState(createCategoryState(1));
 
-  const [categoryData, setCategoryData] = useState({
-    'Tin hoc bong': [],
-    'Tin giao duc': [],
-    'Su kien': [],
-    'Thong bao': [],
-    'Khac': []
-  });
+  const [categoryData, setCategoryData] = useState(createCategoryState(() => []));
 
-  const [categoryTotals, setCategoryTotals] = useState({
-    'Tin hoc bong': 0,
-    'Tin giao duc': 0,
-    'Su kien': 0,
-    'Thong bao': 0,
-    'Khac': 0
-  });
+  const [categoryTotals, setCategoryTotals] = useState(createCategoryState(0));
 
-  const [categoryLoading, setCategoryLoading] = useState({
-    'Tin hoc bong': false,
-    'Tin giao duc': false,
-    'Su kien': false,
-    'Thong bao': false,
-    'Khac': false
-  });
+  const [categoryLoading, setCategoryLoading] = useState(createCategoryState(false));
 
   const [initLoading, setInitLoading] = useState(true);
+  const filterRequestIdRef = useRef(0);
 
   // Modal Handlers
   const openLoginModal = () => setIsLoginModalOpen(true);
@@ -105,34 +88,75 @@ const NewsPage = () => {
     };
   }, [isLoginModalOpen, isRegisterModalOpen]);
 
-  // Fetch counts on mount
+  const getPhanloaiParam = (phanloaiKey = activePhanloai) => (
+    phanloaiKey === 'all' ? undefined : phanloaiKey
+  );
+
+  // Fetch counts when the news type filter changes
   useEffect(() => {
     const fetchCounts = async () => {
+      const requestId = filterRequestIdRef.current + 1;
+      filterRequestIdRef.current = requestId;
+      const currentPhanloai = activePhanloai;
+
       try {
         setInitLoading(true);
-        const response = await newsService.getNewsCountByCategory();
+        setCategoryCounts(createCategoryState(0));
+        setCategoryTotals(createCategoryState(0));
+        setCategoryData(createCategoryState(() => []));
+        setCategoryPages(createCategoryState(1));
+        setCategoryLoading(createCategoryState(false));
+
+        const response = await newsService.getNewsCountByCategory({
+          phanloai: getPhanloaiParam(currentPhanloai)
+        });
+
+        if (requestId !== filterRequestIdRef.current) return;
+
         if (response.success && response.data) {
-          setCategoryCounts(response.data);
-          setCategoryTotals(response.data);
+          const nextCounts = {
+            ...createCategoryState(0),
+            ...response.data
+          };
+
+          setCategoryCounts(nextCounts);
+          setCategoryTotals(nextCounts);
+
+          CATEGORIES_CONFIG.forEach(cat => {
+            const count = nextCounts[cat.key] || 0;
+            if (count > 0) {
+              fetchCategoryNews(cat.key, 1, currentPhanloai, requestId);
+            }
+          });
         }
       } catch (error) {
         console.error('Error fetching news category counts:', error);
       } finally {
-        setInitLoading(false);
+        if (requestId === filterRequestIdRef.current) {
+          setInitLoading(false);
+        }
       }
     };
     fetchCounts();
-  }, []);
+  }, [activePhanloai]);
 
   // Fetch news for a category when its page or counts change
-  const fetchCategoryNews = async (categoryKey, page) => {
+  const fetchCategoryNews = async (
+    categoryKey,
+    page,
+    phanloaiKey = activePhanloai,
+    requestId = filterRequestIdRef.current
+  ) => {
     try {
       setCategoryLoading(prev => ({ ...prev, [categoryKey]: true }));
       const response = await newsService.getPublicNews({
         category: categoryKey,
+        phanloai: getPhanloaiParam(phanloaiKey),
         page,
         limit: ITEMS_PER_PAGE
       });
+
+      if (requestId !== filterRequestIdRef.current) return;
 
       if (response.success) {
         setCategoryData(prev => ({ ...prev, [categoryKey]: response.news || [] }));
@@ -141,19 +165,11 @@ const NewsPage = () => {
     } catch (error) {
       console.error(`Error fetching news for category ${categoryKey}:`, error);
     } finally {
-      setCategoryLoading(prev => ({ ...prev, [categoryKey]: false }));
+      if (requestId === filterRequestIdRef.current) {
+        setCategoryLoading(prev => ({ ...prev, [categoryKey]: false }));
+      }
     }
   };
-
-  // Trigger fetch for categories that have articles
-  useEffect(() => {
-    CATEGORIES_CONFIG.forEach(cat => {
-      const count = categoryCounts[cat.key];
-      if (count > 0) {
-        fetchCategoryNews(cat.key, categoryPages[cat.key]);
-      }
-    });
-  }, [categoryCounts]);
 
   // Handle pagination change
   const handlePageChange = (categoryKey, newPage) => {
@@ -165,6 +181,11 @@ const NewsPage = () => {
     if (sectionElement) {
       sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const handlePhanloaiChange = (phanloaiKey) => {
+    setActivePhanloai(phanloaiKey);
+    setActiveCategory('all');
   };
 
   // Format date helper
@@ -379,28 +400,46 @@ const NewsPage = () => {
         <div className={styles.container}>
           {/* Filter Bar */}
           <div className={styles.filterBar}>
-            <button
-              className={`${styles.filterTab} ${activeCategory === 'all' ? styles.active : ''}`}
-              onClick={() => setActiveCategory('all')}
-            >
-              Tất cả
-            </button>
-            {CATEGORIES_CONFIG.map((cat) => {
-              const count = categoryCounts[cat.key] || 0;
-              const isDisabled = count === 0;
-              return (
+            <div className={styles.filterGroup}>
+              <span className={styles.filterGroupLabel}>Phân loại</span>
+              {PHANLOAI_CONFIG.map((item) => (
                 <button
-                  key={cat.key}
-                  className={`${styles.filterTab} ${activeCategory === cat.key ? styles.active : ''} ${isDisabled ? styles.disabled : ''}`}
-                  onClick={() => !isDisabled && setActiveCategory(cat.key)}
-                  disabled={isDisabled}
-                  title={isDisabled ? 'Chưa có bài viết thuộc danh mục này' : ''}
+                  key={item.key}
+                  className={`${styles.filterTab} ${activePhanloai === item.key ? styles.active : ''}`}
+                  onClick={() => handlePhanloaiChange(item.key)}
                 >
-                  {cat.label}
-                  <span className={styles.filterCount}>{count}</span>
+                  {item.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+
+            <div className={styles.filterDivider} />
+
+            <div className={styles.filterGroup}>
+              <span className={styles.filterGroupLabel}>Danh mục</span>
+              <button
+                className={`${styles.filterTab} ${activeCategory === 'all' ? styles.active : ''}`}
+                onClick={() => setActiveCategory('all')}
+              >
+                Tất cả
+              </button>
+              {CATEGORIES_CONFIG.map((cat) => {
+                const count = categoryCounts[cat.key] || 0;
+                const isDisabled = count === 0;
+                return (
+                  <button
+                    key={cat.key}
+                    className={`${styles.filterTab} ${activeCategory === cat.key ? styles.active : ''} ${isDisabled ? styles.disabled : ''}`}
+                    onClick={() => !isDisabled && setActiveCategory(cat.key)}
+                    disabled={isDisabled}
+                    title={isDisabled ? 'Chưa có bài viết thuộc danh mục này' : ''}
+                  >
+                    {cat.label}
+                    <span className={styles.filterCount}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Section Rendering logic */}

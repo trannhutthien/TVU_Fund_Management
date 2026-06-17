@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
@@ -37,6 +38,7 @@ const HeaderActions = ({
   showNotifications = true,
   className = '',
 }) => {
+  const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleUserAvatarClick = () => {
@@ -52,6 +54,11 @@ const HeaderActions = ({
     if (onLogout) {
       onLogout();
     }
+  };
+
+  const handleProfileNavigation = () => {
+    setShowUserMenu(false);
+    navigate('/profile');
   };
 
   const headerActionsClasses = [
@@ -118,11 +125,11 @@ const HeaderActions = ({
             <div className="user-menu-divider" />
 
             <div className="user-menu-items">
-              <button className="user-menu-item" onClick={() => console.log('Profile')}>
+              <button className="user-menu-item" onClick={handleProfileNavigation}>
                 <span className="user-menu-item-icon">👤</span>
                 <span className="user-menu-item-text">Hồ sơ cá nhân</span>
               </button>
-              <button className="user-menu-item" onClick={() => console.log('Settings')}>
+              <button className="user-menu-item" onClick={handleProfileNavigation}>
                 <span className="user-menu-item-icon">⚙️</span>
                 <span className="user-menu-item-text">Cài đặt</span>
               </button>

@@ -105,16 +105,14 @@ export const createUser = async (req, res) => {
     };
 
     const userId = await UserModel.createUser(userData);
-    console.log('✅ User created with ID:', userId);
 
     // Nếu là NHA_TAI_TRO, tự tạo record trong nhataitro (FK user_id UNIQUE NOT NULL)
     if (Number(roleId) === 4 && loaiTaiKhoan === 'NHA_TAI_TRO') {
       await pool.execute(
         `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro)
-         VALUES (?, ?, ?)`,
+        VALUES (?, ?, ?)`,
         [userId, tenNhaTaiTro?.trim() || hoTen.trim(), loaiNhaTaiTro || 'Ca nhan']
       );
-      console.log('✅ Donor record created for user:', userId);
     }
 
     // Ghi nhật ký hệ thống (không block response nếu fail)
@@ -126,7 +124,6 @@ export const createUser = async (req, res) => {
         mota: `Tạo người dùng mới: ${userData.email} (Họ tên: ${userData.hoTen}, Vai trò ID: ${userData.roleId})`,
         dulieumoi: { ...userData, matKhau: undefined }
       });
-      console.log('✅ System log created');
     } catch (logError) {
       console.error('⚠️ Warning: Failed to create system log:', logError);
     }

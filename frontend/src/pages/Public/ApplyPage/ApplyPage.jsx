@@ -23,6 +23,12 @@ import { bankAccountService } from '@services/bankAccountService';
 import { applicationService } from '@services/applicationService';
 import { uploadService } from '@services/uploadService';
 import { guestService } from '@services/guestService';
+import {
+  DEFAULT_PUBLIC_SETTINGS,
+  systemSettingsService,
+  toFundBankAccount,
+} from '@services/systemSettingsService';
+import { getFundBankAccounts } from '@services/fundService';
 import api from '@services/api';
 import Input from '@components/common/Input/Input';
 import { 
@@ -55,6 +61,7 @@ const ApplyPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('Chuyen khoan'); // 'Chuyen khoan' | 'Khac' | 'Tien mat'
   const [fundBankAccounts, setFundBankAccounts] = useState([]);
   const [fundBankLoading, setFundBankLoading] = useState(false);
+  const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
   const [isOnlinePaymentCompleted, setIsOnlinePaymentCompleted] = useState(false);
   const [onlineTxnId, setOnlineTxnId] = useState('');
   const [isOnlineModalOpen, setIsOnlineModalOpen] = useState(false);
@@ -63,6 +70,22 @@ const ApplyPage = () => {
   // Trạng thái cho modal giả lập thanh toán online
   const [onlinePayState, setOnlinePayState] = useState('idle'); // 'idle' | 'processing' | 'success'
   const [selectedOnlineCard, setSelectedOnlineCard] = useState('vnpay'); // 'vnpay' | 'atm' | 'visa'
+
+  useEffect(() => {
+    let isMounted = true;
+
+    systemSettingsService.getPublicSettings()
+      .then((settings) => {
+        if (isMounted) setPublicSettings(settings);
+      })
+      .catch((error) => {
+        console.error('Error fetching public system settings:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Trạng thái cho khách vãng lai (Public Guest)
   const [guestRole, setGuestRole] = useState(() => {
@@ -136,6 +159,13 @@ const ApplyPage = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const defaultSponsorBank = toFundBankAccount(publicSettings.tai_khoan_nhan_tai_tro);
+  const hasDefaultSponsorBank = !!(
+    defaultSponsorBank.nganHang &&
+    defaultSponsorBank.soTaiKhoan &&
+    defaultSponsorBank.chuTaiKhoan
+  );
+  const contactEmail = publicSettings.email_ho_tro || publicSettings.email_lien_he;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -157,6 +187,43 @@ const ApplyPage = () => {
       return { quyId: fundId };
     });
   }, [location.search, location.state]);
+
+  useEffect(() => {
+    const fundId = selectedFund?.quyId || selectedFund?.quy_id || selectedFund?.id;
+
+    if (!isDonor || !fundId) {
+      setFundBankAccounts([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchFundBankAccounts = async () => {
+      try {
+        setFundBankLoading(true);
+        const response = await getFundBankAccounts(fundId);
+        if (!isMounted) return;
+
+        if (response?.success && Array.isArray(response.bankAccounts)) {
+          setFundBankAccounts(response.bankAccounts);
+        } else {
+          setFundBankAccounts([]);
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('Fetch fund bank accounts error:', error);
+        setFundBankAccounts([]);
+      } finally {
+        if (isMounted) setFundBankLoading(false);
+      }
+    };
+
+    fetchFundBankAccounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isDonor, selectedFund]);
 
   const handleFundSelect = (fund) => {
     setSelectedFund(fund);
@@ -295,16 +362,11 @@ const ApplyPage = () => {
         toast.info('Đang upload file...');
         
         const fileToUpload = uploadedFiles[0].file; // Lấy File object thực
-        console.log('=== FILE UPLOAD DEBUG ===');
-        console.log('File to upload:', fileToUpload);
-        console.log('File name:', fileToUpload?.name);
         
         // Khách vãng lai dùng uploadFilePublic, user đăng nhập dùng uploadFile
         const uploadResponse = isAuthenticated
           ? await uploadService.uploadFile(fileToUpload)
           : await uploadService.uploadFilePublic(fileToUpload);
-          
-        console.log('Upload response:', uploadResponse);
 
         if (!uploadResponse.success) {
           toast.error(uploadResponse.message || 'Upload file thất bại');
@@ -312,7 +374,6 @@ const ApplyPage = () => {
         }
 
         fileUrl = uploadResponse.data.filePath; // Đường dẫn file từ server
-        console.log('File uploaded successfully:', fileUrl);
         
         if (!fileUrl || fileUrl.trim() === '') {
           toast.error('Không nhận được đường dẫn file từ server');
@@ -838,24 +899,24 @@ const ApplyPage = () => {
                                   </div>
                                 ))}
                               </div>
-                            ) : (
+                            ) : hasDefaultSponsorBank ? (
                               <div className={styles.alertWarning}>
                                 <p>Hiện tại Quỹ chưa cấu hình tài khoản nhận chuyển khoản ngân hàng riêng trên hệ thống. Quý vị vui lòng chuyển khoản tới tài khoản chính của nhà trường:</p>
                                 <div className={styles.bankAccountCard} style={{ marginTop: 15 }}>
                                   <div className={styles.bankCardHeader}>
                                     <HiOutlineBuildingLibrary className={styles.bankIcon} />
-                                    <h4>VIETCOMBANK (Trường Đại học Trà Vinh)</h4>
+                                    <h4>{defaultSponsorBank.nganHang}</h4>
                                   </div>
                                   <div className={styles.bankCardBody}>
-                                    <p><strong>Chủ tài khoản:</strong> TRUONG DAI HOC TRA VINH</p>
+                                    <p><strong>Chủ tài khoản:</strong> {defaultSponsorBank.chuTaiKhoan}</p>
                                     <p className={styles.accountNumberRow}>
                                       <strong>Số tài khoản:</strong> 
-                                      <span className={styles.accountNumber}>1018899889</span>
+                                      <span className={styles.accountNumber}>{defaultSponsorBank.soTaiKhoan}</span>
                                       <button
                                         type="button"
                                         className={styles.copyBtn}
                                         onClick={() => {
-                                          navigator.clipboard.writeText('1018899889');
+                                          navigator.clipboard.writeText(defaultSponsorBank.soTaiKhoan);
                                           setCopiedIndex('default');
                                           setTimeout(() => setCopiedIndex(null), 2000);
                                         }}
@@ -863,9 +924,14 @@ const ApplyPage = () => {
                                         {copiedIndex === 'default' ? 'Đã chép' : 'Sao chép'}
                                       </button>
                                     </p>
+                                    {defaultSponsorBank.chiNhanh && <p><strong>Chi nhánh:</strong> {defaultSponsorBank.chiNhanh}</p>}
                                     <p><strong>Nội dung chuyển khoản gợi ý:</strong> {guestFields.guestHoTen || user?.ho_ten || 'Nha tai tro'} ung ho {selectedFund?.tenQuy || 'Quy phat trien'}</p>
                                   </div>
                                 </div>
+                              </div>
+                            ) : (
+                              <div className={styles.alertWarning}>
+                                <p>Quỹ chưa cấu hình tài khoản nhận chuyển khoản. Vui lòng liên hệ {contactEmail} hoặc {publicSettings.so_dien_thoai} để được hỗ trợ.</p>
                               </div>
                             )}
                           </div>
@@ -895,9 +961,10 @@ const ApplyPage = () => {
                             <div className={styles.cashInstructions}>
                               <h4>Địa điểm tiếp nhận nộp tiền mặt trực tiếp:</h4>
                               <ul style={{ paddingLeft: 20, margin: '8px 0', color: '#334155' }}>
-                                <li><strong>Địa chỉ:</strong> Văn phòng Ban quản lý Quỹ Phát triển TVU - Phòng 101, Tòa nhà A1, Đại học Trà Vinh (126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh).</li>
-                                <li><strong>Thời gian làm việc:</strong> Thứ Hai đến Thứ Sáu (Sáng: 7h00 - 11h00, Chiều: 13h00 - 17h00).</li>
-                                <li><strong>Hotline ban quản lý Quỹ:</strong> 0294 3855 246</li>
+                                <li><strong>Địa chỉ:</strong> {publicSettings.dia_chi_lien_he}</li>
+                                <li><strong>Thời gian làm việc:</strong> {publicSettings.gio_lam_viec}</li>
+                                <li><strong>Hotline ban quản lý Quỹ:</strong> {publicSettings.so_dien_thoai}</li>
+                                <li><strong>Email hỗ trợ:</strong> {contactEmail}</li>
                               </ul>
                               <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10 }}>
                                 * Lưu ý: Cán bộ Quỹ sẽ lập biên lai thu tiền mặt và duyệt khoản tài trợ của bạn ngay sau khi nhận tiền.

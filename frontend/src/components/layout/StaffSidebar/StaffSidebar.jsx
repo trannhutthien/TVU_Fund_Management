@@ -68,6 +68,7 @@ const NAV_CONFIG = [
       { label: 'Nhà tài trợ', path: '/admin/nha-tai-tro', icon: HiOutlineHandRaised, roles: [1] },
       { label: 'Khoản tài trợ', path: '/admin/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [1] },
       { label: 'Lịch sử giao dịch', path: '/admin/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [1] },
+      { label: 'Đối soát chứng từ', path: '/admin/chung-tu', icon: HiOutlineDocumentText, roles: [1] },
     ]
   },
   {
@@ -283,8 +284,7 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
 
   // ─── HANDLE SUPPORT ─────────────────────────────────────
   const handleSupport = () => {
-    // TODO: Navigate to support page or open modal
-    console.log('Support clicked');
+    navigate('/guidelines');
   };
 
   // Dùng userProfile nếu có, fallback về user từ authStore
@@ -292,12 +292,6 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
   const displayName = displayUser.hoTen || displayUser.ho_ten || 'Người dùng';
   const displayRole = displayUser.tenVaiTro || ROLE_LABELS[displayUser.vaiTro] || 'Người dùng';
   const displayAvatar = displayUser.avatar;
-
-  // Debug log
-  useEffect(() => {
-    console.log('[StaffSidebar] isOpen prop changed:', isOpen);
-    console.log('[StaffSidebar] Applied class:', isOpen ? 'open' : 'closed');
-  }, [isOpen]);
 
   return (
     <aside className={`${styles.staffSidebar} ${isOpen ? styles.open : ''}`}>

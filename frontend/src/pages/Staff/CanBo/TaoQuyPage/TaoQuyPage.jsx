@@ -223,12 +223,6 @@ const TaoQuyPage = () => {
       return;
     }
 
-    // Debug: Kiểm tra user object
-    console.log('=== DEBUG USER INFO ===');
-    console.log('Full user object:', user);
-    console.log('user?.id:', user?.id);
-    console.log('=======================');
-
     const payload = {
       tenQuy: form.ten_quy.trim(),
       loaiQuy: form.loai_quy,
@@ -246,11 +240,6 @@ const TaoQuyPage = () => {
       trangThai: form.trang_thai,
       nguoiTao: user?.id || null, // Thêm ID người tạo từ user hiện tại
     };
-
-    console.log('=== DEBUG PAYLOAD ===');
-    console.log('Full payload:', payload);
-    console.log('payload.nguoiTao:', payload.nguoiTao);
-    console.log('====================');
 
     try {
       setSubmitting(true);

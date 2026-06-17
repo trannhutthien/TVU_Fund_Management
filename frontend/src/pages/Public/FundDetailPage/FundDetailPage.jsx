@@ -21,17 +21,16 @@ import SocialLinks from '@components/common/SocialLinks';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import Table from '@components/common/Table';
 import { getFundById } from '@services/fundService';
+import {
+  DEFAULT_PUBLIC_SETTINGS,
+  systemSettingsService,
+  toFundBankAccount,
+} from '@services/systemSettingsService';
 import styles from './FundDetailPage.module.scss';
 
 const API_BASE = (
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'
 ).replace(/\/api\/?$/, '');
-
-const SCHOOL_CONTACT_INFO = {
-  phone: '0294 3855246',
-  email: 'ctsv@tvu.edu.vn',
-  address: '126 Nguyễn Thiện Thành, Phường 5, TP. Trà Vinh',
-};
 
 const normalizeNumber = (value) => {
   const number = Number(value);
@@ -210,6 +209,7 @@ const FundDetailPage = () => {
   const [fund, setFund] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
 
   useEffect(() => {
     let isMounted = true;
@@ -250,6 +250,22 @@ const FundDetailPage = () => {
       isMounted = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    systemSettingsService.getPublicSettings()
+      .then((settings) => {
+        if (isMounted) setPublicSettings(settings);
+      })
+      .catch((settingsError) => {
+        console.error('Error fetching public system settings:', settingsError);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const normalized = useMemo(() => {
     if (!fund) return null;
@@ -293,6 +309,13 @@ const FundDetailPage = () => {
   }, [fund, id]);
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const fallbackBankAccount = toFundBankAccount(publicSettings.tai_khoan_nhan_tai_tro);
+  const hasFallbackBankAccount = !!(
+    fallbackBankAccount.nganHang &&
+    fallbackBankAccount.soTaiKhoan &&
+    fallbackBankAccount.chuTaiKhoan
+  );
+  const contactEmail = publicSettings.email_ho_tro || publicSettings.email_lien_he;
 
   const handleApplyClick = () => {
     if (!normalized) return;
@@ -562,9 +585,9 @@ const FundDetailPage = () => {
             </section>
 
             <section className={`${styles.card} ${styles.bankCard}`}>
-              {normalized.bankAccount ? (
+              {normalized.bankAccount || hasFallbackBankAccount ? (
                 <FundBankInfo
-                  bankAccount={normalized.bankAccount}
+                  bankAccount={normalized.bankAccount || fallbackBankAccount}
                   fundName={normalized.name}
                 />
               ) : (
@@ -575,19 +598,19 @@ const FundDetailPage = () => {
                   <dl>
                     <div>
                       <dt>Đơn vị</dt>
-                      <dd>Phòng Công tác Sinh viên</dd>
+                      <dd>{publicSettings.don_vi_quan_ly}</dd>
                     </div>
                     <div>
                       <dt>Điện thoại</dt>
-                      <dd>{SCHOOL_CONTACT_INFO.phone}</dd>
+                      <dd>{publicSettings.so_dien_thoai}</dd>
                     </div>
                     <div>
                       <dt>Email</dt>
-                      <dd>{SCHOOL_CONTACT_INFO.email}</dd>
+                      <dd>{contactEmail}</dd>
                     </div>
                     <div>
                       <dt>Địa chỉ</dt>
-                      <dd>{SCHOOL_CONTACT_INFO.address}</dd>
+                      <dd>{publicSettings.dia_chi_lien_he}</dd>
                     </div>
                   </dl>
                 </div>

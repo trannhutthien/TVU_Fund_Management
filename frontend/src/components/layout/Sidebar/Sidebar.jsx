@@ -137,14 +137,6 @@ const Sidebar = ({ isMobileOpen, onMobileClose }) => {
     }))
     .filter(group => group.items.length > 0); // Chỉ hiện nhóm có ít nhất 1 item
 
-  // Debug log
-  console.log('Sidebar Debug:', {
-    user,
-    userRole,
-    visibleGroupsCount: visibleGroups.length,
-    visibleGroups,
-  });
-
   return (
     <>
       {/* Mobile Backdrop */}

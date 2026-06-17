@@ -1,12 +1,30 @@
 {
   "ten_he_thong": "TVU Fund Management",
-  "email_lien_he": "contact@tvu.edu.vn",
+  "don_vi_quan_ly": "Phòng Công tác Sinh viên - Trường Đại học Trà Vinh",
+  "email_lien_he": "TVU@tvu.edu.vn",
+  "email_ho_tro": "phongctsv@tvu.edu.vn",
   "so_dien_thoai": "0294.3855246",
+  "dia_chi_lien_he": "126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh",
+  "gio_lam_viec": "Thứ 2 - Thứ 6: 7:30 - 17:00",
+  "facebook_url": "https://www.facebook.com/dhtravinh",
+  "youtube_url": "https://www.youtube.com/@dhtravinh",
+  "linkedin_url": "https://www.linkedin.com/school/tra-vinh-university",
+  "tai_khoan_nhan_tai_tro": {
+    "ngan_hang": "VIETCOMBANK",
+    "chi_nhanh": "",
+    "so_tai_khoan": "1018899889",
+    "chu_tai_khoan": "TRUONG DAI HOC TRA VINH"
+  },
   "thoi_han_xu_ly_ngay": 5,
   "so_cap_duyet": 2,
   "ky_tu_ly_do_toi_thieu": 10,
   "kich_thuoc_toi_da_mb": 5,
   "so_file_toi_da": 5,
-  "dinh_dang_cho_phep": ["PDF", "JPG", "PNG", "DOC"],
+  "dinh_dang_cho_phep": [
+    "PDF",
+    "JPG",
+    "PNG",
+    "DOC"
+  ],
   "maintenanceMode": false
 }

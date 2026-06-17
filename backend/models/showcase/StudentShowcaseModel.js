@@ -40,12 +40,14 @@ const getPublicStudentShowcase = async () => {
       sv.hoten,
       sv.khoaphong,
       sv.namhoc,
-      sv.hinhanh,
+      NULLIF(TRIM(sv.hinhanh), '') AS hinhanh,
+      NULLIF(TRIM(nd.avatar), '') AS nguoidung_avatar,
       sv.thanhtich,
       sv.thutu,
       COALESCE(yc.so_lan_ho_tro, 0) AS so_lan_ho_tro,
       COALESCE(yc.tong_tien_ho_tro, 0) AS tong_tien_ho_tro
      FROM sinhviennoibat sv
+     LEFT JOIN nguoidung nd ON nd.nguoidung_id = sv.nguoidung_id
      LEFT JOIN (
        SELECT 
          nguoidung_id,

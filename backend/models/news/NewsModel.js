@@ -80,7 +80,7 @@ const getLandingNews = async () => {
 
 // Lấy tin tức đã xuất bản công khai với bộ lọc
 const getPublicNews = async (filters = {}) => {
-  const { limit = 10, page = 1, category, excludeId } = filters;
+  const { limit = 10, page = 1, category, excludeId, phanloai } = filters;
   const offset = (page - 1) * limit;
 
   // 1. Đếm tổng số bài viết
@@ -90,6 +90,11 @@ const getPublicNews = async (filters = {}) => {
   if (category) {
     countQuery += " AND danhmuc = ?";
     countParams.push(category);
+  }
+
+  if (phanloai) {
+    countQuery += " AND phanloai = ?";
+    countParams.push(phanloai);
   }
 
   if (excludeId) {
@@ -122,6 +127,11 @@ const getPublicNews = async (filters = {}) => {
     params.push(category);
   }
 
+  if (phanloai) {
+    query += " AND phanloai = ?";
+    params.push(phanloai);
+  }
+
   if (excludeId) {
     query += " AND tintuc_id != ?";
     params.push(Number(excludeId));
@@ -136,13 +146,21 @@ const getPublicNews = async (filters = {}) => {
 };
 
 // Lấy số lượng bài viết của từng danh mục
-const getNewsCountByCategory = async () => {
-  const [rows] = await pool.query(
-    `SELECT danhmuc, COUNT(*) as total 
+const getNewsCountByCategory = async (filters = {}) => {
+  const { phanloai } = filters;
+  let query = `SELECT danhmuc, COUNT(*) as total 
      FROM tintuc 
-     WHERE trangthai = 'Da xuat ban'
-     GROUP BY danhmuc`
-  );
+     WHERE trangthai = 'Da xuat ban'`;
+  const params = [];
+
+  if (phanloai) {
+    query += " AND phanloai = ?";
+    params.push(phanloai);
+  }
+
+  query += " GROUP BY danhmuc";
+
+  const [rows] = await pool.query(query, params);
 
   const result = {
     'Tin hoc bong': 0,

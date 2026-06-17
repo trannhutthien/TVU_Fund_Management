@@ -7,25 +7,67 @@ import { buildUserAvatarUrl } from "../../utils/helpers/imageHelper.js";
 
 const settingsPath = path.join(process.cwd(), "config/system_settings.json");
 
+const DEFAULT_SETTINGS = {
+  ten_he_thong: "TVU Fund Management",
+  don_vi_quan_ly: "Phòng Công tác Sinh viên - Trường Đại học Trà Vinh",
+  email_lien_he: "TVU@tvu.edu.vn",
+  email_ho_tro: "phongctsv@tvu.edu.vn",
+  so_dien_thoai: "0294.3855246",
+  dia_chi_lien_he: "126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh",
+  gio_lam_viec: "Thứ 2 - Thứ 6: 7:30 - 17:00",
+  facebook_url: "https://www.facebook.com/dhtravinh",
+  youtube_url: "https://www.youtube.com/@dhtravinh",
+  linkedin_url: "https://www.linkedin.com/school/tra-vinh-university",
+  tai_khoan_nhan_tai_tro: {
+    ngan_hang: "VIETCOMBANK",
+    chi_nhanh: "",
+    so_tai_khoan: "1018899889",
+    chu_tai_khoan: "TRUONG DAI HOC TRA VINH"
+  },
+  thoi_han_xu_ly_ngay: 5,
+  so_cap_duyet: 2,
+  ky_tu_ly_do_toi_thieu: 10,
+  kich_thuoc_toi_da_mb: 5,
+  so_file_toi_da: 5,
+  dinh_dang_cho_phep: ["PDF", "JPG", "PNG", "DOC"],
+  maintenanceMode: false
+};
+
+const mergeSettingsWithDefaults = (settings = {}) => ({
+  ...DEFAULT_SETTINGS,
+  ...settings,
+  tai_khoan_nhan_tai_tro: {
+    ...DEFAULT_SETTINGS.tai_khoan_nhan_tai_tro,
+    ...(settings?.tai_khoan_nhan_tai_tro || {})
+  }
+});
+
+const getPublicSettingsPayload = (settings = {}) => {
+  const cfg = mergeSettingsWithDefaults(settings);
+
+  return {
+    ten_he_thong: cfg.ten_he_thong,
+    don_vi_quan_ly: cfg.don_vi_quan_ly,
+    email_lien_he: cfg.email_lien_he,
+    email_ho_tro: cfg.email_ho_tro,
+    so_dien_thoai: cfg.so_dien_thoai,
+    dia_chi_lien_he: cfg.dia_chi_lien_he,
+    gio_lam_viec: cfg.gio_lam_viec,
+    facebook_url: cfg.facebook_url,
+    youtube_url: cfg.youtube_url,
+    linkedin_url: cfg.linkedin_url,
+    tai_khoan_nhan_tai_tro: cfg.tai_khoan_nhan_tai_tro
+  };
+};
+
 // Utility to read settings
 const readSettingsFile = async () => {
   try {
     const rawData = await fs.readFile(settingsPath, "utf8");
-    return JSON.parse(rawData);
+    return mergeSettingsWithDefaults(JSON.parse(rawData));
   } catch (error) {
     // If doesn't exist, return default settings
-    return {
-      ten_he_thong: "TVU Fund Management",
-      email_lien_he: "contact@tvu.edu.vn",
-      so_dien_thoai: "0294.3855246",
-      thoi_han_xu_ly_ngay: 5,
-      so_cap_duyet: 2,
-      ky_tu_ly_do_toi_thieu: 10,
-      kich_thuoc_toi_da_mb: 5,
-      so_file_toi_da: 5,
-      dinh_dang_cho_phep: ["PDF", "JPG", "PNG", "DOC"],
-      maintenanceMode: false
-    };
+    return mergeSettingsWithDefaults();
   }
 };
 
@@ -133,8 +175,8 @@ export const updateVaiTro = async (req, res) => {
 
     // 4. Log the action
     await logSystemActivity(req, {
-      hanh_dong: "CAP_NHAT_QUY",
-      loai_doi_tuong: "nguoidung",
+      hanh_dong: "CAP_NHAT_VAI_TRO",
+      loai_doi_tuong: "vaitro",
       doi_tuong_id: role_id,
       mo_ta: `Cập nhật vai trò: ${role.tenvaitro} (${trang_thai || role.trangthai})`,
       du_lieu_cu: { mo_ta: role.mota, trang_thai: role.trangthai },
@@ -355,6 +397,22 @@ export const getSystemSettings = async (req, res) => {
 };
 
 // ─── PATCH /api/system/settings ──────────────────────────────────────────────
+export const getPublicSystemSettings = async (req, res) => {
+  try {
+    const settings = await readSettingsFile();
+    return res.status(200).json({
+      success: true,
+      settings: getPublicSettingsPayload(settings)
+    });
+  } catch (error) {
+    console.error("Lỗi getPublicSystemSettings:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, không thể lấy cấu hình công khai"
+    });
+  }
+};
+
 export const updateSystemSettings = async (req, res) => {
   try {
     const updates = req.body;
@@ -370,7 +428,11 @@ export const updateSystemSettings = async (req, res) => {
 
     const updatedSettings = {
       ...currentSettings,
-      ...updates
+      ...updates,
+      tai_khoan_nhan_tai_tro: {
+        ...currentSettings.tai_khoan_nhan_tai_tro,
+        ...(updates?.tai_khoan_nhan_tai_tro || {})
+      }
     };
 
     // Save to file
@@ -378,8 +440,8 @@ export const updateSystemSettings = async (req, res) => {
 
     // Log the change
     await logSystemActivity(req, {
-      hanh_dong: "CAP_NHAT_QUY", // Generic action
-      loai_doi_tuong: "nguoidung",
+      hanh_dong: "CAP_NHAT_CAI_DAT_HE_THONG",
+      loai_doi_tuong: "caidathethong",
       doi_tuong_id: null,
       mo_ta: `Cập nhật cấu hình hệ thống`,
       du_lieu_cu: currentSettings,
@@ -444,8 +506,8 @@ export const updatePagePermissions = async (req, res) => {
 
     // Log the change
     await logSystemActivity(req, {
-      hanh_dong: "CAP_NHAT_QUY",
-      loai_doi_tuong: "nguoidung",
+      hanh_dong: "CAP_NHAT_PHAN_QUYEN",
+      loai_doi_tuong: "phanquyen",
       doi_tuong_id: null,
       mo_ta: `Cập nhật ma trận phân quyền truy cập trang`,
       du_lieu_cu: currentPermissions,
@@ -684,5 +746,3 @@ export const exportNhatKy = async (req, res) => {
     });
   }
 };
-
-

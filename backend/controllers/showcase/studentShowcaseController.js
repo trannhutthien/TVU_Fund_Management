@@ -1,5 +1,8 @@
 import StudentShowcaseModel from "../../models/showcase/StudentShowcaseModel.js";
-import { buildStudentShowcaseImageUrl } from "../../utils/helpers/imageHelper.js";
+import {
+  buildStudentShowcaseImageUrl,
+  buildUserAvatarUrl
+} from "../../utils/helpers/imageHelper.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── STUDENT SHOWCASE CONTROLLER ──────────────────────────────────────────────
@@ -19,7 +22,9 @@ export const getPublicStudentShowcase = async (req, res) => {
         hoTen: student.hoten,
         khoaPhong: student.khoaphong,
         namHoc: student.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(student.hinhanh),
+        hinhAnh: student.hinhanh
+          ? buildStudentShowcaseImageUrl(student.hinhanh)
+          : buildUserAvatarUrl(student.nguoidung_avatar),
         thanhTich: student.thanhtich,
         thuTu: student.thutu,
         soLanHoTro: student.so_lan_ho_tro > 0 ? student.so_lan_ho_tro : ((student.sinhviennoibat_id % 2) + 1),

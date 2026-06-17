@@ -25,10 +25,6 @@ import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 //
 export const createApplication = async (req, res) => {
   try {
-    console.log('=== CREATE APPLICATION START ===');
-    console.log('Request body:', req.body);
-    console.log('User ID:', req.user?.id);
-    
     const {
       quyId,
       tieuDe,
@@ -155,7 +151,6 @@ export const createApplication = async (req, res) => {
     };
 
     const result = await ApplicationModel.createApplication(applicationData);
-    console.log('Application created:', result);
 
     // Ghi nhật ký hệ thống
     await logSystemActivity(req, {
@@ -171,7 +166,6 @@ export const createApplication = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     
     await PheDuyetModel.createPheDuyet(result.yeucauhotroId);
-    console.log('PheDuyet created for request:', result.yeucauhotroId);
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: TRẢ VỀ KẾT QUẢ
@@ -226,6 +220,7 @@ export const getMyApplications = async (req, res) => {
       limitNum,
       offset
     );
+    const total = await ApplicationModel.countApplicationsByUser(userId);
 
     // Helper function to normalize status
     const normalizeStatus = (status) => {
@@ -253,6 +248,9 @@ export const getMyApplications = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Lấy danh sách đơn thành công",
+      total,
+      page: pageNum,
+      limit: limitNum,
       data: applications.map(app => ({
         requestId: app.yeucauhotro_id,
         tieuDe: app.lydo ? (app.lydo.substring(0, 50) + (app.lydo.length > 50 ? '...' : '')) : '',

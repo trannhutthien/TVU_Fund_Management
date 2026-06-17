@@ -187,6 +187,7 @@
 .filterBar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
   background-color: #ffffff;
   padding: 8px;
@@ -199,6 +200,33 @@
     padding: 6px;
     border-radius: 12px;
     margin-bottom: 32px;
+  }
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterGroupLabel {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  padding: 0 6px;
+}
+
+.filterDivider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 28px;
+  background-color: #e2e8f0;
+
+  @media (max-width: 768px) {
+    display: none;
   }
 }
 

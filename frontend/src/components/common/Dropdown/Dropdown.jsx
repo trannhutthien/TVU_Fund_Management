@@ -16,7 +16,7 @@ import styles from './Dropdown.module.scss';
  *     { value: '2', label: 'Option 2' }
  *   ]}
  *   value="1"
- *   onChange={(value) => console.log(value)}
+ *   onChange={(value) => setSelectedValue(value)}
  * />
  * 
  * @example
@@ -33,7 +33,7 @@ import styles from './Dropdown.module.scss';
  *   options={options}
  *   multiple
  *   value={['1', '2']}
- *   onChange={(values) => console.log(values)}
+ *   onChange={(values) => setSelectedValues(values)}
  * />
  */
 const Dropdown = ({

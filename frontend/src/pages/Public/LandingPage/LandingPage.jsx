@@ -3,6 +3,7 @@ import PublicHeader from '@components/layout/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter';
 import HeroBanner from '@components/sections/LandingPage/HeroBanner';
 import NewsSection from '@components/sections/LandingPage/NewsSection';
+import FeaturedNewsSection from '@components/sections/LandingPage/FeaturedNewsSection';
 import FundProgressSection from '@components/sections/LandingPage/FundProgressSection';
 import AISupportSection from '@components/sections/LandingPage/AISupportSection';
 import FundBreakdownSection from '@components/sections/LandingPage/FundBreakdownSection';
@@ -101,13 +102,9 @@ const LandingPage = () => {
           type="moi"
         />
         <FundProgressSection />
-        <NewsSection 
-          title="TIN NỔI BẬT" 
-          subtitle="Các bài viết nổi bật, sự kiện tiêu biểu và tin tức quan trọng được quan tâm nhiều nhất"
+        <FeaturedNewsSection 
           data={landingNews?.noibat} 
           loading={loadingNews}
-          sidebarPosition="left"
-          type="noibat"
         />
         <AISupportSection />
         <FundBreakdownSection />

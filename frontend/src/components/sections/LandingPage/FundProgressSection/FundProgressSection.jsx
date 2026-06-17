@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   HiOutlineBanknotes, 
-  HiOutlineUserGroup, 
   HiOutlineArrowRight,
   HiCheck,
   HiCalendarDays,
@@ -95,18 +94,12 @@ const FundProgressSection = () => {
         const response = await getPublicFunds();
         if (response.success && response.funds) {
           const mappedFunds = response.funds.map(fund => {
-            const currentBalance = fund.soDu || 0;
-            // Lấy số tiền mục tiêu thực tế (sotienmuctieu) từ DB
-            const dbGoal = fund.soTienToiThieu ? parseFloat(fund.soTienToiThieu) : 0;
-            const calculatedGoal = dbGoal > 0 ? dbGoal : Math.max(
-              200000000, 
-              Math.ceil((currentBalance * 1.5) / 10000000) * 10000000
-            );
-            // Số lượng nhà tài trợ tỉ lệ thuận với số dư
-            const calculatedDonors = Math.floor(currentBalance / 10000000) + 5;
-            // Phần trăm tiến trình = (số dư / mục tiêu) * 100
-            const progressPercent = calculatedGoal > 0
-              ? Math.round((currentBalance / calculatedGoal) * 100)
+            const currentBalance = Number(fund.soDu || 0);
+            const goalAmount = Number(fund.soTienMucTieu || fund.soTienToiThieu || 0);
+            const maxSupportAmount = Number(fund.soTienHoTroToiDa || fund.soTienToiDa || 0);
+            const maxSupportCount = Number(fund.soLuongChiTieu || fund.soluonghotrotoida || 0);
+            const progressPercent = goalAmount > 0
+              ? Math.round((currentBalance / goalAmount) * 100)
               : 0;
 
             return {
@@ -115,14 +108,13 @@ const FundProgressSection = () => {
               category: fund.loaiQuy || 'Khác',
               description: fund.moTa || 'Quỹ hỗ trợ sinh viên Trường Đại học Trà Vinh gặp khó khăn.',
               balance: currentBalance,
-              goal: calculatedGoal,
-              donors: calculatedDonors,
+              goal: goalAmount,
               progress: progressPercent,
               image: fund.hinhAnh || null,
               soDonDaNop: fund.soDonDaNop || 0,
               hanNopDon: fund.hanNopDon || null,
-              soTienToiThieu: fund.soTienToiThieu || null,
-              soTienToiDa: fund.soTienToiDa || null
+              maxSupportAmount,
+              maxSupportCount
             };
           });
 
@@ -148,6 +140,29 @@ const FundProgressSection = () => {
     return num.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' đ';
   };
 
+  const formatCompactCurrency = (amount) => {
+    const num = Number(amount) || 0;
+    if (num >= 1000000000) {
+      return `${(num / 1000000000).toLocaleString('vi-VN', {
+        maximumFractionDigits: 1
+      })} tỷ`;
+    }
+    if (num >= 1000000) {
+      return `${Math.round(num / 1000000).toLocaleString('vi-VN')} triệu`;
+    }
+    return formatCurrency(num);
+  };
+
+  const formatSupportCount = (count) => {
+    const num = Number(count) || 0;
+    return num > 0 ? `${num.toLocaleString('vi-VN')} suất` : 'Chưa đặt chỉ tiêu';
+  };
+
+  const formatSupportAmount = (amount) => {
+    const num = Number(amount) || 0;
+    return num > 0 ? formatCurrency(num) : 'Theo quy định';
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Mở quanh năm';
     const date = new Date(dateString);
@@ -157,13 +172,6 @@ const FundProgressSection = () => {
       month: '2-digit',
       year: 'numeric'
     });
-  };
-
-  const formatRange = (min, max) => {
-    if (!min && !max) return '5.000.000 đ - 15.000.000 đ';
-    if (min && !max) return `Từ ${formatCurrency(min)}`;
-    if (!min && max) return `Lên tới ${formatCurrency(max)}`;
-    return `${formatCurrency(min)} - ${formatCurrency(max)}`;
   };
 
   const handleDonateClick = (fundId) => {
@@ -216,47 +224,62 @@ const FundProgressSection = () => {
         {/* 2-Column layout */}
         <div className={styles.layoutGrid}>
           
-          {/* Left Column: Stack list of funds */}
-          <div className={styles.fundStack}>
-            {funds.map((fund) => {
-              const isSelected = fund.id === selectedFundId;
-              const fundTheme = getCategoryTheme(fund.category);
-              
-              // Gán các thuộc tính CSS tùy chỉnh riêng cho từng thẻ quỹ
-              const itemStyles = {
-                '--item-primary': fundTheme.primaryColor,
-                '--item-bg': fundTheme.badgeBg,
-                '--item-light-bg': fundTheme.lightBg,
-                '--item-text': fundTheme.darkText,
-                '--item-shadow': fundTheme.shadow
-              };
+          {/* Left Column: Compact fund list */}
+          <div className={styles.fundListPanel}>
+            <div className={styles.fundListHeader}>
+              <div>
+                <span className={styles.fundListEyebrow}>Danh mục quỹ</span>
+                <h3 className={styles.fundListTitle}>Tất cả quỹ đang mở</h3>
+              </div>
+              <span className={styles.fundCount}>{funds.length}</span>
+            </div>
 
-              return (
-                <div 
-                  key={fund.id} 
-                  className={`${styles.fundItem} ${isSelected ? styles.activeItem : ''}`}
-                  style={itemStyles}
-                  onClick={() => setSelectedFundId(fund.id)}
-                >
-                  <div className={styles.fundMeta}>
-                    <span className={styles.fundCategory}>{fundTheme.name}</span>
-                    <span className={styles.fundPercent}>{fund.progress}%</span>
-                  </div>
-                  <h4 className={styles.fundName}>{fund.name}</h4>
-                  
-                  {/* Small progress bar */}
-                  <div className={styles.progressTrack}>
-                    <div 
-                      className={styles.progressBar} 
-                      style={{ width: `${Math.min(100, fund.progress)}%`, background: fundTheme.gradient }}
-                    />
-                  </div>
-                  <div className={styles.fundBalanceSummary}>
-                    Đã có: <strong>{formatCurrency(fund.balance)}</strong>
-                  </div>
-                </div>
-              );
-            })}
+            <div className={styles.fundStack}>
+              {funds.map((fund) => {
+                const isSelected = fund.id === selectedFundId;
+                const fundTheme = getCategoryTheme(fund.category);
+                
+                const itemStyles = {
+                  '--item-primary': fundTheme.primaryColor,
+                  '--item-bg': fundTheme.badgeBg,
+                  '--item-light-bg': fundTheme.lightBg,
+                  '--item-text': fundTheme.darkText,
+                  '--item-shadow': fundTheme.shadow
+                };
+
+                return (
+                  <button 
+                    key={fund.id} 
+                    type="button"
+                    className={`${styles.fundItem} ${isSelected ? styles.activeItem : ''}`}
+                    style={itemStyles}
+                    onClick={() => setSelectedFundId(fund.id)}
+                  >
+                    <span className={styles.fundTopRow}>
+                      <span className={styles.fundCategory}>{fundTheme.name}</span>
+                      <span className={styles.fundPercent}>{fund.progress}%</span>
+                    </span>
+
+                    <span className={styles.fundMainRow}>
+                      <span className={styles.fundName}>{fund.name}</span>
+                      <span className={styles.fundAmount}>{formatCompactCurrency(fund.balance)}</span>
+                    </span>
+                    
+                    <span className={styles.progressTrack} aria-hidden="true">
+                      <span
+                        className={styles.progressBar} 
+                        style={{ width: `${Math.min(100, fund.progress)}%`, background: fundTheme.gradient }}
+                      />
+                    </span>
+
+                    <span className={styles.fundBottomRow}>
+                      <span>{formatCompactCurrency(fund.goal)} mục tiêu</span>
+                      <span>{formatSupportCount(fund.maxSupportCount)}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Right Column: Detailed selected fund with dynamic styles */}
@@ -332,53 +355,49 @@ const FundProgressSection = () => {
                 </div>
               </div>
 
-              {/* Grid 4 thẻ thống kê tác động thực tế (Impact Stats Grid) */}
+              {/* Grid 4 thẻ thống kê từ dữ liệu quỹ */}
               <div className={styles.statsGrid}>
-                {/* 1. Số nhà tài trợ */}
-                <div className={styles.statCard}>
-                  <div className={styles.statIconWrapper}>
-                    <HiOutlineUserGroup className={styles.statIcon} />
-                  </div>
-                  <div className={styles.statText}>
-                    <span className={styles.statLabel}>Nhà tài trợ</span>
-                    <span className={styles.statValue}>{selectedFund.donors} đối tác</span>
-                  </div>
-                </div>
-
-                {/* 2. Số sinh viên ước tính được hỗ trợ */}
+                {/* 1. Số lượng hỗ trợ tối đa */}
                 <div className={styles.statCard}>
                   <div className={styles.statIconWrapper}>
                     <HiAcademicCap className={styles.statIcon} />
                   </div>
                   <div className={styles.statText}>
-                    <span className={styles.statLabel}>Tác động thực tế</span>
-                    <span className={styles.statValue}>
-                      {Math.floor(selectedFund.balance / 5000000) > 0 
-                        ? `~${Math.floor(selectedFund.balance / 5000000)} sinh viên` 
-                        : 'Đang tích lũy suất'}
-                    </span>
+                    <span className={styles.statLabel}>Chỉ tiêu hỗ trợ</span>
+                    <span className={styles.statValue}>{formatSupportCount(selectedFund.maxSupportCount)}</span>
                   </div>
                 </div>
 
-                {/* 3. Số hồ sơ đang chờ xét duyệt */}
+                {/* 2. Mức hỗ trợ tối đa mỗi suất */}
+                <div className={styles.statCard}>
+                  <div className={styles.statIconWrapper}>
+                    <HiOutlineBanknotes className={styles.statIcon} />
+                  </div>
+                  <div className={styles.statText}>
+                    <span className={styles.statLabel}>Hỗ trợ tối đa/suất</span>
+                    <span className={styles.statValue}>{formatSupportAmount(selectedFund.maxSupportAmount)}</span>
+                  </div>
+                </div>
+
+                {/* 3. Số hồ sơ đã ghi nhận */}
                 <div className={styles.statCard}>
                   <div className={styles.statIconWrapper}>
                     <HiDocumentCheck className={styles.statIcon} />
                   </div>
                   <div className={styles.statText}>
-                    <span className={styles.statLabel}>Hồ sơ đang nộp</span>
+                    <span className={styles.statLabel}>Hồ sơ đã ghi nhận</span>
                     <span className={styles.statValue}>{selectedFund.soDonDaNop} yêu cầu</span>
                   </div>
                 </div>
 
-                {/* 4. Hạn nộp đơn và định mức */}
+                {/* 4. Hạn nộp đơn */}
                 <div className={styles.statCard}>
                   <div className={styles.statIconWrapper}>
                     <HiCalendarDays className={styles.statIcon} />
                   </div>
                   <div className={styles.statText}>
-                    <span className={styles.statLabel}>Hạn nộp đơn / Định mức</span>
-                    <span className={styles.statValue} title={formatRange(selectedFund.soTienToiThieu, selectedFund.soTienToiDa)}>
+                    <span className={styles.statLabel}>Hạn nộp đơn</span>
+                    <span className={styles.statValue}>
                       {formatDate(selectedFund.hanNopDon)}
                     </span>
                   </div>

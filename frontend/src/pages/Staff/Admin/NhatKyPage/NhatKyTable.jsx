@@ -66,6 +66,15 @@ const HANH_DONG_CONFIG = {
   
   'TAO_QUY': { icon: HiOutlineBuildingLibrary, color: 'var(--color-primary, #1a2f5e)', bg: 'rgba(26,47,94,0.08)', label: 'Tạo quỹ' },
   'THEM_MOI_QUY': { icon: HiOutlineBuildingLibrary, color: 'var(--color-primary, #1a2f5e)', bg: 'rgba(26,47,94,0.08)', label: 'Tạo quỹ' },
+
+  'API_TAO_MOI': { icon: HiOutlineDocumentPlus, color: '#0891b2', bg: 'rgba(8,145,178,0.10)', label: 'API tạo mới' },
+  'API_CAP_NHAT': { icon: HiOutlinePencilSquare, color: '#f97316', bg: 'rgba(249,115,22,0.10)', label: 'API cập nhật' },
+  'API_XOA': { icon: HiOutlineXCircle, color: '#ef4444', bg: 'rgba(239,68,68,0.10)', label: 'API xóa' },
+  'DANG_KY_TAI_KHOAN': { icon: HiOutlineUserPlus, color: '#0891b2', bg: 'rgba(8,145,178,0.10)', label: 'Đăng ký' },
+  'CAP_NHAT_MAT_KHAU': { icon: HiOutlineLockClosed, color: '#f97316', bg: 'rgba(249,115,22,0.10)', label: 'Đổi mật khẩu' },
+  'CAP_NHAT_VAI_TRO': { icon: HiOutlineLockOpen, color: '#7c3aed', bg: 'rgba(124,58,237,0.10)', label: 'Vai trò' },
+  'CAP_NHAT_CAI_DAT_HE_THONG': { icon: HiOutlinePencilSquare, color: '#7c3aed', bg: 'rgba(124,58,237,0.10)', label: 'Cài đặt' },
+  'CAP_NHAT_PHAN_QUYEN': { icon: HiOutlineLockOpen, color: '#7c3aed', bg: 'rgba(124,58,237,0.10)', label: 'Phân quyền' },
 };
 
 const NhatKyTable = ({ logs, loading, onViewDetail }) => {

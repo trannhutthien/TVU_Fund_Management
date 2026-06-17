@@ -72,7 +72,7 @@ export const getLandingNews = async (req, res) => {
 // GET /api/news/public - Lấy danh sách tin tức công khai có phân trang
 export const getPublicNews = async (req, res) => {
   try {
-    const { limit, page, category, excludeId } = req.query;
+    const { limit, page, category, excludeId, phanloai } = req.query;
 
     const parsedLimit = limit ? parseInt(limit) : 10;
     const parsedPage = page ? parseInt(page) : 1;
@@ -81,7 +81,8 @@ export const getPublicNews = async (req, res) => {
       limit: parsedLimit,
       page: parsedPage,
       category: category || null,
-      excludeId: excludeId ? parseInt(excludeId) : null
+      excludeId: excludeId ? parseInt(excludeId) : null,
+      phanloai: phanloai ? normalizePhanloai(phanloai) : null
     });
 
     const totalPages = Math.ceil(total / parsedLimit);
@@ -116,7 +117,10 @@ export const getPublicNews = async (req, res) => {
 // GET /api/news/count-by-category - Lấy số lượng tin của từng danh mục
 export const getNewsCountByCategory = async (req, res) => {
   try {
-    const counts = await NewsModel.getNewsCountByCategory();
+    const { phanloai } = req.query;
+    const counts = await NewsModel.getNewsCountByCategory({
+      phanloai: phanloai ? normalizePhanloai(phanloai) : null
+    });
     return res.status(200).json({
       success: true,
       data: counts

@@ -164,7 +164,7 @@
   "chung_tu": {
     "label": "Đối soát chứng từ",
     "path": "/chung-tu",
-    "admin": false,
+    "admin": true,
     "canbo": false,
     "ketoan": true,
     "sinhvien": false,

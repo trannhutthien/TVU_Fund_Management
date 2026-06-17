@@ -19,22 +19,12 @@ const StaffLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
-    console.log('[StaffLayout] Toggle sidebar - Before:', isSidebarOpen);
-    setIsSidebarOpen((prev) => {
-      console.log('[StaffLayout] Toggle sidebar - After:', !prev);
-      return !prev;
-    });
+    setIsSidebarOpen((prev) => !prev);
   };
   
   const closeSidebar = () => {
-    console.log('[StaffLayout] Close sidebar');
     setIsSidebarOpen(false);
   };
-
-  // Log state changes
-  useEffect(() => {
-    console.log('[StaffLayout] isSidebarOpen changed:', isSidebarOpen);
-  }, [isSidebarOpen]);
 
   // Đóng sidebar khi resize về desktop
   useEffect(() => {

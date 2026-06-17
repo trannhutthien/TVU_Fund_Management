@@ -22,10 +22,6 @@ const DonorProfile = ({ user, onLogout }) => {
     personalInfoRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSavePersonalInfo = (infoData) => {
-    console.log('Save donor info:', infoData);
-  };
-
   return (
     <div className={styles.donorProfile}>
       <ProfileHeader
@@ -38,7 +34,6 @@ const DonorProfile = ({ user, onLogout }) => {
         <div ref={personalInfoRef}>
           <PersonalInfoSection
             user={user}
-            onSave={handleSavePersonalInfo}
           />
         </div>
 

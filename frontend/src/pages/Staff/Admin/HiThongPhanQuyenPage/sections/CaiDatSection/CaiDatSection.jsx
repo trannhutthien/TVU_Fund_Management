@@ -6,6 +6,8 @@ import {
   HiOutlinePaperClip,
   HiOutlineWrench,
   HiOutlineChartBarSquare,
+  HiOutlineBuildingLibrary,
+  HiOutlineGlobeAlt,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
@@ -28,6 +30,21 @@ const CaiDatSection = () => {
   const [tenHeThong, setTenHeThong] = useState('TVU Fund Management');
   const [emailLienHe, setEmailLienHe] = useState('contact@tvu.edu.vn');
   const [soDienThoai, setSoDienThoai] = useState('0294.3855246');
+  const [publicInfo, setPublicInfo] = useState({
+    don_vi_quan_ly: '',
+    email_ho_tro: '',
+    dia_chi_lien_he: '',
+    gio_lam_viec: '',
+    facebook_url: '',
+    youtube_url: '',
+    linkedin_url: '',
+  });
+  const [sponsorBank, setSponsorBank] = useState({
+    ngan_hang: '',
+    chi_nhanh: '',
+    so_tai_khoan: '',
+    chu_tai_khoan: '',
+  });
   
   const [thoiHanXuLyNgay, setThoiHanXuLyNgay] = useState(5);
   const [soCapDuyet, setSoCapDuyet] = useState(2);
@@ -51,6 +68,21 @@ const CaiDatSection = () => {
           setTenHeThong(cfg.ten_he_thong || 'TVU Fund Management');
           setEmailLienHe(cfg.email_lien_he || '');
           setSoDienThoai(cfg.so_dien_thoai || '');
+          setPublicInfo({
+            don_vi_quan_ly: cfg.don_vi_quan_ly || '',
+            email_ho_tro: cfg.email_ho_tro || '',
+            dia_chi_lien_he: cfg.dia_chi_lien_he || '',
+            gio_lam_viec: cfg.gio_lam_viec || '',
+            facebook_url: cfg.facebook_url || '',
+            youtube_url: cfg.youtube_url || '',
+            linkedin_url: cfg.linkedin_url || '',
+          });
+          setSponsorBank({
+            ngan_hang: cfg.tai_khoan_nhan_tai_tro?.ngan_hang || '',
+            chi_nhanh: cfg.tai_khoan_nhan_tai_tro?.chi_nhanh || '',
+            so_tai_khoan: cfg.tai_khoan_nhan_tai_tro?.so_tai_khoan || '',
+            chu_tai_khoan: cfg.tai_khoan_nhan_tai_tro?.chu_tai_khoan || '',
+          });
           setThoiHanXuLyNgay(cfg.thoi_han_xu_ly_ngay || 5);
           setSoCapDuyet(cfg.so_cap_duyet || 2);
           setKyTuLyDoToiThieu(cfg.ky_tu_ly_do_toi_thieu || 10);
@@ -126,6 +158,14 @@ const CaiDatSection = () => {
     setDinhDangChoPhep(newFormats);
   };
 
+  const updatePublicInfo = (field, value) => {
+    setPublicInfo((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateSponsorBank = (field, value) => {
+    setSponsorBank((prev) => ({ ...prev, [field]: value }));
+  };
+
   if (loading) {
     return (
       <div className={styles.loadingState}>
@@ -190,6 +230,136 @@ const CaiDatSection = () => {
                   }
                 >
                   Lưu thay đổi
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <HiOutlineGlobeAlt className={styles.cardIcon} />
+              <h3 className={styles.cardTitle}>Thông tin hiển thị công khai</h3>
+            </div>
+            <div className={styles.cardBody}>
+              <div className={styles.formGrid}>
+                <Input
+                  label="Đơn vị quản lý"
+                  value={publicInfo.don_vi_quan_ly}
+                  onChange={(e) => updatePublicInfo('don_vi_quan_ly', e.target.value)}
+                  disabled={saving}
+                />
+                <Input
+                  label="Email hỗ trợ"
+                  type="email"
+                  value={publicInfo.email_ho_tro}
+                  onChange={(e) => updatePublicInfo('email_ho_tro', e.target.value)}
+                  disabled={saving}
+                />
+                <Input
+                  label="Giờ làm việc"
+                  value={publicInfo.gio_lam_viec}
+                  onChange={(e) => updatePublicInfo('gio_lam_viec', e.target.value)}
+                  disabled={saving}
+                />
+                <div className={styles.formGroup}>
+                  <label className={styles.tagLabel}>Địa chỉ liên hệ / tiếp nhận tài trợ</label>
+                  <textarea
+                    className={styles.textarea}
+                    value={publicInfo.dia_chi_lien_he}
+                    onChange={(e) => updatePublicInfo('dia_chi_lien_he', e.target.value)}
+                    rows={3}
+                    disabled={saving}
+                  />
+                </div>
+                <Input
+                  label="Facebook URL"
+                  type="url"
+                  value={publicInfo.facebook_url}
+                  onChange={(e) => updatePublicInfo('facebook_url', e.target.value)}
+                  disabled={saving}
+                />
+                <Input
+                  label="YouTube URL"
+                  type="url"
+                  value={publicInfo.youtube_url}
+                  onChange={(e) => updatePublicInfo('youtube_url', e.target.value)}
+                  disabled={saving}
+                />
+                <Input
+                  label="LinkedIn URL"
+                  type="url"
+                  value={publicInfo.linkedin_url}
+                  onChange={(e) => updatePublicInfo('linkedin_url', e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+              <p className={styles.helperNote}>
+                Các thông tin này được dùng cho footer, header và hướng dẫn liên hệ công khai.
+              </p>
+              <div className={styles.formActions}>
+                <Button
+                  variant="primary"
+                  size="small"
+                  disabled={saving}
+                  onClick={() =>
+                    handleSaveSettings({
+                      ...publicInfo,
+                    })
+                  }
+                >
+                  LÆ°u thay Ä‘á»•i
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <HiOutlineBuildingLibrary className={styles.cardIcon} />
+              <h3 className={styles.cardTitle}>Tài khoản nhận tài trợ mặc định</h3>
+            </div>
+            <div className={styles.cardBody}>
+              <div className={styles.formGrid}>
+                <Input
+                  label="Ngân hàng"
+                  value={sponsorBank.ngan_hang}
+                  onChange={(e) => updateSponsorBank('ngan_hang', e.target.value)}
+                  disabled={saving}
+                />
+                <Input
+                  label="Chi nhánh"
+                  value={sponsorBank.chi_nhanh}
+                  onChange={(e) => updateSponsorBank('chi_nhanh', e.target.value)}
+                  disabled={saving}
+                />
+                <Input
+                  label="Số tài khoản"
+                  value={sponsorBank.so_tai_khoan}
+                  onChange={(e) => updateSponsorBank('so_tai_khoan', e.target.value)}
+                  disabled={saving}
+                />
+                <Input
+                  label="Chủ tài khoản"
+                  value={sponsorBank.chu_tai_khoan}
+                  onChange={(e) => updateSponsorBank('chu_tai_khoan', e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+              <p className={styles.helperNote}>
+                Nếu quỹ chưa có tài khoản riêng, trang tài trợ sẽ hiện tài khoản mặc định này.
+              </p>
+              <div className={styles.formActions}>
+                <Button
+                  variant="primary"
+                  size="small"
+                  disabled={saving}
+                  onClick={() =>
+                    handleSaveSettings({
+                      tai_khoan_nhan_tai_tro: sponsorBank,
+                    })
+                  }
+                >
+                  LÆ°u thay Ä‘á»•i
                 </Button>
               </div>
             </div>

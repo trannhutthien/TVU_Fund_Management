@@ -9,6 +9,7 @@ import {
   getNhatKyStats,
   exportNhatKy,
   getSystemSettings,
+  getPublicSystemSettings,
   updateSystemSettings,
   getPagePermissions,
   updatePagePermissions
@@ -36,6 +37,7 @@ nhatKyRouter.get("/", protect, isAdmin, getNhatKy);
 const settingsRouter = express.Router();
 settingsRouter.get("/permissions", getPagePermissions); // Expose publicly for guest header visibility checking
 settingsRouter.patch("/permissions", protect, isAdmin, updatePagePermissions);
+settingsRouter.get("/public", getPublicSystemSettings);
 settingsRouter.get("/", protect, isAdmin, getSystemSettings);
 settingsRouter.patch("/", protect, isAdmin, updateSystemSettings);
 

@@ -6,10 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "check:staff": "node utils/checkStaffUsers.js",
-    "seed:staff": "node utils/seedStaffUsers.js",
-    "test:email": "node utils/scripts/testEmail.js"
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

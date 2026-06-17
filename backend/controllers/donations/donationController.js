@@ -769,14 +769,6 @@ export const createAuthenticatedDonation = async (req, res) => {
     const { quy_id, so_tien, hinh_anh_minh_chung, hinh_thuc, ghi_chu } = req.body;
     const userId = req.user?.id; // ✅ Sửa từ user_id → id (theo middleware protect)
 
-    console.log('🔍 DEBUG createAuthenticatedDonation:', {
-      userId,
-      quy_id,
-      so_tien,
-      hinh_thuc,
-      req_user: req.user
-    });
-
     // Validation
     const isCash = hinh_thuc === 'Tien mat';
     if (!quy_id || !so_tien || (!isCash && !hinh_anh_minh_chung)) {
@@ -813,35 +805,10 @@ export const createAuthenticatedDonation = async (req, res) => {
 
     // Lấy thông tin nhà tài trợ từ user_id
     const donors = await DonorModel.getAllDonors();
-    
-    console.log('🔍 DEBUG getAllDonors:', {
-      totalDonors: donors.length,
-      sampleDonors: donors.slice(0, 3).map(d => ({ 
-        nha_tai_tro_id: d.nhataitro_id, 
-        user_id: d.nguoidung_id, 
-        ten: d.tennhataitro 
-      }))
-    });
-    
     let donor = donors.find(d => d.nguoidung_id === userId);
-
-    console.log('🔍 DEBUG tìm donor:', {
-      userId,
-      userIdType: typeof userId,
-      totalDonors: donors.length,
-      donorFound: !!donor,
-      donorDetails: donor ? { 
-        id: donor.nhataitro_id, 
-        user_id: donor.nguoidung_id, 
-        user_id_type: typeof donor.nguoidung_id,
-        ten: donor.tennhataitro 
-      } : null
-    });
 
     // Nếu chưa có record trong NhaTaiTro, tự động tạo
     if (!donor) {
-      console.log(`User ${userId} chưa có trong NhaTaiTro, tự động tạo...`);
-      
       // Lấy thông tin user từ database (do req.user từ middleware protect không chứa ho_ten)
       const [[userRow]] = await pool.query(
         `SELECT hoten FROM nguoidung WHERE nguoidung_id = ?`,
@@ -868,8 +835,6 @@ export const createAuthenticatedDonation = async (req, res) => {
           message: "Không thể tạo thông tin nhà tài trợ. Vui lòng thử lại.",
         });
       }
-      
-      console.log(`Đã tạo nhà tài trợ mới: ID ${newDonorId}`);
     }
 
     // Tạo khoản tài trợ với trạng thái "Chờ duyệt"

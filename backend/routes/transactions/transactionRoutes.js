@@ -27,6 +27,6 @@ router.get("/export", protect, authorizeRoles(1, 2), exportTransactions);
 router.get("/:id", protect, authorizeRoles(1, 2), getTransactionById);
 
 // PATCH /api/transactions/:id/doi-soat — Cập nhật trạng thái đối soát
-router.patch("/:id/doi-soat", protect, authorizeRoles(2), updateDoiSoatStatus);
+router.patch("/:id/doi-soat", protect, authorizeRoles(1, 2), updateDoiSoatStatus);
 
 export default router;

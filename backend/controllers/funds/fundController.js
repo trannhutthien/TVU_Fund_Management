@@ -9,10 +9,6 @@ import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 // Tạo quỹ mới trong hệ thống
 export const createFund = async (req, res) => {
   try {
-    // Debug: Log toàn bộ request body
-    console.log('=== CREATE FUND DEBUG ===');
-    console.log('Full request body:', JSON.stringify(req.body, null, 2));
-    
     const {
       tenQuy,
       loaiQuy,
@@ -27,15 +23,6 @@ export const createFund = async (req, res) => {
       trangThai,
       nguoiTao
     } = req.body;
-
-    // Debug: Log từng field quan trọng
-    console.log('Extracted fields:');
-    console.log('- tenQuy:', tenQuy);
-    console.log('- soTienMucTieu:', soTienMucTieu, 'type:', typeof soTienMucTieu);
-    console.log('- soTienHoTroToiDa:', soTienHoTroToiDa, 'type:', typeof soTienHoTroToiDa);
-    console.log('- soDu:', soDu, 'type:', typeof soDu);
-    console.log('- nguoiTao:', nguoiTao, 'type:', typeof nguoiTao);
-    console.log('========================');
 
     // 1. Validate dữ liệu đầu vào
     if (!tenQuy || !loaiQuy) {

@@ -65,6 +65,7 @@ export const logSystemActivity = async (req, logData) => {
     ];
 
     await pool.query(query, values);
+    if (req) req._systemLogWritten = true;
   } catch (error) {
     console.error("❌ Lỗi ghi nhật ký hệ thống:", error);
   }

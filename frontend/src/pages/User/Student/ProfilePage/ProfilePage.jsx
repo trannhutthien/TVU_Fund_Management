@@ -94,19 +94,6 @@ const ProfilePage = () => {
   const userType = user?.loai_tai_khoan || user?.loaiTaiKhoan || user?.loai_nguoi_dung;
   const isDonor = userType === 'NHA_TAI_TRO';
 
-  // Debug log
-  useEffect(() => {
-    if (user) {
-      console.log('🔍 ProfilePage - User data:', {
-        loai_tai_khoan: user.loai_tai_khoan,
-        loaiTaiKhoan: user.loaiTaiKhoan,
-        loai_nguoi_dung: user.loai_nguoi_dung,
-        userType,
-        isDonor,
-      });
-    }
-  }, [user, userType, isDonor]);
-
   return (
     <div className={styles.profilePage}>
       <PublicHeader

@@ -12,7 +12,7 @@ import styles from './DonorWallSection.module.scss';
 /**
  * DonorCard Component - Card hiển thị thông tin nhà tài trợ
  */
-const DonorCard = ({ donor, isFeatured = false }) => {
+const DonorCard = ({ donor, isFeatured = false, onClick }) => {
   const getInitial = (name) => {
     if (!name || typeof name !== 'string') return '?';
     return name.charAt(0).toUpperCase();
@@ -41,8 +41,23 @@ const DonorCard = ({ donor, isFeatured = false }) => {
     );
   };
 
+  const handleKeyDown = (event) => {
+    if (!onClick) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <div className={`${styles.donorCard} ${isFeatured ? styles.featuredDonorCard : ''}`}>
+    <div
+      className={`${styles.donorCard} ${isFeatured ? styles.featuredDonorCard : ''}`}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`Xem trang đối tác nhà tài trợ ${donor.name || donor.ten || ''}`.trim()}
+    >
       <div className={styles.cardContent}>
         {isFeatured && <span className={styles.featuredBadge}>⭐ TOP 1 NHÀ TÀI TRỢ</span>}
         {renderAvatar()}
@@ -187,7 +202,11 @@ const DonorWallSection = ({ onRegisterClick }) => {
           <div className={styles.donorLayout}>
             {/* Top 1 Featured Donor */}
             <div className={styles.featuredSection}>
-              <DonorCard donor={topDonors[0]} isFeatured={true} />
+              <DonorCard
+                donor={topDonors[0]}
+                isFeatured={true}
+                onClick={() => navigate('/donors')}
+              />
             </div>
 
             {/* Other Donors Grid */}
@@ -197,6 +216,7 @@ const DonorWallSection = ({ onRegisterClick }) => {
                   key={donor.id || index} 
                   donor={donor}
                   isFeatured={false}
+                  onClick={() => navigate('/donors')}
                 />
               ))}
             </div>

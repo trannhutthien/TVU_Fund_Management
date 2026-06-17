@@ -7,6 +7,7 @@ import BankAccountSection from './sections/BankAccountSection';
 import ApplicationHistorySection from './sections/ApplicationHistorySection';
 import StudentOverviewSection from './sections/StudentOverviewSection';
 import { bankAccountService } from '@services/bankAccountService';
+import { applicationService } from '@services/applicationService';
 import styles from './StudentProfile.module.scss';
 
 /**
@@ -36,6 +37,7 @@ const StudentProfile = ({ user, onLogout }) => {
   useEffect(() => {
     if (isSinhVien) {
       fetchBankAccounts();
+      fetchApplicationOverview();
     }
   }, [isSinhVien]);
 
@@ -67,12 +69,26 @@ const StudentProfile = ({ user, onLogout }) => {
     }
   };
 
-  const handleEdit = () => {
-    personalInfoRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const fetchApplicationOverview = async () => {
+    try {
+      const response = await applicationService.getMyApplications({ page: 1, limit: 1 });
+
+      if (response.success) {
+        const applications = Array.isArray(response.data) ? response.data : [];
+        const total = Number(response.total ?? response.pagination?.total ?? applications.length);
+
+        setProfileOverview(prev => ({
+          ...prev,
+          soHoSoDaNop: Number.isFinite(total) ? total : applications.length,
+        }));
+      }
+    } catch (error) {
+      console.error('Fetch application overview error:', error);
+    }
   };
 
-  const handleSavePersonalInfo = (infoData) => {
-    console.log('Save personal info:', infoData);
+  const handleEdit = () => {
+    personalInfoRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleAddBankAccount = async (accountData) => {
@@ -153,7 +169,6 @@ const StudentProfile = ({ user, onLogout }) => {
         <div ref={personalInfoRef}>
           <PersonalInfoSection
             user={user}
-            onSave={handleSavePersonalInfo}
           />
         </div>
 

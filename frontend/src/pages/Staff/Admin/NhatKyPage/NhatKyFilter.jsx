@@ -23,6 +23,14 @@ const HANH_DONG_OPTIONS = [
   { value: 'CAP_NHAT_TRANG_THAI_NGUOI_DUNG', label: '🔒 Khóa/Mở tài khoản' },
   { value: 'CAP_NHAT_QUY', label: '🏦 Cập nhật quỹ' },
   { value: 'THEM_MOI_QUY', label: '🏦 Tạo quỹ mới' },
+  { value: 'API_TAO_MOI', label: 'API tạo mới' },
+  { value: 'API_CAP_NHAT', label: 'API cập nhật' },
+  { value: 'API_XOA', label: 'API xóa' },
+  { value: 'DANG_KY_TAI_KHOAN', label: 'Đăng ký tài khoản' },
+  { value: 'CAP_NHAT_MAT_KHAU', label: 'Đổi mật khẩu' },
+  { value: 'CAP_NHAT_VAI_TRO', label: 'Cập nhật vai trò' },
+  { value: 'CAP_NHAT_CAI_DAT_HE_THONG', label: 'Cập nhật cài đặt' },
+  { value: 'CAP_NHAT_PHAN_QUYEN', label: 'Cập nhật phân quyền' },
 ];
 
 const LOAI_DT_OPTIONS = [
@@ -33,6 +41,13 @@ const LOAI_DT_OPTIONS = [
   { value: 'quy', label: 'Quỹ' },
   { value: 'giaodich', label: 'Giao dịch' },
   { value: 'auth', label: 'Xác thực' },
+  { value: 'tintuc', label: 'Tin tức' },
+  { value: 'danhgia', label: 'Đánh giá' },
+  { value: 'sinhviennoibat', label: 'Sinh viên nổi bật' },
+  { value: 'vaitro', label: 'Vai trò' },
+  { value: 'caidathethong', label: 'Cài đặt hệ thống' },
+  { value: 'phanquyen', label: 'Phân quyền' },
+  { value: 'tep', label: 'Tệp tải lên' },
 ];
 
 const NhatKyFilter = ({ filters, staffOptions, onChange }) => {

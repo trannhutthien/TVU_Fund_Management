@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import HeaderActions from '@components/common/HeaderActions';
 import useAuthStore from '@stores/authStore';
 import { authService } from '@services/authService';
 import api from '@services/api';
+import { DEFAULT_PUBLIC_SETTINGS, systemSettingsService } from '@services/systemSettingsService';
 import { HiChevronDown } from 'react-icons/hi2';
 import styles from './PublicHeader.module.scss';
 
@@ -27,6 +28,9 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   const { isAuthenticated, user, token, logout: logoutStore } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
+  const navRef = useRef(null);
 
   const handleLogout = async () => {
     try {
@@ -66,6 +70,28 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
   // Toggle mobile menu (chỉ dùng khi không có onToggleSidebar)
   const toggleMobileMenu = () => {
     if (onToggleSidebar) {
@@ -79,6 +105,11 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   // Close mobile menu khi click link
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+    setOpenDropdown(null);
+  };
+
+  const toggleDropdown = (label) => {
+    setOpenDropdown(prev => (prev === label ? null : label));
   };
 
   // Navigation items
@@ -90,6 +121,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       children: [
         { label: 'Tin tức & Sự kiện', path: '/news' },
         { label: 'Hướng dẫn & Quy định', path: '/guidelines' },
+        { label: 'Sinh viên nói gì về TVU Fund', path: '/testimonials' },
         { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
       ],
     },
@@ -118,6 +150,22 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     fetchPerms();
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    systemSettingsService.getPublicSettings()
+      .then((settings) => {
+        if (isMounted) setPublicSettings(settings);
+      })
+      .catch((error) => {
+        console.error('Error fetching public header settings:', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const checkPageAccess = (pageKey) => {
     if (!permissions || Object.keys(permissions).length === 0) return true;
     const perm = permissions[pageKey];
@@ -142,6 +190,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     '/news': 'news',
     '/funds': 'funds',
     '/guidelines': 'guidelines',
+    '/testimonials': 'landing_page',
     '/donors': 'donors',
     '/profile': 'profile',
     '/apply': 'apply',
@@ -204,20 +253,31 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
                 theme="dark"
               />
               {checkPageAccess('landing_page') && (
-                <span className={styles.logoText}>TVU Fund Management</span>
+                <span className={styles.logoText}>{publicSettings.ten_he_thong || 'TVU Fund Management'}</span>
               )}
             </div>
           </div>
 
           {/* Navigation Menu (Center) - Desktop only */}
-          <nav className={styles.nav}>
+          <nav className={styles.nav} ref={navRef}>
             {filteredNavItems.map((item) => {
               if (item.isDropdown) {
+                const isOpen = openDropdown === item.label;
+
                 return (
-                  <div className={styles.dropdown} key={item.label}>
-                    <span className={styles.dropdownToggle}>
+                  <div
+                    className={`${styles.dropdown} ${isOpen ? styles.dropdownOpen : ''}`}
+                    key={item.label}
+                  >
+                    <button
+                      type="button"
+                      className={styles.dropdownToggle}
+                      onClick={() => toggleDropdown(item.label)}
+                      aria-expanded={isOpen}
+                      aria-haspopup="menu"
+                    >
                       {item.label} <HiChevronDown className={styles.arrowIcon} />
-                    </span>
+                    </button>
                     <div className={styles.dropdownMenu}>
                       {item.children.map((child) => (
                         <NavLink
@@ -226,6 +286,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
                           className={({ isActive }) =>
                             `${styles.dropdownItem} ${isActive ? styles.dropdownItemActive : ''}`
                           }
+                          onClick={() => setOpenDropdown(null)}
                         >
                           {child.label}
                         </NavLink>

@@ -59,9 +59,15 @@ const LANOIBAT_OPTIONS = [
   { value: 3, label: 'Sidebar', note: 'Tin ngắn ở cột phụ bên phải trang chủ' },
 ];
 
+const PHANLOAI_OPTIONS = [
+  { value: 'Tin moi', label: 'Tin mới', note: 'Hiển thị trong section Tin Mới trên Landing Page' },
+  { value: 'Tin noi bat', label: 'Tin nổi bật', note: 'Hiển thị trong section Tin Nổi Bật dưới tiến trình gây quỹ' },
+];
+
 const DANHMUC_LABEL = Object.fromEntries(DANHMUC_OPTIONS.map(o => [o.value, o.label]));
 const TRANGTHAI_LABEL = Object.fromEntries(TRANGTHAI_OPTIONS.map(o => [o.value, o.label]));
 const LANOIBAT_LABEL = Object.fromEntries(LANOIBAT_OPTIONS.map(o => [o.value, o.label]));
+const PHANLOAI_LABEL = Object.fromEntries(PHANLOAI_OPTIONS.map(o => [o.value, o.label]));
 
 const QUILL_MODULES = {
   toolbar: {
@@ -95,6 +101,7 @@ const INITIAL_FORM = {
   status: 'Ban nhap',
   publishDate: '',
   lanoibat: 0,
+  phanloai: 'Tin moi',
 };
 
 // ─── Badge helpers ───────────────────────────────────────────────
@@ -173,6 +180,7 @@ const TaoTinTucPage = () => {
   // Filters
   const [filterKeyword, setFilterKeyword] = useState('');
   const [filterDanhmuc, setFilterDanhmuc] = useState('');
+  const [filterPhanloai, setFilterPhanloai] = useState('');
   const [filterTrangthai, setFilterTrangthai] = useState('');
   const [filterLanoibat, setFilterLanoibat] = useState('');
 
@@ -208,6 +216,7 @@ const TaoTinTucPage = () => {
             status: n.status || 'Ban nhap',
             publishDate: pd,
             lanoibat: n.lanoibat ?? 0,
+            phanloai: n.phanloai || 'Tin moi',
           });
         }
       } catch {
@@ -346,6 +355,7 @@ const TaoTinTucPage = () => {
         content: form.content,
         avatar: form.avatarPath || null,
         category: form.category,
+        phanloai: form.phanloai,
         status: form.status,
         publishDate: form.status === 'Da xuat ban' && form.publishDate ? new Date(form.publishDate).toISOString() : null,
         lanoibat: Number(form.lanoibat),
@@ -380,16 +390,17 @@ const TaoTinTucPage = () => {
     return newsList.filter(item => {
       if (debouncedKeyword && !item.title?.toLowerCase().includes(debouncedKeyword.toLowerCase())) return false;
       if (filterDanhmuc && item.category !== filterDanhmuc) return false;
+      if (filterPhanloai && item.phanloai !== filterPhanloai) return false;
       if (filterTrangthai && item.status !== filterTrangthai) return false;
       if (filterLanoibat !== '' && String(item.lanoibat ?? (item.isFeatured ? 1 : 0)) !== filterLanoibat) return false;
       return true;
     });
-  }, [newsList, debouncedKeyword, filterDanhmuc, filterTrangthai, filterLanoibat]);
+  }, [newsList, debouncedKeyword, filterDanhmuc, filterPhanloai, filterTrangthai, filterLanoibat]);
 
   const totalPages = Math.ceil(filteredList.length / PAGE_SIZE);
   const pagedList = filteredList.slice((listPage - 1) * PAGE_SIZE, listPage * PAGE_SIZE);
 
-  useEffect(() => { setListPage(1); }, [debouncedKeyword, filterDanhmuc, filterTrangthai, filterLanoibat]);
+  useEffect(() => { setListPage(1); }, [debouncedKeyword, filterDanhmuc, filterPhanloai, filterTrangthai, filterLanoibat]);
 
   // ── Toggle status (nút Tạm dừng/Kích hoạt) ──────────────────
   const handleToggleStatus = async (item) => {
@@ -613,6 +624,13 @@ const TaoTinTucPage = () => {
                           </select>
                         </div>
                         <div className={styles.field} style={{ marginTop: 12 }}>
+                          <label className={styles.label}>Phân loại Landing Page</label>
+                          <select id="news-phanloai" className={styles.select} value={form.phanloai} onChange={e => setForm(p => ({ ...p, phanloai: e.target.value }))}>
+                            {PHANLOAI_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                          </select>
+                          <div className={styles.classifyNote}>💡 {PHANLOAI_OPTIONS.find(opt => opt.value === form.phanloai)?.note}</div>
+                        </div>
+                        <div className={styles.field} style={{ marginTop: 12 }}>
                           <label className={styles.label}>Vị trí hiển thị</label>
                           <select id="news-lanoibat" className={styles.select} value={form.lanoibat} onChange={e => setForm(p => ({ ...p, lanoibat: Number(e.target.value) }))}>
                             {LANOIBAT_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
@@ -687,6 +705,10 @@ const TaoTinTucPage = () => {
                 <option value="">Tất cả danh mục</option>
                 {DANHMUC_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
+              <select className={styles.filterSelect} value={filterPhanloai} onChange={e => setFilterPhanloai(e.target.value)}>
+                <option value="">Tất cả phân loại</option>
+                {PHANLOAI_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
               <select className={styles.filterSelect} value={filterTrangthai} onChange={e => setFilterTrangthai(e.target.value)}>
                 <option value="">Tất cả trạng thái</option>
                 {TRANGTHAI_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -718,6 +740,7 @@ const TaoTinTucPage = () => {
                           <th className={styles.thAvatar}>Ảnh</th>
                           <th className={styles.thTitle}>Tiêu đề</th>
                           <th>Danh mục</th>
+                          <th>Phân loại</th>
                           <th>Vị trí</th>
                           <th>Trạng thái</th>
                           <th>Ngày đăng</th>
@@ -745,6 +768,11 @@ const TaoTinTucPage = () => {
                               </div>
                             </td>
                             <td><CategoryBadge category={item.category} /></td>
+                            <td>
+                              <span className={`${styles.badge} ${item.phanloai === 'Tin noi bat' ? styles.badgeGold : styles.badgeBlue}`}>
+                                {PHANLOAI_LABEL[item.phanloai] || 'Tin mới'}
+                              </span>
+                            </td>
                             <td><LanoibatBadge value={item.lanoibat ?? (item.isFeatured ? 1 : 0)} /></td>
                             <td>
                               <StatusBadge

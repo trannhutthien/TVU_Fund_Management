@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
+  HiOutlineArrowLeft,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlineMagnifyingGlass,
@@ -8,17 +10,21 @@ import BackgroundImage from '@components/common/BackgroundImage';
 import Button from '@components/common/Button/Button';
 import Dropdown from '@components/common/Dropdown';
 import Input from '@components/common/Input/Input';
+import PublicFooter from '@components/layout/PublicFooter';
+import PublicHeader from '@components/layout/PublicHeader';
 import {
   TestimonialCard,
   TestimonialForm,
   TestimonialModal,
 } from '@components/common/Testimonials';
 import danhGiaService from '@services/danhGiaService';
+import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './TestimonialsPage.module.scss';
 
 const PAGE_SIZE = 12;
 
 const TestimonialsPage = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [khoaOptions, setKhoaOptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,8 +88,29 @@ const TestimonialsPage = () => {
 
   return (
     <div className={styles.page}>
-      <BackgroundImage className={styles.banner} overlayType="dark">
+      <PublicHeader />
+
+      <BackgroundImage
+        className={styles.banner}
+        overlayType="dark"
+        imageUrl={khuonVienImage}
+      >
         <div className={styles.bannerContent}>
+          <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+            <button
+              type="button"
+              className={styles.backButton}
+              onClick={() => navigate(-1)}
+            >
+              <HiOutlineArrowLeft />
+              Quay lại
+            </button>
+            <Link to="/" className={styles.breadcrumbLink}>Trang chủ</Link>
+            <HiOutlineChevronRight className={styles.breadcrumbDivider} />
+            <Link to="/news" className={styles.breadcrumbLink}>Tin tức & Hướng dẫn</Link>
+            <HiOutlineChevronRight className={styles.breadcrumbDivider} />
+            <span className={styles.breadcrumbActive}>Sinh viên nói gì về TVU Fund</span>
+          </nav>
           <h1>Sinh viên nói gì về TVU Fund</h1>
           <p>Những cảm nhận đã được kiểm duyệt từ sinh viên và cộng đồng TVU Fund.</p>
         </div>
@@ -180,6 +207,8 @@ const TestimonialsPage = () => {
         testimonial={selectedTestimonial}
         onClose={() => setSelectedTestimonial(null)}
       />
+
+      <PublicFooter />
     </div>
   );
 };

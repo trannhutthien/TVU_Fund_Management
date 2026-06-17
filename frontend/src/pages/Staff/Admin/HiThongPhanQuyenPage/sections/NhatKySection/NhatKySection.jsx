@@ -32,6 +32,14 @@ const HANH_DONG_OPTIONS = [
   { value: 'KHOA_TAI_KHOAN', label: '🔒 Khóa tài khoản' },
   { value: 'DANG_NHAP', label: '🔑 Đăng nhập' },
   { value: 'CAP_NHAT_QUY', label: '🏦 Cập nhật quỹ' },
+  { value: 'API_TAO_MOI', label: 'API tạo mới' },
+  { value: 'API_CAP_NHAT', label: 'API cập nhật' },
+  { value: 'API_XOA', label: 'API xóa' },
+  { value: 'DANG_KY_TAI_KHOAN', label: 'Đăng ký tài khoản' },
+  { value: 'CAP_NHAT_MAT_KHAU', label: 'Đổi mật khẩu' },
+  { value: 'CAP_NHAT_VAI_TRO', label: 'Cập nhật vai trò' },
+  { value: 'CAP_NHAT_CAI_DAT_HE_THONG', label: 'Cập nhật cài đặt' },
+  { value: 'CAP_NHAT_PHAN_QUYEN', label: 'Cập nhật phân quyền' },
 ];
 
 const DOI_TUONG_OPTIONS = [
@@ -52,6 +60,14 @@ const HANH_DONG_STYLE = {
   KHOA_TAI_KHOAN: { bg: 'rgba(239,68,68,0.08)', color: '#ef4444', icon: HiOutlineLockClosed, label: 'Khóa tài khoản' },
   DANG_NHAP: { bg: 'rgba(168,85,247,0.08)', color: '#7c3aed', icon: HiOutlineArrowRightOnRectangle, label: 'Đăng nhập' },
   CAP_NHAT_QUY: { bg: 'rgba(26,47,94,0.08)', color: 'var(--color-primary, #1a2f5e)', icon: HiOutlineBuildingLibrary, label: 'Cập nhật quỹ' },
+  API_TAO_MOI: { bg: 'rgba(8,145,178,0.10)', color: '#0891b2', icon: HiOutlineUserPlus, label: 'API tạo mới' },
+  API_CAP_NHAT: { bg: 'rgba(249,115,22,0.10)', color: '#f97316', icon: HiOutlineBuildingLibrary, label: 'API cập nhật' },
+  API_XOA: { bg: 'rgba(239,68,68,0.10)', color: '#ef4444', icon: HiOutlineXCircle, label: 'API xóa' },
+  DANG_KY_TAI_KHOAN: { bg: 'rgba(8,145,178,0.10)', color: '#0891b2', icon: HiOutlineUserPlus, label: 'Đăng ký' },
+  CAP_NHAT_MAT_KHAU: { bg: 'rgba(249,115,22,0.10)', color: '#f97316', icon: HiOutlineLockClosed, label: 'Đổi mật khẩu' },
+  CAP_NHAT_VAI_TRO: { bg: 'rgba(124,58,237,0.10)', color: '#7c3aed', icon: HiOutlineLockClosed, label: 'Vai trò' },
+  CAP_NHAT_CAI_DAT_HE_THONG: { bg: 'rgba(124,58,237,0.10)', color: '#7c3aed', icon: HiOutlineBuildingLibrary, label: 'Cài đặt' },
+  CAP_NHAT_PHAN_QUYEN: { bg: 'rgba(124,58,237,0.10)', color: '#7c3aed', icon: HiOutlineLockClosed, label: 'Phân quyền' },
 };
 
 const NhatKySection = () => {

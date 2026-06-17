@@ -539,16 +539,16 @@
 .dropdown {
   position: relative;
   display: inline-block;
-  
-  &:hover {
+
+  &.dropdownOpen {
     .dropdownToggle {
       color: var(--color-gold);
-      
+
       .arrowIcon {
         transform: rotate(180deg);
       }
     }
-    
+
     .dropdownMenu {
       opacity: 1;
       visibility: visible;
@@ -565,6 +565,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 8px 4px;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   display: inline-flex;
   align-items: center;

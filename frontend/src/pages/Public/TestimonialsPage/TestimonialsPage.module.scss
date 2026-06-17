@@ -4,23 +4,23 @@
   min-height: 100vh;
   background: $bg-page;
   color: $text-body;
+  display: flex;
+  flex-direction: column;
 }
 
 .banner {
-  min-height: 300px;
-  background: $color-navy-blue;
+  min-height: 360px;
 
   :global([class*='backgroundImage']) {
-    background: $color-navy-blue !important;
-    background-image: none !important;
     background-attachment: scroll;
+    background-position: center;
   }
 }
 
 .bannerContent {
   width: min(1120px, calc(100% - 32px));
   margin: auto;
-  padding: 72px 0;
+  padding: 96px 0 72px;
 
   h1 {
     max-width: 760px;
@@ -38,6 +38,59 @@
     font-size: $text-lg;
     line-height: $leading-relaxed;
   }
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: $text-sm;
+  font-weight: $font-semibold;
+}
+
+.backButton,
+.breadcrumbLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.88);
+  text-decoration: none;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.backButton {
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font: inherit;
+
+  &:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.18);
+  }
+}
+
+.breadcrumbLink {
+  &:hover {
+    color: $color-gold;
+  }
+}
+
+.breadcrumbDivider {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.breadcrumbActive {
+  color: #fff;
 }
 
 .container {

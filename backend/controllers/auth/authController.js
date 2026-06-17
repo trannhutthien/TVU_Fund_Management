@@ -144,8 +144,7 @@ export const register = async (req, res) => {
           loai: loaiNhaTaiTro || 'Ca nhan', // 'Ca nhan' hoặc 'To chuc'
         };
         
-        const result = await DonorModel.createDonor(donorData);
-        console.log(`Đã tạo nhà tài trợ ID ${result.insertId} cho user ID ${userId}`);
+        await DonorModel.createDonor(donorData);
       } catch (donorError) {
         console.error("Lỗi tạo nhà tài trợ:", donorError);
         // Không throw error, vì user đã được tạo thành công
@@ -162,6 +161,21 @@ export const register = async (req, res) => {
 
     // 10. Lấy thông tin user vừa tạo
     const newUser = await NguoiDungModel.getUserForProfile(userId);
+
+    await logSystemActivity(req, {
+      nguoidung_id: userId,
+      hanh_dong: "DANG_KY_TAI_KHOAN",
+      loai_doi_tuong: "nguoidung",
+      doi_tuong_id: userId,
+      mo_ta: `Đăng ký tài khoản ${loaiTaiKhoan === "nhataitro" ? "nhà tài trợ" : "sinh viên"} thành công`,
+      du_lieu_moi: {
+        nguoidung_id: newUser.nguoidung_id,
+        hoten: newUser.hoten,
+        email: newUser.email,
+        vaitro_id: newUser.vaitro_id,
+        loaitaikhoan: newUser.loaitaikhoan
+      }
+    });
 
     return res.status(201).json({
       success: true,

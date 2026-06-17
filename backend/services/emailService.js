@@ -17,10 +17,6 @@ const isConfigured = () => {
 // Fallback logging function for development mode
 const logEmailFallback = ({ to, subject, html }) => {
   const timestamp = new Date().toLocaleString("vi-VN");
-  console.log(`\n================= EMAIL LOG (DEVELOPMENT - ${timestamp}) =================`);
-  console.log(`TO: ${to}`);
-  console.log(`SUBJECT: ${subject}`);
-  console.log(`========================================================================`);
 
   // Create logs folder if it doesn't exist
   const logsDir = path.join(process.cwd(), "logs");
@@ -39,7 +35,6 @@ ${html}
 
   try {
     fs.appendFileSync(path.join(logsDir, "emails.log"), logContent, "utf8");
-    console.log(`[Email Service] Email content logged to: logs/emails.log`);
   } catch (err) {
     console.error("[Email Service] Failed to write email log:", err.message);
   }
@@ -57,7 +52,6 @@ const sendMailWrapper = async (mailOptions) => {
       });
 
       await transporter.sendMail(mailOptions);
-      console.log(`[Email Service] Sent email to ${mailOptions.to} successfully via Gmail SMTP.`);
       return true;
     } catch (err) {
       console.error("[Email Service] SMTP error, falling back to file log. Error:", err.message);
@@ -65,7 +59,6 @@ const sendMailWrapper = async (mailOptions) => {
       return false;
     }
   } else {
-    console.log("[Email Service] SMTP not configured. Falling back to log file.");
     logEmailFallback(mailOptions);
     return true;
   }

@@ -104,6 +104,17 @@ const getApplicationsByUser = async (nguoiDungId, limit = 20, offset = 0) => {
   return rows;
 };
 
+const countApplicationsByUser = async (nguoiDungId) => {
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM yeucauhotro
+     WHERE nguoidung_id = ?`,
+    [nguoiDungId]
+  );
+
+  return Number(rows[0]?.total || 0);
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // HÀM: getAllApplications
 // CÔNG DỤNG: Lấy tất cả đơn xin hỗ trợ (cho Admin/Giáo vụ)
@@ -242,7 +253,6 @@ const updateApplicationStatus = async (yeucauhotroId, trangThai, connection = nu
               'Nhận hỗ trợ từ TVU Fund và đạt thành tích tốt trong học tập.'
             ]
           );
-          console.log(`[Auto-Showcase] Đã tự động thêm sinh viên nổi bật: ${hoten} (User ID ${nguoidung_id})`);
         }
       }
     } catch (err) {
@@ -277,6 +287,7 @@ export default {
   createApplication,
   getApplicationById,
   getApplicationsByUser,
+  countApplicationsByUser,
   getAllApplications,
   updateApplicationStatus,
   updateTuChoi
