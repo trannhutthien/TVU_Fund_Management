@@ -3,7 +3,40 @@
   min-height: 100vh;
 }
 
+@media (max-width: 768px) {
+  .layoutWrapper {
+    display: block;
+  }
+}
+
 .mainContent {
   flex: 1;
   overflow-x: hidden;
+  min-width: 0;
+}
+
+.sidebarOverlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebarOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1150;
+    animation: fadeIn 0.2s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }

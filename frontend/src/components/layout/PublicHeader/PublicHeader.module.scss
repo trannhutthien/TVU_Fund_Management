@@ -336,6 +336,41 @@
   }
 }
 
+.actions :global(.header-actions) {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.sidebarToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(240, 165, 0, 0.75);
+  border-radius: 999px;
+  background: rgba(240, 165, 0, 0.16);
+  color: var(--color-gold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: var(--color-gold);
+    color: var(--color-navy-blue);
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.35);
+  }
+
+  @media (max-width: 768px) {
+    display: inline-flex;
+  }
+}
+
 // ============================================
 // HAMBURGER MENU (Mobile)
 // ============================================
@@ -413,7 +448,8 @@
   transition: all 0.3s ease;
   
   &.mobileMenuOpen {
-    max-height: 500px;
+    max-height: calc(100vh - var(--header-height));
+    overflow-y: auto;
     opacity: 1;
   }
 }
@@ -456,6 +492,13 @@
   
   // Button trong mobile menu full width
   button {
+    display: flex !important;
+    width: 100%;
+  }
+
+  :global(.header-actions) {
+    display: flex !important;
+    justify-content: center;
     width: 100%;
   }
 }
@@ -493,8 +536,8 @@
 
 @media (max-width: 768px) {
   .container {
-    padding: 0 16px;
-    gap: 16px;
+    padding: 0 12px;
+    gap: 10px;
   }
   
   :root {
@@ -503,6 +546,34 @@
   
   .header {
     height: 64px;
+  }
+
+  .actions {
+    gap: 8px;
+  }
+
+  .mobileMenu {
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 380px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  .actions {
+    gap: 6px;
+  }
+
+  .sidebarToggle,
+  .hamburger {
+    width: 32px;
+    height: 32px;
+  }
+
+  .hamburgerLine {
+    width: 24px;
   }
 }
 

@@ -1,0 +1,209 @@
+@startuml ERD_Hien_Tai
+!theme plain
+hide circle
+left to right direction
+
+skinparam backgroundColor #FFFFFF
+skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultFontSize 10
+skinparam nodesep 18
+skinparam ranksep 22
+skinparam entity {
+  BackgroundColor #FFF9E6
+  BorderColor #555555
+}
+
+scale max 1100 width
+title ERD TVU Fund - Rut gon theo database hien tai
+
+entity "vaitro" as vaitro {
+  * vaitro_id <<PK>>
+  --
+  tenvaitro
+}
+
+entity "donvihoc" as donvihoc {
+  * donvihoc_id <<PK>>
+  --
+  madonvi
+  tenkhoa
+}
+
+entity "nguoidung" as nguoidung {
+  * nguoidung_id <<PK>>
+  --
+  email
+  hoten
+  vaitro_id <<FK>>
+  donvihoc_id <<FK>>
+  taikhoannganhang_id <<FK>>
+}
+
+entity "taikhoannganhang" as taikhoannganhang {
+  * taikhoannganhang_id <<PK>>
+  --
+  quy_id <<FK>>
+  sotaikhoan
+  nganhang
+}
+
+entity "loaiquy" as loaiquy {
+  * loaiquy_id <<PK>>
+  --
+  tenloai
+}
+
+entity "quy" as quy {
+  * quy_id <<PK>>
+  --
+  tenquy
+  loaiquy_id <<FK>>
+  nguoitao_id <<FK>>
+  sodu
+  trangthai
+}
+
+entity "yeucauhotro" as yeucauhotro {
+  * yeucauhotro_id <<PK>>
+  --
+  nguoidung_id <<FK>>
+  quy_id <<FK>>
+  sotiendenghi
+  trangthai
+}
+
+entity "pheduyet" as pheduyet {
+  * pheduyet_id <<PK>>
+  --
+  yeucauhotro_id <<FK>>
+  nguoiduyet_id <<FK>>
+  capduyet
+  ketqua
+}
+
+entity "nhataitro" as nhataitro {
+  * nhataitro_id <<PK>>
+  --
+  nguoidung_id <<FK>>
+  tennhataitro
+  loainhataitro
+}
+
+entity "khoantaitro" as khoantaitro {
+  * khoantaitro_id <<PK>>
+  --
+  nhataitro_id <<FK>>
+  quy_id <<FK>>
+  nguoixacnhan_id <<FK>>
+  sotien
+  trangthai
+}
+
+entity "giaodich" as giaodich {
+  * giaodich_id <<PK>>
+  --
+  yeucauhotro_id <<FK>>
+  quy_id <<FK>>
+  nguoinhan_id <<FK>>
+  nguoithuchien_id <<FK>>
+  doisoatboiid <<FK>>
+  sotien
+  doisoattrangthai
+}
+
+entity "tintuc" as tintuc {
+  * tintuc_id <<PK>>
+  --
+  nguoitao_id <<FK>>
+  nguoisua_id <<FK>>
+  tieude
+  phanloai
+  trangthai
+}
+
+entity "sinhviennoibat" as sinhviennoibat {
+  * sinhviennoibat_id <<PK>>
+  --
+  nguoidung_id <<FK>>
+  hoten
+  trangthai
+}
+
+entity "danhgia" as danhgia {
+  * danhgia_id <<PK>>
+  --
+  nguoidung_id <<FK>>
+  nguoiduyet_id <<FK>>
+  hoten
+  trangthai
+  noibat
+}
+
+entity "guest_yeucauhotro" as guest_yeucauhotro {
+  * guest_yeucauhotro_id <<PK>>
+  --
+  quy_id <<LOGIC>>
+  nguoidung_id_ref <<LOGIC>>
+  yeucauhotro_id_ref <<LOGIC>>
+  tracking_uuid
+}
+
+entity "guest_khoantaitro" as guest_khoantaitro {
+  * guest_khoantaitro_id <<PK>>
+  --
+  quy_id <<LOGIC>>
+  nhataitro_id_ref <<LOGIC>>
+  khoantaitro_id_ref <<LOGIC>>
+  tracking_uuid
+}
+
+entity "nhatkyhethong" as nhatkyhethong {
+  * nhatkyhethong_id <<PK>>
+  --
+  nguoidung_id <<FK>>
+  hanhdong
+  loaidoituong
+}
+
+' Quan he FK that
+vaitro ||--o{ nguoidung
+donvihoc ||--o{ nguoidung
+taikhoannganhang ||--o{ nguoidung
+nguoidung ||--o{ nhataitro
+loaiquy ||--o{ quy
+nguoidung ||--o{ quy
+quy ||--o{ taikhoannganhang
+
+nguoidung ||--o{ yeucauhotro
+quy ||--o{ yeucauhotro
+yeucauhotro ||--o{ pheduyet
+nguoidung ||--o{ pheduyet
+
+nhataitro ||--o{ khoantaitro
+quy ||--o{ khoantaitro
+nguoidung ||--o{ khoantaitro
+
+yeucauhotro ||--o{ giaodich
+quy ||--o{ giaodich
+nguoidung ||--o{ giaodich
+
+nguoidung ||--o{ tintuc
+nguoidung ||--o{ sinhviennoibat
+nguoidung ||--o{ danhgia
+nguoidung ||--o{ nhatkyhethong
+
+' Quan he logic cua bang guest, schema khong dat FK
+quy ||..o{ guest_yeucauhotro
+nguoidung ||..o{ guest_yeucauhotro
+yeucauhotro ||..o{ guest_yeucauhotro
+
+quy ||..o{ guest_khoantaitro
+nhataitro ||..o{ guest_khoantaitro
+khoantaitro ||..o{ guest_khoantaitro
+
+legend bottom
+  PK = khoa chinh | FK = khoa ngoai | LOGIC = lien ket logic khong dat FK
+endlegend
+
+@enduml

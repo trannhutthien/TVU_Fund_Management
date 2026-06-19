@@ -270,6 +270,12 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
     if (onClose) onClose();
   };
 
+  const handleNavItemClick = () => {
+    if (window.innerWidth <= 768) {
+      handleClose();
+    }
+  };
+
   // ─── GET AVATAR INITIAL ─────────────────────────────────
   const getInitial = (name) => {
     if (!name) return '?';
@@ -369,6 +375,7 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
                   className={({ isActive }) =>
                     `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
                   }
+                  onClick={handleNavItemClick}
                 >
                   <Icon className={styles.navIcon} />
                   <span className={styles.navLabel}>{item.label}</span>

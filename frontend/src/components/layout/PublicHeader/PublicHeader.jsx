@@ -9,7 +9,7 @@ import useAuthStore from '@stores/authStore';
 import { authService } from '@services/authService';
 import api from '@services/api';
 import { DEFAULT_PUBLIC_SETTINGS, systemSettingsService } from '@services/systemSettingsService';
-import { HiChevronDown } from 'react-icons/hi2';
+import { HiChevronDown, HiChevronRight } from 'react-icons/hi2';
 import styles from './PublicHeader.module.scss';
 
 /**
@@ -31,6 +31,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
   const navRef = useRef(null);
+  const isStaffUser = isAuthenticated && [1, 2, 3].includes(Number(user?.vaiTro));
 
   const handleLogout = async () => {
     try {
@@ -92,14 +93,21 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     };
   }, []);
 
-  // Toggle mobile menu (chỉ dùng khi không có onToggleSidebar)
-  const toggleMobileMenu = () => {
+  const toggleStaffSidebar = () => {
+    setIsMobileMenuOpen(false);
     if (onToggleSidebar) {
-      // Ở StaffLayout: gọi toggle sidebar thay vì mở mobile menu
       onToggleSidebar();
     } else {
-      setIsMobileMenuOpen(!isMobileMenuOpen);
+      window.dispatchEvent(new CustomEvent('tvu:toggle-staff-sidebar'));
     }
+  };
+
+  // Toggle mobile header menu.
+  const toggleMobileMenu = () => {
+    if (!isMobileMenuOpen) {
+      window.dispatchEvent(new CustomEvent('tvu:close-staff-sidebar'));
+    }
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   // Close mobile menu khi click link
@@ -314,6 +322,18 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
 
           {/* Action Buttons (Right) */}
           <div className={styles.actions}>
+            {isStaffUser && (
+              <button
+                type="button"
+                className={styles.sidebarToggle}
+                onClick={toggleStaffSidebar}
+                aria-label="Mở sidebar quản trị"
+                title="Mở sidebar quản trị"
+              >
+                <HiChevronRight />
+              </button>
+            )}
+
             {isAuthenticated ? (
               <>
                 <HeaderActions
@@ -358,8 +378,8 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
         </div>
       </header>
 
-      {/* Mobile Menu Dropdown - CHỈ hiện khi KHÔNG có sidebar (trang Public) */}
-      {!onToggleSidebar && (
+      {/* Mobile Menu Dropdown */}
+      {isMobileMenuOpen && (
         <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
           {/* Navigation Links */}
           {filteredNavItems.map((item) => {

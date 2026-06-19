@@ -641,3 +641,52 @@
     }
   }
 }
+
+@media (max-width: 420px) {
+  .container,
+  .bannerContent {
+    width: min(100% - 20px, 1200px);
+  }
+
+  .banner {
+    min-height: 280px;
+    padding: 32px 0 54px;
+  }
+
+  .bannerInfo {
+    gap: 12px;
+  }
+
+  .bannerTitle {
+    font-size: 1.85rem;
+  }
+
+  .statsCard :global(.stat-card-value) {
+    font-size: 1.1rem;
+  }
+
+  .card,
+  .fullWidthSection,
+  .contactFallback {
+    padding: 16px;
+  }
+
+  .progressHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+
+    span:first-child {
+      font-size: 1.6rem;
+    }
+  }
+
+  .ctaActions button {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .skeletonStatCard {
+    padding: 16px;
+  }
+}

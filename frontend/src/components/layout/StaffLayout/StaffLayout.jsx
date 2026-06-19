@@ -37,6 +37,13 @@ const StaffLayout = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    window.addEventListener('tvu:close-staff-sidebar', closeSidebar);
+    return () => {
+      window.removeEventListener('tvu:close-staff-sidebar', closeSidebar);
+    };
+  }, []);
+
   return (
     <div className={`${styles.staffLayout} staff-app-shell`}>
       {/* Header – truyền callback toggle sidebar */}

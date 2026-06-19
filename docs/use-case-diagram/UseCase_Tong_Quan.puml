@@ -12,161 +12,285 @@ skinparam linetype ortho
 skinparam nodesep 30
 skinparam ranksep 40
 
-title **USE CASE DIAGRAM — TVU Fund Management System**
+title **USE CASE DIAGRAM - TVU Fund Management System**
 
 left to right direction
 
-' ═══════════════════════════
-' ACTORS TRÁI (khai báo trước rectangle)
-' ═══════════════════════════
-actor "Sinh viên"   as SV
+' Actors cong khai
+actor "Khách truy cập" as KH
+actor "Sinh viên" as SV
 actor "Nhà tài trợ" as NTT
+KH -[hidden]down- SV
 SV -[hidden]down- NTT
 
 rectangle "Hệ thống TVU Fund Management" {
 
-  package "Xác thực & Hồ sơ" as PKG_AUTH {
-    (Đăng ký tài khoản) as UC01
-    (Đăng nhập)         as UC02
-    (Đổi mật khẩu)     as UC03
-    (Quản lý hồ sơ)    as UC04
+  package "Công khai & tra cứu" as PKG_PUBLIC {
+    (Xem landing & thống kê công khai) as UC01
+    (Xem danh sách quỹ) as UC02
+    (Xem chi tiết quỹ) as UC03
+    (Xem bảng vàng / tri ân nhà tài trợ) as UC04
+    (Xem sinh viên nổi bật) as UC05
+    (Xem tin mới / tin nổi bật) as UC06
+    (Xem tất cả cảm nhận sinh viên) as UC07
+    (Gửi cảm nhận chờ kiểm duyệt) as UC08
+    (Tra cứu trạng thái bằng mã theo dõi) as UC09
+    (Xem trang đối tác nhà tài trợ) as UC10
   }
 
-  package "Hỗ trợ sinh viên" as PKG_SV {
-    (Nộp đơn xin hỗ trợ) as UC05
-    (AI hỗ trợ viết đơn) as UC06
-    (Xem đơn & lịch sử)  as UC07
+  package "Xác thực & hồ sơ" as PKG_AUTH {
+    (Đăng ký tài khoản) as UC11
+    (Đăng nhập / Google OAuth) as UC12
+    (Đăng xuất) as UC13
+    (Đổi mật khẩu) as UC14
+    (Quản lý hồ sơ cá nhân) as UC15
+    (Quản lý tài khoản ngân hàng cá nhân) as UC16
   }
 
-  package "Phê duyệt & Giải ngân" as PKG_PHE {
-    (Phê duyệt đơn cấp 1)         as UC09
-    (Phê duyệt đơn cấp 2)         as UC10
-    (Phê duyệt cấp 3 & Giải ngân) as UC11
-    (Từ chối đơn)                 as UC12
+  package "Hỗ trợ sinh viên" as PKG_APPLICATION {
+    (Nộp đơn xin hỗ trợ) as UC17
+    (Nộp đơn khách vãng lai) as UC18
+    (Xác minh OTP email) as UC19
+    (Tải minh chứng / tài liệu đính kèm) as UC20
+    (AI hỗ trợ viết đơn) as UC21
+    (Theo dõi hồ sơ & lịch sử hỗ trợ) as UC22
   }
 
-  package "Tài trợ" as PKG_TT {
-    (Quyên góp / Tài trợ)  as UC13
-    (Xác nhận tài trợ)     as UC14
-    (Từ chối tài trợ)      as UC15
-    (Xem lịch sử tài trợ) as UC16
+  package "Tài trợ" as PKG_DONATION {
+    (Tạo khoản tài trợ khi đăng nhập) as UC23
+    (Tạo khoản tài trợ công khai) as UC24
+    (Tạo khoản tài trợ khách vãng lai) as UC25
+    (Tải chứng từ tài trợ) as UC26
+    (Xem lịch sử & thống kê tài trợ) as UC27
+    (Xem thông tin ngân hàng nhận tài trợ) as UC28
   }
 
-  package "Quản lý quỹ" as PKG_QUY {
-    (Tạo quỹ mới)            as UC17
-    (Xem danh sách quỹ)      as UC18
-    (Cập nhật quỹ)           as UC19
-    (Theo dõi sức khỏe quỹ) as UC20
+  package "Quản lý quỹ & danh mục" as PKG_FUND {
+    (Tạo / cập nhật quỹ) as UC29
+    (Cập nhật trạng thái & sức khỏe quỹ) as UC30
+    (Quản lý loại quỹ) as UC31
+    (Quản lý tài khoản ngân hàng quỹ) as UC32
+    (Quản lý nhà tài trợ) as UC33
   }
 
-  package "Tài chính & Báo cáo" as PKG_TC {
-    (Xem giao dịch)     as UC21
-    (Đối soát chứng từ) as UC22
-    (Xuất báo cáo)      as UC23
-    (Xem thống kê)      as UC24
+  package "Nội dung công khai" as PKG_CONTENT {
+    (Quản lý tin tức & sự kiện) as UC34
+    (Phân loại Tin mới / Tin nổi bật) as UC35
+    (Quản lý sinh viên nổi bật) as UC36
+    (Quản lý cảm nhận sinh viên) as UC37
+    (Duyệt / từ chối / chọn nổi bật cảm nhận) as UC38
   }
 
-  package "Quản trị hệ thống" as PKG_AD {
-    (Quản lý người dùng)         as UC25
-    (Quản lý vai trò)            as UC26
-    (Xem nhật ký hệ thống)      as UC27
-    (Cài đặt hệ thống)          as UC28
-    (Xem lịch sử hoạt động)     as UC29
-    (Ma trận phân quyền)        as UC30
-    (Quản lý sinh viên nổi bật) as UC31
+  package "Phê duyệt & giải ngân" as PKG_APPROVAL {
+    (Xem danh sách hồ sơ hỗ trợ) as UC39
+    (Phê duyệt hồ sơ cấp 1) as UC40
+    (Phê duyệt hồ sơ cấp 2) as UC41
+    (Phê duyệt cấp 3 & giải ngân) as UC42
+    (Từ chối hồ sơ) as UC43
+    (Xem lịch sử phê duyệt) as UC44
+    (Xác nhận / duyệt / từ chối tài trợ) as UC45
+    (Ghi nhận khoản tài trợ offline) as UC46
+    (Tạo giao dịch & cập nhật số dư quỹ) as UC47
   }
 
-  UC05 ..> UC06 : <<extend>>
-  UC09 ..> UC02 : <<include>>
-  UC11 ..> UC21 : <<include>>
-  UC14 ..> UC16 : <<include>>
+  package "Tài chính & báo cáo" as PKG_FINANCE {
+    (Xem lịch sử giao dịch) as UC48
+    (Đối soát chứng từ) as UC49
+    (Xem dashboard thống kê) as UC50
+    (Xuất báo cáo / Excel) as UC51
+  }
+
+  package "Quản trị hệ thống" as PKG_ADMIN {
+    (Quản lý người dùng) as UC52
+    (Quản lý vai trò) as UC53
+    (Ma trận phân quyền trang) as UC54
+    (Cài đặt hệ thống, footer, liên hệ, ngân hàng) as UC55
+    (Xem / xuất nhật ký hệ thống) as UC56
+    (Ghi nhật ký tác động dữ liệu) as UC57
+  }
+
+  UC03 ..> UC02 : <<include>>
+  UC03 ..> UC28 : <<include>>
+
+  UC17 ..> UC20 : <<include>>
+  UC17 ..> UC21 : <<extend>>
+  UC18 ..> UC19 : <<include>>
+  UC18 ..> UC20 : <<include>>
+  UC18 ..> UC09 : <<include>>
+
+  UC23 ..> UC26 : <<include>>
+  UC24 ..> UC26 : <<include>>
+  UC24 ..> UC28 : <<include>>
+  UC25 ..> UC19 : <<include>>
+  UC25 ..> UC26 : <<include>>
+  UC25 ..> UC09 : <<include>>
+
+  UC34 ..> UC35 : <<include>>
+  UC37 ..> UC38 : <<include>>
+
+  UC42 ..> UC47 : <<include>>
+  UC45 ..> UC47 : <<include>>
+  UC49 ..> UC48 : <<include>>
+
+  UC29 ..> UC57 : <<include>>
+  UC33 ..> UC57 : <<include>>
+  UC34 ..> UC57 : <<include>>
+  UC37 ..> UC57 : <<include>>
+  UC40 ..> UC57 : <<include>>
+  UC41 ..> UC57 : <<include>>
+  UC42 ..> UC57 : <<include>>
+  UC45 ..> UC57 : <<include>>
+  UC49 ..> UC57 : <<include>>
+  UC52 ..> UC57 : <<include>>
+  UC54 ..> UC57 : <<include>>
+  UC55 ..> UC57 : <<include>>
 }
 
-' ═══════════════════════════
-' ACTORS PHẢI (khai báo sau rectangle)
-' ═══════════════════════════
+' Actors noi bo va dich vu ngoai
 actor "Cán bộ quỹ" as CBQ
-actor "Kế toán"    as KT
-actor "Admin"      as AD
+actor "Kế toán" as KT
+actor "Admin" as AD
+actor "Dịch vụ Email/OTP" as OTP
+actor "Dịch vụ AI" as AI
 CBQ -[hidden]down- KT
-KT  -[hidden]down- AD
+KT -[hidden]down- AD
+AD -[hidden]down- OTP
+OTP -[hidden]down- AI
 
-' ═══════════════════════════════════════════════
-' SINH VIÊN
-' ═══════════════════════════════════════════════
+' Khach truy cap
+KH --> UC01
+KH --> UC02
+KH --> UC03
+KH --> UC04
+KH --> UC05
+KH --> UC06
+KH --> UC07
+KH --> UC08
+KH --> UC09
+KH --> UC10
+KH --> UC11
+KH --> UC12
+KH --> UC18
+KH --> UC24
+KH --> UC25
+
+' Sinh vien
 SV --> UC01
 SV --> UC02
 SV --> UC03
-SV --> UC04
-SV --> UC05
+SV --> UC06
 SV --> UC07
-SV --> UC18
-' ═══════════════════════════════════════════════
-' NHÀ TÀI TRỢ
-' ═══════════════════════════════════════════════
+SV --> UC08
+SV --> UC12
+SV --> UC13
+SV --> UC14
+SV --> UC15
+SV --> UC16
+SV --> UC17
+SV --> UC21
+SV --> UC22
+
+' Nha tai tro
 NTT --> UC01
 NTT --> UC02
 NTT --> UC03
 NTT --> UC04
+NTT --> UC06
+NTT --> UC10
+NTT --> UC11
+NTT --> UC12
 NTT --> UC13
-NTT --> UC16
+NTT --> UC14
+NTT --> UC15
+NTT --> UC23
+NTT --> UC27
+NTT --> UC28
 
-' ═══════════════════════════════════════════════
-' CÁN BỘ QUỸ
-' ═══════════════════════════════════════════════
-CBQ --> UC02
-CBQ --> UC03
-CBQ --> UC07
-CBQ --> UC09
+' Can bo quy
 CBQ --> UC12
-CBQ --> UC16
-CBQ --> UC17
-CBQ --> UC18
-CBQ --> UC19
-CBQ --> UC20
-CBQ --> UC23
-CBQ --> UC25
+CBQ --> UC13
+CBQ --> UC14
+CBQ --> UC15
+CBQ --> UC29
+CBQ --> UC30
 CBQ --> UC31
+CBQ --> UC32
+CBQ --> UC33
+CBQ --> UC34
+CBQ --> UC35
+CBQ --> UC36
+CBQ --> UC37
+CBQ --> UC38
+CBQ --> UC39
+CBQ --> UC40
+CBQ --> UC43
+CBQ --> UC44
+CBQ --> UC46
+CBQ --> UC51
 
-' ═══════════════════════════════════════════════
-' KẾ TOÁN
-' ═══════════════════════════════════════════════
-KT --> UC02
-KT --> UC03
-KT --> UC11
+' Ke toan
 KT --> UC12
+KT --> UC13
 KT --> UC14
 KT --> UC15
-KT --> UC16
-KT --> UC21
-KT --> UC22
-KT --> UC23
-KT --> UC24
+KT --> UC39
+KT --> UC42
+KT --> UC43
+KT --> UC45
+KT --> UC47
+KT --> UC48
+KT --> UC49
+KT --> UC50
+KT --> UC51
 
-' ═══════════════════════════════════════════════
-' ADMIN
-' ═══════════════════════════════════════════════
-AD --> UC02
-AD --> UC03
-AD --> UC07
-AD --> UC10
+' Admin
 AD --> UC12
+AD --> UC13
 AD --> UC14
 AD --> UC15
-AD --> UC16
-AD --> UC17
-AD --> UC18
-AD --> UC19
-AD --> UC20
-AD --> UC21
-AD --> UC23
-AD --> UC24
-AD --> UC25
-AD --> UC26
-AD --> UC27
-AD --> UC28
 AD --> UC29
 AD --> UC30
 AD --> UC31
+AD --> UC32
+AD --> UC33
+AD --> UC34
+AD --> UC35
+AD --> UC36
+AD --> UC37
+AD --> UC38
+AD --> UC39
+AD --> UC41
+AD --> UC43
+AD --> UC44
+AD --> UC45
+AD --> UC48
+AD --> UC49
+AD --> UC50
+AD --> UC51
+AD --> UC52
+AD --> UC53
+AD --> UC54
+AD --> UC55
+AD --> UC56
+
+OTP --> UC19
+AI --> UC21
+
+note bottom of UC57
+  Middleware ghi các API POST/PUT/PATCH/DELETE
+  vào bảng nhatkyhethong để theo dõi tác động dữ liệu.
+end note
+
+legend right
+  **Bảng dữ liệu chính hiện tại**
+  nguoidung, vaitro, donvihoc
+  quy, loaiquy, taikhoannganhang
+  yeucauhotro, pheduyet
+  nhataitro, khoantaitro, giaodich
+  tintuc (phanloai: Tin moi / Tin noi bat)
+  danhgia, sinhviennoibat
+  guest_yeucauhotro, guest_khoantaitro
+  nhatkyhethong
+endlegend
 
 @enduml
