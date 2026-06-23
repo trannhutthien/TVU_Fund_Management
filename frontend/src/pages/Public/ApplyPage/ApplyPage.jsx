@@ -324,9 +324,19 @@ const ApplyPage = () => {
     const fundId = Number(fundIdFromNavigation);
     if (!Number.isFinite(fundId)) return;
 
+    const fundFromNavigation = {
+      quyId: fundId,
+      quy_id: fundId,
+      id: fundId,
+      tenQuy: location.state?.tenQuy || location.state?.ten_quy || null,
+      ten_quy: location.state?.ten_quy || location.state?.tenQuy || null,
+      loaiQuy: location.state?.loaiQuy || location.state?.loai_quy || null,
+      loai_quy: location.state?.loai_quy || location.state?.loaiQuy || null,
+    };
+
     setSelectedFund((prev) => {
       if (prev?.quyId === fundId) return prev;
-      return { quyId: fundId };
+      return fundFromNavigation;
     });
   }, [location.search, location.state]);
 

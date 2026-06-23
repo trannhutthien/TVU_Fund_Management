@@ -84,7 +84,7 @@ const getCategoryTheme = (category) => {
 const getFundTypeName = (fund) =>
   fund?.loaiquy?.tenLoai ||
   fund?.loaiquy?.tenloai ||
-  fund?.tenLoaiQuy ||
+  fund?.tenloai ||
   fund?.tenLoai ||
   fund?.loaiQuy ||
   'Khác';
@@ -203,7 +203,7 @@ const FundProgressSection = () => {
         quyId: fund.id,
         fundId: fund.id,
         tenQuy: fund.name,
-        tenLoaiQuy: fund.typeName,
+        loaiQuyLabel: fund.typeName,
         loaiQuy: fund.typeCode,
         role: 'donor',
         guestRole: 'donor',

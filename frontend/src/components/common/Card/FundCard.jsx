@@ -64,32 +64,41 @@ const FundCard = ({ fund }) => {
     navigate(`/funds/${fund.quy_id}`);
   };
 
+  const buildFundNavigationState = (role) => {
+    const fundId = Number(fund.quy_id);
+    const fundName = fund.ten_quy || '';
+    const fundTypeCode = fund.ma_loai_quy || null;
+    const fundTypeName = fund.loai_quy || '';
+
+    return {
+      quy_id: fundId,
+      quyId: fundId,
+      fundId,
+      id: fundId,
+      tenQuy: fundName,
+      ten_quy: fundName,
+      loaiQuy: fundTypeCode,
+      loai_quy: fundTypeCode,
+      typeCode: fundTypeCode,
+      category: fundTypeCode,
+      tenLoaiQuy: fundTypeName,
+      loaiQuyLabel: fundTypeName,
+      trangThai: fund.trang_thai,
+      trang_thai: fund.trang_thai,
+      role,
+      guestRole: role,
+    };
+  };
+
   const handleApply = () => {
     navigate(`/apply?role=student&fundId=${fund.quy_id}`, {
-      state: {
-        quy_id: fund.quy_id,
-        quyId: fund.quy_id,
-        fundId: fund.quy_id,
-        tenQuy: fund.ten_quy,
-        tenLoaiQuy: fund.loai_quy,
-        loaiQuy: fund.ma_loai_quy,
-        role: 'student',
-      },
+      state: buildFundNavigationState('student'),
     });
   };
 
   const handleDonate = () => {
     navigate(`/apply?role=donor&fundId=${fund.quy_id}`, {
-      state: {
-        quy_id: fund.quy_id,
-        quyId: fund.quy_id,
-        fundId: fund.quy_id,
-        tenQuy: fund.ten_quy,
-        tenLoaiQuy: fund.loai_quy,
-        loaiQuy: fund.ma_loai_quy,
-        role: 'donor',
-        guestRole: 'donor',
-      },
+      state: buildFundNavigationState('donor'),
     });
   };
 

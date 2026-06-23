@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
   HiOutlineBuildingLibrary, 
@@ -28,19 +28,71 @@ const daysRemaining = (dateStr) => {
   return diff;
 };
 
-const areSameFundList = (currentList, nextList) => (
-  currentList.length === nextList.length &&
-  currentList.every((fund, index) => fund.quyId === nextList[index]?.quyId)
-);
+const normalizeSelectedFund = (fund) => {
+  if (!fund) return null;
+  const quyId = fund.quyId ?? fund.quy_id ?? fund.id;
+  if (!quyId) return null;
+
+  const loaiQuy = fund.loaiQuy ?? fund.loai_quy ?? fund.typeCode ?? fund.category ?? null;
+  return {
+    ...fund,
+    quyId: Number(quyId),
+    tenQuy: fund.tenQuy ?? fund.ten_quy ?? fund.name ?? '',
+    loaiQuy,
+    trangThai: fund.trangThai ?? fund.trang_thai ?? 'Dang hoat dong',
+  };
+};
 
 const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
   const [selectedLoaiQuy, setSelectedLoaiQuy] = useState(null);
   const [selectedFundId, setSelectedFundId] = useState(null);
   const [allFunds, setAllFunds] = useState([]); // Tất cả quỹ từ database
   const [loaiQuyOptions, setLoaiQuyOptions] = useState([]); // Danh sách loại quỹ động
-  const [fundList, setFundList] = useState([]); // Quỹ đã filter theo loại
   const [fundDetail, setFundDetail] = useState(null);
   const [loadingFunds, setLoadingFunds] = useState(false);
+  const selectedFundKey = selectedFund?.quyId ?? selectedFund?.quy_id ?? selectedFund?.id ?? null;
+  const normalizedSelectedFund = useMemo(
+    () => normalizeSelectedFund(selectedFund),
+    [
+      selectedFund?.quyId,
+      selectedFund?.quy_id,
+      selectedFund?.id,
+      selectedFund?.tenQuy,
+      selectedFund?.ten_quy,
+      selectedFund?.name,
+      selectedFund?.loaiQuy,
+      selectedFund?.loai_quy,
+      selectedFund?.typeCode,
+      selectedFund?.category,
+      selectedFund?.trangThai,
+      selectedFund?.trang_thai,
+    ]
+  );
+
+  const fundList = useMemo(() => {
+    if (!selectedLoaiQuy) return [];
+
+    const filtered = allFunds.filter(
+      (fund) => fund.loaiQuy === selectedLoaiQuy && fund.trangThai === 'Dang hoat dong'
+    );
+
+    if (
+      normalizedSelectedFund?.quyId &&
+      normalizedSelectedFund.loaiQuy === selectedLoaiQuy &&
+      !filtered.some((fund) => fund.quyId === normalizedSelectedFund.quyId)
+    ) {
+      return [normalizedSelectedFund, ...filtered];
+    }
+
+    return filtered;
+  }, [
+    allFunds,
+    selectedLoaiQuy,
+    normalizedSelectedFund?.quyId,
+    normalizedSelectedFund?.tenQuy,
+    normalizedSelectedFund?.loaiQuy,
+    normalizedSelectedFund?.trangThai,
+  ]);
 
   // Lấy tất cả quỹ và loại quỹ từ database khi component mount
   useEffect(() => {
@@ -82,20 +134,22 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
   }, []);
 
   useEffect(() => {
-    if (!selectedFund?.quyId || allFunds.length === 0) return;
+    if (!normalizedSelectedFund?.quyId) return;
 
-    const matchedFund = allFunds.find((fund) => fund.quyId === Number(selectedFund.quyId));
-    if (!matchedFund) return;
+    const matchedFund = allFunds.find((fund) => fund.quyId === normalizedSelectedFund.quyId) || normalizedSelectedFund;
+    if (!matchedFund.loaiQuy) return;
 
-    setSelectedLoaiQuy(matchedFund.loaiQuy);
-    setFundList((currentList) => {
-      const nextList = allFunds.filter(
-        (fund) => fund.loaiQuy === matchedFund.loaiQuy && fund.trangThai === 'Dang hoat dong'
-      );
-      return areSameFundList(currentList, nextList) ? currentList : nextList;
-    });
-    setSelectedFundId(matchedFund.quyId);
-  }, [selectedFund?.quyId, allFunds]);
+    setSelectedLoaiQuy((currentLoaiQuy) => (
+      currentLoaiQuy === matchedFund.loaiQuy ? currentLoaiQuy : matchedFund.loaiQuy
+    ));
+    setSelectedFundId((currentFundId) => (
+      currentFundId === matchedFund.quyId ? currentFundId : matchedFund.quyId
+    ));
+  }, [
+    normalizedSelectedFund?.quyId,
+    normalizedSelectedFund?.loaiQuy,
+    allFunds
+  ]);
 
   // Format label cho loại quỹ
   const formatLoaiQuyLabel = (loaiQuy) => {
@@ -109,48 +163,35 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
     return mapping[loaiQuy] || loaiQuy;
   };
 
-  // Filter quỹ theo loại quỹ được chọn
   useEffect(() => {
-    if (!selectedLoaiQuy) {
-      setFundList((currentList) => (currentList.length > 0 ? [] : currentList));
-      setSelectedFundId((currentFundId) => (currentFundId ? null : currentFundId));
-      setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
-      return;
-    }
+    if (!selectedLoaiQuy || !selectedFundId) return;
 
-    // Filter quỹ theo loại và trạng thái "Đang hoạt động"
-    const filtered = allFunds.filter(
-      f => f.loaiQuy === selectedLoaiQuy && f.trangThai === 'Dang hoat dong'
-    );
-    setFundList((currentList) => (
-      areSameFundList(currentList, filtered) ? currentList : filtered
-    ));
-    const shouldKeepSelectedFund = selectedFund?.quyId &&
-      filtered.some((fund) => fund.quyId === Number(selectedFund.quyId));
+    const shouldKeepSelectedFund = fundList.some((fund) => fund.quyId === Number(selectedFundId));
+    if (shouldKeepSelectedFund) return;
 
-    if (!shouldKeepSelectedFund) {
-      setSelectedFundId((currentFundId) => (currentFundId ? null : currentFundId));
-      setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
+    setSelectedFundId(null);
+    setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
+    if (Number(selectedFundKey) === Number(selectedFundId)) {
+      onFundSelect?.(null);
     }
-  }, [selectedLoaiQuy, allFunds, selectedFund?.quyId]);
+  }, [selectedLoaiQuy, selectedFundId, fundList, selectedFundKey, onFundSelect]);
 
   useEffect(() => {
     if (!selectedFundId || fundList.length === 0) {
       setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
-      if (selectedFund?.quyId) onFundSelect?.(null);
       return;
     }
 
-    const detail = fundList.find((f) => f.quyId === selectedFundId);
+    const detail = fundList.find((f) => f.quyId === Number(selectedFundId));
     setFundDetail((currentDetail) => (
       currentDetail?.quyId === detail?.quyId ? currentDetail : detail || null
     ));
 
-    if ((detail?.quyId || null) !== (selectedFund?.quyId || null)) {
+    if ((detail?.quyId || null) !== (Number(selectedFundKey) || null)) {
       onFundSelect?.(detail || null);
     }
 
-  }, [selectedFundId, fundList, onFundSelect, selectedFund?.quyId]);
+  }, [selectedFundId, fundList, onFundSelect, selectedFundKey]);
 
   const fundOptions = fundList.map((f) => ({
     value: f.quyId,
