@@ -81,6 +81,21 @@ const getCategoryTheme = (category) => {
   }
 };
 
+const getFundTypeName = (fund) =>
+  fund?.loaiquy?.tenLoai ||
+  fund?.loaiquy?.tenloai ||
+  fund?.tenLoaiQuy ||
+  fund?.tenLoai ||
+  fund?.loaiQuy ||
+  'Khác';
+
+const getFundTypeCode = (fund) =>
+  fund?.loaiquy?.maLoai ||
+  fund?.maLoaiQuy ||
+  fund?.maLoai ||
+  fund?.loaiQuy ||
+  getFundTypeName(fund);
+
 const FundProgressSection = () => {
   const navigate = useNavigate();
   const [funds, setFunds] = useState([]);
@@ -101,11 +116,16 @@ const FundProgressSection = () => {
             const progressPercent = goalAmount > 0
               ? Math.round((currentBalance / goalAmount) * 100)
               : 0;
+            const fundId = fund.quyId ?? fund.quy_id;
+            const typeName = getFundTypeName(fund);
+            const typeCode = getFundTypeCode(fund);
 
             return {
-              id: fund.quyId,
-              name: fund.tenQuy,
-              category: fund.loaiQuy || 'Khác',
+              id: fundId,
+              name: fund.tenQuy || fund.ten_quy || fund.tenquy,
+              category: typeCode || 'Khác',
+              typeName,
+              typeCode,
               description: fund.moTa || 'Quỹ hỗ trợ sinh viên Trường Đại học Trà Vinh gặp khó khăn.',
               balance: currentBalance,
               goal: goalAmount,
@@ -174,8 +194,21 @@ const FundProgressSection = () => {
     });
   };
 
-  const handleDonateClick = (fundId) => {
-    navigate('/funds', { state: { autoDonateFundId: fundId } });
+  const handleDonateClick = (fund) => {
+    if (!fund?.id) return;
+
+    navigate(`/apply?role=donor&fundId=${fund.id}`, {
+      state: {
+        quy_id: fund.id,
+        quyId: fund.id,
+        fundId: fund.id,
+        tenQuy: fund.name,
+        tenLoaiQuy: fund.typeName,
+        loaiQuy: fund.typeCode,
+        role: 'donor',
+        guestRole: 'donor',
+      },
+    });
   };
 
   if (loading) {
@@ -410,7 +443,7 @@ const FundProgressSection = () => {
                   variant="primary" 
                   size="lg"
                   className={styles.btnAction}
-                  onClick={() => handleDonateClick(selectedFund.id)}
+                  onClick={() => handleDonateClick(selectedFund)}
                 >
                   Đóng góp ngay cho quỹ này
                   <HiOutlineArrowRight className={styles.arrowIcon} />

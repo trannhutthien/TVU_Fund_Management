@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import {
@@ -8,52 +8,20 @@ import {
   HiOutlineCheckCircle,
   HiOutlineExclamationTriangle,
 } from 'react-icons/hi2';
-import { getFundBankAccounts } from '@services/donationService';
 import styles from './SchoolBankInfoSection.module.scss';
 
 /**
  * SchoolBankInfoSection Component (Display Only)
  *
  * Hiển thị thông tin tài khoản ngân hàng của quỹ cho Nhà tài trợ
- * - Lấy thông tin tài khoản ngân hàng từ API theo quỹ được chọn
+ * - Hiển thị thông tin tài khoản ngân hàng được truyền sẵn
  * - Số tài khoản, tên ngân hàng, chủ tài khoản
  * - Nội dung chuyển khoản động (DONATE - Tên quỹ - Tên NTT)
  * - Copy button cho các field
  * - Hướng dẫn và lưu ý
  */
-const SchoolBankInfoSection = ({ selectedFund, donorName }) => {
+const SchoolBankInfoSection = ({ selectedFund, donorName, bankAccount = null }) => {
   const [copiedField, setCopiedField] = useState(null);
-  const [bankAccount, setBankAccount] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  // Lấy thông tin tài khoản ngân hàng khi có quỹ được chọn
-  useEffect(() => {
-    if (!selectedFund?.quyId) {
-      setBankAccount(null);
-      return;
-    }
-
-    const fetchBankAccount = async () => {
-      try {
-        setLoading(true);
-        const response = await getFundBankAccounts(selectedFund.quyId);
-        if (response.success && response.bankAccounts?.length > 0) {
-          // Lấy tài khoản đầu tiên (tài khoản chính)
-          setBankAccount(response.bankAccounts[0]);
-        } else {
-          setBankAccount(null);
-        }
-      } catch (error) {
-        console.error('Lỗi tải thông tin tài khoản ngân hàng:', error);
-        setBankAccount(null);
-        toast.error('Không thể tải thông tin tài khoản ngân hàng');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBankAccount();
-  }, [selectedFund?.quyId]);
 
   // Tạo nội dung chuyển khoản
   const transferContent = selectedFund?.tenQuy && donorName
@@ -89,21 +57,15 @@ const SchoolBankInfoSection = ({ selectedFund, donorName }) => {
         </div>
       )}
 
-      {loading && (
-        <div className={styles.loadingState}>
-          Đang tải thông tin tài khoản ngân hàng...
-        </div>
-      )}
-
-      {!loading && !bankAccount && selectedFund && (
+      {!bankAccount && selectedFund && (
         <div className={styles.noBank}>
           <HiOutlineExclamationTriangle className={styles.warningIcon} />
-          <p>Quỹ này chưa có thông tin tài khoản ngân hàng</p>
+          <p>Chưa có thông tin tài khoản ngân hàng để hiển thị</p>
           <p className={styles.subText}>Vui lòng liên hệ quản trị viên</p>
         </div>
       )}
 
-      {!loading && bankAccount && (
+      {bankAccount && (
         <>
           {/* Số tài khoản */}
           <div className={styles.fieldGroup}>
@@ -221,6 +183,12 @@ SchoolBankInfoSection.propTypes = {
     tenQuy: PropTypes.string,
   }),
   donorName: PropTypes.string,
+  bankAccount: PropTypes.shape({
+    soTaiKhoan: PropTypes.string,
+    nganHang: PropTypes.string,
+    chiNhanh: PropTypes.string,
+    chuTaiKhoan: PropTypes.string,
+  }),
 };
 
 export default SchoolBankInfoSection;

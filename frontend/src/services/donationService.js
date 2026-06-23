@@ -56,21 +56,6 @@ export const createStaffDonation = async (donationData) => {
 };
 
 /**
- * Lấy thông tin tài khoản ngân hàng của quỹ
- * @param {number} fundId - ID quỹ
- * @returns {Promise} Thông tin tài khoản ngân hàng
- */
-export const getFundBankAccounts = async (fundId) => {
-  try {
-    const response = await api.get(`/funds/${fundId}/bank-accounts`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching fund bank accounts:', error);
-    throw error.response?.data || { message: 'Lỗi khi lấy thông tin tài khoản ngân hàng' };
-  }
-};
-
-/**
  * Duyệt khoản tài trợ (Kế toán/Admin)
  * @param {number} donationId - ID khoản tài trợ
  * @param {Object} data - Dữ liệu duyệt (ghi_chu, minh_chung_ke_toan)
@@ -189,4 +174,3 @@ export const getMyDonations = async () => {
     throw error.response?.data || { message: 'Lỗi khi lấy lịch sử quyên góp của tôi' };
   }
 };
-

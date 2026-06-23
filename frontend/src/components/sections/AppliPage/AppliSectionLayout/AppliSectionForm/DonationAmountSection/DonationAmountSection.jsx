@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   HiOutlineBanknotes,
@@ -108,4 +108,4 @@ DonationAmountSection.propTypes = {
   onAmountChange: PropTypes.func.isRequired,
 };
 
-export default DonationAmountSection;
+export default memo(DonationAmountSection);

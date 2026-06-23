@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { memo, useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Typography, Card, Result, Button } from 'antd';
@@ -28,7 +29,6 @@ import {
   systemSettingsService,
   toFundBankAccount,
 } from '@services/systemSettingsService';
-import { getFundBankAccounts } from '@services/fundService';
 import api from '@services/api';
 import Input from '@components/common/Input/Input';
 import { 
@@ -37,12 +37,143 @@ import {
   HiOutlineBanknotes, 
   HiOutlineClipboardDocumentCheck,
   HiOutlineCheck,
-  HiOutlineQrCode,
-  HiOutlineArrowPath
+  HiOutlineQrCode
 } from 'react-icons/hi2';
 import styles from './ApplyPage.module.scss';
 
 const { Title, Paragraph, Text } = Typography;
+
+const INITIAL_GUEST_FIELDS = {
+  guestHoTen: '',
+  guestEmail: '',
+  guestSoDienThoai: '',
+  guestMssv: '',
+  guestKhoa: '',
+  guestLop: '',
+  guestSoTaiKhoan: '',
+  guestNganHang: '',
+  guestChuTaiKhoan: '',
+  guestToChuc: '',
+  guestDiaChi: '',
+  hinhThuc: 'Khac',
+  maGiaoDich: '',
+  ghiChu: '',
+};
+
+const isDonorGuestInfoComplete = (fields) => !!(
+  fields.guestHoTen?.trim() &&
+  fields.guestEmail?.trim() &&
+  fields.guestSoDienThoai?.trim()
+);
+
+const GuestDonorInfoSection = memo(({
+  initialValues,
+  onFieldsChange,
+  onValidityChange,
+  resetKey,
+}) => {
+  const [fields, setFields] = useState(initialValues);
+
+  useEffect(() => {
+    setFields(initialValues);
+    onFieldsChange(initialValues);
+    onValidityChange(isDonorGuestInfoComplete(initialValues));
+  }, [initialValues, onFieldsChange, onValidityChange, resetKey]);
+
+  const handleLocalInputChange = useCallback((field, value) => {
+    setFields((prev) => {
+      if (prev[field] === value) return prev;
+
+      const next = { ...prev, [field]: value };
+      onFieldsChange(next);
+      onValidityChange(isDonorGuestInfoComplete(next));
+      return next;
+    });
+  }, [onFieldsChange, onValidityChange]);
+
+  return (
+    <div className={styles.guestFormCard}>
+      <h3>Thông tin nhà tài trợ vãng lai</h3>
+      <div className={styles.guestFormRow}>
+        <div className={styles.inputGroup}>
+          <Input
+            type="text"
+            label="Họ và tên"
+            placeholder="Nhập họ và tên..."
+            value={fields.guestHoTen}
+            onChange={(e) => handleLocalInputChange('guestHoTen', e.target.value)}
+            required
+          />
+        </div>
+        <div className={styles.inputGroup}>
+          <Input
+            type="email"
+            label="Email liên lạc"
+            placeholder="Nhập email..."
+            value={fields.guestEmail}
+            onChange={(e) => handleLocalInputChange('guestEmail', e.target.value)}
+            required
+          />
+        </div>
+      </div>
+      <div className={styles.guestFormRowThree}>
+        <div className={styles.inputGroup}>
+          <Input
+            type="tel"
+            label="Số điện thoại"
+            placeholder="Nhập SĐT..."
+            value={fields.guestSoDienThoai}
+            onChange={(e) => handleLocalInputChange('guestSoDienThoai', e.target.value)}
+          />
+        </div>
+        <div className={styles.inputGroup}>
+          <Input
+            type="text"
+            label="Tên tổ chức (nếu có)"
+            placeholder="Doanh nghiệp/Tổ chức..."
+            value={fields.guestToChuc}
+            onChange={(e) => handleLocalInputChange('guestToChuc', e.target.value)}
+          />
+        </div>
+        <div className={styles.inputGroup}>
+          <Input
+            type="text"
+            label="Địa chỉ"
+            placeholder="Nhập địa chỉ..."
+            value={fields.guestDiaChi}
+            onChange={(e) => handleLocalInputChange('guestDiaChi', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className={styles.inputGroup} style={{ marginTop: 20 }}>
+        <label className={styles.selectLabel}>Ghi chú đóng góp</label>
+        <textarea
+          rows={3}
+          placeholder="Lời nhắn gửi tới quỹ..."
+          value={fields.ghiChu}
+          onChange={(e) => handleLocalInputChange('ghiChu', e.target.value)}
+          className={styles.textareaInput}
+        />
+      </div>
+    </div>
+  );
+});
+
+GuestDonorInfoSection.displayName = 'GuestDonorInfoSection';
+
+GuestDonorInfoSection.propTypes = {
+  initialValues: PropTypes.shape({
+    guestHoTen: PropTypes.string,
+    guestEmail: PropTypes.string,
+    guestSoDienThoai: PropTypes.string,
+    guestToChuc: PropTypes.string,
+    guestDiaChi: PropTypes.string,
+    ghiChu: PropTypes.string,
+  }).isRequired,
+  onFieldsChange: PropTypes.func.isRequired,
+  onValidityChange: PropTypes.func.isRequired,
+  resetKey: PropTypes.number.isRequired,
+};
 
 /**
  * ApplyPage Component
@@ -59,8 +190,6 @@ const ApplyPage = () => {
   
   // Trạng thái phương thức đóng góp tài trợ mới
   const [paymentMethod, setPaymentMethod] = useState('Khac'); // 'Chuyen khoan' | 'Khac' | 'Tien mat'
-  const [fundBankAccounts, setFundBankAccounts] = useState([]);
-  const [fundBankLoading, setFundBankLoading] = useState(false);
   const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
   const [isOnlinePaymentCompleted, setIsOnlinePaymentCompleted] = useState(false);
   const [onlineTxnId, setOnlineTxnId] = useState('');
@@ -107,38 +236,32 @@ const ApplyPage = () => {
       setGuestRole('donor');
     }
   }, [location.search, location.state]);
-  const [guestFields, setGuestFields] = useState({
-    guestHoTen: '',
-    guestEmail: '',
-    guestSoDienThoai: '',
-    guestMssv: '',
-    guestKhoa: '',
-    guestLop: '',
-    guestSoTaiKhoan: '',
-    guestNganHang: '',
-    guestChuTaiKhoan: '',
-    guestToChuc: '',
-    guestDiaChi: '',
-    hinhThuc: 'Khac',
-    maGiaoDich: '',
-    ghiChu: '',
-  });
+  const [guestFields, setGuestFields] = useState(INITIAL_GUEST_FIELDS);
+  const guestDonorFieldsRef = useRef(INITIAL_GUEST_FIELDS);
+  const [guestDonorInfoValid, setGuestDonorInfoValid] = useState(false);
+  const [guestDonorResetKey, setGuestDonorResetKey] = useState(0);
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [submittedGuestInfo, setSubmittedGuestInfo] = useState(null); // { email, trackingUuid, type }
   const [guestOtpCode, setGuestOtpCode] = useState('');
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null); // { email, tempPassword, trackingUuid }
 
-  const handlePaymentMethodChange = (method) => {
+  const handlePaymentMethodChange = useCallback((method) => {
     setPaymentMethod(method);
-    setGuestFields(prev => ({ ...prev, hinhThuc: method }));
+    setGuestFields(prev => (
+      prev.hinhThuc === method ? prev : { ...prev, hinhThuc: method }
+    ));
+    guestDonorFieldsRef.current = {
+      ...guestDonorFieldsRef.current,
+      hinhThuc: method,
+    };
     
     // Reset online payment state if switching tabs
     if (method !== 'Khac') {
       setIsOnlinePaymentCompleted(false);
       setOnlineTxnId('');
     }
-  };
+  }, []);
 
   // Xác định vai trò: Nhà tài trợ hoặc Sinh viên
   const userType = user?.loai_tai_khoan || user?.loaiTaiKhoan || user?.loai_nguoi_dung;
@@ -167,6 +290,7 @@ const ApplyPage = () => {
     defaultSponsorBank.chuTaiKhoan
   );
   const contactEmail = publicSettings.email_ho_tro || publicSettings.email_lien_he;
+  const selectedFundId = selectedFund?.quyId ?? selectedFund?.quy_id ?? selectedFund?.id ?? null;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -189,128 +313,160 @@ const ApplyPage = () => {
     });
   }, [location.search, location.state]);
 
-  useEffect(() => {
-    const fundId = selectedFund?.quyId || selectedFund?.quy_id || selectedFund?.id;
+  const handleFundSelect = useCallback((fund) => {
+    setSelectedFund((prev) => (prev === fund ? prev : fund));
+  }, []);
 
-    if (!isDonor || !fundId) {
-      setFundBankAccounts([]);
-      return;
-    }
+  const handleContentChange = useCallback((valuesOrUpdater) => {
+    setContentValues(valuesOrUpdater);
+  }, []);
 
-    let isMounted = true;
-
-    const fetchFundBankAccounts = async () => {
-      try {
-        setFundBankLoading(true);
-        const response = await getFundBankAccounts(fundId);
-        if (!isMounted) return;
-
-        if (response?.success && Array.isArray(response.bankAccounts)) {
-          setFundBankAccounts(response.bankAccounts);
-        } else {
-          setFundBankAccounts([]);
-        }
-      } catch (error) {
-        if (!isMounted) return;
-        console.error('Fetch fund bank accounts error:', error);
-        setFundBankAccounts([]);
-      } finally {
-        if (isMounted) setFundBankLoading(false);
-      }
-    };
-
-    fetchFundBankAccounts();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isDonor, selectedFund]);
-
-  const handleFundSelect = (fund) => {
-    setSelectedFund(fund);
-  };
-
-  const handleContentChange = (valuesOrUpdater) => {
-    if (typeof valuesOrUpdater === 'function') {
-      setContentValues(valuesOrUpdater);
-    } else {
-      setContentValues(valuesOrUpdater);
-    }
-  };
-
-  const handleBankChange = (values) => {
+  const handleBankChange = useCallback((values) => {
     setBankValues(values);
-  };
+  }, []);
 
-  const handleOpenAI = () => {
+  const handleOpenAI = useCallback(() => {
     // AI panel luôn hiển thị ở sidebar, không cần mở riêng
-  };
+  }, []);
 
-  const handleApplyAISuggestion = (newText) => {
+  const handleApplyAISuggestion = useCallback((newText) => {
     setContentValues((prev) => ({ ...prev, mo_ta: newText }));
-  };
+  }, []);
 
-  const handleFilesChange = (files) => {
+  const handleFilesChange = useCallback((files) => {
     setUploadedFiles(files);
-  };
+  }, []);
+
+  const handleGuestDonorFieldsChange = useCallback((fields) => {
+    guestDonorFieldsRef.current = {
+      ...guestDonorFieldsRef.current,
+      ...fields,
+    };
+  }, []);
+
+  const handleGuestDonorValidityChange = useCallback((isValid) => {
+    setGuestDonorInfoValid((prev) => (prev === isValid ? prev : isValid));
+  }, []);
+
+  const fundSelectSection = useMemo(() => (
+    <FundSelectSection
+      onFundSelect={handleFundSelect}
+      selectedFund={selectedFund}
+      isDonor={isDonor}
+    />
+  ), [handleFundSelect, isDonor, selectedFund]);
+
+  const donationAmountSection = useMemo(() => (
+    <DonationAmountSection
+      selectedFund={selectedFund}
+      donationAmount={donationAmount}
+      onAmountChange={setDonationAmount}
+    />
+  ), [donationAmount, selectedFund]);
+
+  const donorDocumentSection = useMemo(() => (
+    <DocumentSection
+      files={uploadedFiles}
+      onFilesChange={handleFilesChange}
+      isDonor
+    />
+  ), [handleFilesChange, uploadedFiles]);
+
+  const studentDocumentSection = useMemo(() => (
+    <DocumentSection
+      files={uploadedFiles}
+      onFilesChange={handleFilesChange}
+      isDonor={isDonor}
+    />
+  ), [handleFilesChange, isDonor, uploadedFiles]);
 
   // Tính toán validation status cho từng bước
-  const validationStatus = isAuthenticated
-    ? (isDonor
-        ? {
-            // Nhà tài trợ đăng nhập cần chọn quỹ, nhập số tiền và gửi minh chứng trực tuyến
-            step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000,
-            step2: hasUploadedProof,
-            step3: false,
-            step4: false,
-          }
-        : {
-            // Sinh viên đăng nhập cần đủ 4 bước
-            step1: !!selectedFund,
-            step2: !!(
-              contentValues.tieu_de?.length >= 10 &&
-              contentValues.mo_ta?.length >= 50 &&
-              contentValues.so_tien_yeu_cau &&
-              parseFloat(contentValues.so_tien_yeu_cau) >= (selectedFund?.soTienToiThieu || 0) &&
-              parseFloat(contentValues.so_tien_yeu_cau) <= (selectedFund?.soTienToiDa || Infinity)
-            ),
-            step3: !!(
-              bankValues.selectedBankId &&
-              bankValues.soDienThoai?.length > 0
-            ),
-            step4: !!(uploadedFiles?.length > 0),
-          })
-    : (isDonor
-        ? {
-            // Nhà tài trợ vãng lai cần: Chọn quỹ + nhập số tiền + thông tin cá nhân + minh chứng + xác nhận
-            step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000 && 
-                   !!(guestFields.guestHoTen?.trim() && guestFields.guestEmail?.trim() && guestFields.guestSoDienThoai?.trim()),
-            step2: hasUploadedProof && captchaVerified,
-            step3: false,
-            step4: false,
-          }
-        : {
-            // Sinh viên vãng lai
-            step1: !!selectedFund,
-            step2: !!(
-              contentValues.tieu_de?.length >= 10 &&
-              contentValues.mo_ta?.length >= 50 &&
-              contentValues.so_tien_yeu_cau &&
-              parseFloat(contentValues.so_tien_yeu_cau) > 0
-            ),
-            step3: !!(
-              guestFields.guestHoTen?.trim() &&
-              guestFields.guestEmail?.trim() &&
-              guestFields.guestSoDienThoai?.trim() &&
-              guestFields.guestMssv?.trim() &&
-              guestFields.guestKhoa?.trim() &&
-              guestFields.guestLop?.trim() &&
-              guestFields.guestSoTaiKhoan?.trim() &&
-              guestFields.guestNganHang?.trim() &&
-              guestFields.guestChuTaiKhoan?.trim()
-            ),
-            step4: !!(uploadedFiles?.length > 0) && captchaVerified,
-          });
+  const validationStatus = useMemo(() => {
+    if (isAuthenticated) {
+      if (isDonor) {
+        return {
+          // Nhà tài trợ đăng nhập cần chọn quỹ, nhập số tiền và gửi minh chứng trực tuyến
+          step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000,
+          step2: hasUploadedProof,
+          step3: false,
+          step4: false,
+        };
+      }
+
+      return {
+        // Sinh viên đăng nhập cần đủ 4 bước
+        step1: !!selectedFund,
+        step2: !!(
+          contentValues.tieu_de?.length >= 10 &&
+          contentValues.mo_ta?.length >= 50 &&
+          contentValues.so_tien_yeu_cau &&
+          parseFloat(contentValues.so_tien_yeu_cau) >= (selectedFund?.soTienToiThieu || 0) &&
+          parseFloat(contentValues.so_tien_yeu_cau) <= (selectedFund?.soTienToiDa || Infinity)
+        ),
+        step3: !!(
+          bankValues.selectedBankId &&
+          bankValues.soDienThoai?.length > 0
+        ),
+        step4: hasUploadedProof,
+      };
+    }
+
+    if (isDonor) {
+      return {
+        // Nhà tài trợ vãng lai cần: Chọn quỹ + nhập số tiền + thông tin cá nhân + minh chứng + xác nhận
+        step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000 &&
+               guestDonorInfoValid,
+        step2: hasUploadedProof && captchaVerified,
+        step3: false,
+        step4: false,
+      };
+    }
+
+    return {
+      // Sinh viên vãng lai
+      step1: !!selectedFund,
+      step2: !!(
+        contentValues.tieu_de?.length >= 10 &&
+        contentValues.mo_ta?.length >= 50 &&
+        contentValues.so_tien_yeu_cau &&
+        parseFloat(contentValues.so_tien_yeu_cau) > 0
+      ),
+      step3: !!(
+        guestFields.guestHoTen?.trim() &&
+        guestFields.guestEmail?.trim() &&
+        guestFields.guestSoDienThoai?.trim() &&
+        guestFields.guestMssv?.trim() &&
+        guestFields.guestKhoa?.trim() &&
+        guestFields.guestLop?.trim() &&
+        guestFields.guestSoTaiKhoan?.trim() &&
+        guestFields.guestNganHang?.trim() &&
+        guestFields.guestChuTaiKhoan?.trim()
+      ),
+      step4: hasUploadedProof && captchaVerified,
+    };
+  }, [
+    bankValues.selectedBankId,
+    bankValues.soDienThoai,
+    captchaVerified,
+    contentValues.mo_ta,
+    contentValues.so_tien_yeu_cau,
+    contentValues.tieu_de,
+    donationAmount,
+    guestDonorInfoValid,
+    guestFields.guestChuTaiKhoan,
+    guestFields.guestEmail,
+    guestFields.guestHoTen,
+    guestFields.guestKhoa,
+    guestFields.guestLop,
+    guestFields.guestMssv,
+    guestFields.guestNganHang,
+    guestFields.guestSoDienThoai,
+    guestFields.guestSoTaiKhoan,
+    hasUploadedProof,
+    isAuthenticated,
+    isDonor,
+    selectedFund,
+  ]);
 
   const isFormValid = isDonor
     ? validationStatus.step1 && validationStatus.step2
@@ -323,7 +479,10 @@ const ApplyPage = () => {
     // Reset tất cả state về giá trị ban đầu
     setSelectedFund(null);
     setPaymentMethod('Khac');
-    setGuestFields(prev => ({ ...prev, hinhThuc: 'Khac' }));
+    setGuestFields(INITIAL_GUEST_FIELDS);
+    guestDonorFieldsRef.current = INITIAL_GUEST_FIELDS;
+    setGuestDonorInfoValid(false);
+    setGuestDonorResetKey((prev) => prev + 1);
     setDonationAmount('');
     setContentValues({ 
       tieu_de: '', 
@@ -448,18 +607,19 @@ const ApplyPage = () => {
         // LUỒNG KHÁCH VÃNG LAI (GUEST)
         if (isDonor) {
           const txnId = onlineTxnId || 'VNPAY' + Math.floor(10000000 + Math.random() * 90000000);
+          const currentGuestFields = guestDonorFieldsRef.current;
           const payload = {
-            guestHoTen: guestFields.guestHoTen,
-            guestEmail: guestFields.guestEmail,
-            guestSoDienThoai: guestFields.guestSoDienThoai,
-            guestToChuc: guestFields.guestToChuc,
-            guestDiaChi: guestFields.guestDiaChi,
+            guestHoTen: currentGuestFields.guestHoTen,
+            guestEmail: currentGuestFields.guestEmail,
+            guestSoDienThoai: currentGuestFields.guestSoDienThoai,
+            guestToChuc: currentGuestFields.guestToChuc,
+            guestDiaChi: currentGuestFields.guestDiaChi,
             quyId: selectedFund.quyId,
             soTien: parseFloat(donationAmount),
             hinhThuc: paymentMethod,
             maGiaoDich: txnId,
             chungTu: fileUrl,
-            ghiChu: guestFields.ghiChu || 'Quyên góp trực tuyến vãng lai'
+            ghiChu: currentGuestFields.ghiChu || 'Quyên góp trực tuyến vãng lai'
           };
           response = await guestService.submitDonation(payload);
         } else {
@@ -543,11 +703,11 @@ const ApplyPage = () => {
     fetchBankAccounts();
   }, [isAuthenticated]);
 
-  const openLoginModal = () => setIsLoginModalOpen(true);
-  const closeLoginModal = () => setIsLoginModalOpen(false);
+  const openLoginModal = useCallback(() => setIsLoginModalOpen(true), []);
+  const closeLoginModal = useCallback(() => setIsLoginModalOpen(false), []);
 
-  const openRegisterModal = () => setIsRegisterModalOpen(true);
-  const closeRegisterModal = () => setIsRegisterModalOpen(false);
+  const openRegisterModal = useCallback(() => setIsRegisterModalOpen(true), []);
+  const closeRegisterModal = useCallback(() => setIsRegisterModalOpen(false), []);
 
   // Handle ESC key để đóng modal
   useEffect(() => {
@@ -567,7 +727,7 @@ const ApplyPage = () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isLoginModalOpen, isRegisterModalOpen]);
+  }, [closeLoginModal, closeRegisterModal, isLoginModalOpen, isRegisterModalOpen]);
 
   // Xử lý xác thực OTP từ khách vãng lai
   const handleVerifyGuestOtp = async () => {
@@ -603,9 +763,11 @@ const ApplyPage = () => {
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setGuestFields(prev => ({ ...prev, [field]: value }));
-  };
+  const handleInputChange = useCallback((field, value) => {
+    setGuestFields(prev => (
+      prev[field] === value ? prev : { ...prev, [field]: value }
+    ));
+  }, []);
 
   // ─── PHÂN NHÁNH GIAO DIỆN 1: MÀN HÌNH NHẬP OTP
   if (submittedGuestInfo) {
@@ -851,20 +1013,12 @@ const ApplyPage = () => {
 
                   {/* BƯỚC 1: Chọn Quỹ */}
                   {(!isDonor || paymentMethod === 'Khac') && (
-                    <FundSelectSection
-                      onFundSelect={handleFundSelect}
-                      selectedFund={selectedFund}
-                      isDonor={isDonor}
-                    />
+                    fundSelectSection
                   )}
 
                   {/* Phần Nhập số tiền cho Nhà tài trợ */}
                   {isDonor && paymentMethod === 'Khac' && (
-                    <DonationAmountSection
-                      selectedFund={selectedFund}
-                      donationAmount={donationAmount}
-                      onAmountChange={setDonationAmount}
-                    />
+                    donationAmountSection
                   )}
 
                   {/* CHI TIẾT TỪNG PHƯƠNG THỨC ĐÓNG GÓP */}
@@ -877,44 +1031,9 @@ const ApplyPage = () => {
                               <p><strong>Hướng dẫn chuyển khoản:</strong> Quý nhà tài trợ vui lòng chuyển khoản theo thông tin tài khoản của Quỹ dưới đây. Sau khi nhận được tiền chuyển khoản, cán bộ quản lý quỹ sẽ kiểm tra và xác nhận đóng góp của quý vị trên hệ thống.</p>
                             </div>
                             
-                            {fundBankLoading ? (
-                              <div className={styles.loadingSpinner}>
-                                <HiOutlineArrowPath className={styles.spinIcon} />
-                                <span>Đang tải thông tin tài khoản của Quỹ...</span>
-                              </div>
-                            ) : fundBankAccounts.length > 0 ? (
-                              <div className={styles.bankCardsGrid}>
-                                {fundBankAccounts.map((acc, index) => (
-                                  <div key={acc.taiKhoanNganHangId || index} className={styles.bankAccountCard}>
-                                    <div className={styles.bankCardHeader}>
-                                      <HiOutlineBuildingLibrary className={styles.bankIcon} />
-                                      <h4>{acc.nganHang}</h4>
-                                    </div>
-                                    <div className={styles.bankCardBody}>
-                                      <p><strong>Chủ tài khoản:</strong> {acc.chuTaiKhoan}</p>
-                                      <p className={styles.accountNumberRow}>
-                                        <strong>Số tài khoản:</strong> 
-                                        <span className={styles.accountNumber}>{acc.soTaiKhoan}</span>
-                                        <button
-                                          type="button"
-                                          className={styles.copyBtn}
-                                          onClick={() => {
-                                            navigator.clipboard.writeText(acc.soTaiKhoan);
-                                            setCopiedIndex(index);
-                                            setTimeout(() => setCopiedIndex(null), 2000);
-                                          }}
-                                        >
-                                          {copiedIndex === index ? 'Đã chép' : 'Sao chép'}
-                                        </button>
-                                      </p>
-                                      {acc.chiNhanh && <p><strong>Chi nhánh:</strong> {acc.chiNhanh}</p>}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : hasDefaultSponsorBank ? (
+                            {hasDefaultSponsorBank ? (
                               <div className={styles.alertWarning}>
-                                <p>Hiện tại Quỹ chưa cấu hình tài khoản nhận chuyển khoản ngân hàng riêng trên hệ thống. Quý vị vui lòng chuyển khoản tới tài khoản chính của nhà trường:</p>
+                                <p>Quý vị vui lòng chuyển khoản tới tài khoản chính của nhà trường:</p>
                                 <div className={styles.bankAccountCard} style={{ marginTop: 15 }}>
                                   <div className={styles.bankCardHeader}>
                                     <HiOutlineBuildingLibrary className={styles.bankIcon} />
@@ -990,79 +1109,17 @@ const ApplyPage = () => {
                   )}
 
                   {isDonor && paymentMethod === 'Khac' && (
-                    <DocumentSection
-                      files={uploadedFiles}
-                      onFilesChange={handleFilesChange}
-                      isDonor
-                    />
+                    donorDocumentSection
                   )}
 
                   {/* THÔNG TIN LIÊN HỆ CỦA NHÀ TÀI TRỢ (Chỉ hiển thị khi thanh toán trực tuyến và là khách vãng lai) */}
                   {isDonor && paymentMethod === 'Khac' && !isAuthenticated && (
-                    <div className={styles.guestFormCard}>
-                      <h3>Thông tin nhà tài trợ vãng lai</h3>
-                      <div className={styles.guestFormRow}>
-                        <div className={styles.inputGroup}>
-                          <Input 
-                            type="text" 
-                            label="Họ và tên"
-                            placeholder="Nhập họ và tên..."
-                            value={guestFields.guestHoTen}
-                            onChange={(e) => handleInputChange('guestHoTen', e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className={styles.inputGroup}>
-                          <Input 
-                            type="email" 
-                            label="Email liên lạc"
-                            placeholder="Nhập email..."
-                            value={guestFields.guestEmail}
-                            onChange={(e) => handleInputChange('guestEmail', e.target.value)}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className={styles.guestFormRowThree}>
-                        <div className={styles.inputGroup}>
-                          <Input 
-                            type="tel" 
-                            label="Số điện thoại"
-                            placeholder="Nhập SĐT..."
-                            value={guestFields.guestSoDienThoai}
-                            onChange={(e) => handleInputChange('guestSoDienThoai', e.target.value)}
-                          />
-                        </div>
-                        <div className={styles.inputGroup}>
-                          <Input 
-                            type="text" 
-                            label="Tên tổ chức (nếu có)"
-                            placeholder="Doanh nghiệp/Tổ chức..."
-                            value={guestFields.guestToChuc}
-                            onChange={(e) => handleInputChange('guestToChuc', e.target.value)}
-                          />
-                        </div>
-                        <div className={styles.inputGroup}>
-                          <Input 
-                            type="text" 
-                            label="Địa chỉ"
-                            placeholder="Nhập địa chỉ..."
-                            value={guestFields.guestDiaChi}
-                            onChange={(e) => handleInputChange('guestDiaChi', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <div className={styles.inputGroup} style={{ marginTop: 20 }}>
-                        <label className={styles.selectLabel}>Ghi chú đóng góp</label>
-                        <textarea 
-                          rows={3} 
-                          placeholder="Lời nhắn gửi tới quỹ..."
-                          value={guestFields.ghiChu}
-                          onChange={(e) => handleInputChange('ghiChu', e.target.value)}
-                          className={styles.textareaInput}
-                        />
-                      </div>
-                    </div>
+                    <GuestDonorInfoSection
+                      initialValues={guestDonorFieldsRef.current}
+                      onFieldsChange={handleGuestDonorFieldsChange}
+                      onValidityChange={handleGuestDonorValidityChange}
+                      resetKey={guestDonorResetKey}
+                    />
                   )}
 
                   {/* BƯỚC 2: Nội dung yêu cầu hỗ trợ (chỉ cho sinh viên) */}
@@ -1191,11 +1248,7 @@ const ApplyPage = () => {
 
                   {/* BƯỚC 4: Tài liệu đính kèm minh chứng (Chỉ dành cho sinh viên đề nghị hỗ trợ) */}
                   {!isDonor && (
-                    <DocumentSection
-                      files={uploadedFiles}
-                      onFilesChange={handleFilesChange}
-                      isDonor={isDonor}
-                    />
+                    studentDocumentSection
                   )}
 
                   {/* Xác thực bảo mật Robot cho khách vãng lai (Chỉ hiển thị khi làm trực tuyến) */}

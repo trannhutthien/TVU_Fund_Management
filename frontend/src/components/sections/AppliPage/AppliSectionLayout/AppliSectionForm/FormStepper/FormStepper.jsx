@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import PropTypes from 'prop-types';
 import styles from './FormStepper.module.scss';
 
@@ -89,4 +90,4 @@ FormStepper.propTypes = {
   isDonor: PropTypes.bool,
 };
 
-export default FormStepper;
+export default memo(FormStepper);

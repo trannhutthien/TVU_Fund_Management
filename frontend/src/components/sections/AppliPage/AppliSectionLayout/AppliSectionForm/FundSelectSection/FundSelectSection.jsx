@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { 
+import {
   HiOutlineBuildingLibrary, 
   HiOutlineInformationCircle,
   HiOutlineCurrencyDollar,
@@ -9,9 +9,7 @@ import {
   HiOutlineUsers
 } from 'react-icons/hi2';
 import Dropdown from '@components/common/Dropdown/Dropdown';
-import FundBankInfo from '@components/common/FundBankInfo';
 import fundService from '@services/fundService';
-import { getFundBankAccounts } from '@services/donationService';
 import styles from './FundSelectSection.module.scss';
 
 const formatVND = (amount) => {
@@ -30,6 +28,11 @@ const daysRemaining = (dateStr) => {
   return diff;
 };
 
+const areSameFundList = (currentList, nextList) => (
+  currentList.length === nextList.length &&
+  currentList.every((fund, index) => fund.quyId === nextList[index]?.quyId)
+);
+
 const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
   const [selectedLoaiQuy, setSelectedLoaiQuy] = useState(null);
   const [selectedFundId, setSelectedFundId] = useState(null);
@@ -38,8 +41,6 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
   const [fundList, setFundList] = useState([]); // Quỹ đã filter theo loại
   const [fundDetail, setFundDetail] = useState(null);
   const [loadingFunds, setLoadingFunds] = useState(false);
-  const [bankAccounts, setBankAccounts] = useState([]);
-  const [loadingBankAccounts, setLoadingBankAccounts] = useState(false);
 
   // Lấy tất cả quỹ và loại quỹ từ database khi component mount
   useEffect(() => {
@@ -88,11 +89,10 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
 
     setSelectedLoaiQuy(matchedFund.loaiQuy);
     setFundList((currentList) => {
-      const existsInCurrentList = currentList.some((fund) => fund.quyId === matchedFund.quyId);
-      if (existsInCurrentList) return currentList;
-      return allFunds.filter(
+      const nextList = allFunds.filter(
         (fund) => fund.loaiQuy === matchedFund.loaiQuy && fund.trangThai === 'Dang hoat dong'
       );
+      return areSameFundList(currentList, nextList) ? currentList : nextList;
     });
     setSelectedFundId(matchedFund.quyId);
   }, [selectedFund?.quyId, allFunds]);
@@ -112,9 +112,9 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
   // Filter quỹ theo loại quỹ được chọn
   useEffect(() => {
     if (!selectedLoaiQuy) {
-      setFundList([]);
-      setSelectedFundId(null);
-      setFundDetail(null);
+      setFundList((currentList) => (currentList.length > 0 ? [] : currentList));
+      setSelectedFundId((currentFundId) => (currentFundId ? null : currentFundId));
+      setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
       return;
     }
 
@@ -122,50 +122,35 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
     const filtered = allFunds.filter(
       f => f.loaiQuy === selectedLoaiQuy && f.trangThai === 'Dang hoat dong'
     );
-    setFundList(filtered);
+    setFundList((currentList) => (
+      areSameFundList(currentList, filtered) ? currentList : filtered
+    ));
     const shouldKeepSelectedFund = selectedFund?.quyId &&
       filtered.some((fund) => fund.quyId === Number(selectedFund.quyId));
 
     if (!shouldKeepSelectedFund) {
-      setSelectedFundId(null);
-      setFundDetail(null);
+      setSelectedFundId((currentFundId) => (currentFundId ? null : currentFundId));
+      setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
     }
-  }, [selectedLoaiQuy, allFunds, selectedFund]);
+  }, [selectedLoaiQuy, allFunds, selectedFund?.quyId]);
 
   useEffect(() => {
     if (!selectedFundId || fundList.length === 0) {
-      setFundDetail(null);
-      setBankAccounts([]);
+      setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
+      if (selectedFund?.quyId) onFundSelect?.(null);
       return;
     }
 
     const detail = fundList.find((f) => f.quyId === selectedFundId);
-    setFundDetail(detail || null);
-    onFundSelect?.(detail || null);
+    setFundDetail((currentDetail) => (
+      currentDetail?.quyId === detail?.quyId ? currentDetail : detail || null
+    ));
 
-    // Nếu là donor, lấy thông tin tài khoản ngân hàng
-    if (isDonor && detail) {
-      fetchBankAccounts(detail.quyId);
+    if ((detail?.quyId || null) !== (selectedFund?.quyId || null)) {
+      onFundSelect?.(detail || null);
     }
-  }, [selectedFundId, fundList, onFundSelect, isDonor]);
 
-  // Lấy thông tin tài khoản ngân hàng của quỹ
-  const fetchBankAccounts = async (fundId) => {
-    try {
-      setLoadingBankAccounts(true);
-      const response = await getFundBankAccounts(fundId);
-      if (response.success) {
-        setBankAccounts(response.bankAccounts || []);
-      } else {
-        setBankAccounts([]);
-      }
-    } catch (error) {
-      console.error('Lỗi tải thông tin tài khoản ngân hàng:', error);
-      setBankAccounts([]);
-    } finally {
-      setLoadingBankAccounts(false);
-    }
-  };
+  }, [selectedFundId, fundList, onFundSelect, selectedFund?.quyId]);
 
   const fundOptions = fundList.map((f) => ({
     value: f.quyId,
@@ -402,19 +387,6 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
             </div>
           )}
 
-          {/* Bank Account Info - Chỉ hiển thị cho donor */}
-          {isDonor && !loadingBankAccounts && bankAccounts.length > 0 && (
-            <FundBankInfo
-              bankAccount={bankAccounts[0]}
-              fundName={fundDetail.tenQuy}
-            />
-          )}
-
-          {isDonor && loadingBankAccounts && (
-            <div className={styles.loadingBankInfo}>
-              Đang tải thông tin tài khoản ngân hàng...
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -427,4 +399,4 @@ FundSelectSection.propTypes = {
   isDonor: PropTypes.bool,
 };
 
-export default FundSelectSection;
+export default memo(FundSelectSection);
