@@ -20,6 +20,11 @@ export const guestService = {
     return response.data;
   },
 
+  resendOtp: async (data) => {
+    const response = await api.post(API_ENDPOINTS.GUEST_RESEND_OTP, data);
+    return response.data;
+  },
+
   // Tra cứu trạng thái đơn vãng lai bằng UUID
   trackStatus: async (uuid) => {
     const response = await api.get(API_ENDPOINTS.GUEST_TRACK(uuid));

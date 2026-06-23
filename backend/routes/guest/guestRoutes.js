@@ -2,6 +2,7 @@ import express from "express";
 import {
   submitGuestApplication,
   submitGuestDonation,
+  resendGuestOtp,
   verifyOtp,
   trackGuestStatus,
 } from "../../controllers/guest/guestController.js";
@@ -24,6 +25,9 @@ router.post("/tai-tro", submissionLimiter, submitGuestDonation);
 
 // POST /api/guest/verify-otp - Xác thực OTP và kích hoạt migrate dữ liệu
 router.post("/verify-otp", verifyOtp);
+
+// POST /api/guest/resend-otp - Gửi lại OTP cho phiên khách vãng lai
+router.post("/resend-otp", resendGuestOtp);
 
 // GET /api/guest/track/:uuid - Tra cứu trạng thái đơn qua UUID
 router.get("/track/:uuid", trackGuestStatus);

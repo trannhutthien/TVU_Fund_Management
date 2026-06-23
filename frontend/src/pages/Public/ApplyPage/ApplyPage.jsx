@@ -66,6 +66,22 @@ const isDonorGuestInfoComplete = (fields) => !!(
   fields.guestSoDienThoai?.trim()
 );
 
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((value || '').trim());
+const isValidPhone = (value) => /^[0-9]{10,11}$/.test((value || '').trim());
+const isValidBankAccountNumber = (value) => /^[0-9]{6,20}$/.test((value || '').trim());
+
+const isGuestStudentInfoValid = (fields) => !!(
+  fields.guestHoTen?.trim() &&
+  isValidEmail(fields.guestEmail) &&
+  isValidPhone(fields.guestSoDienThoai) &&
+  fields.guestMssv?.trim() &&
+  fields.guestKhoa?.trim() &&
+  fields.guestLop?.trim() &&
+  isValidBankAccountNumber(fields.guestSoTaiKhoan) &&
+  fields.guestNganHang?.trim() &&
+  fields.guestChuTaiKhoan?.trim()
+);
+
 const GuestDonorInfoSection = memo(({
   initialValues,
   onFieldsChange,
@@ -244,6 +260,7 @@ const ApplyPage = () => {
   const [submittedGuestInfo, setSubmittedGuestInfo] = useState(null); // { email, trackingUuid, type }
   const [guestOtpCode, setGuestOtpCode] = useState('');
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null); // { email, tempPassword, trackingUuid }
 
   const handlePaymentMethodChange = useCallback((method) => {
@@ -431,17 +448,7 @@ const ApplyPage = () => {
         contentValues.so_tien_yeu_cau &&
         parseFloat(contentValues.so_tien_yeu_cau) > 0
       ),
-      step3: !!(
-        guestFields.guestHoTen?.trim() &&
-        guestFields.guestEmail?.trim() &&
-        guestFields.guestSoDienThoai?.trim() &&
-        guestFields.guestMssv?.trim() &&
-        guestFields.guestKhoa?.trim() &&
-        guestFields.guestLop?.trim() &&
-        guestFields.guestSoTaiKhoan?.trim() &&
-        guestFields.guestNganHang?.trim() &&
-        guestFields.guestChuTaiKhoan?.trim()
-      ),
+      step3: isGuestStudentInfoValid(guestFields),
       step4: hasUploadedProof && captchaVerified,
     };
   }, [
@@ -646,6 +653,7 @@ const ApplyPage = () => {
           setSubmittedGuestInfo({
             email: response.data.email,
             trackingUuid: response.data.trackingUuid,
+            otpToken: response.data.otpToken,
             type: isDonor ? 'donation' : 'application'
           });
         } else {
@@ -741,7 +749,8 @@ const ApplyPage = () => {
       const response = await guestService.verifyOtp({
         email: submittedGuestInfo.email,
         otpCode: guestOtpCode.trim(),
-        type: submittedGuestInfo.type
+        type: submittedGuestInfo.type,
+        otpToken: submittedGuestInfo.otpToken
       });
 
       if (response.success) {
@@ -760,6 +769,39 @@ const ApplyPage = () => {
       toast.error(err.response?.data?.message || 'Lỗi xác minh mã OTP');
     } finally {
       setVerifyingOtp(false);
+    }
+  };
+
+  const handleResendGuestOtp = async () => {
+    if (!submittedGuestInfo?.otpToken) {
+      toast.error('Phiên xác thực không hợp lệ, vui lòng gửi lại form');
+      return;
+    }
+
+    try {
+      setResendingOtp(true);
+      const response = await guestService.resendOtp({
+        email: submittedGuestInfo.email,
+        type: submittedGuestInfo.type,
+        otpToken: submittedGuestInfo.otpToken
+      });
+
+      if (response.success) {
+        setSubmittedGuestInfo((prev) => ({
+          ...prev,
+          trackingUuid: response.data.trackingUuid,
+          otpToken: response.data.otpToken
+        }));
+        setGuestOtpCode('');
+        toast.success('Đã gửi lại mã OTP mới. Vui lòng dùng email mới nhất.');
+      } else {
+        toast.error(response.message || 'Không thể gửi lại mã OTP');
+      }
+    } catch (err) {
+      console.error('Resend OTP error:', err);
+      toast.error(err.response?.data?.message || 'Lỗi gửi lại mã OTP');
+    } finally {
+      setResendingOtp(false);
     }
   };
 
@@ -785,11 +827,14 @@ const ApplyPage = () => {
                 Hệ thống đã gửi một mã xác thực (OTP) 6 chữ số về địa chỉ email <strong>{submittedGuestInfo.email}</strong>. 
                 Vui lòng kiểm tra hộp thư (hoặc mục Spam/Thư rác) và nhập mã vào ô bên dưới:
               </Paragraph>
+              <Text className={styles.otpTrackingCode}>
+                Mã tra cứu: {submittedGuestInfo.trackingUuid}
+              </Text>
               <input
                 type="text"
                 maxLength={6}
                 value={guestOtpCode}
-                onChange={(e) => setGuestOtpCode(e.target.value)}
+                onChange={(e) => setGuestOtpCode(e.target.value.replace(/\D/g, ''))}
                 className={styles.otpInput}
                 placeholder="000000"
               />
@@ -802,6 +847,15 @@ const ApplyPage = () => {
                   style={{ width: '100%', background: '#4f46e5', borderColor: '#4f46e5' }}
                 >
                   Xác Nhận & Kích Hoạt
+                </Button>
+                <Button
+                  type="link"
+                  onClick={handleResendGuestOtp}
+                  loading={resendingOtp}
+                  disabled={verifyingOtp}
+                  style={{ marginTop: 12 }}
+                >
+                  Gửi lại mã OTP
                 </Button>
               </div>
             </div>

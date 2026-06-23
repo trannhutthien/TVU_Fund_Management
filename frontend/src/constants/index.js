@@ -50,5 +50,6 @@ export const API_ENDPOINTS = {
   GUEST_SUBMIT_APPLICATION: '/guest/yeu-cau',
   GUEST_SUBMIT_DONATION: '/guest/tai-tro',
   GUEST_VERIFY_OTP: '/guest/verify-otp',
+  GUEST_RESEND_OTP: '/guest/resend-otp',
   GUEST_TRACK: (uuid) => `/guest/track/${uuid}`,
 }
