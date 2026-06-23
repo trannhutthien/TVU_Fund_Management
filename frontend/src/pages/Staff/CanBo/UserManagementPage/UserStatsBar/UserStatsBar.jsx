@@ -7,9 +7,10 @@ import {
 import { StatCard } from '@components/common/Card';
 import styles from './UserStatsBar.module.scss';
 
-const UserStatsBar = ({ stats, loading }) => {
+const UserStatsBar = ({ stats, loading, activeKey, onCardClick }) => {
   const cards = [
     {
+      key: 'all',
       label: 'Tổng người dùng',
       value: stats
         ? stats.tongNguoiDungHoatDong !== undefined
@@ -19,8 +20,10 @@ const UserStatsBar = ({ stats, loading }) => {
       icon: HiOutlineUsers,
       color: 'var(--color-navy-blue, #1a2f5e)',
       bg: 'rgba(26,47,94,0.08)',
+      iconBgColor: 'blue',
     },
     {
+      key: 'students',
       label: 'Sinh viên',
       value: stats
         ? stats.sinhVienHoatDong !== undefined
@@ -30,8 +33,10 @@ const UserStatsBar = ({ stats, loading }) => {
       icon: HiOutlineAcademicCap,
       color: 'var(--color-gold, #f0a500)',
       bg: 'rgba(240,165,0,0.08)',
+      iconBgColor: 'yellow',
     },
     {
+      key: 'donors',
       label: 'Nhà tài trợ',
       value: stats
         ? stats.nhaTaiTroHoatDong !== undefined
@@ -41,13 +46,16 @@ const UserStatsBar = ({ stats, loading }) => {
       icon: HiOutlineHandRaised,
       color: '#10b981',
       bg: 'rgba(16,185,129,0.08)',
+      iconBgColor: 'green',
     },
     {
+      key: 'locked',
       label: 'Tài khoản bị khóa',
       value: stats?.taiKhoanBiKhoa ?? 0,
       icon: HiOutlineLockClosed,
       color: '#ef4444',
       bg: 'rgba(239,68,68,0.08)',
+      iconBgColor: 'red',
     },
   ];
 
@@ -63,30 +71,22 @@ const UserStatsBar = ({ stats, loading }) => {
 
   return (
     <div className={styles.statsRow}>
-      <StatCard
-        title={cards[0].label}
-        value={cards[0].value}
-        icon={<HiOutlineUsers size={20} />}
-        iconBgColor="blue"
-      />
-      <StatCard
-        title={cards[1].label}
-        value={cards[1].value}
-        icon={<HiOutlineAcademicCap size={20} />}
-        iconBgColor="yellow"
-      />
-      <StatCard
-        title={cards[2].label}
-        value={cards[2].value}
-        icon={<HiOutlineHandRaised size={20} />}
-        iconBgColor="green"
-      />
-      <StatCard
-        title={cards[3].label}
-        value={cards[3].value}
-        icon={<HiOutlineLockClosed size={20} />}
-        iconBgColor="red"
-      />
+      {cards.map((card) => {
+        const Icon = card.icon;
+        const isActive = activeKey === card.key;
+
+        return (
+          <StatCard
+            key={card.key}
+            title={card.label}
+            value={card.value}
+            icon={<Icon size={20} />}
+            iconBgColor={card.iconBgColor}
+            onClick={() => onCardClick?.(card.key)}
+            className={isActive ? styles.activeCard : ''}
+          />
+        );
+      })}
     </div>
   );
 };

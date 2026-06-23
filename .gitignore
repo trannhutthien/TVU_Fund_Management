@@ -8,6 +8,8 @@ node_modules/
 # ========================
 .env
 .env.*
+!.env.example
+!**/.env.example
 
 # ========================
 # Logs
@@ -16,10 +18,20 @@ node_modules/
 logs/
 
 # ========================
+# Local database dumps/import helpers
+# ========================
+*.sql
+!docs/database/*.sql
+backend/database/local_dump.sql
+backend/database/import_to_aiven.js
+
+# ========================
 # Build
 # ========================
 dist/
 build/
+out/
+docs/out/
 
 # ========================
 # OS files
@@ -32,6 +44,7 @@ Thumbs.db
 # ========================
 .vscode/
 .idea/
+.codex-logs/
 
 # ========================
 # Temporary files
@@ -39,6 +52,8 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+.tmp_*/
+.wrangler/
 
 # ========================
 # Cache
@@ -54,6 +69,7 @@ coverage/
 # ========================
 # Optional
 # ========================
+backend/uploads/avatar/
 # docs/
 # assets/
 # *.docx

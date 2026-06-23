@@ -1,16 +1,35 @@
 import NewsModel from "../../models/news/NewsModel.js";
+import fs from "fs";
+import path from "path";
 
 const buildNewsImageUrl = (imagePath) => {
   if (!imagePath) return null;
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+
+  let cleanPath = String(imagePath).trim();
+  if (!cleanPath) return null;
+
+  try {
+    const parsed = new URL(cleanPath);
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      cleanPath = parsed.pathname.replace(/^\/+/, "");
+    } else {
+      return imagePath;
+    }
+  } catch {
+    cleanPath = cleanPath.replace(/^\/+/, "");
+  }
+
+  if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
     return imagePath;
   }
   const BASE_URL = process.env.BASE_URL || 'http://localhost:5001';
-  let cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
   if (cleanPath.startsWith('uploads/')) {
+    if (!fs.existsSync(path.join(process.cwd(), cleanPath))) return null;
     return `${BASE_URL}/${cleanPath}`;
   }
-  return `${BASE_URL}/uploads/avatars/news/${cleanPath}`;
+  const relativePath = `uploads/avatars/news/${cleanPath}`;
+  if (!fs.existsSync(path.join(process.cwd(), relativePath))) return null;
+  return `${BASE_URL}/${relativePath}`;
 };
 
 const PHANLOAI_VALUES = ['Tin moi', 'Tin noi bat'];

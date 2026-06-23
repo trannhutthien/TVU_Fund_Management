@@ -696,7 +696,8 @@ export const staffApprove = async (req, res) => {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". Chỉ duyệt được đơn ở trạng thái "Chờ duyệt cấp 1".`,
+        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}".
+         Chỉ duyệt được đơn ở trạng thái "Chờ duyệt cấp 1".`,
       });
     }
 
@@ -846,22 +847,19 @@ export const adminApprove = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
     // ─────────────────────────────────────────────────────────────────────────
-    
     const currentStatus = application.trangthai;
-
     // Chỉ cho phép duyệt đơn ở trạng thái "Cho duyet cap 2" (hoặc "Dang xu ly" cho tương thích cũ)
     if (currentStatus !== 'Cho duyet cap 2' && currentStatus !== 'Dang xu ly') {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". Admin chỉ duyệt được đơn ở trạng thái "Chờ duyệt cấp 2".`,
+        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". 
+        Admin chỉ duyệt được đơn ở trạng thái "Chờ duyệt cấp 2".`,
       });
     }
-
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 4: KIỂM TRA CẤP 1 ĐÃ DUYỆT
     // ─────────────────────────────────────────────────────────────────────────
-    
     const danhSachPheDuyet = await PheDuyetModel.getPheDuyetByRequestId(id);
     const cap1 = danhSachPheDuyet.find(pd => pd.capduyet === 1);
     
@@ -872,13 +870,10 @@ export const adminApprove = async (req, res) => {
         message: "Cấp 1 chưa duyệt. Admin chỉ duyệt được sau khi Giáo vụ duyệt cấp 1.",
       });
     }
-
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
     // ─────────────────────────────────────────────────────────────────────────
-    
     const capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
-    
     if (!capHienTai) {
       await connection.rollback();
       return res.status(400).json({
@@ -886,7 +881,6 @@ export const adminApprove = async (req, res) => {
         message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
       });
     }
-
     // Admin chỉ duyệt cấp 2
     if (capHienTai.capduyet !== 2) {
       await connection.rollback();
@@ -895,7 +889,6 @@ export const adminApprove = async (req, res) => {
         message: `Đơn này đang ở cấp ${capHienTai.capduyet}. Admin chỉ duyệt được cấp 2.`,
       });
     }
-
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 6: CẬP NHẬT PHÊ DUYỆT CẤP 2
     // ─────────────────────────────────────────────────────────────────────────
@@ -1033,29 +1026,19 @@ export const disburseApplication = async (req, res) => {
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
-    // ─────────────────────────────────────────────────────────────────────────
-    
     const currentStatus = application.trangthai;
-
-    // Cho phép kế toán xử lý đơn ở các trạng thái:
-    // - "Cho duyet cap 3" hoặc "Dang xu ly": đã qua cấp 1 + 2, chờ kế toán duyệt cấp 3
-    // - "Cho giai ngan": đã duyệt cấp 3 nhưng quỹ thiếu tiền, chờ quỹ có tiền để giải ngân
     if (!['Cho duyet cap 3', 'Dang xu ly', 'Cho giai ngan'].includes(currentStatus)) {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Không thể giải ngân đơn ở trạng thái "${currentStatus}". Chỉ chấp nhận "Chờ duyệt cấp 3" hoặc "Chờ giải ngân".`,
+        message: `Không thể giải ngân đơn ở trạng thái "${currentStatus}".
+         Chỉ chấp nhận "Chờ duyệt cấp 3" hoặc "Chờ giải ngân".`,
       });
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 4: KIỂM TRA CẤP 1 VÀ CẤP 2 ĐÃ DUYỆT
-    // ─────────────────────────────────────────────────────────────────────────
-    
     const danhSachPheDuyet = await PheDuyetModel.getPheDuyetByRequestId(id);
     const cap1 = danhSachPheDuyet.find(pd => pd.capduyet === 1);
     const cap2 = danhSachPheDuyet.find(pd => pd.capduyet === 2);
-    
     if (!cap1 || cap1.ketqua !== 'Da duyet') {
       await connection.rollback();
       return res.status(400).json({
@@ -1063,7 +1046,6 @@ export const disburseApplication = async (req, res) => {
         message: "Cấp 1 chưa duyệt. Kế toán chỉ duyệt được sau khi Giáo vụ duyệt cấp 1.",
       });
     }
-
     if (!cap2 || cap2.ketqua !== 'Da duyet') {
       await connection.rollback();
       return res.status(400).json({
@@ -1071,19 +1053,11 @@ export const disburseApplication = async (req, res) => {
         message: "Cấp 2 chưa duyệt. Kế toán chỉ duyệt được sau khi Admin duyệt cấp 2.",
       });
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
-    // ─────────────────────────────────────────────────────────────────────────
-    // - Nếu trạng thái là "Dang xu ly": chưa có cấp 3 → cần duyệt cấp 3 mới
-    // - Nếu trạng thái là "Cho giai ngan": cấp 3 đã duyệt rồi → bỏ qua bước này
-
     const isRetryDisbursement = currentStatus === 'Cho giai ngan';
     let capHienTai = null;
-
     if (!isRetryDisbursement) {
       capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
-
       if (!capHienTai) {
         await connection.rollback();
         return res.status(400).json({
@@ -1091,7 +1065,6 @@ export const disburseApplication = async (req, res) => {
           message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
         });
       }
-
       // Kế toán chỉ duyệt cấp 3
       if (capHienTai.capduyet !== 3) {
         await connection.rollback();

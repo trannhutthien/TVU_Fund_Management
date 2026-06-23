@@ -620,472 +620,470 @@ export const getApplicationStats = async (req, res) => {
   }
 };
 
+// GET /api/statistics/ketoan/report
 export const getKeToanReportStats = async (req, res) => {
   try {
-    const type = req.query.type || 'month'; // 'month' | 'quarter' | 'year'
-    const year = parseInt(req.query.year) || new Date().getFullYear();
-    const month = parseInt(req.query.month) || (new Date().getMonth() + 1);
-    const quarter = parseInt(req.query.quarter) || Math.ceil((new Date().getMonth() + 1) / 3);
+    const now = new Date();
+    const allowedTypes = new Set(['month', 'quarter', 'year']);
+    const type = allowedTypes.has(req.query.type) ? req.query.type : 'month';
+
+    const parseBoundedInt = (value, fallback, min, max) => {
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed)) return fallback;
+      return Math.min(Math.max(parsed, min), max);
+    };
+
+    const year = parseBoundedInt(req.query.year, now.getFullYear(), 2000, 2100);
+    const month = parseBoundedInt(req.query.month, now.getMonth() + 1, 1, 12);
+    const quarter = parseBoundedInt(
+      req.query.quarter,
+      Math.ceil((now.getMonth() + 1) / 3),
+      1,
+      4
+    );
     const compareMode = req.query.compareMode === 'true' || req.query.compareMode === true;
 
-    // Helper functions
-    const getPeriodCondition = (fieldName) => {
-      if (type === 'month') {
+    const pad2 = (value) => String(value).padStart(2, '0');
+    const formatDate = (date) => (
+      `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+    );
+    const addMonths = (date, amount) => (
+      new Date(date.getFullYear(), date.getMonth() + amount, date.getDate())
+    );
+
+    const currentPeriod = { type, year, month, quarter };
+    const getPeriodRange = (period) => {
+      if (period.type === 'month') {
+        const startDate = new Date(period.year, period.month - 1, 1);
+        const endDate = new Date(period.year, period.month, 1);
         return {
-          sql: `YEAR(${fieldName}) = ? AND MONTH(${fieldName}) = ?`,
-          params: [year, month]
-        };
-      } else if (type === 'quarter') {
-        return {
-          sql: `YEAR(${fieldName}) = ? AND QUARTER(${fieldName}) = ?`,
-          params: [year, quarter]
-        };
-      } else {
-        return {
-          sql: `YEAR(${fieldName}) = ?`,
-          params: [year]
+          startDate,
+          endDate,
+          start: formatDate(startDate),
+          end: formatDate(endDate),
         };
       }
-    };
 
-    const getPreviousPeriod = () => {
-      let prevYear = year;
-      let prevMonth = month;
-      let prevQuarter = quarter;
-
-      if (type === 'month') {
-        if (prevMonth > 1) {
-          prevMonth -= 1;
-        } else {
-          prevMonth = 12;
-          prevYear -= 1;
-        }
-      } else if (type === 'quarter') {
-        if (prevQuarter > 1) {
-          prevQuarter -= 1;
-        } else {
-          prevQuarter = 4;
-          prevYear -= 1;
-        }
-      } else {
-        prevYear -= 1;
-      }
-      return { year: prevYear, month: prevMonth, quarter: prevQuarter };
-    };
-
-    const getPrevPeriodCondition = (fieldName) => {
-      const prev = getPreviousPeriod();
-      if (type === 'month') {
+      if (period.type === 'quarter') {
+        const startMonth = (period.quarter - 1) * 3;
+        const startDate = new Date(period.year, startMonth, 1);
+        const endDate = new Date(period.year, startMonth + 3, 1);
         return {
-          sql: `YEAR(${fieldName}) = ? AND MONTH(${fieldName}) = ?`,
-          params: [prev.year, prev.month]
-        };
-      } else if (type === 'quarter') {
-        return {
-          sql: `YEAR(${fieldName}) = ? AND QUARTER(${fieldName}) = ?`,
-          params: [prev.year, prev.quarter]
-        };
-      } else {
-        return {
-          sql: `YEAR(${fieldName}) = ?`,
-          params: [prev.year]
+          startDate,
+          endDate,
+          start: formatDate(startDate),
+          end: formatDate(endDate),
         };
       }
-    };
 
-    const currentCondGD = getPeriodCondition('ngaygiaodich');
-    const currentCondKT = getPeriodCondition('ngaytaitro');
-
-    // 1. KPI Summary Data
-    const [[thuRow]] = await pool.query(
-      `SELECT COALESCE(SUM(sotien), 0) AS total
-       FROM khoantaitro
-       WHERE trangthai IN ('Da duyet', 'Da nhan') AND ${currentCondKT.sql}`,
-      currentCondKT.params
-    );
-
-    const [[chiRow]] = await pool.query(
-      `SELECT COALESCE(SUM(sotien), 0) AS total
-       FROM giaodich
-       WHERE trangthai = 'Thanh cong'
-         AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-         AND ${currentCondGD.sql}`,
-      currentCondGD.params
-    );
-
-    const [[gdRow]] = await pool.query(
-      `SELECT COUNT(*) AS total
-       FROM (
-         SELECT ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai IN ('Da duyet', 'Da nhan')
-         UNION ALL
-         SELECT ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-       ) AS combined
-       WHERE ${currentCondGD.sql}`,
-      currentCondGD.params
-    );
-
-    const [[quyRow]] = await pool.query(
-      `SELECT COUNT(*) AS total
-       FROM quy
-       WHERE trangthai = 'Dang hoat dong'`
-    );
-
-    const summaryData = {
-      tongThu: parseFloat(thuRow.total),
-      tongChi: parseFloat(chiRow.total),
-      soQuy: quyRow.total,
-      soGiaoDich: gdRow.total
-    };
-
-    // 2. Comparison Summary Data (if compareMode = true)
-    let compareSummaryData = null;
-    if (compareMode) {
-      const prevCondGD = getPrevPeriodCondition('ngaygiaodich');
-      const prevCondKT = getPrevPeriodCondition('ngaytaitro');
-      
-      const [[prevThuRow]] = await pool.query(
-        `SELECT COALESCE(SUM(sotien), 0) AS total
-         FROM khoantaitro
-         WHERE trangthai IN ('Da duyet', 'Da nhan') AND ${prevCondKT.sql}`,
-        prevCondKT.params
-      );
-
-      const [[prevChiRow]] = await pool.query(
-        `SELECT COALESCE(SUM(sotien), 0) AS total
-         FROM giaodich
-         WHERE trangthai = 'Thanh cong'
-           AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-           AND ${prevCondGD.sql}`,
-        prevCondGD.params
-      );
-
-      const [[prevGdRow]] = await pool.query(
-        `SELECT COUNT(*) AS total
-         FROM (
-           SELECT ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai IN ('Da duyet', 'Da nhan')
-           UNION ALL
-           SELECT ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-         ) AS combined
-         WHERE ${prevCondGD.sql}`,
-        prevCondGD.params
-      );
-
-      compareSummaryData = {
-        tongThu: parseFloat(prevThuRow.total),
-        tongChi: parseFloat(prevChiRow.total),
-        soQuy: quyRow.total,
-        soGiaoDich: prevGdRow.total
+      const startDate = new Date(period.year, 0, 1);
+      const endDate = new Date(period.year + 1, 0, 1);
+      return {
+        startDate,
+        endDate,
+        start: formatDate(startDate),
+        end: formatDate(endDate),
       };
-    }
+    };
 
-    // 3. Cashflow data
-    const cashflowData = [];
-    if (type === 'month') {
-      const selectedDate = new Date(year, month - 1, 1);
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        
-        const [[row]] = await pool.query(
-          `SELECT
-             SUM(thu) AS thu,
-             SUM(chi) AS chi
-           FROM (
-             SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
-             FROM khoantaitro
-             WHERE trangthai IN ('Da duyet', 'Da nhan')
-             UNION ALL
-             SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
-             FROM giaodich
-             WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-           ) AS combined
-           WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
-          [d.getFullYear(), d.getMonth() + 1]
-        );
-
-        cashflowData.push({
-          thang: `T${d.getMonth() + 1}`,
-          thangKey: key,
-          thu: parseFloat(row.thu || 0),
-          chi: parseFloat(row.chi || 0)
-        });
+    const getPreviousPeriod = (period) => {
+      if (period.type === 'month') {
+        const prevDate = new Date(period.year, period.month - 2, 1);
+        return {
+          type: 'month',
+          year: prevDate.getFullYear(),
+          month: prevDate.getMonth() + 1,
+          quarter: Math.ceil((prevDate.getMonth() + 1) / 3),
+        };
       }
-    } else if (type === 'quarter') {
-      for (let q = 1; q <= 4; q++) {
-        const [[row]] = await pool.query(
-          `SELECT
-             SUM(thu) AS thu,
-             SUM(chi) AS chi
-           FROM (
-             SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
-             FROM khoantaitro
-             WHERE trangthai IN ('Da duyet', 'Da nhan')
-             UNION ALL
-             SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
-             FROM giaodich
-             WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-           ) AS combined
-           WHERE YEAR(ngay_date) = ? AND QUARTER(ngay_date) = ?`,
-          [year, q]
-        );
-        cashflowData.push({
-          thang: `Q${q}`,
-          thangKey: `${year}-Q${q}`,
-          thu: parseFloat(row.thu || 0),
-          chi: parseFloat(row.chi || 0)
-        });
-      }
-    } else { // year
-      for (let m = 1; m <= 12; m++) {
-        const [[row]] = await pool.query(
-          `SELECT
-             SUM(thu) AS thu,
-             SUM(chi) AS chi
-           FROM (
-             SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
-             FROM khoantaitro
-             WHERE trangthai IN ('Da duyet', 'Da nhan')
-             UNION ALL
-             SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
-             FROM giaodich
-             WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-           ) AS combined
-           WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
-          [year, m]
-        );
-        cashflowData.push({
-          thang: `T${m}`,
-          thangKey: `${year}-${String(m).padStart(2, '0')}`,
-          thu: parseFloat(row.thu || 0),
-          chi: parseFloat(row.chi || 0)
-        });
-      }
-    }
 
-    // 4. Comparison Cashflow Data (if compareMode = true)
-    const compareCashflowData = [];
-    if (compareMode) {
-      const prev = getPreviousPeriod();
-      if (type === 'month') {
-        const prevDate = new Date(prev.year, prev.month - 1, 1);
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(prevDate.getFullYear(), prevDate.getMonth() - i, 1);
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-          
-          const [[row]] = await pool.query(
-            `SELECT
-               SUM(thu) AS thu,
-               SUM(chi) AS chi
-             FROM (
-               SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
-               FROM khoantaitro
-               WHERE trangthai IN ('Da duyet', 'Da nhan')
-               UNION ALL
-               SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
-               FROM giaodich
-               WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-             ) AS combined
-             WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
-            [d.getFullYear(), d.getMonth() + 1]
-          );
+      if (period.type === 'quarter') {
+        if (period.quarter > 1) {
+          return { ...period, quarter: period.quarter - 1 };
+        }
+        return { type: 'quarter', year: period.year - 1, month: 12, quarter: 4 };
+      }
 
-          compareCashflowData.push({
-            thang: `T${d.getMonth() + 1}`,
+      return { type: 'year', year: period.year - 1, month: period.month, quarter: period.quarter };
+    };
+
+    const buildCashflowBuckets = (period) => {
+      const buckets = [];
+
+      if (period.type === 'month') {
+        const selectedDate = new Date(period.year, period.month - 1, 1);
+        const startDate = addMonths(selectedDate, -5);
+        const endDate = addMonths(selectedDate, 1);
+
+        for (let i = 5; i >= 0; i -= 1) {
+          const date = addMonths(selectedDate, -i);
+          const key = `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+          buckets.push({
+            key,
+            thang: `T${date.getMonth() + 1}`,
             thangKey: key,
-            thu: parseFloat(row.thu || 0),
-            chi: parseFloat(row.chi || 0)
+            thu: 0,
+            chi: 0,
           });
         }
-      } else if (type === 'quarter') {
-        const prevYear = prev.year;
-        for (let q = 1; q <= 4; q++) {
-          const [[row]] = await pool.query(
-            `SELECT
-               SUM(thu) AS thu,
-               SUM(chi) AS chi
-             FROM (
-               SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
-               FROM khoantaitro
-               WHERE trangthai IN ('Da duyet', 'Da nhan')
-               UNION ALL
-               SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
-               FROM giaodich
-               WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-             ) AS combined
-             WHERE YEAR(ngay_date) = ? AND QUARTER(ngay_date) = ?`,
-            [prevYear, q]
-          );
-          compareCashflowData.push({
-            thang: `Q${q}`,
-            thangKey: `${prevYear}-Q${q}`,
-            thu: parseFloat(row.thu || 0),
-            chi: parseFloat(row.chi || 0)
-          });
-        }
-      } else { // year
-        const prevYear = prev.year;
-        for (let m = 1; m <= 12; m++) {
-          const [[row]] = await pool.query(
-            `SELECT
-               SUM(thu) AS thu,
-               SUM(chi) AS chi
-             FROM (
-               SELECT ngaycapnhat AS ngay_date, sotien AS thu, 0 AS chi
-               FROM khoantaitro
-               WHERE trangthai IN ('Da duyet', 'Da nhan')
-               UNION ALL
-               SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
-               FROM giaodich
-               WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-             ) AS combined
-             WHERE YEAR(ngay_date) = ? AND MONTH(ngay_date) = ?`,
-            [prevYear, m]
-          );
-          compareCashflowData.push({
-            thang: `T${m}`,
-            thangKey: `${prevYear}-${String(m).padStart(2, '0')}`,
-            thu: parseFloat(row.thu || 0),
-            chi: parseFloat(row.chi || 0)
-          });
-        }
+
+        return {
+          buckets,
+          start: formatDate(startDate),
+          end: formatDate(endDate),
+          keyExpression: "DATE_FORMAT(ngay_date, '%Y-%m')",
+        };
       }
-    }
 
-    // 5. Breakdown Thu (Top Nhà tài trợ)
-    const [thuBreakdownRows] = await pool.query(
-      `SELECT 
-         CASE 
-           WHEN ntt.tennhataitro = 'Nhà tài trợ' AND nd.hoten IS NOT NULL AND nd.hoten != '' 
-           THEN nd.hoten 
-           ELSE ntt.tennhataitro 
-         END AS name, 
-         SUM(kt.sotien) AS value
-       FROM khoantaitro kt
-       INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
-       LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
-       WHERE kt.trangthai IN ('Da duyet', 'Da nhan') AND ${currentCondKT.sql}
-       GROUP BY name
-       ORDER BY value DESC
-       LIMIT 5`,
-      currentCondKT.params
-    );
+      if (period.type === 'quarter') {
+        for (let q = 1; q <= 4; q += 1) {
+          const key = `${period.year}-Q${q}`;
+          buckets.push({
+            key,
+            thang: `Q${q}`,
+            thangKey: key,
+            thu: 0,
+            chi: 0,
+          });
+        }
 
-    const totalThuVal = thuBreakdownRows.reduce((sum, r) => sum + parseFloat(r.value), 0);
-    const breakdownThuData = thuBreakdownRows.map(r => ({
-      name: r.name,
-      value: parseFloat(r.value),
-      percentage: totalThuVal > 0 ? Math.round((parseFloat(r.value) / totalThuVal) * 100) : 0
-    }));
+        return {
+          buckets,
+          start: `${period.year}-01-01`,
+          end: `${period.year + 1}-01-01`,
+          keyExpression: "CONCAT(YEAR(ngay_date), '-Q', QUARTER(ngay_date))",
+        };
+      }
 
-    // 6. Breakdown Chi (Phân bổ chi theo quỹ)
-    const [chiBreakdownRows] = await pool.query(
-      `SELECT q.tenquy AS name, SUM(gd.sotien) AS value
-       FROM giaodich gd
-       INNER JOIN quy q ON gd.quy_id = q.quy_id
-       WHERE gd.trangthai = 'Thanh cong'
-         AND (gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)
-         AND ${currentCondGD.sql}
-       GROUP BY q.tenquy
-       ORDER BY value DESC
-       LIMIT 5`,
-      currentCondGD.params
-    );
+      for (let m = 1; m <= 12; m += 1) {
+        const key = `${period.year}-${pad2(m)}`;
+        buckets.push({
+          key,
+          thang: `T${m}`,
+          thangKey: key,
+          thu: 0,
+          chi: 0,
+        });
+      }
 
-    const totalChiVal = chiBreakdownRows.reduce((sum, r) => sum + parseFloat(r.value), 0);
-    const breakdownChiData = chiBreakdownRows.map(r => ({
-      name: r.name,
-      value: parseFloat(r.value),
-      percentage: totalChiVal > 0 ? Math.round((parseFloat(r.value) / totalChiVal) * 100) : 0
-    }));
+      return {
+        buckets,
+        start: `${period.year}-01-01`,
+        end: `${period.year + 1}-01-01`,
+        keyExpression: "DATE_FORMAT(ngay_date, '%Y-%m')",
+      };
+    };
 
-    // 7. Fund Table data
-    const [funds] = await pool.query(
-      `SELECT quy_id, tenquy AS ten_quy, sodu AS so_du, sotienmuctieu AS so_tien_toi_da, trangthai AS trang_thai
-       FROM quy`
-    );
-
-    const fundTableData = [];
-    for (const f of funds) {
-      // successful Thu in period for this fund
-      const [[fundThuRow]] = await pool.query(
-        `SELECT COALESCE(SUM(sotien), 0) AS total
-         FROM khoantaitro
-         WHERE quy_id = ? AND trangthai IN ('Da duyet', 'Da nhan') AND ${currentCondKT.sql}`,
-        [f.quy_id, ...currentCondKT.params]
-      );
-
-      // successful Chi in period for this fund
-      const [[fundChiRow]] = await pool.query(
-        `SELECT COALESCE(SUM(sotien), 0) AS total
-         FROM giaodich
-         WHERE quy_id = ? AND trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL) AND ${currentCondGD.sql}`,
-        [f.quy_id, ...currentCondGD.params]
-      );
-
-      // transaction count
-      const [[fundGdRow]] = await pool.query(
-        `SELECT COUNT(*) AS total
-         FROM (
-           SELECT quy_id, ngaycapnhat AS ngaygiaodich FROM khoantaitro WHERE trangthai IN ('Da duyet', 'Da nhan')
-           UNION ALL
-           SELECT quy_id, ngaygiaodich FROM giaodich WHERE trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-         ) AS combined
-         WHERE quy_id = ? AND ${currentCondGD.sql}`,
-        [f.quy_id, ...currentCondGD.params]
-      );
-
-      // trend data (last 6 transactions)
-      const [trendRows] = await pool.query(
-        `SELECT sotien AS value
-         FROM giaodich
-         WHERE quy_id = ? AND trangthai = 'Thanh cong' AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
-         ORDER BY ngaygiaodich DESC
-         LIMIT 6`,
-        [f.quy_id]
-      );
-
-      const trendData = trendRows.reverse().map(tr => ({ value: parseFloat(tr.value) }));
-
-      fundTableData.push({
-        quyId: f.quy_id,
-        tenQuy: f.ten_quy,
-        thu: parseFloat(fundThuRow.total),
-        chi: parseFloat(fundChiRow.total),
-        soDu: parseFloat(f.so_du),
-        soTienToiDa: parseFloat(f.so_tien_toi_da || 0),
-        soGiaoDich: fundGdRow.total,
-        trangThai: f.trang_thai === 'Dang hoat dong' ? 'Đang hoạt động' : 
-                   f.trang_thai === 'Tam dung' ? 'Tạm dừng' : 
-                   f.trang_thai === 'Da dong' ? 'Đã đóng' : f.trang_thai,
-        trendData
+    const toPercentBreakdown = (rows) => {
+      const total = rows.reduce((sum, row) => sum + (Number(row.value) || 0), 0);
+      return rows.map((row) => {
+        const value = Number(row.value) || 0;
+        return {
+          name: row.name,
+          value,
+          percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+        };
       });
-    }
+    };
 
-    // 8. Chi tiết các giao dịch chi giải ngân (transaction rows)
-    const [transactionRows] = await pool.query(
-      `SELECT
-         gd.giaodich_id AS id,
-         nd.hoten AS ho_ten,
-         nd.masodinhdanh AS mssv,
-         q.tenquy AS ten_quy,
-         gd.sotien AS so_tien,
-         gd.ngaygiaodich AS ngay_giai_ngan
-       FROM giaodich gd
-       INNER JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
-       INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
-       INNER JOIN quy q ON gd.quy_id = q.quy_id
-       WHERE gd.trangthai = 'Thanh cong' AND ${currentCondGD.sql}
-       ORDER BY gd.ngaygiaodich DESC`,
-      currentCondGD.params
-    );
+    const rowsToNumberMap = (rows, valueField = 'total') => {
+      const map = new Map();
+      rows.forEach((row) => {
+        map.set(Number(row.quy_id), Number(row[valueField]) || 0);
+      });
+      return map;
+    };
 
-    const rows = transactionRows.map((r, idx) => ({
-      stt: idx + 1,
-      ho_ten: r.ho_ten || 'Sinh viên',
-      mssv: r.mssv || '—',
-      ten_quy: r.ten_quy || '',
-      so_tien: parseFloat(r.so_tien || 0),
-      ngay_giai_ngan: r.ngay_giai_ngan ? new Date(r.ngay_giai_ngan).toLocaleDateString('vi-VN') : '—'
+    const currentRange = getPeriodRange(currentPeriod);
+    const previousPeriod = getPreviousPeriod(currentPeriod);
+    const previousRange = getPeriodRange(previousPeriod);
+
+    const getSummaryData = async (range) => {
+      const [thuResult, chiResult, gdResult] = await Promise.all([
+        pool.query(
+          `SELECT COALESCE(SUM(sotien), 0) AS total
+           FROM khoantaitro
+           WHERE trangthai IN ('Da duyet', 'Da nhan')
+             AND ngaycapnhat >= ?
+             AND ngaycapnhat < ?`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT COALESCE(SUM(sotien), 0) AS total
+           FROM giaodich
+           WHERE trangthai = 'Thanh cong'
+             AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+             AND ngaygiaodich >= ?
+             AND ngaygiaodich < ?`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT COUNT(*) AS total
+           FROM (
+             SELECT quy_id
+             FROM khoantaitro
+             WHERE trangthai IN ('Da duyet', 'Da nhan')
+               AND ngaycapnhat >= ?
+               AND ngaycapnhat < ?
+             UNION ALL
+             SELECT quy_id
+             FROM giaodich
+             WHERE trangthai = 'Thanh cong'
+               AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+               AND ngaygiaodich >= ?
+               AND ngaygiaodich < ?
+           ) AS combined`,
+          [range.start, range.end, range.start, range.end]
+        ),
+      ]);
+
+      return {
+        tongThu: Number(thuResult[0][0]?.total) || 0,
+        tongChi: Number(chiResult[0][0]?.total) || 0,
+        soGiaoDich: Number(gdResult[0][0]?.total) || 0,
+      };
+    };
+
+    const getCashflowData = async (period) => {
+      const config = buildCashflowBuckets(period);
+      const [rows] = await pool.query(
+        `SELECT
+           ${config.keyExpression} AS period_key,
+           SUM(thu) AS thu,
+           SUM(chi) AS chi
+         FROM (
+           SELECT
+             ngaycapnhat AS ngay_date,
+             sotien AS thu,
+             0 AS chi
+           FROM khoantaitro
+           WHERE trangthai IN ('Da duyet', 'Da nhan')
+             AND ngaycapnhat >= ?
+             AND ngaycapnhat < ?
+           UNION ALL
+           SELECT
+             ngaygiaodich AS ngay_date,
+             0 AS thu,
+             sotien AS chi
+           FROM giaodich
+           WHERE trangthai = 'Thanh cong'
+             AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+             AND ngaygiaodich >= ?
+             AND ngaygiaodich < ?
+         ) AS combined
+         GROUP BY period_key`,
+        [config.start, config.end, config.start, config.end]
+      );
+
+      const valueByKey = new Map(rows.map((row) => [row.period_key, row]));
+      return config.buckets.map((bucket) => {
+        const row = valueByKey.get(bucket.key);
+        return {
+          thang: bucket.thang,
+          thangKey: bucket.thangKey,
+          thu: row ? Number(row.thu) || 0 : 0,
+          chi: row ? Number(row.chi) || 0 : 0,
+        };
+      });
+    };
+
+    const getFundTableData = async (range) => {
+      const [
+        fundsResult,
+        fundThuResult,
+        fundChiResult,
+        fundGdResult,
+        trendResult,
+      ] = await Promise.all([
+        pool.query(
+          `SELECT
+             quy_id,
+             tenquy AS ten_quy,
+             sodu AS so_du,
+             sotienmuctieu AS so_tien_toi_da,
+             trangthai AS trang_thai
+           FROM quy
+           ORDER BY quy_id ASC`
+        ),
+        pool.query(
+          `SELECT quy_id, COALESCE(SUM(sotien), 0) AS total
+           FROM khoantaitro
+           WHERE trangthai IN ('Da duyet', 'Da nhan')
+             AND ngaycapnhat >= ?
+             AND ngaycapnhat < ?
+           GROUP BY quy_id`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT quy_id, COALESCE(SUM(sotien), 0) AS total
+           FROM giaodich
+           WHERE trangthai = 'Thanh cong'
+             AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+             AND ngaygiaodich >= ?
+             AND ngaygiaodich < ?
+           GROUP BY quy_id`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT quy_id, COUNT(*) AS total
+           FROM (
+             SELECT quy_id
+             FROM khoantaitro
+             WHERE trangthai IN ('Da duyet', 'Da nhan')
+               AND ngaycapnhat >= ?
+               AND ngaycapnhat < ?
+             UNION ALL
+             SELECT quy_id
+             FROM giaodich
+             WHERE trangthai = 'Thanh cong'
+               AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+               AND ngaygiaodich >= ?
+               AND ngaygiaodich < ?
+           ) AS combined
+           GROUP BY quy_id`,
+          [range.start, range.end, range.start, range.end]
+        ),
+        pool.query(
+          `SELECT quy_id, value
+           FROM (
+             SELECT
+               quy_id,
+               sotien AS value,
+               ROW_NUMBER() OVER (
+                 PARTITION BY quy_id
+                 ORDER BY ngaygiaodich DESC, giaodich_id DESC
+               ) AS rn
+             FROM giaodich
+             WHERE trangthai = 'Thanh cong'
+               AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+           ) AS ranked
+           WHERE rn <= 6
+           ORDER BY quy_id ASC, rn DESC`
+        ),
+      ]);
+
+      const funds = fundsResult[0];
+      const thuByFund = rowsToNumberMap(fundThuResult[0]);
+      const chiByFund = rowsToNumberMap(fundChiResult[0]);
+      const gdByFund = rowsToNumberMap(fundGdResult[0]);
+      const trendByFund = new Map();
+
+      trendResult[0].forEach((row) => {
+        const quyId = Number(row.quy_id);
+        if (!trendByFund.has(quyId)) trendByFund.set(quyId, []);
+        trendByFund.get(quyId).push({ value: Number(row.value) || 0 });
+      });
+
+      const statusMap = {
+        'Dang hoat dong': 'Đang hoạt động',
+        'Tam dung': 'Tạm dừng',
+        'Da dong': 'Đã đóng',
+      };
+
+      return funds.map((fund) => {
+        const quyId = Number(fund.quy_id);
+        return {
+          quyId,
+          tenQuy: fund.ten_quy,
+          thu: thuByFund.get(quyId) || 0,
+          chi: chiByFund.get(quyId) || 0,
+          soDu: Number(fund.so_du) || 0,
+          soTienToiDa: Number(fund.so_tien_toi_da) || 0,
+          soGiaoDich: gdByFund.get(quyId) || 0,
+          trangThai: statusMap[fund.trang_thai] || fund.trang_thai,
+          trendData: trendByFund.get(quyId) || [],
+        };
+      });
+    };
+
+    const [
+      summaryBase,
+      activeFundsResult,
+      cashflowData,
+      compareSummaryBase,
+      compareCashflowData,
+      thuBreakdownResult,
+      chiBreakdownResult,
+      fundTableData,
+      transactionRowsResult,
+    ] = await Promise.all([
+      getSummaryData(currentRange),
+      pool.query(
+        `SELECT COUNT(*) AS total
+         FROM quy
+         WHERE trangthai = 'Dang hoat dong'`
+      ),
+      getCashflowData(currentPeriod),
+      compareMode ? getSummaryData(previousRange) : Promise.resolve(null),
+      compareMode ? getCashflowData(previousPeriod) : Promise.resolve([]),
+      pool.query(
+        `SELECT
+           CASE
+             WHEN ntt.tennhataitro = 'Nhà tài trợ' AND nd.hoten IS NOT NULL AND nd.hoten != ''
+             THEN nd.hoten
+             ELSE ntt.tennhataitro
+           END AS name,
+           SUM(kt.sotien) AS value
+         FROM khoantaitro kt
+         INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+         LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
+         WHERE kt.trangthai IN ('Da duyet', 'Da nhan')
+           AND kt.ngaycapnhat >= ?
+           AND kt.ngaycapnhat < ?
+         GROUP BY name
+         ORDER BY value DESC
+         LIMIT 5`,
+        [currentRange.start, currentRange.end]
+      ),
+      pool.query(
+        `SELECT q.tenquy AS name, SUM(gd.sotien) AS value
+         FROM giaodich gd
+         INNER JOIN quy q ON gd.quy_id = q.quy_id
+         WHERE gd.trangthai = 'Thanh cong'
+           AND (gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)
+           AND gd.ngaygiaodich >= ?
+           AND gd.ngaygiaodich < ?
+         GROUP BY q.tenquy
+         ORDER BY value DESC
+         LIMIT 5`,
+        [currentRange.start, currentRange.end]
+      ),
+      getFundTableData(currentRange),
+      pool.query(
+        `SELECT
+           gd.giaodich_id AS id,
+           nd.hoten AS ho_ten,
+           nd.masodinhdanh AS mssv,
+           q.tenquy AS ten_quy,
+           gd.sotien AS so_tien,
+           gd.ngaygiaodich AS ngay_giai_ngan
+         FROM giaodich gd
+         INNER JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
+         INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
+         INNER JOIN quy q ON gd.quy_id = q.quy_id
+         WHERE gd.trangthai = 'Thanh cong'
+           AND gd.ngaygiaodich >= ?
+           AND gd.ngaygiaodich < ?
+         ORDER BY gd.ngaygiaodich DESC`,
+        [currentRange.start, currentRange.end]
+      ),
+    ]);
+
+    const soQuy = Number(activeFundsResult[0][0]?.total) || 0;
+    const summaryData = { ...summaryBase, soQuy };
+    const compareSummaryData = compareSummaryBase ? { ...compareSummaryBase, soQuy } : null;
+    const breakdownThuData = toPercentBreakdown(thuBreakdownResult[0]);
+    const breakdownChiData = toPercentBreakdown(chiBreakdownResult[0]);
+
+    const rows = transactionRowsResult[0].map((row, index) => ({
+      stt: index + 1,
+      ho_ten: row.ho_ten || 'Sinh viên',
+      mssv: row.mssv || '—',
+      ten_quy: row.ten_quy || '',
+      so_tien: Number(row.so_tien) || 0,
+      ngay_giai_ngan: row.ngay_giai_ngan
+        ? new Date(row.ngay_giai_ngan).toLocaleDateString('vi-VN')
+        : '—',
     }));
 
     return res.status(200).json({
@@ -1099,21 +1097,19 @@ export const getKeToanReportStats = async (req, res) => {
         breakdownThuData,
         breakdownChiData,
         fundTableData,
-        rows
-      }
+        rows,
+      },
     });
-
   } catch (error) {
     console.error("Lỗi getKeToanReportStats:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi lấy báo cáo thống kê thu chi",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
-// ─── GET /api/statistics/admin/advanced ───────────────────────────────────────
 export const getAdminAdvancedStats = async (req, res) => {
   try {
     // 1. Tỷ lệ duyệt hồ sơ thành công & Thời gian xử lý trung bình

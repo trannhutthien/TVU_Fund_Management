@@ -1,6 +1,7 @@
 import {
-  HiOutlineBuildingOffice,
+  HiOutlineHandRaised,
   HiOutlineCurrencyDollar,
+  HiOutlineEnvelope,
   HiOutlineChartBar,
   HiOutlineClock,
   HiOutlineCheckCircle,
@@ -10,26 +11,34 @@ import styles from './HDNhaTaiTroSection.module.scss';
 const STEPS_NTT = [
   {
     step: 1,
-    icon: HiOutlineBuildingOffice,
-    title: 'Đăng ký tài khoản',
-    desc: 'Đăng ký tài khoản Nhà tài trợ với thông tin tổ chức/cá nhân. Admin sẽ xác minh thông tin trước khi kích hoạt.',
-    time: '~5 phút',
+    icon: HiOutlineHandRaised,
+    title: 'Chọn quỹ muốn đóng góp',
+    desc: 'Nhà tài trợ có thể chọn quỹ công khai và bắt đầu tạo khoản quyên góp ngay với tư cách khách vãng lai, không cần đăng nhập trước.',
+    time: '~3 phút',
     color: 'var(--color-primary)',
   },
   {
     step: 2,
     icon: HiOutlineCurrencyDollar,
-    title: 'Tạo khoản tài trợ',
-    desc: 'Chọn quỹ muốn hỗ trợ, nhập số tiền cam kết, tải ảnh minh chứng chuyển khoản. Cán bộ sẽ xác nhận trong 24h.',
+    title: 'Nhập thông tin đóng góp',
+    desc: 'Cung cấp họ tên hoặc tổ chức, email, số tiền, hình thức đóng góp và tải minh chứng chuyển khoản nếu đã thực hiện giao dịch.',
     time: '~5 phút',
     color: 'var(--color-gold)',
   },
   {
     step: 3,
+    icon: HiOutlineEnvelope,
+    title: 'Xác thực email OTP',
+    desc: 'Hệ thống gửi mã OTP về email nhà tài trợ. Sau khi xác thực, khoản đóng góp được ghi nhận ở trạng thái chờ xác nhận giao dịch.',
+    time: '15 phút hiệu lực',
+    color: '#7c3aed',
+  },
+  {
+    step: 4,
     icon: HiOutlineChartBar,
-    title: 'Theo dõi tác động',
-    desc: 'Xem báo cáo sử dụng quỹ, danh sách sinh viên được hỗ trợ từ đóng góp của bạn. Xuất báo cáo tác động theo yêu cầu.',
-    time: 'Realtime',
+    title: 'Theo dõi đóng góp',
+    desc: 'Sau khi xác thực, hệ thống tạo tài khoản theo dõi cho nhà tài trợ. Kế toán và cán bộ quản lý sẽ kiểm tra, xác nhận khoản đóng góp.',
+    time: '24-48 giờ',
     color: '#10b981',
   },
 ];
@@ -38,6 +47,8 @@ const QUYEN_LOI = [
   'Tên và logo hiển thị trên Bảng Vàng Nhà tài trợ',
   'Nhận báo cáo sử dụng quỹ định kỳ hàng quý',
   'Giấy xác nhận đóng góp có chữ ký Ban Giám hiệu',
+  'Có thể đóng góp nhanh bằng email thật mà không cần tạo tài khoản trước',
+  'Tài khoản theo dõi được hệ thống tạo sau khi xác thực OTP thành công',
   'Được vinh danh tại các sự kiện của Nhà trường',
   'Tiếp cận nguồn nhân lực chất lượng cao từ TVU',
   'Hỗ trợ tư vấn chương trình hợp tác đào tạo',
@@ -54,7 +65,7 @@ const HDNhaTaiTroSection = () => {
           <div className={styles.sectionLine} />
         </div>
 
-        {/* 3 Steps */}
+        {/* Steps */}
         <div className={styles.stepsGrid}>
           {STEPS_NTT.map((step) => {
             const Icon = step.icon;

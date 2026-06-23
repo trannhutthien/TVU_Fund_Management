@@ -1,6 +1,7 @@
 import {
-  HiOutlineUserPlus,
+  HiOutlineClipboardDocumentList,
   HiOutlineDocumentPlus,
+  HiOutlineEnvelope,
   HiOutlineClock,
   HiOutlineBanknotes,
   HiOutlinePaperClip,
@@ -15,33 +16,41 @@ import styles from './HDSinhVienSection.module.scss';
 const STEPS_SV = [
   {
     step: 1,
-    icon: HiOutlineUserPlus,
-    title: 'Đăng ký tài khoản',
-    desc: 'Sử dụng email sinh viên TVU (@st.tvu.edu.vn) để đăng ký. Hệ thống tự động xác thực danh tính sinh viên.',
-    time: '~2 phút',
+    icon: HiOutlineClipboardDocumentList,
+    title: 'Chọn quỹ hỗ trợ',
+    desc: 'Sinh viên có thể chọn quỹ phù hợp từ danh mục công khai và bắt đầu nộp đơn ngay, không bắt buộc đăng ký tài khoản trước.',
+    time: '~3 phút',
     color: 'var(--color-primary)',
   },
   {
     step: 2,
     icon: HiOutlineDocumentPlus,
-    title: 'Tạo hồ sơ đề nghị',
-    desc: 'Chọn quỹ phù hợp, điền thông tin hoàn cảnh, tải lên giấy tờ minh chứng. AI hỗ trợ viết lý do thuyết phục.',
+    title: 'Hoàn thiện hồ sơ',
+    desc: 'Điền thông tin cá nhân, thông tin học tập, tài khoản nhận hỗ trợ, lý do đề nghị và tải tài liệu minh chứng theo yêu cầu.',
     time: '~10 phút',
     color: 'var(--color-gold)',
   },
   {
     step: 3,
-    icon: HiOutlineClock,
-    title: 'Chờ xét duyệt',
-    desc: 'Hồ sơ được xét duyệt qua 2-3 cấp. Bạn nhận thông báo tự động sau mỗi cấp duyệt qua email và hệ thống.',
-    time: '3-7 ngày',
+    icon: HiOutlineEnvelope,
+    title: 'Xác thực email OTP',
+    desc: 'Sau khi gửi đơn, hệ thống gửi mã OTP đến email đã khai báo. Sinh viên nhập mã để kích hoạt hồ sơ và xác nhận email liên hệ.',
+    time: '15 phút hiệu lực',
     color: '#7c3aed',
   },
   {
     step: 4,
+    icon: HiOutlineClock,
+    title: 'Theo dõi xét duyệt',
+    desc: 'Sau khi OTP hợp lệ, đơn được chuyển vào quy trình duyệt. Hệ thống tạo tài khoản theo dõi và gửi thông tin đăng nhập tạm thời qua email.',
+    time: '3-7 ngày',
+    color: '#0891b2',
+  },
+  {
+    step: 5,
     icon: HiOutlineBanknotes,
-    title: 'Nhận giải ngân',
-    desc: 'Tiền được chuyển khoản trực tiếp vào tài khoản ngân hàng bạn đã đăng ký trong hệ thống.',
+    title: 'Nhận kết quả hỗ trợ',
+    desc: 'Khi hồ sơ được duyệt và đủ điều kiện giải ngân, khoản hỗ trợ được chuyển vào tài khoản ngân hàng sinh viên đã cung cấp.',
     time: '1-3 ngày',
     color: '#10b981',
   },
@@ -49,10 +58,11 @@ const STEPS_SV = [
 
 const TAI_LIEU = {
   batBuoc: [
-    'Giấy xác nhận sinh viên (còn hiệu lực)',
-    'Bảng điểm học kỳ gần nhất',
+    'Thông tin sinh viên: họ tên, MSSV, khoa, lớp và email đang sử dụng',
+    'Giấy xác nhận sinh viên hoặc tài liệu chứng minh đang theo học',
+    'Tài liệu minh chứng hoàn cảnh, nhu cầu hỗ trợ hoặc nội dung đề nghị',
     'CMND/CCCD (chụp 2 mặt)',
-    'Thông tin tài khoản ngân hàng',
+    'Thông tin tài khoản ngân hàng nhận hỗ trợ',
   ],
   boSung: [
     'Giấy xác nhận hoàn cảnh khó khăn (nếu có)',
@@ -67,19 +77,19 @@ const LUU_Y = [
     icon: HiOutlineExclamationTriangle,
     color: '#f59e0b',
     title: 'Deadline nộp đơn',
-    desc: 'Kiểm tra hạn nộp của từng quỹ. Hệ thống sẽ tự đóng nhận đơn sau deadline.',
+    desc: 'Kiểm tra ngày bắt đầu và ngày kết thúc của từng quỹ. Hồ sơ gửi sau hạn có thể không được tiếp nhận.',
   },
   {
     icon: HiOutlineShieldCheck,
     color: '#10b981',
-    title: 'Bảo mật thông tin',
-    desc: 'Thông tin cá nhân và hồ sơ chỉ được dùng cho mục đích xét duyệt nội bộ.',
+    title: 'Email xác thực',
+    desc: 'Sử dụng email thật và đang truy cập được để nhận OTP, mã tra cứu và thông tin tài khoản theo dõi hồ sơ.',
   },
   {
     icon: HiOutlineArrowPath,
     color: 'var(--color-primary)',
     title: 'Theo dõi trạng thái',
-    desc: 'Đăng nhập thường xuyên để kiểm tra trạng thái hồ sơ và nhận thông báo kịp thời.',
+    desc: 'Sau khi xác thực OTP, sinh viên có thể tra cứu bằng mã UUID hoặc đăng nhập bằng tài khoản được hệ thống tạo tự động.',
   },
 ];
 
@@ -94,7 +104,7 @@ const HDSinhVienSection = () => {
           <div className={styles.sectionLine} />
         </div>
 
-        {/* 4 Steps */}
+        {/* Steps */}
         <div className={styles.stepsGrid}>
           {STEPS_SV.map((step) => {
             const Icon = step.icon;

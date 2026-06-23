@@ -106,19 +106,4 @@ Kế toán có thể liên hệ nhà tài trợ
 để làm rõ trường hợp bị từ chối
 end note
 
-legend right
-**Mô tả**: Từ chối khoản tài trợ không hợp lệ
-**API**: PUT /api/donations/:id/reject
-**Quyền hạn**: Kế toán (role 2), Admin (role 1)
-**Lý do từ chối**:
-  - Không tìm thấy giao dịch
-  - Số tiền không khớp
-  - Nội dung chuyển khoản sai
-  - Chứng từ giả
-**Kết quả**: 
-  - KHÔNG cộng tiền
-  - KHÔNG tạo giao dịch
-  - Trạng thái: "Từ chối"
-endlegend
-
 @enduml

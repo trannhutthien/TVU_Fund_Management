@@ -24,6 +24,17 @@ const validatePhone = (phone) => {
   return phoneRegex.test(phone.trim());
 };
 
+const isEmailDeliveryError = (error) => {
+  return error?.code === "EMAIL_NOT_CONFIGURED" || error?.code === "EMAIL_SEND_FAILED";
+};
+
+const sendEmailErrorResponse = (res, action = "gửi mã OTP") => {
+  return res.status(500).json({
+    success: false,
+    message: `Không thể ${action} qua email thật. Vui lòng kiểm tra cấu hình SMTP và thử lại.`
+  });
+};
+
 /**
  * Tạo mật khẩu ngẫu nhiên an toàn
  */
@@ -155,6 +166,10 @@ export const submitGuestApplication = async (req, res) => {
 
   } catch (error) {
     console.error("Lỗi submitGuestApplication:", error);
+    if (isEmailDeliveryError(error)) {
+      return sendEmailErrorResponse(res, "gửi mã OTP xác thực");
+    }
+
     return res.status(500).json({
       success: false,
       message: "Lỗi hệ thống khi gửi đơn xin hỗ trợ"
@@ -271,6 +286,10 @@ export const submitGuestDonation = async (req, res) => {
 
   } catch (error) {
     console.error("Lỗi submitGuestDonation:", error);
+    if (isEmailDeliveryError(error)) {
+      return sendEmailErrorResponse(res, "gửi mã OTP xác thực");
+    }
+
     return res.status(500).json({
       success: false,
       message: "Lỗi hệ thống khi đăng ký đóng góp tài trợ"
@@ -385,6 +404,11 @@ export const verifyOtp = async (req, res) => {
         message: "Mã OTP đã hết hiệu lực (vượt quá 15 phút)"
       });
     }
+
+    if (isEmailDeliveryError(error)) {
+      return sendEmailErrorResponse(res, "gửi email xác nhận");
+    }
+
     return res.status(500).json({
       success: false,
       message: "Lỗi hệ thống khi xác thực mã OTP"

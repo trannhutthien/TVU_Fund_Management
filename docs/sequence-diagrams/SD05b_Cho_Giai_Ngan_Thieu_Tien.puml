@@ -95,17 +95,4 @@ note over KT, DB
 3. Kế toán quay lại giải ngân cho đơn
    đang ở trạng thái "Chờ giải ngân"
 end note
-
-legend right
-**Mô tả**: Xử lý đơn khi quỹ thiếu tiền
-**API**: POST /api/applications/:id/disburse
-**Quyền hạn**: Kế toán (role 2), Admin (role 1)
-**Điều kiện**: Số dư quỹ < Số tiền đơn
-**Kết quả**: 
-  - KHÔNG trừ tiền quỹ
-  - KHÔNG tạo giao dịch
-  - Trạng thái: "Chờ giải ngân"
-**Giải pháp**: Kêu gọi thêm tài trợ
-endlegend
-
 @enduml

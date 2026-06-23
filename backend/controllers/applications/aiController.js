@@ -1,6 +1,61 @@
 import FundModel from '../../models/funds/FundModel.js';
 import { generateGeminiContent } from '../../utils/helpers/geminiHelper.js';
 
+const compactText = (value = '') => String(value).replace(/\s+/g, ' ').trim();
+
+const buildFallbackAnalysis = ({ moTa, fundName, fundCriteria }) => {
+  const text = compactText(moTa);
+  const lowerText = text.toLowerCase();
+  const hasAmount = /\d|đồng|vnd|triệu|nghìn|ngàn/.test(lowerText);
+  const hasCommitment = /cam kết|cố gắng|nỗ lực|sử dụng đúng|hoàn thành/.test(lowerText);
+  const hasSpecificReason = text.length >= 80;
+
+  return {
+    danhGia: hasSpecificReason
+      ? `Nội dung đã nêu được hoàn cảnh liên quan đến ${fundName}, tuy nhiên cần trình bày mạch lạc hơn để tăng tính thuyết phục.`
+      : `Nội dung còn khá ngắn so với yêu cầu của ${fundName}; nên bổ sung thêm bối cảnh, khó khăn và nhu cầu hỗ trợ cụ thể.`,
+    diemManh: hasSpecificReason
+      ? 'Có nêu hoàn cảnh cá nhân.'
+      : 'Đã xác định nhu cầu hỗ trợ.',
+    diemYeu: hasAmount
+      ? (hasCommitment ? 'Cần sắp xếp ý rõ hơn.' : 'Chưa nêu cam kết sau hỗ trợ.')
+      : 'Chưa nêu số tiền mong muốn.',
+    goiY: fundCriteria
+      ? 'Bổ sung minh chứng phù hợp điều kiện quỹ, số tiền đề nghị và cam kết sử dụng kinh phí đúng mục đích.'
+      : 'Bổ sung hoàn cảnh, số tiền đề nghị, minh chứng kèm theo và cam kết học tập sau khi nhận hỗ trợ.'
+  };
+};
+
+const buildFallbackOptimizedText = ({ moTa, fundName, fundCriteria }) => {
+  const text = compactText(moTa);
+  const criteriaSentence = fundCriteria
+    ? ` Tôi nhận thấy bản thân phù hợp với định hướng hỗ trợ của quỹ, đặc biệt là tiêu chí: ${compactText(fundCriteria)}.`
+    : '';
+
+  return `Kính gửi Ban quản lý ${fundName}, em xin trình bày hoàn cảnh và nguyện vọng được xem xét hỗ trợ như sau: ${text}.${criteriaSentence} Hiện tại, những khó khăn nêu trên ảnh hưởng trực tiếp đến khả năng trang trải chi phí học tập và sinh hoạt của em. Vì vậy, em kính mong Ban quản lý Quỹ xem xét tạo điều kiện hỗ trợ để em có thêm nguồn lực tiếp tục học tập. Em cam kết sử dụng khoản hỗ trợ đúng mục đích, chấp hành đầy đủ các quy định của nhà trường và nỗ lực duy trì kết quả học tập, rèn luyện tốt. Em xin chân thành cảm ơn.`;
+};
+
+const buildFallbackDraftText = ({ moTa, fundName, fundCriteria }) => {
+  const text = compactText(moTa);
+  const criteriaBlock = fundCriteria
+    ? `\n\nQua tìm hiểu, em nhận thấy ${fundName} có tiêu chí hỗ trợ phù hợp với hoàn cảnh hiện tại của em, cụ thể: ${compactText(fundCriteria)}.`
+    : '';
+
+  return `Kính gửi Ban Giám hiệu Trường Đại học Trà Vinh và Ban quản lý ${fundName},
+
+Em tên là: ........................................
+Mã số sinh viên: ..................................
+Lớp/Khoa: .........................................
+
+Em viết đơn này kính mong Nhà trường và Ban quản lý Quỹ xem xét hỗ trợ cho em trong giai đoạn hiện nay. Hoàn cảnh của em như sau: ${text}.${criteriaBlock}
+
+Những khó khăn trên đang ảnh hưởng trực tiếp đến việc học tập, sinh hoạt và khả năng duy trì quá trình học của em. Vì vậy, em kính mong được xem xét hỗ trợ từ Quỹ để có thêm điều kiện trang trải các chi phí cần thiết, tiếp tục theo học và ổn định việc học tập tại Trường.
+
+Nếu được hỗ trợ, em cam kết sử dụng khoản kinh phí đúng mục đích, cung cấp đầy đủ minh chứng theo yêu cầu, chấp hành các quy định của Nhà trường và tiếp tục nỗ lực học tập, rèn luyện để xứng đáng với sự quan tâm của Quỹ.
+
+Em xin chân thành cảm ơn.`;
+};
+
 /**
  * Xử lý yêu cầu AI gợi ý viết đơn
  * POST /api/applications/ai-suggest
@@ -59,25 +114,34 @@ Hãy đánh giá và trả về kết quả bằng định dạng JSON (chỉ tr
 }
 `;
 
-      const aiResponse = await generateGeminiContent(prompt, true);
-      let parsedResponse;
       try {
-        parsedResponse = JSON.parse(aiResponse.trim());
-      } catch (parseError) {
-        console.error('Failed to parse JSON from Gemini response:', aiResponse);
-        // Trích xuất JSON bằng regex đề phòng Gemini trả về markdown code blocks
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedResponse = JSON.parse(jsonMatch[0]);
-        } else {
-          throw parseError;
+        const aiResponse = await generateGeminiContent(prompt, true);
+        let parsedResponse;
+        try {
+          parsedResponse = JSON.parse(aiResponse.trim());
+        } catch (parseError) {
+          console.error('Failed to parse JSON from Gemini response:', aiResponse);
+          // Trích xuất JSON bằng regex đề phòng Gemini trả về markdown code blocks
+          const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsedResponse = JSON.parse(jsonMatch[0]);
+          } else {
+            throw parseError;
+          }
         }
-      }
 
-      return res.status(200).json({
-        success: true,
-        data: parsedResponse
-      });
+        return res.status(200).json({
+          success: true,
+          data: parsedResponse
+        });
+      } catch (aiError) {
+        console.error('AI analyze fallback:', aiError.message);
+        return res.status(200).json({
+          success: true,
+          data: buildFallbackAnalysis({ moTa, fundName, fundCriteria }),
+          fallback: true
+        });
+      }
 
     } else if (action === 'optimize') {
       if (!moTa || moTa.trim().length < 10) {
@@ -99,7 +163,14 @@ Yêu cầu đầu ra:
 - Chỉ trả về duy nhất đoạn văn đã được viết lại, không thêm bất kỳ lời dẫn, nhận xét hay ký tự thừa nào khác.
 `;
 
-      const aiResponse = await generateGeminiContent(prompt, false);
+      let aiResponse;
+      try {
+        aiResponse = await generateGeminiContent(prompt, false);
+      } catch (aiError) {
+        console.error('AI optimize fallback:', aiError.message);
+        aiResponse = buildFallbackOptimizedText({ moTa, fundName, fundCriteria });
+      }
+
       return res.status(200).json({
         success: true,
         data: aiResponse.trim()
@@ -132,7 +203,14 @@ Yêu cầu đầu ra:
 - Chỉ trả về duy nhất nội dung lá đơn đã soạn thảo, không thêm bất kỳ lời dẫn hay nhận xét nào khác của AI.
 `;
 
-      const aiResponse = await generateGeminiContent(prompt, false);
+      let aiResponse;
+      try {
+        aiResponse = await generateGeminiContent(prompt, false);
+      } catch (aiError) {
+        console.error('AI draft fallback:', aiError.message);
+        aiResponse = buildFallbackDraftText({ moTa, fundName, fundCriteria });
+      }
+
       return res.status(200).json({
         success: true,
         data: aiResponse.trim()

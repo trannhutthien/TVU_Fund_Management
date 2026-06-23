@@ -6,16 +6,16 @@ left to right direction
 skinparam backgroundColor #FFFFFF
 skinparam linetype ortho
 skinparam shadowing false
-skinparam defaultFontSize 10
-skinparam nodesep 18
-skinparam ranksep 22
+skinparam defaultFontSize 20
+skinparam nodesep 15
+skinparam ranksep 40
 skinparam entity {
   BackgroundColor #FFF9E6
   BorderColor #555555
 }
 
-scale max 1100 width
-title ERD TVU Fund - Rut gon theo database hien tai
+scale max 1900 width
+
 
 entity "vaitro" as vaitro {
   * vaitro_id <<PK>>

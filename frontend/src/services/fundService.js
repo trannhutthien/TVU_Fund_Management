@@ -1,7 +1,7 @@
 import axios from 'axios';
 import api from './api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 /**
  * Lấy danh sách quỹ công khai (không cần authentication)
@@ -63,7 +63,7 @@ export const updateFundStatus = async (fundId, trangThai) => {
  * GET /api/loai-quy
  */
 export const getAllLoaiQuy = async () => {
-  const response = await api.get('/loai-quy');
+  const response = await axios.get(`${API_URL}/loai-quy`);
   return response.data;
 };
 

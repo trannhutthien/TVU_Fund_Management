@@ -49,16 +49,12 @@
   }
 }
 
-// Steps Grid (3 columns)
+// Steps Grid
 .stepsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 24px;
   margin-bottom: 48px;
-  
-  @media (max-width: 991px) {
-    grid-template-columns: 1fr;
-  }
 }
 
 .stepCard {

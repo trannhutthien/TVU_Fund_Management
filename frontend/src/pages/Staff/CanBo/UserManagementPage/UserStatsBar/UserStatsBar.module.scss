@@ -55,6 +55,11 @@
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+.activeCard {
+  border-color: var(--color-navy-blue, #1a2f5e);
+  box-shadow: 0 8px 24px rgba(26, 47, 94, 0.14);
+}
+
 @keyframes pulse {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }

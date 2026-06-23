@@ -83,13 +83,4 @@ Người tài trợ chuyển khoản
 → Cộng tiền vào quỹ
 end note
 
-legend right
-**Mô tả**: Quyên góp công khai không cần đăng nhập
-**API**: POST /api/donations/public (Công khai)
-**Quyền hạn**: Không yêu cầu xác thực
-**Tự động**: Tạo hồ sơ nhà tài trợ lần đầu
-**Trạng thái**: "Chờ xác nhận" (chờ Kế toán duyệt)
-**Chú ý**: Chưa cộng tiền vào quỹ
-endlegend
-
 @enduml

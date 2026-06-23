@@ -1,0 +1,89 @@
+@startuml JWT Authentication Flow
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+
+title Cơ chế xác thực JWT (JSON Web Token)
+
+actor "Người dùng" as User
+participant "Client\n(Trình duyệt)" as Client
+participant "Server\n(Backend)" as Server
+database "Database" as DB
+
+== Đăng nhập lần đầu ==
+User -> Client: Nhập username/password
+Client -> Server: Gửi thông tin đăng nhập
+Server -> DB: Xác thực thông tin
+DB --> Server: Thông tin hợp lệ
+
+note over Server
+  Server tạo 2 token:
+  • Access Token (thời hạn ngắn: 15-30 phút)
+  • Refresh Token (thời hạn dài: 7-30 ngày)
+  
+  Access Token chứa:
+  - userId, role, permissions
+  - Mã hóa bằng secret key
+  - Không lưu database
+end note
+
+Server --> Client: Trả về cả 2 token
+Client -> Client: Lưu Access Token vào memory\nLưu Refresh Token vào HttpOnly Cookie
+
+== Truy cập tài nguyên bảo mật ==
+User -> Client: Yêu cầu xem dữ liệu
+Client -> Server: Gửi request kèm Access Token\n(trong header Authorization)
+
+note over Server
+  Server verify Access Token:
+  • Kiểm tra chữ ký (signature)
+  • Kiểm tra thời hạn (expiration)
+  • Giải mã thông tin user
+  
+  Không cần query database
+  → Nhanh và giảm tải DB
+end note
+
+alt Token hợp lệ
+  Server -> DB: Lấy dữ liệu (nếu cần)
+  Server --> Client: Trả về dữ liệu
+  Client --> User: Hiển thị dữ liệu
+else Token hết hạn
+  Server --> Client: HTTP 401 Unauthorized
+  note over Client: Tự động dùng Refresh Token\nđể lấy Access Token mới
+end
+
+== Khi Access Token hết hạn ==
+Client -> Server: Gửi Refresh Token
+Server -> DB: Kiểm tra Refresh Token\ntrong danh sách hợp lệ
+
+alt Refresh Token hợp lệ
+  Server -> Server: Tạo Access Token mới
+  Server -> DB: Lưu log refresh (tùy chọn)
+  Server --> Client: Trả Access Token mới
+  Client -> Client: Cập nhật Access Token
+  Client -> Server: Thử lại request ban đầu
+  Server --> Client: Trả về dữ liệu
+else Refresh Token không hợp lệ
+  Server --> Client: HTTP 403 Forbidden
+  Client --> User: Yêu cầu đăng nhập lại
+end
+
+== Đăng xuất ==
+User -> Client: Nhấn nút đăng xuất
+Client -> Server: Gửi request logout\nkèm Refresh Token
+Server -> DB: Xóa/vô hiệu hóa\nRefresh Token
+Server --> Client: Xác nhận đăng xuất
+Client -> Client: Xóa cả 2 token\nkhỏi bộ nhớ
+Client --> User: Chuyển về trang đăng nhập
+
+note right of Server
+  **Ưu điểm bảo mật:**
+  ✓ Access Token ngắn hạn → giảm rủi ro bị đánh cắp
+  ✓ Refresh Token dài hạn → giảm phiền người dùng
+  ✓ Token không lưu session server → stateless
+  ✓ HttpOnly Cookie → chống XSS attack
+end note
+
+@enduml

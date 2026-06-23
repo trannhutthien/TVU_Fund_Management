@@ -1,0 +1,70 @@
+@startuml AD14_Phan_Quyen_Dong
+
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityFontSize 11
+skinparam swimlaneWidth 220
+skinparam shadowing false
+
+title **AD14: PHÂN QUYỀN TRANG ĐỘNG & VÔ HIỆU HÓA TÀI KHOẢN**
+
+|#FFCDD2|Admin|
+start
+:Cấu hình ma trận
+Role - Page - Visibility;
+:Bật/tắt quyền truy cập trang;
+
+|#F5F5F5|Hệ thống|
+if (Cấu hình hợp lệ?) then (Có)
+  :Lưu vào page_permissions.json\nÁp dụng cho giao diện;
+  :Ghi audit log vào DB\nCAP_NHAT_PHAN_QUYEN;
+else (Không)
+  :Thông báo lỗi → Dừng;
+  stop
+endif
+
+|#FFCDD2|Admin|
+if (Thao tác tài khoản/quỹ?) then (Khóa tài khoản)
+  :Đặt user.trangthai = KHOA;
+  :Chặn đăng nhập mới;
+  :Ghi log cập nhật trạng thái;
+else (Đóng quỹ)
+  :Đặt quy.trangthai = "Da dong";
+  :Các nghiệp vụ ghi kiểm tra trạng thái quỹ;
+  :Ghi log đổi trạng thái quỹ;
+endif
+
+|#BBDEFB|Người dùng|
+:Gửi yêu cầu thao tác;
+
+|#F5F5F5|API Middleware|
+if (JWT hợp lệ?) then (Có)
+  if (Vai trò không bị TAM_DUNG?) then (Có)
+    if (Role được phép theo authorizeRoles?) then (Có)
+      if (Ghi vào quỹ "Da dong"?) then (Có)
+        :Chặn thao tác\nTrả 409 Fund Closed;
+        stop
+      else (Không)
+        :Thực hiện ghi dữ liệu;
+        :Ghi audit log;
+        :Trả kết quả về giao diện;
+      endif
+    else (Không)
+      :Trả 403 Forbidden;
+      stop
+    endif
+  else (Không)
+    :Trả 403 Role Suspended;
+    stop
+  endif
+else (Không)
+  :Trả 401 Unauthorized;
+  stop
+endif
+
+|#BBDEFB|Người dùng|
+:Nhận phản hồi;
+stop
+
+
+@enduml

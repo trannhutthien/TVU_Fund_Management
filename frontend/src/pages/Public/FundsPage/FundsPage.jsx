@@ -7,8 +7,26 @@ import FundSelectSection from '@components/sections/FundsPage/FundSelectSection'
 import FundGridSection from '@components/sections/FundsPage/FundGridSection';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
-import { getPublicFunds } from '@services/fundService';
+import { getAllLoaiQuy, getPublicFunds } from '@services/fundService';
 import styles from './FundsPage.module.scss';
+
+const ALL_FILTER = 'Tất cả';
+
+const normalizeLoaiQuyName = (fund) =>
+  fund?.loaiquy?.tenLoai ||
+  fund?.loaiquy?.tenloai ||
+  fund?.tenLoaiQuy ||
+  fund?.loaiQuy ||
+  '';
+
+const getUniqueLoaiQuyNames = (items = []) =>
+  Array.from(
+    new Set(
+      items
+        .map((item) => item?.tenLoai || item?.tenloai || item?.ten_loai)
+        .filter(Boolean)
+    )
+  );
 
 /**
  * FundsPage - Trang Danh Mục Quỹ
@@ -16,7 +34,8 @@ import styles from './FundsPage.module.scss';
  * Hiển thị danh sách các quỹ hỗ trợ sinh viên
  */
 const FundsPage = () => {
-  const [activeFilter, setActiveFilter] = useState('Tất cả');
+  const [activeFilter, setActiveFilter] = useState(ALL_FILTER);
+  const [filterCategories, setFilterCategories] = useState([ALL_FILTER]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortValue, setSortValue] = useState('newest');
   const [loading, setLoading] = useState(true);
@@ -37,28 +56,48 @@ const FundsPage = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await getPublicFunds();
+        const [fundsResponse, loaiQuyResponse] = await Promise.all([
+          getPublicFunds(),
+          getAllLoaiQuy(),
+        ]);
         
-        if (response.success) {
+        if (fundsResponse.success) {
           // Map API response to component format
-          const mappedFunds = response.funds.map(fund => ({
-            quy_id: fund.quyId,
-            ten_quy: fund.tenQuy,
-            loai_quy: fund.loaiQuy,
-            hinh_anh: fund.hinhAnh,
-            mo_ta: fund.moTa,
-            so_du: fund.soDu,
-            so_du_thuc_te: fund.soDuThucTe, // Số dư thực tế sau khi trừ các khoản chờ giải ngân
-            trang_thai: fund.trangThai,
-            so_tien_toi_thieu: fund.soTienToiThieu,
-            so_tien_toi_da: fund.soTienToiDa,
-            so_luong_chi_tieu: fund.soLuongChiTieu,
-            han_nop_don: fund.hanNopDon,
-            dieu_kien_tom_tat: fund.dieuKienTomTat,
-            so_don_da_nop: fund.soDonDaNop,
-            phan_tram_da_nhan: fund.phanTramDaNhan,
-          }));
+          const mappedFunds = fundsResponse.funds.map((fund) => {
+            const tenLoaiQuy = normalizeLoaiQuyName(fund);
+
+            return {
+              quy_id: fund.quyId,
+              ten_quy: fund.tenQuy,
+              loai_quy: tenLoaiQuy,
+              ma_loai_quy: fund.loaiquy?.maLoai || fund.loaiQuy,
+              hinh_anh: fund.hinhAnh,
+              mo_ta: fund.moTa,
+              so_du: fund.soDu,
+              so_du_thuc_te: fund.soDuThucTe, // Số dư thực tế sau khi trừ các khoản chờ giải ngân
+              trang_thai: fund.trangThai,
+              so_tien_toi_thieu: fund.soTienToiThieu,
+              so_tien_toi_da: fund.soTienToiDa,
+              so_luong_chi_tieu: fund.soLuongChiTieu,
+              han_nop_don: fund.hanNopDon,
+              ngay_bat_dau: fund.ngayBatDau,
+              ngay_ket_thuc: fund.ngayKetThuc || fund.hanNopDon,
+              dieu_kien_tom_tat: fund.dieuKienTomTat,
+              so_don_da_nop: fund.soDonDaNop,
+              phan_tram_da_nhan: fund.phanTramDaNhan,
+            };
+          });
+
+          const loaiQuyNames = getUniqueLoaiQuyNames(loaiQuyResponse?.data);
+          const fallbackNames = Array.from(
+            new Set(mappedFunds.map((fund) => fund.loai_quy).filter(Boolean))
+          );
+
           setFunds(mappedFunds);
+          setFilterCategories([
+            ALL_FILTER,
+            ...(loaiQuyNames.length > 0 ? loaiQuyNames : fallbackNames),
+          ]);
         } else {
           setError('Không thể tải danh sách quỹ');
         }
@@ -113,7 +152,7 @@ const FundsPage = () => {
     let filtered = [...funds];
 
     // Filter by category
-    if (activeFilter !== 'Tất cả') {
+    if (activeFilter !== ALL_FILTER) {
       filtered = filtered.filter(fund => fund.loai_quy === activeFilter);
     }
 
@@ -162,6 +201,7 @@ const FundsPage = () => {
             onSortChange={handleSortChange}
             onFilterChange={handleFilterChange}
             activeFilter={activeFilter}
+            filterCategories={filterCategories}
           />
 
           {error ? (

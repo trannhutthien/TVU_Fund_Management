@@ -177,6 +177,8 @@ export const getFunds = async (req, res) => {
         soTienToiDa: fund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: fund.so_luong_chi_tieu,
         hanNopDon: fund.han_nop_don,
+        ngayBatDau: fund.ngay_bat_dau || fund.ngaybatdau,
+        ngayKetThuc: fund.ngay_ket_thuc || fund.han_nop_don,
         dieuKienTomTat: fund.dieu_kien_tom_tat,
         soDu: fund.so_du,
         nguoiTao: fund.nguoitao_id,
@@ -224,6 +226,8 @@ export const getPublicFunds = async (req, res) => {
         soTienToiDa: fund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: fund.so_luong_chi_tieu,
         hanNopDon: fund.han_nop_don,
+        ngayBatDau: fund.ngay_bat_dau || fund.ngaybatdau,
+        ngayKetThuc: fund.ngay_ket_thuc || fund.han_nop_don,
         dieuKienTomTat: fund.dieu_kien_tom_tat,
         soDu: fund.so_du,
         soDuThucTe: fund.so_du_thuc_te, // Số dư thực tế sau khi trừ các khoản chờ giải ngân

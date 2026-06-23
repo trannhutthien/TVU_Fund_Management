@@ -110,6 +110,54 @@ const UserManagementPage = ({ isAdmin = false }) => {
     [total]
   );
 
+  const activeStatsCard = useMemo(() => {
+    if (filters.trang_thai === 'KHOA') return 'locked';
+    if (activeTab === 'sinh_vien') return 'students';
+    if (activeTab === 'nha_tai_tro') return 'donors';
+    if (activeTab === 'tat_ca' && !filters.trang_thai && !filters.khoa_phong && !filters.loai_ntt) return 'all';
+    return '';
+  }, [activeTab, filters.trang_thai, filters.khoa_phong, filters.loai_ntt]);
+
+  const handleStatsCardClick = useCallback((cardKey) => {
+    setPage(1);
+
+    if (cardKey === 'students') {
+      setActiveTab('sinh_vien');
+      setFilters((current) => ({
+        ...current,
+        trang_thai: '',
+        khoa_phong: '',
+        loai_ntt: '',
+      }));
+      return;
+    }
+
+    if (cardKey === 'donors') {
+      setActiveTab('nha_tai_tro');
+      setFilters((current) => ({
+        ...current,
+        trang_thai: '',
+        khoa_phong: '',
+        loai_ntt: '',
+      }));
+      return;
+    }
+
+    if (cardKey === 'locked') {
+      setActiveTab('tat_ca');
+      setFilters((current) => ({
+        ...current,
+        trang_thai: 'KHOA',
+        khoa_phong: '',
+        loai_ntt: '',
+      }));
+      return;
+    }
+
+    setActiveTab('tat_ca');
+    setFilters(INITIAL_FILTERS);
+  }, []);
+
   const handleToggleStatus = async (user) => {
     const newStatus = user.trang_thai === 'HOAT_DONG' ? 'KHOA' : 'HOAT_DONG';
     const label = newStatus === 'KHOA' ? 'khóa' : 'mở khóa';
@@ -182,7 +230,12 @@ const UserManagementPage = ({ isAdmin = false }) => {
           )}
         </header>
 
-        <UserStatsBar stats={stats} loading={statsLoading} />
+        <UserStatsBar
+          stats={stats}
+          loading={statsLoading}
+          activeKey={activeStatsCard}
+          onCardClick={handleStatsCardClick}
+        />
 
         <div className={styles.tabBar}>
           {TABS.map((tab) => {

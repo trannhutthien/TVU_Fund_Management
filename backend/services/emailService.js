@@ -1,66 +1,72 @@
 import nodemailer from 'nodemailer';
-import fs from 'fs';
-import path from 'path';
+
+const EMAIL_NOT_CONFIGURED = "EMAIL_NOT_CONFIGURED";
+const EMAIL_SEND_FAILED = "EMAIL_SEND_FAILED";
 
 // Helper to check if SMTP settings are valid and not placeholders
 const isConfigured = () => {
-  const user = process.env.MAIL_USER;
-  const pass = process.env.MAIL_PASS;
+  const user = process.env.MAIL_USER?.trim();
+  const pass = process.env.MAIL_PASS?.trim();
   return (
-    user && 
-    pass && 
-    user !== 'your_gmail@gmail.com' && 
+    user &&
+    pass &&
+    user !== 'your_gmail@gmail.com' &&
     pass !== 'xxxx xxxx xxxx xxxx'
   );
 };
 
-// Fallback logging function for development mode
-const logEmailFallback = ({ to, subject, html }) => {
-  const timestamp = new Date().toLocaleString("vi-VN");
+const createEmailError = (code, message, cause = null) => {
+  const error = new Error(message);
+  error.code = code;
+  if (cause) {
+    error.cause = cause;
+  }
+  return error;
+};
 
-  // Create logs folder if it doesn't exist
-  const logsDir = path.join(process.cwd(), "logs");
-  if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir, { recursive: true });
+const createTransportConfig = () => {
+  if (!isConfigured()) {
+    throw createEmailError(
+      EMAIL_NOT_CONFIGURED,
+      "SMTP email is not configured. Please set MAIL_USER and MAIL_PASS."
+    );
   }
 
-  const logContent = `
-===========================================================
-TIME: ${timestamp}
-TO: ${to}
-SUBJECT: ${subject}
-BODY:
-${html}
-===========================================================\n`;
+  const auth = {
+    user: process.env.MAIL_USER.trim(),
+    pass: process.env.MAIL_PASS.trim(),
+  };
 
-  try {
-    fs.appendFileSync(path.join(logsDir, "emails.log"), logContent, "utf8");
-  } catch (err) {
-    console.error("[Email Service] Failed to write email log:", err.message);
+  const host = process.env.MAIL_HOST?.trim();
+  if (host) {
+    const port = Number(process.env.MAIL_PORT || 587);
+    return {
+      host,
+      port,
+      secure: process.env.MAIL_SECURE === "true" || port === 465,
+      auth,
+    };
   }
+
+  return {
+    service: process.env.MAIL_SERVICE || "gmail",
+    auth,
+  };
 };
 
 const sendMailWrapper = async (mailOptions) => {
-  if (isConfigured()) {
-    try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.MAIL_USER,
-          pass: process.env.MAIL_PASS,
-        },
-      });
+  const transporter = nodemailer.createTransport(createTransportConfig());
 
-      await transporter.sendMail(mailOptions);
-      return true;
-    } catch (err) {
-      console.error("[Email Service] SMTP error, falling back to file log. Error:", err.message);
-      logEmailFallback(mailOptions);
-      return false;
-    }
-  } else {
-    logEmailFallback(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
     return true;
+  } catch (err) {
+    console.error("[Email Service] SMTP error:", err.message);
+    throw createEmailError(
+      EMAIL_SEND_FAILED,
+      "Could not send email through SMTP.",
+      err
+    );
   }
 };
 

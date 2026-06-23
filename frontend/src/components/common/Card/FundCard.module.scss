@@ -118,13 +118,14 @@
   font-size: 20px;
   font-weight: 800;
   color: var(--color-primary);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 // Info Row
 .infoRow {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
@@ -136,6 +137,9 @@
   gap: 4px;
   font-size: 13px;
   color: #64748b;
+  flex: 1 1 100%;
+  min-width: 0;
+  line-height: 1.45;
 
   &.deadline {
     color: #ef4444;
@@ -150,9 +154,9 @@
 }
 
 .infoText {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 // Divider
@@ -169,12 +173,15 @@
 .progressHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
   margin-bottom: 8px;
 }
 
 .balanceInfo {
   font-size: 13px;
+  min-width: 0;
 }
 
 .balanceLabel {
@@ -184,6 +191,7 @@
 .balanceValue {
   font-weight: 700;
   color: var(--color-primary);
+  overflow-wrap: anywhere;
 }
 
 .percentValue {
@@ -227,9 +235,20 @@
 
 // Action Buttons
 .actionButtons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: auto;
+
+  > button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  > button:first-child {
+    grid-column: 1 / -1;
+  }
 }
 
 // Paused Overlay

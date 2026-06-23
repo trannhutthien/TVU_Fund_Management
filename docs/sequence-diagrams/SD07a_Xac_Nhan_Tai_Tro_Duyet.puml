@@ -98,15 +98,4 @@ note over KT, Email
 → Quỹ có thể sử dụng để giải ngân
 end note
 
-legend right
-**Mô tả**: Kế toán xác nhận đã nhận tiền và cộng vào quỹ
-**API**: PUT /api/donations/:id/approve
-**Quyền hạn**: Kế toán (role 2), Admin (role 1)
-**Giao dịch**: 
-  - Cộng tiền vào quỹ
-  - Tạo giao dịch THU
-  - Trạng thái: "Đã nhận"
-**Tác động**: Tăng số dư quỹ (nguồn thu chính)
-endlegend
-
 @enduml

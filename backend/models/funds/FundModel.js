@@ -215,7 +215,8 @@ const getPublicFunds = async () => {
         q.sotienhotrotoida AS so_tien_toi_da,
         q.soluonghotrotoida AS so_luong_chi_tieu,
         q.dieukienhotro AS dieu_kien_tom_tat,
-        q.ngaybatdau,
+        q.ngaybatdau AS ngay_bat_dau,
+        q.ngayketthuc AS ngay_ket_thuc,
         q.ngayketthuc AS han_nop_don,
         q.sodu AS so_du,
         -- Tính số dư thực tế (trừ đi các khoản đang chờ giải ngân)

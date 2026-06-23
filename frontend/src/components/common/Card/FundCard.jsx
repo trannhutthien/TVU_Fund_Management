@@ -4,6 +4,7 @@ import {
   HiOutlineBuildingLibrary,
   HiOutlineUserCircle,
   HiOutlineCalendar,
+  HiOutlineHandRaised,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button';
 import StatusBadge from '@components/common/StatusBadge';
@@ -27,7 +28,9 @@ const FundCard = ({ fund }) => {
 
   const formatDate = (date) => {
     if (!date) return null;
-    return new Date(date).toLocaleDateString('vi-VN');
+    const parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+    return parsedDate.toLocaleDateString('vi-VN');
   };
 
   const isNearDeadline = (date) => {
@@ -52,7 +55,9 @@ const FundCard = ({ fund }) => {
   // Check states
   const isPaused = fund.trang_thai === 'Tam dung';
   const isFull = fund.phan_tram_da_nhan >= 100;
-  const nearDeadline = isNearDeadline(fund.han_nop_don);
+  const startDate = formatDate(fund.ngay_bat_dau);
+  const endDate = formatDate(fund.ngay_ket_thuc || fund.han_nop_don);
+  const nearDeadline = isNearDeadline(fund.ngay_ket_thuc || fund.han_nop_don);
 
   // Handlers
   const handleViewDetail = () => {
@@ -60,8 +65,32 @@ const FundCard = ({ fund }) => {
   };
 
   const handleApply = () => {
-    // Điều hướng đến trang tạo đơn xin hỗ trợ public với quy_id
-    navigate(`/apply?fund=${fund.quy_id}`);
+    navigate(`/apply?role=student&fundId=${fund.quy_id}`, {
+      state: {
+        quy_id: fund.quy_id,
+        quyId: fund.quy_id,
+        fundId: fund.quy_id,
+        tenQuy: fund.ten_quy,
+        tenLoaiQuy: fund.loai_quy,
+        loaiQuy: fund.ma_loai_quy,
+        role: 'student',
+      },
+    });
+  };
+
+  const handleDonate = () => {
+    navigate(`/apply?role=donor&fundId=${fund.quy_id}`, {
+      state: {
+        quy_id: fund.quy_id,
+        quyId: fund.quy_id,
+        fundId: fund.quy_id,
+        tenQuy: fund.ten_quy,
+        tenLoaiQuy: fund.loai_quy,
+        loaiQuy: fund.ma_loai_quy,
+        role: 'donor',
+        guestRole: 'donor',
+      },
+    });
   };
 
   return (
@@ -101,7 +130,7 @@ const FundCard = ({ fund }) => {
         </div>
 
         {/* Info Row */}
-        {(fund.dieu_kien_tom_tat || fund.han_nop_don) && (
+        {(fund.dieu_kien_tom_tat || startDate || endDate) && (
           <div className={styles.infoRow}>
             {fund.dieu_kien_tom_tat && (
               <div className={styles.infoItem}>
@@ -109,12 +138,20 @@ const FundCard = ({ fund }) => {
                 <span className={styles.infoText}>{fund.dieu_kien_tom_tat}</span>
               </div>
             )}
-            {fund.han_nop_don && (
+            {startDate && (
+              <div className={styles.infoItem}>
+                <HiOutlineCalendar className={styles.infoIcon} />
+                <span className={styles.infoText}>
+                  <strong>Bắt đầu:</strong> {startDate}
+                </span>
+              </div>
+            )}
+            {endDate && (
               <div className={`${styles.infoItem} ${nearDeadline ? styles.deadline : ''}`}>
                 <HiOutlineCalendar className={styles.infoIcon} />
                 <span className={styles.infoText}>
                   {nearDeadline && '⚠️ '}
-                  {formatDate(fund.han_nop_don)}
+                  <strong>Kết thúc:</strong> {endDate}
                 </span>
               </div>
             )}
@@ -130,7 +167,7 @@ const FundCard = ({ fund }) => {
             <>
               <div className={styles.progressHeader}>
                 <div className={styles.balanceInfo}>
-                  <span className={styles.balanceLabel}>Còn lại: </span>
+                  <span className={styles.balanceLabel}>Số tiền còn lại: </span>
                   <span className={styles.balanceValue}>
                     {formatCurrency(fund.so_du_thuc_te ?? fund.so_du)}
                   </span>
@@ -160,6 +197,14 @@ const FundCard = ({ fund }) => {
             Xem chi tiết
           </Button>
           <Button
+            variant="secondary"
+            size="md"
+            leftIcon={<HiOutlineHandRaised />}
+            onClick={handleDonate}
+          >
+            Đóng góp
+          </Button>
+          <Button
             variant="primary"
             size="md"
             onClick={handleApply}
@@ -185,6 +230,7 @@ FundCard.propTypes = {
     quy_id: PropTypes.number.isRequired,
     ten_quy: PropTypes.string.isRequired,
     loai_quy: PropTypes.string,
+    ma_loai_quy: PropTypes.string,
     hinh_anh: PropTypes.string,
     so_du: PropTypes.number,
     so_du_thuc_te: PropTypes.number, // Số dư thực tế sau khi trừ các khoản chờ giải ngân
@@ -193,6 +239,8 @@ FundCard.propTypes = {
     so_tien_toi_da: PropTypes.number,
     so_luong_chi_tieu: PropTypes.number,
     han_nop_don: PropTypes.string,
+    ngay_bat_dau: PropTypes.string,
+    ngay_ket_thuc: PropTypes.string,
     dieu_kien_tom_tat: PropTypes.string,
     so_don_da_nop: PropTypes.number,
     phan_tram_da_nhan: PropTypes.number,

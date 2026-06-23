@@ -1,8 +1,41 @@
+import fs from "fs";
+import path from "path";
+
 /**
  * Image Helper
- * 
+ *
  * Utility functions để xử lý image URLs cho donor avatars và fund images
  */
+
+const getBaseUrl = () => process.env.BASE_URL || "http://localhost:5001";
+
+const toRelativeUploadPath = (imagePath) => {
+  if (!imagePath) return null;
+
+  const rawPath = String(imagePath).trim();
+  if (!rawPath) return null;
+
+  try {
+    const parsed = new URL(rawPath);
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      return parsed.pathname.replace(/^\/+/, "");
+    }
+    return null;
+  } catch {
+    return rawPath.replace(/^\/+/, "");
+  }
+};
+
+const uploadFileExists = (relativePath) => {
+  if (!relativePath || !relativePath.startsWith("uploads/")) return true;
+  return fs.existsSync(path.join(process.cwd(), relativePath));
+};
+
+const buildAbsoluteUploadUrl = (relativePath) => {
+  if (!relativePath || !relativePath.startsWith("uploads/")) return null;
+  if (!uploadFileExists(relativePath)) return null;
+  return `${getBaseUrl()}/${relativePath}`;
+};
 
 /**
  * Build full image URL từ relative path
@@ -24,16 +57,15 @@ export const buildImageUrl = (imagePath, type = 'donor') => {
     return null;
   }
 
-  // Nếu image đã là full URL (http/https), giữ nguyên
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+  const relativeFromUrl = toRelativeUploadPath(imagePath);
+
+  // Nếu image đã là full URL ngoài hệ thống, giữ nguyên
+  if (!relativeFromUrl && (imagePath.startsWith('http://') || imagePath.startsWith('https://'))) {
     return imagePath;
   }
 
-  // Lấy BASE_URL từ env
-  const BASE_URL = process.env.BASE_URL || 'http://localhost:5001';
-
   // Xử lý relative path
-  let cleanPath = imagePath;
+  let cleanPath = relativeFromUrl || imagePath;
 
   // Loại bỏ "backend/" nếu có
   if (cleanPath.startsWith('backend/')) {
@@ -59,23 +91,23 @@ export const buildImageUrl = (imagePath, type = 'donor') => {
     // Extract filename từ legacy path
     const filename = cleanPath.replace('uploads/avatars/', '');
     // Rebuild với cấu trúc mới
-    return `${BASE_URL}/uploads/avatars/donor/${filename}`;
+    return buildAbsoluteUploadUrl(`uploads/avatars/donor/${filename}`);
   }
 
   // XỬ LÝ LEGACY PATH: "uploads/avatars/fund_image.jpg" → "uploads/avatars/fund/fund_image.jpg"
   if (type === 'fund' && cleanPath.startsWith('uploads/avatars/') && !cleanPath.startsWith('uploads/avatars/fund/')) {
     const filename = cleanPath.replace('uploads/avatars/', '');
-    return `${BASE_URL}/uploads/avatars/fund/${filename}`;
+    return buildAbsoluteUploadUrl(`uploads/avatars/fund/${filename}`);
   }
 
   // Nếu path đã có "uploads/", giữ nguyên
   if (cleanPath.startsWith('uploads/')) {
-    return `${BASE_URL}/${cleanPath}`;
+    return buildAbsoluteUploadUrl(cleanPath);
   }
 
   // Nếu chỉ có tên file, thêm path tương ứng với type
   const basePath = typePathMap[type] || 'uploads/avatars';
-  return `${BASE_URL}/${basePath}/${cleanPath}`;
+  return buildAbsoluteUploadUrl(`${basePath}/${cleanPath}`);
 };
 
 /**
@@ -112,24 +144,24 @@ export const buildUserAvatarUrl = (avatarPath) => {
  */
 export const buildStudentShowcaseImageUrl = (imagePath) => {
   if (!imagePath) return null;
-  
-  // Nếu đã là full URL, giữ nguyên
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+
+  const relativeFromUrl = toRelativeUploadPath(imagePath);
+
+  // Nếu đã là full URL ngoài hệ thống, giữ nguyên
+  if (!relativeFromUrl && (imagePath.startsWith('http://') || imagePath.startsWith('https://'))) {
     return imagePath;
   }
-  
-  const BASE_URL = process.env.BASE_URL || 'http://localhost:5001';
-  
+
   // Loại bỏ leading slash
-  let cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+  let cleanPath = relativeFromUrl || (imagePath.startsWith('/') ? imagePath.substring(1) : imagePath);
   
   // Nếu đã có "uploads/", giữ nguyên
   if (cleanPath.startsWith('uploads/')) {
-    return `${BASE_URL}/${cleanPath}`;
+    return buildAbsoluteUploadUrl(cleanPath);
   }
   
   // Nếu chỉ có tên file, thêm path mặc định
-  return `${BASE_URL}/uploads/avatars/students/${cleanPath}`;
+  return buildAbsoluteUploadUrl(`uploads/avatars/students/${cleanPath}`);
 };
 
 /**

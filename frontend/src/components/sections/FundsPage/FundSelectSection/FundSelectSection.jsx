@@ -17,18 +17,10 @@ const FundSelectSection = ({
   onSortChange,
   onFilterChange,
   activeFilter = 'Tất cả',
+  filterCategories = ['Tất cả'],
 }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortValue, setSortValue] = useState('newest');
-
-  // Danh sách các danh mục lọc
-  const filterCategories = [
-    'Tất cả',
-    'Hỗ trợ học phí',
-    'Hoàn cảnh khó khăn',
-    'Khuyến tài',
-    'Hỗ trợ đột xuất',
-  ];
 
   // Options cho dropdown sắp xếp
   const sortOptions = [
@@ -114,6 +106,7 @@ FundSelectSection.propTypes = {
   onSortChange: PropTypes.func,
   onFilterChange: PropTypes.func,
   activeFilter: PropTypes.string,
+  filterCategories: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default FundSelectSection;

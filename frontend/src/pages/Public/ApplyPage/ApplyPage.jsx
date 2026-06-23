@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Typography, Card, Result, Button } from 'antd';
 import { ClockCircleOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
@@ -58,7 +58,7 @@ const ApplyPage = () => {
   const { isAuthenticated, user } = useAuthStore();
   
   // Trạng thái phương thức đóng góp tài trợ mới
-  const [paymentMethod, setPaymentMethod] = useState('Chuyen khoan'); // 'Chuyen khoan' | 'Khac' | 'Tien mat'
+  const [paymentMethod, setPaymentMethod] = useState('Khac'); // 'Chuyen khoan' | 'Khac' | 'Tien mat'
   const [fundBankAccounts, setFundBankAccounts] = useState([]);
   const [fundBankLoading, setFundBankLoading] = useState(false);
   const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
@@ -119,7 +119,7 @@ const ApplyPage = () => {
     guestChuTaiKhoan: '',
     guestToChuc: '',
     guestDiaChi: '',
-    hinhThuc: 'Chuyen khoan',
+    hinhThuc: 'Khac',
     maGiaoDich: '',
     ghiChu: '',
   });
@@ -159,6 +159,7 @@ const ApplyPage = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const hasUploadedProof = uploadedFiles?.length > 0;
   const defaultSponsorBank = toFundBankAccount(publicSettings.tai_khoan_nhan_tai_tro);
   const hasDefaultSponsorBank = !!(
     defaultSponsorBank.nganHang &&
@@ -257,9 +258,9 @@ const ApplyPage = () => {
   const validationStatus = isAuthenticated
     ? (isDonor
         ? {
-            // Nhà tài trợ đăng nhập chỉ cần: Chọn quỹ + Nhập số tiền >= 10,000đ
+            // Nhà tài trợ đăng nhập cần chọn quỹ, nhập số tiền và gửi minh chứng trực tuyến
             step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000,
-            step2: true, 
+            step2: hasUploadedProof,
             step3: false,
             step4: false,
           }
@@ -281,10 +282,10 @@ const ApplyPage = () => {
           })
     : (isDonor
         ? {
-            // Nhà tài trợ vãng lai cần: Chọn quỹ + Nhập số tiền >= 10,000đ + Điền thông tin cá nhân
+            // Nhà tài trợ vãng lai cần: Chọn quỹ + nhập số tiền + thông tin cá nhân + minh chứng + xác nhận
             step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000 && 
                    !!(guestFields.guestHoTen?.trim() && guestFields.guestEmail?.trim() && guestFields.guestSoDienThoai?.trim()),
-            step2: captchaVerified, // Chỉ cần check captcha ở bước này
+            step2: hasUploadedProof && captchaVerified,
             step3: false,
             step4: false,
           }
@@ -321,6 +322,8 @@ const ApplyPage = () => {
   const handleReset = () => {
     // Reset tất cả state về giá trị ban đầu
     setSelectedFund(null);
+    setPaymentMethod('Khac');
+    setGuestFields(prev => ({ ...prev, hinhThuc: 'Khac' }));
     setDonationAmount('');
     setContentValues({ 
       tieu_de: '', 
@@ -348,7 +351,7 @@ const ApplyPage = () => {
     }
 
     // Kiểm tra file đính kèm
-    const requiresFileUpload = !isDonor;
+    const requiresFileUpload = !isDonor || (isDonor && paymentMethod === 'Khac');
     if (requiresFileUpload && (!uploadedFiles || uploadedFiles.length === 0)) {
       toast.error('Vui lòng đính kèm file minh chứng');
       return;
@@ -392,7 +395,7 @@ const ApplyPage = () => {
           applicationData = {
             quy_id: selectedFund.quyId,
             so_tien: parseFloat(donationAmount),
-            hinh_anh_minh_chung: null,
+            hinh_anh_minh_chung: fileUrl,
             hinh_thuc: paymentMethod,
             ma_giao_dich: txnId,
             ghi_chu: `Quyên góp trực tuyến từ ${user.ho_ten || user.email || 'Nhà tài trợ'}`
@@ -455,7 +458,7 @@ const ApplyPage = () => {
             soTien: parseFloat(donationAmount),
             hinhThuc: paymentMethod,
             maGiaoDich: txnId,
-            chungTu: null,
+            chungTu: fileUrl,
             ghiChu: guestFields.ghiChu || 'Quyên góp trực tuyến vãng lai'
           };
           response = await guestService.submitDonation(payload);
@@ -773,6 +776,16 @@ const ApplyPage = () => {
 
       <BackgroundImage overlayType="dark">
         <main className={styles.mainContent}>
+          <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+            <Link to="/" className={styles.breadcrumbLink}>Trang chủ</Link>
+            <span className={styles.breadcrumbSep}>→</span>
+            <Link to="/funds" className={styles.breadcrumbLink}>Danh mục quỹ</Link>
+            <span className={styles.breadcrumbSep}>→</span>
+            <span className={styles.breadcrumbCurrent}>
+              {isDonor ? 'Tạo khoản quyên góp' : 'Tạo hồ sơ đề nghị'}
+            </span>
+          </nav>
+
           <div className={styles.titleSection}>
             <FundTitleSection
               title={isDonor ? "Tạo khoản quyên góp" : "Tạo hồ sơ đề nghị"}
@@ -974,6 +987,14 @@ const ApplyPage = () => {
                         )}
                       </div>
                     </div>
+                  )}
+
+                  {isDonor && paymentMethod === 'Khac' && (
+                    <DocumentSection
+                      files={uploadedFiles}
+                      onFilesChange={handleFilesChange}
+                      isDonor
+                    />
                   )}
 
                   {/* THÔNG TIN LIÊN HỆ CỦA NHÀ TÀI TRỢ (Chỉ hiển thị khi thanh toán trực tuyến và là khách vãng lai) */}

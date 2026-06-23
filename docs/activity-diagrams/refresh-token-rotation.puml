@@ -1,0 +1,72 @@
+@startuml Refresh Token Rotation (Chữ Lớn)
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceArrowThickness 2.5
+skinparam roundcorner 8
+
+' ==========================================
+' CẤU HÌNH PHÓNG TO CHỮ (FONT SIZE CONFIG)
+' ==========================================
+skinparam DefaultFontSize 15
+skinparam TitleFontSize 22
+skinparam NoteFontSize 14
+skinparam ActorFontSize 16
+skinparam ParticipantFontSize 16
+
+title Cơ chế Xoay vòng Refresh Token (Cỡ chữ lớn)
+
+actor "Người dùng" as User
+participant "Ứng dụng (Client)" as Client
+participant "Hệ thống (Server)" as Server
+database "Cơ sở dữ liệu" as DB
+participant "Kẻ tấn công (Hacker)" as Hacker #red
+
+== 1. Đăng nhập ban đầu ==
+User -> Client: Nhập tài khoản & mật khẩu
+Client -> Server: Gửi yêu cầu đăng nhập
+Server -> DB: Lưu Refresh Token số 1 (Trạng thái: ACTIVE)
+Server --> Client: Trả về Access Token số 1 + Refresh Token số 1
+
+== 2. Cấp lại mã mới khi hết hạn (Xoay vòng Token) ==
+Client -> Client: Access Token số 1 hết hạn (Sau 15 phút)
+Client -> Server: Gửi Refresh Token số 1 để xin mã mới
+Server -> DB: Kiểm tra Refresh Token số 1 (Xác nhận hợp lệ & ACTIVE)
+
+note over Server
+  **Cơ chế Xoay vòng (Rotation) hoạt động:**
+  - Chuyển trạng thái Refresh Token số 1: ACTIVE → USED (Đã sử dụng)
+  - Tạo ra cặp mã hoàn toàn mới: Access Token số 2 & Refresh Token số 2
+end note
+
+Server -> DB: Cập nhật Refresh Token số 1 (USED) & Lưu Refresh Token số 2 (ACTIVE)
+Server --> Client: Trả về Access Token số 2 + Refresh Token số 2
+Client -> Client: Lưu mã số 2 mới và xóa sạch các mã số 1 cũ
+
+== 3. Phát hiện tấn công (Kẻ xấu dùng lại mã cũ) ==
+note over Hacker #pink
+  **Kịch bản:** Kẻ tấn công bằng cách nào đó ăn trộm được 
+  Refresh Token số 1 (lúc này đã mang trạng thái USED trên Server)
+  và gửi lên hệ thống để hòng chiếm quyền điều khiển.
+end note
+
+Hacker -> Server: Gửi Refresh Token số 1 (đã USED) để xin Access Token
+Server -> DB: Kiểm tra trạng thái của Refresh Token số 1
+
+note over Server #pink
+  **HỆ THỐNG PHÁT HIỆN BẤT THƯỜNG (Reuse Detection):**
+  Mã này đã từng được sử dụng trước đó! 
+  Dấu hiệu cho thấy có một trong hai bên (User hoặc Hacker) đang bị lộ mã.
+  Hệ thống kích hoạt cơ chế tự vệ khẩn cấp.
+end note
+
+Server -> DB: Hủy bỏ, vô hiệu hóa toàn bộ chuỗi Token liên quan (Cả mã số 1, số 2...)
+Server --> Hacker: Trả về lỗi HTTP 403 Forbidden (Chặn đứng kẻ xấu)
+Server -[#red]-> Client: Hủy bỏ phiên làm việc của Người dùng thật để an toàn
+Client --> User: Đăng xuất từ xa, thông báo tài khoản có nguy cơ và yêu cầu đăng nhập lại
+
+== 4. Đăng xuất thông thường ==
+User -> Client: Nhấn nút Đăng xuất
+Client -> Server: Gửi Refresh Token hiện tại lên
+Server -> DB: Xóa bỏ/Vô hiệu hóa Refresh Token này trong cơ sở dữ liệu
+Client -> Client: Xóa sạch toàn bộ mã đang lưu trên máy
+@enduml

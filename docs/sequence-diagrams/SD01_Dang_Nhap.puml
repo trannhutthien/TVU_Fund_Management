@@ -60,15 +60,4 @@ end
 
 deactivate Browser
 
-legend right
-**Mô tả**: Xác thực người dùng và phân quyền truy cập
-**API**: POST /api/auth/login
-**Vai trò**: 
-  - 1 = Admin (Quản trị viên)
-  - 2 = Kế toán
-  - 3 = Cán bộ Quỹ
-  - 4 = Sinh viên/Nhà tài trợ
-**Token**: Access Token (15 phút) + Refresh Token (7 ngày)
-endlegend
-
 @enduml

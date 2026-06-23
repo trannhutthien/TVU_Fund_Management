@@ -74,18 +74,4 @@ deactivate Browser
 
 KT -> KT: Mở file Word:\n- Xem nội dung\n- Chỉnh sửa nếu cần\n- Thêm chữ ký\n- In hoặc gửi email
 
-legend right
-**Mô tả**: Xuất báo cáo tài chính dạng file Word
-**API**: GET /api/reports/revenue-expense
-**Quyền hạn**: Kế toán (role 2), Admin (role 1)
-**Loại báo cáo**:
-  1. Thu chi tổng hợp
-  2. Danh sách nhà tài trợ
-  3. Danh sách thủ hưởng
-  4. Báo cáo quỹ chi tiết
-  5. Báo cáo đề xuất
-**Template**: Sử dụng docxtemplater
-**Format**: .docx (có thể chỉnh sửa)
-endlegend
-
 @enduml

@@ -62,12 +62,4 @@ và trạng thái;
 :Chuyển đến trang 
 "Đơn của tôi";
 stop
-
-legend right
-**Quyền:** Sinh viên (role 4)
-**API:** POST /api/applications
-**Trạng thái ban đầu:** Chờ duyệt cấp 1
-**Bước tiếp theo:** Cán bộ phê duyệt cấp 1
-endlegend
-
 @enduml

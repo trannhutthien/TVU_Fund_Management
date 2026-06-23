@@ -114,7 +114,7 @@ const statisticsService = {
    * @param {object} params - type, year, month, quarter, compareMode
    */
   getKeToanReportStats: async (params) => {
-    const res = await api.get('/statistics/ketoan/report', { params });
+    const res = await api.get('/statistics/ketoan/report', { params, timeout: 30000 });
     return res.data.data;
   },
 

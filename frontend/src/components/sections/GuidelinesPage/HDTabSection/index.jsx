@@ -11,13 +11,13 @@ const TABS = [
     id: 'sinh_vien', 
     icon: HiOutlineAcademicCap, 
     label: 'Dành cho Sinh viên', 
-    count: '4 bước' 
+    count: '5 bước' 
   },
   { 
     id: 'nha_tai_tro', 
     icon: HiOutlineHandRaised, 
     label: 'Dành cho Nhà tài trợ', 
-    count: '3 bước' 
+    count: '4 bước' 
   },
   { 
     id: 'quy_dinh', 

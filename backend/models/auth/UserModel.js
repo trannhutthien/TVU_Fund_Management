@@ -143,6 +143,19 @@ const getAllUsers = async () => {
 
 // Danh sách có filter + phân trang
 //   tab: 'tat_ca' | 'sinh_vien' | 'nha_tai_tro' | 'nhan_vien'
+const toDbUserStatus = (status) => {
+  if (status === 'HOAT_DONG') return 'Hoat dong';
+  if (status === 'KHOA') return 'Khoa';
+  if (status === 'CHO_DUYET') return 'Cho duyet';
+  return status;
+};
+
+const toDbAccountType = (type) => {
+  if (type === 'SINH_VIEN') return 'Sinh vien';
+  if (type === 'NHA_TAI_TRO') return 'Nha tai tro';
+  return type;
+};
+
 const getUserList = async ({
   keyword = '',
   trang_thai = '',
@@ -171,11 +184,11 @@ const getUserList = async ({
     const like = `%${keyword}%`;
     params.push(like, like, like, like);
   }
-  if (trang_thai) { conds.push(`n.trangthai = ?`); params.push(trang_thai); }
+  if (trang_thai) { conds.push(`n.trangthai = ?`); params.push(toDbUserStatus(trang_thai)); }
   if (khoa_phong) { conds.push(`dv.tenkhoa = ?`); params.push(khoa_phong); }
   if (loai_ntt && tab !== 'sinh_vien' && tab !== 'nhan_vien') {
     conds.push(`n.loaitaikhoan = ?`);
-    params.push(loai_ntt);
+    params.push(toDbAccountType(loai_ntt));
   }
 
   const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
