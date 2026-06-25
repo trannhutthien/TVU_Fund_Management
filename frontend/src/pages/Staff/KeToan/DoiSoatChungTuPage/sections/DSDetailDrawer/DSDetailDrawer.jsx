@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { HiPaperClip, HiArrowDownTray } from 'react-icons/hi2';
+import { HiPaperClip, HiArrowDownTray, HiDocumentArrowDown } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import CloseButton from '@components/common/CloseButton';
 import styles from './DSDetailDrawer.module.scss';
@@ -16,6 +16,8 @@ const DSDetailDrawer = ({
   onDoiSoat,
   onGanCo,
   isSubmitting,
+  activeTab,
+  onExportSingle,
 }) => {
   const [soTienThucTe, setSoTienThucTe] = useState('');
   const [ghiChu, setGhiChu] = useState('');
@@ -67,6 +69,7 @@ const DSDetailDrawer = ({
 
   const isDaDoiSoat = giaoDich.doi_soat_trang_thai === 'Da_doi_soat';
   const isBatThuong = giaoDich.doi_soat_trang_thai === 'Bat_thuong';
+  const canEditDoiSoat = activeTab === 'can_doi_soat';
 
   // ─── RENDER BANNER ─────────────────────────────────────────────────────────
   const renderBanner = () => {
@@ -227,7 +230,7 @@ const DSDetailDrawer = ({
                   value={soTienThucTe}
                   onChange={(e) => setSoTienThucTe(e.target.value)}
                   placeholder="Nhập số tiền thực tế trên sao kê"
-                  disabled={isDaDoiSoat}
+                  disabled={!canEditDoiSoat}
                 />
               </div>
               {renderChenhLech()}
@@ -243,7 +246,7 @@ const DSDetailDrawer = ({
               value={ghiChu}
               onChange={(e) => setGhiChu(e.target.value)}
               placeholder="Ghi chú xác nhận hoặc mô tả bất thường..."
-              disabled={isDaDoiSoat}
+              disabled={!canEditDoiSoat}
             />
           </div>
 
@@ -266,20 +269,40 @@ const DSDetailDrawer = ({
 
         {/* Footer */}
         <div className={styles.footer}>
-          {isDaDoiSoat ? (
+          {!canEditDoiSoat ? (
             <div className={styles.footerInfo}>
               <span className={styles.footerInfoText}>
-                Đã đối soát bởi {giaoDich.doi_soat_boi_ten || 'Kế toán'} —{' '}
-                {giaoDich.doi_soat_luc
-                  ? new Date(giaoDich.doi_soat_luc).toLocaleDateString('vi-VN')
-                  : '—'}
+                {isDaDoiSoat
+                  ? `Đã đối soát bởi ${giaoDich.doi_soat_boi_ten || 'Kế toán'} — ${
+                      giaoDich.doi_soat_luc
+                        ? new Date(giaoDich.doi_soat_luc).toLocaleDateString('vi-VN')
+                        : '—'
+                    }`
+                  : 'Đang xem chi tiết chứng từ bất thường'}
               </span>
-              <Button variant="ghost" onClick={onClose}>
-                Đóng
-              </Button>
+              <div className={styles.footerInfoActions}>
+                <Button
+                  variant="secondary"
+                  onClick={() => onExportSingle?.(giaoDich)}
+                  leftIcon={<HiDocumentArrowDown />}
+                >
+                  Xuất Excel
+                </Button>
+                <Button variant="ghost" onClick={onClose}>
+                  Đóng
+                </Button>
+              </div>
             </div>
           ) : (
             <div className={styles.footerActions}>
+              <Button
+                variant="secondary"
+                onClick={() => onExportSingle?.(giaoDich)}
+                leftIcon={<HiDocumentArrowDown />}
+                disabled={isSubmitting}
+              >
+                Xuất Excel
+              </Button>
               <Button
                 variant="outline-danger"
                 onClick={handleGanCoBatThuong}

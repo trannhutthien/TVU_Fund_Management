@@ -1,5 +1,30 @@
 import pool from "../../config/db.js";
 
+const normalizeFilterValues = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+  return String(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const addInFilter = (whereConditions, queryParams, column, value) => {
+  const values = normalizeFilterValues(value);
+  if (values.length === 0) return;
+
+  if (values.length === 1) {
+    whereConditions.push(`${column} = ?`);
+    queryParams.push(values[0]);
+    return;
+  }
+
+  whereConditions.push(`${column} IN (${values.map(() => '?').join(', ')})`);
+  queryParams.push(...values);
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── TRANSACTION MODEL ─────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -227,6 +252,12 @@ const getAllTransactions = async (filters, limit, offset) => {
     queryParams.push(filters.quyId);
   }
 
+  // Filter theo mã giao dịch cụ thể
+  if (filters.transactionId) {
+    whereConditions.push('gd.giaodich_id = ?');
+    queryParams.push(filters.transactionId);
+  }
+
   // Filter theo trạng thái giao dịch
   if (filters.trangThai) {
     whereConditions.push('gd.trangthai = ?');
@@ -235,8 +266,7 @@ const getAllTransactions = async (filters, limit, offset) => {
 
   // Filter theo trạng thái đối soát
   if (filters.doiSoatTrangThai) {
-    whereConditions.push('gd.doisoattrangthai = ?');
-    queryParams.push(filters.doiSoatTrangThai);
+    addInFilter(whereConditions, queryParams, 'gd.doisoattrangthai', filters.doiSoatTrangThai);
   }
 
   // Filter theo hình thức
@@ -357,13 +387,16 @@ const getTransactionsSummary = async (filters) => {
     whereConditions.push('gd.quy_id = ?');
     queryParams.push(filters.quyId);
   }
+  if (filters.transactionId) {
+    whereConditions.push('gd.giaodich_id = ?');
+    queryParams.push(filters.transactionId);
+  }
   if (filters.trangThai) {
     whereConditions.push('gd.trangthai = ?');
     queryParams.push(filters.trangThai);
   }
   if (filters.doiSoatTrangThai) {
-    whereConditions.push('gd.doisoattrangthai = ?');
-    queryParams.push(filters.doiSoatTrangThai);
+    addInFilter(whereConditions, queryParams, 'gd.doisoattrangthai', filters.doiSoatTrangThai);
   }
   if (filters.hinhThuc) {
     whereConditions.push('gd.hinhthuc = ?');

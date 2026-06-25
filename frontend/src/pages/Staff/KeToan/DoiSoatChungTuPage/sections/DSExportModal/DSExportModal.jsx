@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { toast } from 'react-toastify';
 import { HiDocumentArrowDown } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import CloseButton from '@components/common/CloseButton';
 import Dropdown from '@components/common/Dropdown/Dropdown';
 import useAuthStore from '@stores/authStore';
+import transactionService from '@services/transactionService';
 import styles from './DSExportModal.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -13,18 +15,45 @@ import styles from './DSExportModal.module.scss';
 // CÔNG DỤNG: Modal xuất biên bản đối soát với tùy chọn
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const DSExportModal = ({ onClose, activeTab, filterLoai, filterDateRange, filterQuy }) => {
+const STATUS_BY_OPTION = {
+  daDoisoat: 'Da_doi_soat',
+  batThuong: 'Bat_thuong',
+  chuaDoisoat: 'Chua_doi_soat',
+};
+
+const getDefaultExportOptions = (activeTab) => ({
+  daDoisoat: activeTab === 'da_doi_soat',
+  batThuong: activeTab === 'bat_thuong',
+  chuaDoisoat: activeTab === 'can_doi_soat',
+  tomTat: false,
+});
+
+const formatDateValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getMonthRange = (month, year) => ({
+  from: `${year}-${String(month).padStart(2, '0')}-01`,
+  to: formatDateValue(new Date(year, month, 0)),
+});
+
+const DSExportModal = ({
+  onClose,
+  activeTab,
+  filterLoai,
+  filterDateRange,
+  filterQuy,
+  searchKeyword,
+}) => {
   const { user } = useAuthStore();
 
   // ─── STATE ─────────────────────────────────────────────────────────────────
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [exportOptions, setExportOptions] = useState({
-    daDoisoat: true,
-    batThuong: true,
-    chuaDoisoat: false,
-    tomTat: false,
-  });
+  const [exportOptions, setExportOptions] = useState(() => getDefaultExportOptions(activeTab));
   const [nguoiLap, setNguoiLap] = useState('');
   const [ngayLap, setNgayLap] = useState('');
   const [ghiChu, setGhiChu] = useState('');
@@ -39,6 +68,10 @@ const DSExportModal = ({ onClose, activeTab, filterLoai, filterDateRange, filter
     const today = new Date();
     setNgayLap(today.toLocaleDateString('vi-VN'));
   }, [user]);
+
+  useEffect(() => {
+    setExportOptions(getDefaultExportOptions(activeTab));
+  }, [activeTab]);
 
   // ─── GENERATE OPTIONS ──────────────────────────────────────────────────────
   const monthOptions = Array.from({ length: 12 }, (_, i) => ({
@@ -62,14 +95,58 @@ const DSExportModal = ({ onClose, activeTab, filterLoai, filterDateRange, filter
 
   // ─── HANDLE EXPORT ─────────────────────────────────────────────────────────
   const handleExport = async (format) => {
+    if (format !== 'excel') {
+      toast.info('Chức năng xuất PDF chưa được hỗ trợ');
+      return;
+    }
+
+    const statuses = Object.entries(STATUS_BY_OPTION)
+      .filter(([option]) => exportOptions[option])
+      .map(([, status]) => status);
+
+    if (statuses.length === 0) {
+      toast.warning('Vui lòng chọn ít nhất một danh sách cần xuất');
+      return;
+    }
+
     try {
       setIsExporting(true);
-      // Chức năng xuất file sẽ được tích hợp khi có API
-      alert(`Xuất ${format === 'excel' ? 'Excel' : 'PDF'} thành công`);
+      const monthRange = getMonthRange(selectedMonth, selectedYear);
+      const fromDate = filterDateRange?.from || monthRange.from;
+      const toDate = filterDateRange?.to || monthRange.to;
+
+      const blob = await transactionService.exportTransactions({
+        reportType: 'doi-soat',
+        doiSoatTrangThai: statuses.join(','),
+        loai: filterLoai || undefined,
+        quyId: filterQuy || undefined,
+        tuNgay: fromDate,
+        denNgay: toDate,
+        keyword: searchKeyword || undefined,
+        includeSummary: exportOptions.tomTat ? 'true' : undefined,
+        nguoiLap,
+        ghiChu: ghiChu || undefined,
+        selectedMonth,
+        selectedYear,
+      });
+
+      const url = window.URL.createObjectURL(new Blob([blob], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }));
+      const link = document.createElement('a');
+      link.href = url;
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      link.setAttribute('download', `DoiSoatChungTu_${timestamp}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Đã xuất file Excel đối soát chứng từ');
       onClose();
     } catch (error) {
       console.error('Lỗi xuất biên bản:', error);
-      alert('Có lỗi xảy ra khi xuất biên bản');
+      toast.error('Có lỗi xảy ra khi xuất biên bản');
     } finally {
       setIsExporting(false);
     }
@@ -77,12 +154,8 @@ const DSExportModal = ({ onClose, activeTab, filterLoai, filterDateRange, filter
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <>
-      {/* Overlay */}
-      <div className={styles.overlay} onClick={onClose} />
-
-      {/* Modal */}
-      <div className={styles.modal}>
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
@@ -212,13 +285,12 @@ const DSExportModal = ({ onClose, activeTab, filterLoai, filterDateRange, filter
             variant="danger"
             onClick={() => handleExport('pdf')}
             disabled={isExporting}
-            loading={isExporting}
           >
             Xuất PDF
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -231,6 +303,7 @@ DSExportModal.propTypes = {
     to: PropTypes.string,
   }),
   filterQuy: PropTypes.string,
+  searchKeyword: PropTypes.string,
 };
 
 export default DSExportModal;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { HiArrowUpTray, HiDocumentArrowDown } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import transactionService from '@services/transactionService';
@@ -257,6 +258,36 @@ const DoiSoatChungTuPage = () => {
     }
   };
 
+  const handleExportSingle = async (giaoDich) => {
+    if (!giaoDich?.transaction_id) return;
+
+    try {
+      const blob = await transactionService.exportTransactions({
+        reportType: 'doi-soat',
+        transactionId: giaoDich.transaction_id,
+        doiSoatTrangThai: giaoDich.doi_soat_trang_thai || undefined,
+        includeSummary: 'true',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([blob], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }));
+      const link = document.createElement('a');
+      link.href = url;
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      link.setAttribute('download', `DoiSoatChungTu_GD${giaoDich.transaction_id}_${timestamp}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Đã xuất chứng từ đối soát');
+    } catch (error) {
+      console.error('Lỗi xuất chứng từ đối soát:', error);
+      toast.error('Có lỗi khi xuất chứng từ đối soát');
+    }
+  };
+
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
     <div className={styles.page}>
@@ -329,6 +360,8 @@ const DoiSoatChungTuPage = () => {
           onDoiSoat={handleDoiSoat}
           onGanCo={handleGanCo}
           isSubmitting={isSubmitting}
+          activeTab={activeTab}
+          onExportSingle={handleExportSingle}
         />
       )}
 
@@ -348,6 +381,7 @@ const DoiSoatChungTuPage = () => {
           filterLoai={filterLoai}
           filterDateRange={filterDateRange}
           filterQuy={filterQuy}
+          searchKeyword={searchKeyword}
         />
       )}
     </div>

@@ -474,12 +474,8 @@ const DSImportModal = ({ onClose, onImport }) => {
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <>
-      {/* Overlay */}
-      <div className={styles.overlay} onClick={onClose} />
-
-      {/* Modal */}
-      <div className={styles.modal}>
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.header}>
           <h3 className={styles.title}>Nhập sao kê ngân hàng</h3>
@@ -504,7 +500,7 @@ const DSImportModal = ({ onClose, onImport }) => {
         {/* Footer */}
         <div className={styles.footer}>{renderFooter()}</div>
       </div>
-    </>
+    </div>
   );
 };
 
