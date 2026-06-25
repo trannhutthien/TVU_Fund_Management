@@ -47,7 +47,7 @@
   "apply": {
     "label": "Tạo đơn",
     "path": "/apply",
-    "admin": true,
+    "admin": false,
     "canbo": false,
     "ketoan": false,
     "sinhvien": true,

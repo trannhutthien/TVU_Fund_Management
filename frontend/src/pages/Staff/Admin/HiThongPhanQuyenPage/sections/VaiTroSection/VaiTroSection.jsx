@@ -12,6 +12,7 @@ import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import api from '@services/api';
 import EditVaiTroModal from './EditVaiTroModal/EditVaiTroModal';
+import UserListModal from './UserListModal/UserListModal';
 import styles from './VaiTroSection.module.scss';
 
 const ROLE_CONFIG = {
@@ -50,6 +51,7 @@ const VaiTroSection = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
+  const [viewingUsersRole, setViewingUsersRole] = useState(null);
 
   const fetchRoles = async () => {
     setLoading(true);
@@ -156,7 +158,7 @@ const VaiTroSection = () => {
                   variant="ghost"
                   size="small"
                   className={styles.viewUsersBtn}
-                  onClick={() => navigate(`/admin/users?role_id=${role.role_id}`)}
+                  onClick={() => setViewingUsersRole(role)}
                 >
                   <HiOutlineUsers className={styles.btnIcon} />
                   <span>Xem người dùng</span>
@@ -187,6 +189,13 @@ const VaiTroSection = () => {
             setEditingRole(null);
             fetchRoles();
           }}
+        />
+      )}
+
+      {viewingUsersRole && (
+        <UserListModal
+          role={viewingUsersRole}
+          onClose={() => setViewingUsersRole(null)}
         />
       )}
     </div>

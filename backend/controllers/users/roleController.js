@@ -195,6 +195,7 @@ export const getUsersByRole = async (req, res) => {
       },
       total: users.length,
       users: users.map(user => ({
+        user_id: user.nguoidung_id,
         id: user.masodinhdanh,
         hoTen: user.hoten,
         email: user.email,

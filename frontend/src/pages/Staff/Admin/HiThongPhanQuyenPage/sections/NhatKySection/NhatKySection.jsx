@@ -13,11 +13,13 @@ import {
   HiOutlineXMark,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
+  HiOutlineEye,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import api from '@services/api';
+import NhatKyDetailModal from './NhatKyDetailModal/NhatKyDetailModal';
 import styles from './NhatKySection.module.scss';
 
 const PAGE_SIZE = 20;
@@ -77,6 +79,8 @@ const NhatKySection = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [staffOptions, setStaffOptions] = useState([]);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const [filters, setFilters] = useState({
     keyword: '',
@@ -149,6 +153,26 @@ const NhatKySection = () => {
       den_ngay: '',
     });
     setPage(1);
+  };
+
+  const handleViewDetail = async (log) => {
+    setSelectedLog(log);
+    setDetailLoading(true);
+
+    try {
+      const response = await api.get(`/nhat-ky/${log.log_id}`);
+      if (response.data?.success) {
+        setSelectedLog(response.data.log);
+      } else {
+        toast.error('Không thể tải chi tiết nhật ký');
+      }
+    } catch (error) {
+      console.error('Error fetching log detail:', error);
+      toast.error('Lỗi khi tải chi tiết nhật ký');
+      setSelectedLog(null);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   // Export to CSV
@@ -318,19 +342,20 @@ const NhatKySection = () => {
                 <th style={{ width: '160px' }}>Hành động</th>
                 <th>Đối tượng</th>
                 <th style={{ width: '120px' }}>Kết quả</th>
+                <th style={{ width: '84px' }}>Chi tiết</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className={styles.loadingCell}>
+                  <td colSpan={6} className={styles.loadingCell}>
                     <div className={styles.spinner}></div>
                     <p>Đang tải nhật ký...</p>
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className={styles.emptyCell}>
+                  <td colSpan={6} className={styles.emptyCell}>
                     <p>Không tìm thấy hoạt động nào phù hợp với bộ lọc</p>
                   </td>
                 </tr>
@@ -416,6 +441,18 @@ const NhatKySection = () => {
                       <td>
                         <StatusBadge status={badgeStatus} label={badgeLabel} />
                       </td>
+
+                      <td className={styles.actionCell}>
+                        <button
+                          type="button"
+                          className={styles.viewBtn}
+                          onClick={() => handleViewDetail(log)}
+                          aria-label="Xem chi tiết nhật ký"
+                          title="Xem chi tiết"
+                        >
+                          <HiOutlineEye />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
@@ -447,6 +484,16 @@ const NhatKySection = () => {
           </div>
         )}
       </div>
+
+      <NhatKyDetailModal
+        log={selectedLog}
+        loading={detailLoading}
+        actionConfig={selectedLog ? HANH_DONG_STYLE[selectedLog.hanh_dong] : null}
+        onClose={() => {
+          setSelectedLog(null);
+          setDetailLoading(false);
+        }}
+      />
     </div>
   );
 };

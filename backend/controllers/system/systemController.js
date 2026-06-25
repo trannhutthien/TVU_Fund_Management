@@ -71,6 +71,35 @@ const readSettingsFile = async () => {
   }
 };
 
+const NHAT_KY_JOIN_FIELDS = new Set(["hoten", "email", "avatar", "vaitro_id", "tenvaitro"]);
+
+const getRawNhatKyColumns = (log) => (
+  Object.fromEntries(
+    Object.entries(log).filter(([key]) => !NHAT_KY_JOIN_FIELDS.has(key))
+  )
+);
+
+const mapNhatKyLog = (log, includeRaw = false) => ({
+  log_id: log.nhatkyhethong_id,
+  nguoi_dung_id: log.nguoidung_id,
+  hanh_dong: log.hanhdong,
+  loai_doi_tuong: log.loaidoituong,
+  doi_tuong_id: log.doituong_id,
+  mo_ta: log.mota,
+  du_lieu_cu: log.dulieucu,
+  du_lieu_moi: log.dulieumoi,
+  ip_address: log.ipaddress,
+  created_at: log.createdat,
+  raw: includeRaw ? getRawNhatKyColumns(log) : undefined,
+  nguoi_thuc_hien: log.hoten ? {
+    ho_ten: log.hoten,
+    email: log.email,
+    avatar: buildUserAvatarUrl(log.avatar),
+    role_id: log.vaitro_id,
+    ten_vai_tro: log.tenvaitro
+  } : null
+});
+
 // ─── GET /api/vaitro ─────────────────────────────────────────────────────────
 export const getVaiTro = async (req, res) => {
   try {
@@ -344,25 +373,7 @@ export const getNhatKy = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      logs: logs.map(log => ({
-        log_id: log.nhatkyhethong_id,
-        nguoi_dung_id: log.nguoidung_id,
-        hanh_dong: log.hanhdong,
-        loai_doi_tuong: log.loaidoituong,
-        doi_tuong_id: log.doituong_id,
-        mo_ta: log.mota,
-        du_lieu_cu: log.dulieucu,
-        du_lieu_moi: log.dulieumoi,
-        ip_address: log.ipaddress,
-        created_at: log.createdat,
-        nguoi_thuc_hien: log.hoten ? {
-          ho_ten: log.hoten,
-          email: log.email,
-          avatar: buildUserAvatarUrl(log.avatar),
-          role_id: log.vaitro_id,
-          ten_vai_tro: log.tenvaitro
-        } : null
-      })),
+      logs: logs.map((log) => mapNhatKyLog(log)),
       pagination: {
         page: Math.max(1, parseInt(page) || 1),
         page_size: limit,
@@ -375,6 +386,56 @@ export const getNhatKy = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Lỗi server, không thể tải nhật ký hệ thống"
+    });
+  }
+};
+
+// ─── GET /api/nhat-ky/:log_id ────────────────────────────────────────────────
+export const getNhatKyDetail = async (req, res) => {
+  try {
+    const logId = parseInt(req.params.log_id, 10);
+
+    if (!Number.isInteger(logId) || logId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "ID nhật ký không hợp lệ"
+      });
+    }
+
+    const [rows] = await pool.query(
+      `
+        SELECT
+          nk.*,
+          n.hoten,
+          n.email,
+          n.avatar,
+          n.vaitro_id,
+          v.tenvaitro
+        FROM nhatkyhethong nk
+        LEFT JOIN nguoidung n ON nk.nguoidung_id = n.nguoidung_id
+        LEFT JOIN vaitro v ON n.vaitro_id = v.vaitro_id
+        WHERE nk.nhatkyhethong_id = ?
+        LIMIT 1
+      `,
+      [logId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy nhật ký hoạt động"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      log: mapNhatKyLog(rows[0], true)
+    });
+  } catch (error) {
+    console.error("Lỗi getNhatKyDetail:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, không thể tải chi tiết nhật ký"
     });
   }
 };
@@ -504,21 +565,27 @@ export const updatePagePermissions = async (req, res) => {
     // Save to file
     await fs.writeFile(permissionsPath, JSON.stringify(updatedPermissions, null, 2), "utf8");
 
-    // Log the change
-    await logSystemActivity(req, {
+    req._systemLogWritten = true;
+
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật ma trận phân quyền thành công",
+      permissions: updatedPermissions
+    });
+
+    // Log after responding so logging latency/failure does not affect saving.
+    logSystemActivity(req, {
       hanh_dong: "CAP_NHAT_PHAN_QUYEN",
       loai_doi_tuong: "phanquyen",
       doi_tuong_id: null,
       mo_ta: `Cập nhật ma trận phân quyền truy cập trang`,
       du_lieu_cu: currentPermissions,
       du_lieu_moi: updatedPermissions
+    }).catch((logError) => {
+      console.error("Lỗi log updatePagePermissions:", logError);
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "Cập nhật ma trận phân quyền thành công",
-      permissions: updatedPermissions
-    });
+    return;
   } catch (error) {
     console.error("Lỗi updatePagePermissions:", error);
     return res.status(500).json({

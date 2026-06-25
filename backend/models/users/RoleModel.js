@@ -58,6 +58,7 @@ const updateRole = async (roleId, data) => {
 const getUsersByRoleId = async (roleId) => {
   const [rows] = await pool.query(
     `SELECT 
+      nguoidung_id,
       masodinhdanh,
       hoten,
       email,

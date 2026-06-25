@@ -298,6 +298,34 @@
   white-space: nowrap;
 }
 
+.actionCell {
+  text-align: center;
+}
+
+.viewBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: var(--color-primary, #1a2f5e);
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    border-color: var(--color-primary, #1a2f5e);
+    background: #f8f9ff;
+  }
+}
+
 .loadingCell,
 .emptyCell {
   text-align: center;
