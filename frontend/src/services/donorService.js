@@ -18,6 +18,12 @@ export const getDonorWall = async () => {
   }
 };
 
+// Lấy chi tiết công khai của nhà tài trợ không cần token
+export const getPublicDonorDetail = async (id) => {
+  const response = await api.get(`/donors/public/${id}`);
+  return response.data;
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // DONOR USER APIS (Nhà tài trợ xem profile của mình - CẦN TOKEN)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -59,6 +65,7 @@ export const getDonorDetail = async (id) => {
 export default {
   // Public
   getDonorWall,
+  getPublicDonorDetail,
   // Donor user
   getMyDonorStats,
   getMyDonations,

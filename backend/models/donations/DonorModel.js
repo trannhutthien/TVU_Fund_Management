@@ -88,7 +88,7 @@ const getDonorById = async (nhaTaiTroId) => {
       nd.email as nd_email,
       nd.sodienthoai as nd_sodienthoai,
       nd.diachi as nd_diachi,
-      nd.avatar
+      COALESCE(nt.logo, nd.avatar) AS avatar
      FROM nhataitro nt
      LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      WHERE nt.nhataitro_id = ?
@@ -118,7 +118,7 @@ const getAllDonors = async () => {
       nt.trangthai,
       nt.ngaytao,
       nd.hoten,
-      nd.avatar
+      COALESCE(nt.logo, nd.avatar) AS avatar
      FROM nhataitro nt
      LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      WHERE nt.trangthai = 'Hoat dong'
@@ -195,7 +195,7 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
         nt.logo,
         nt.ngaytao,
         nd.hoten,
-        nd.avatar,
+        COALESCE(nt.logo, nd.avatar) AS avatar,
         COALESCE(SUM(CASE WHEN kt.trangthai = 'Da nhan' THEN kt.sotien ELSE 0 END), 0) AS tong_da_dong_gop,
         COUNT(kt.khoantaitro_id) AS so_khoan,
         MAX(kt.ngaytaitro) AS lan_cuoi
@@ -232,7 +232,7 @@ const getDonorWithStats = async (nhaTaiTroId) => {
         nt.trangthai,
         nt.ngaytao,
         nd.hoten,
-        nd.avatar,
+        COALESCE(nt.logo, nd.avatar) AS avatar,
         COALESCE(SUM(CASE WHEN kt.trangthai = 'Da nhan' THEN kt.sotien ELSE 0 END), 0) AS tong_da_dong_gop,
         COUNT(kt.khoantaitro_id) AS so_khoan,
         MAX(kt.ngaytaitro) AS lan_cuoi
@@ -393,7 +393,7 @@ const getDonorByNguoiDungId = async (nguoiDungId) => {
       nt.ngaytao,
       nt.ngaycapnhat,
       nd.hoten,
-      nd.avatar
+      COALESCE(nt.logo, nd.avatar) AS avatar
      FROM nhataitro nt
      INNER JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      WHERE nt.nguoidung_id = ?

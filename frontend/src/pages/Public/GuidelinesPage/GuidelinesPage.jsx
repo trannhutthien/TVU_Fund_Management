@@ -9,6 +9,8 @@ import HDNhaTaiTroSection from '@components/sections/GuidelinesPage/HDNhaTaiTroS
 import HDQuyDinhSection from '@components/sections/GuidelinesPage/HDQuyDinhSection';
 import HDFAQSection from '@components/sections/GuidelinesPage/HDFAQSection';
 import HDContactSection from '@components/sections/GuidelinesPage/HDContactSection';
+import LoginForm from '@components/forms/LoginForm';
+import RegisterForm from '@components/forms/RegisterForm';
 import styles from './GuidelinesPage.module.scss';
 
 /**
@@ -22,6 +24,14 @@ const GuidelinesPage = () => {
   const [activeTab, setActiveTab] = useState('sinh_vien'); // 'sinh_vien' | 'nha_tai_tro' | 'quy_dinh'
   const [activeFAQ, setActiveFAQ] = useState(null); // index câu hỏi đang mở
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
+  const openLoginModal = () => setIsLoginModalOpen(true);
+  const closeLoginModal = () => setIsLoginModalOpen(false);
+  
+  const openRegisterModal = () => setIsRegisterModalOpen(true);
+  const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
   // Scroll to top khi component mount
   useEffect(() => {
@@ -38,9 +48,37 @@ const GuidelinesPage = () => {
     }
   }, [activeTab]);
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (isLoginModalOpen) {
+          closeLoginModal();
+        }
+        if (isRegisterModalOpen) {
+          closeRegisterModal();
+        }
+      }
+    };
+
+    if (isLoginModalOpen || isRegisterModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isLoginModalOpen, isRegisterModalOpen]);
+
   return (
     <div className={styles.guidelinesPage}>
-      <PublicHeader />
+      <PublicHeader 
+        onLoginClick={openLoginModal}
+        onRegisterClick={openRegisterModal}
+      />
       
       <BackgroundImage overlayType="dark">
         <main>
@@ -71,6 +109,30 @@ const GuidelinesPage = () => {
       </BackgroundImage>
       
       <PublicFooter />
+
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <div className="login-modal-overlay" onClick={closeLoginModal}>
+          <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+            <LoginForm 
+              onSuccess={closeLoginModal}
+              onClose={closeLoginModal}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Register Modal */}
+      {isRegisterModalOpen && (
+        <div className="register-modal-overlay" onClick={closeRegisterModal}>
+          <div className="register-modal-content" onClick={(e) => e.stopPropagation()}>
+            <RegisterForm 
+              onSuccess={closeRegisterModal}
+              onClose={closeRegisterModal}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

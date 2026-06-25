@@ -17,6 +17,8 @@ import {
   TestimonialForm,
   TestimonialModal,
 } from '@components/common/Testimonials';
+import LoginForm from '@components/forms/LoginForm';
+import RegisterForm from '@components/forms/RegisterForm';
 import danhGiaService from '@services/danhGiaService';
 import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './TestimonialsPage.module.scss';
@@ -34,7 +36,15 @@ const TestimonialsPage = () => {
   const [searchInput, setSearchInput] = useState('');
   const [keyword, setKeyword] = useState('');
   const [selectedTestimonial, setSelectedTestimonial] = useState(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const debounceRef = useRef(null);
+
+  const openLoginModal = () => setIsLoginModalOpen(true);
+  const closeLoginModal = () => setIsLoginModalOpen(false);
+  
+  const openRegisterModal = () => setIsRegisterModalOpen(true);
+  const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -77,6 +87,31 @@ const TestimonialsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, selectedKhoa, keyword]);
 
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (isLoginModalOpen) {
+          closeLoginModal();
+        }
+        if (isRegisterModalOpen) {
+          closeRegisterModal();
+        }
+      }
+    };
+
+    if (isLoginModalOpen || isRegisterModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isLoginModalOpen, isRegisterModalOpen]);
+
   const dropdownOptions = useMemo(() => ([
     { value: '', label: 'Tất cả khoa' },
     ...khoaOptions.map((item) => ({ value: item, label: item })),
@@ -88,7 +123,10 @@ const TestimonialsPage = () => {
 
   return (
     <div className={styles.page}>
-      <PublicHeader />
+      <PublicHeader 
+        onLoginClick={openLoginModal}
+        onRegisterClick={openRegisterModal}
+      />
 
       <BackgroundImage
         className={styles.banner}
@@ -209,6 +247,30 @@ const TestimonialsPage = () => {
       />
 
       <PublicFooter />
+
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <div className="login-modal-overlay" onClick={closeLoginModal}>
+          <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+            <LoginForm 
+              onSuccess={closeLoginModal}
+              onClose={closeLoginModal}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Register Modal */}
+      {isRegisterModalOpen && (
+        <div className="register-modal-overlay" onClick={closeRegisterModal}>
+          <div className="register-modal-content" onClick={(e) => e.stopPropagation()}>
+            <RegisterForm 
+              onSuccess={closeRegisterModal}
+              onClose={closeRegisterModal}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

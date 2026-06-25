@@ -131,20 +131,6 @@
 }
 
 // ============================================
-// Top Tier Row (Diamond + Gold)
-// ============================================
-.topTierRow {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
-  align-items: flex-start; // Align items to top
-
-  @media (max-width: 1023px) {
-    flex-direction: column;
-  }
-}
-
-// ============================================
 // Common Card Styles
 // ============================================
 .diamondCard,
@@ -156,6 +142,9 @@
   padding: 24px;
   box-shadow: 0 4px 16px rgba(26, 47, 94, 0.08);
   transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
     transform: translateY(-4px);
@@ -199,6 +188,9 @@
 // ============================================
 .cardContent {
   text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .tierLabel {
@@ -233,6 +225,7 @@
   justify-content: center;
   gap: 24px;
   margin: 16px 0;
+  margin-top: auto;
   padding: 16px 0;
   border-top: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
@@ -282,72 +275,33 @@
 }
 
 // ============================================
-// Diamond Tier Specific
+// Grid Sections (Diamond, Gold, Silver)
 // ============================================
-.diamondSection {
-  // When with gold section (side by side)
-  flex: 0 0 35%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-
-  // When alone (no gold section), use grid layout
-  &:only-child {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 24px;
-  }
-
-  @media (max-width: 1023px) {
-    flex: 1;
-    
-    &:only-child {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    }
-  }
+.diamondSection,
+.goldSection,
+.silverSection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  width: 100%;
+  margin-bottom: 40px;
 
   @media (max-width: 767px) {
-    &:only-child {
-      grid-template-columns: 1fr;
-    }
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
   }
 }
 
 .diamondCard {
   border: 2px solid var(--color-gold, $color-gold);
-  width: 100%; // Ensure full width within container
-}
-
-// ============================================
-// Gold Tier Specific
-// ============================================
-.goldSection {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .goldCard {
   border: 1.5px solid rgba(240, 165, 0, 0.3);
-}
-
-// ============================================
-// Silver Tier Specific
-// ============================================
-.silverSection {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-
-  @media (max-width: 1023px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 767px) {
-    grid-template-columns: 1fr;
-  }
 }
 
 .silverCard {
@@ -360,6 +314,7 @@
   .statsRow {
     gap: 16px;
     margin: 12px 0 0 0;
+    margin-top: auto;
     padding: 12px 0 0 0;
     border-bottom: none;
   }

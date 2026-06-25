@@ -161,12 +161,13 @@ const getDonationById = async (khoanTaiTroId) => {
       ntt.loainhataitro,
       ntt.email as ntt_email,
       ntt.sodienthoai as ntt_sodienthoai,
-      ntt.logo,
+      COALESCE(ntt.logo, nd.avatar) AS logo,
       q.tenquy,
       q.loaiquy_id,
       q.sodu as quy_so_du
      FROM khoantaitro kt
      INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+     LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
      INNER JOIN quy q ON kt.quy_id = q.quy_id
      WHERE kt.khoantaitro_id = ?
      LIMIT 1`,
@@ -227,13 +228,14 @@ const listDonations = async ({
         kt.ghichu,
         ntt.tennhataitro,
         ntt.loainhataitro,
-        ntt.logo,
+        COALESCE(ntt.logo, nd.avatar) AS logo,
         ntt.email,
         ntt.sodienthoai,
         q.tenquy,
         q.loaiquy_id
      FROM khoantaitro kt
      INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+     LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
      INNER JOIN quy q ON kt.quy_id = q.quy_id
      ${where}
      ORDER BY

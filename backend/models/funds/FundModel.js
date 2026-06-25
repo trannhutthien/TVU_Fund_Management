@@ -289,9 +289,10 @@ const getReceivedDonationsByFundId = async (quyId) => {
       kt.ghichu,
       ntt.tennhataitro,
       ntt.loainhataitro,
-      ntt.logo
+      COALESCE(ntt.logo, nd.avatar) AS logo
      FROM khoantaitro kt
      INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+     LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
      WHERE kt.quy_id = ?
        AND kt.trangthai = 'Da nhan'
      ORDER BY kt.ngaytaitro DESC, kt.ngaytao DESC`,

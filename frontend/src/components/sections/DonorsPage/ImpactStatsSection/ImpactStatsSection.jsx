@@ -67,7 +67,7 @@ const StatItem = ({ icon: Icon, value, suffix, label }) => {
  * Hiển thị 3 chỉ số chính: Sinh viên, Giải ngân, Đối tác
  * Dữ liệu lấy từ API backend
  */
-const ImpactStatsSection = () => {
+const ImpactStatsSection = ({ totalDonors }) => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState([]);
 
@@ -96,7 +96,7 @@ const ImpactStatsSection = () => {
           },
           {
             icon: HiOutlineBuildingOffice2,
-            value: data.totalDonors || 0,
+            value: typeof totalDonors === 'number' ? totalDonors : (data.totalDonors || 0),
             suffix: '+',
             label: 'ĐỐI TÁC DOANH NGHIỆP',
           },
@@ -121,7 +121,7 @@ const ImpactStatsSection = () => {
           },
           {
             icon: HiOutlineBuildingOffice2,
-            value: 0,
+            value: typeof totalDonors === 'number' ? totalDonors : 0,
             suffix: '+',
             label: 'ĐỐI TÁC DOANH NGHIỆP',
           },
@@ -132,7 +132,7 @@ const ImpactStatsSection = () => {
     };
 
     fetchImpactStats();
-  }, []);
+  }, [totalDonors]);
 
   if (loading) {
     return (

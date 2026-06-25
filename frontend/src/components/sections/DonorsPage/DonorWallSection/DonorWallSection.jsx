@@ -9,6 +9,7 @@ import {
 import StatusBadge from '@components/common/StatusBadge';
 import Logo from '@components/common/Logo';
 import donorService from '@services/donorService';
+import NhaTaiTroDetailDrawer from '@pages/Staff/CanBo/NhaTaiTroPage/NhaTaiTroDetailDrawer/NhaTaiTroDetailDrawer';
 import styles from './DonorWallSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -51,9 +52,9 @@ const formatFundTypes = (cacQuyHoTro) => {
 /**
  * DiamondCard - Card lớn cho đối tác Kim cương
  */
-const DiamondCard = ({ donor }) => {
+const DiamondCard = ({ donor, onClick }) => {
   return (
-    <div className={styles.diamondCard}>
+    <div className={styles.diamondCard} onClick={onClick} style={{ cursor: 'pointer' }}>
       {/* Tier Icon */}
       <div className={styles.tierBadge}>
         {getTierIcon('diamond')}
@@ -108,9 +109,9 @@ const DiamondCard = ({ donor }) => {
 /**
  * GoldCard - Card vừa cho nhà tài trợ Vàng
  */
-const GoldCard = ({ donor }) => {
+const GoldCard = ({ donor, onClick }) => {
   return (
-    <div className={styles.goldCard}>
+    <div className={styles.goldCard} onClick={onClick} style={{ cursor: 'pointer' }}>
       {/* Tier Icon */}
       <div className={styles.tierBadge}>
         {getTierIcon('gold')}
@@ -165,9 +166,9 @@ const GoldCard = ({ donor }) => {
 /**
  * SilverCard - Card nhỏ cho nhà tài trợ Bạc
  */
-const SilverCard = ({ donor }) => {
+const SilverCard = ({ donor, onClick }) => {
   return (
-    <div className={styles.silverCard}>
+    <div className={styles.silverCard} onClick={onClick} style={{ cursor: 'pointer' }}>
       {/* Tier Icon */}
       <div className={styles.tierBadge}>
         {getTierIcon('silver')}
@@ -218,39 +219,9 @@ const SilverCard = ({ donor }) => {
  * 
  * Dữ liệu lấy từ API backend
  */
-const DonorWallSection = () => {
-  const [loading, setLoading] = useState(true);
+const DonorWallSection = ({ donorsData = { diamond: [], gold: [], silver: [] }, loading = true }) => {
   const [activeTab, setActiveTab] = useState('doi-tac'); // 'doi-tac' or 'nha-tai-tro'
-  const [donorsData, setDonorsData] = useState({
-    diamond: [],
-    gold: [],
-    silver: []
-  });
-
-  useEffect(() => {
-    const fetchDonors = async () => {
-      try {
-        setLoading(true);
-        const data = await donorService.getDonorWall();
-        setDonorsData({
-          diamond: data.diamond || [],
-          gold: data.gold || [],
-          silver: data.silver || []
-        });
-      } catch (error) {
-        console.error('Error fetching donors:', error);
-        setDonorsData({
-          diamond: [],
-          gold: [],
-          silver: []
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDonors();
-  }, []);
+  const [selectedSponsor, setSelectedSponsor] = useState(null);
 
   if (loading) {
     return (
@@ -340,26 +311,21 @@ const DonorWallSection = () => {
           </div>
         ) : (
           <>
-            {/* Tier 1 & 2: Diamond + Gold */}
-            {(filteredDiamond.length > 0 || filteredGold.length > 0) && (
-              <div className={styles.topTierRow}>
-                {/* Diamond Tier */}
-                {filteredDiamond.length > 0 && (
-                  <div className={styles.diamondSection}>
-                    {filteredDiamond.map((donor) => (
-                      <DiamondCard key={donor.id} donor={donor} />
-                    ))}
-                  </div>
-                )}
+            {/* Diamond Tier */}
+            {filteredDiamond.length > 0 && (
+              <div className={styles.diamondSection}>
+                {filteredDiamond.map((donor) => (
+                  <DiamondCard key={donor.id} donor={donor} onClick={() => setSelectedSponsor(donor)} />
+                ))}
+              </div>
+            )}
 
-                {/* Gold Tier */}
-                {filteredGold.length > 0 && (
-                  <div className={styles.goldSection}>
-                    {filteredGold.map((donor) => (
-                      <GoldCard key={donor.id} donor={donor} />
-                    ))}
-                  </div>
-                )}
+            {/* Gold Tier */}
+            {filteredGold.length > 0 && (
+              <div className={styles.goldSection}>
+                {filteredGold.map((donor) => (
+                  <GoldCard key={donor.id} donor={donor} onClick={() => setSelectedSponsor(donor)} />
+                ))}
               </div>
             )}
 
@@ -367,13 +333,22 @@ const DonorWallSection = () => {
             {filteredSilver.length > 0 && (
               <div className={styles.silverSection}>
                 {filteredSilver.map((donor) => (
-                  <SilverCard key={donor.id} donor={donor} />
+                  <SilverCard key={donor.id} donor={donor} onClick={() => setSelectedSponsor(donor)} />
                 ))}
               </div>
             )}
           </>
         )}
       </div>
+
+      {/* Detail Drawer for Public Visitors */}
+      {selectedSponsor && (
+        <NhaTaiTroDetailDrawer
+          sponsor={{ nha_tai_tro_id: selectedSponsor.id, ...selectedSponsor }}
+          onClose={() => setSelectedSponsor(null)}
+          isPublic={true}
+        />
+      )}
     </section>
   );
 };

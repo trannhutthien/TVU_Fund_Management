@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th6 17, 2026 lúc 05:16 PM
+-- Thời gian đã tạo: Th6 23, 2026 lúc 11:10 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.1.25
 
@@ -532,7 +532,8 @@ INSERT INTO `nhatkyhethong` (`nhatkyhethong_id`, `nguoidung_id`, `hanhdong`, `lo
 (221, 12, 'DANG_XUAT', 'nguoidung', 12, '[Sinh viên] Nguyễn Minh cần: Đăng xuất khỏi hệ thống', NULL, NULL, '127.0.0.1', '2026-06-17 14:44:43'),
 (222, 3, 'DANG_NHAP', 'nguoidung', 3, '[Nhân viên hệ thống] Lê Văn Tùng: Đăng nhập hệ thống thành công', NULL, NULL, '127.0.0.1', '2026-06-17 14:45:44'),
 (223, 3, 'API_CAP_NHAT', 'trangthai', 2, '[Nhân viên hệ thống] Lê Văn Tùng: PATCH /api/danhgia/2/trangthai - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"PATCH\",\"path\":\"/api/danhgia/2/trangthai\",\"statusCode\":200,\"durationMs\":11,\"params\":{\"id\":\"2\"},\"query\":{},\"body\":{\"trangThai\":\"Da duyet\"}}', '127.0.0.1', '2026-06-17 14:45:52'),
-(224, 3, 'API_CAP_NHAT', 'noi-bat', 2, '[Nhân viên hệ thống] Lê Văn Tùng: PATCH /api/danhgia/2/noi-bat - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"PATCH\",\"path\":\"/api/danhgia/2/noi-bat\",\"statusCode\":200,\"durationMs\":9,\"params\":{\"id\":\"2\"},\"query\":{},\"body\":{\"noiBat\":true,\"thuTu\":0}}', '127.0.0.1', '2026-06-17 14:45:54');
+(224, 3, 'API_CAP_NHAT', 'noi-bat', 2, '[Nhân viên hệ thống] Lê Văn Tùng: PATCH /api/danhgia/2/noi-bat - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"PATCH\",\"path\":\"/api/danhgia/2/noi-bat\",\"statusCode\":200,\"durationMs\":9,\"params\":{\"id\":\"2\"},\"query\":{},\"body\":{\"noiBat\":true,\"thuTu\":0}}', '127.0.0.1', '2026-06-17 14:45:54'),
+(225, 3, 'DANG_NHAP', 'nguoidung', 3, '[Nhân viên hệ thống] Lê Văn Tùng: Đăng nhập hệ thống thành công', NULL, NULL, '127.0.0.1', '2026-06-19 01:05:00');
 
 -- --------------------------------------------------------
 
@@ -992,7 +993,7 @@ ALTER TABLE `nhataitro`
 -- AUTO_INCREMENT cho bảng `nhatkyhethong`
 --
 ALTER TABLE `nhatkyhethong`
-  MODIFY `nhatkyhethong_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=225;
+  MODIFY `nhatkyhethong_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=226;
 
 --
 -- AUTO_INCREMENT cho bảng `pheduyet`

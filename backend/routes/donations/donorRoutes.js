@@ -6,6 +6,7 @@ import {
   getDonorStats,
   getMyDonorStats,
   getMyDonations,
+  getPublicDonorDetail,
 } from '../../controllers/donations/donorController.js';
 import { protect } from '../../middleware/authMiddleware.js';
 import { authorizeRoles } from '../../middleware/rolesMiddleware.js';
@@ -18,6 +19,9 @@ const router = express.Router();
 
 // GET /api/donors/wall - Public: danh sách nhà tài trợ cho DonorWallSection
 router.get('/wall', getDonorWall);
+
+// GET /api/donors/public/:id - Public: chi tiết nhà tài trợ không cần token
+router.get('/public/:id', getPublicDonorDetail);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DONOR USER ROUTES (Nhà tài trợ xem profile của mình)

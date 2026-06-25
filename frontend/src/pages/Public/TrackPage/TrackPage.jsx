@@ -9,6 +9,8 @@ import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
 import BackgroundImage from '@components/common/BackgroundImage';
 import ApplicationStatusStepper from '@components/common/ApplicationStatusStepper/ApplicationStatusStepper';
 import { guestService } from '@services/guestService';
+import LoginForm from '@components/forms/LoginForm';
+import RegisterForm from '@components/forms/RegisterForm';
 import styles from './TrackPage.module.scss';
 
 const { Title, Text, Paragraph } = Typography;
@@ -26,6 +28,16 @@ const TrackPage = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [tempCredentials, setTempCredentials] = useState(null);
+
+  // Modal overlay state
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
+  const openLoginModal = () => setIsLoginModalOpen(true);
+  const closeLoginModal = () => setIsLoginModalOpen(false);
+  
+  const openRegisterModal = () => setIsRegisterModalOpen(true);
+  const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
   // Normalize status for support application
   const normalizeAppStatus = (status) => {
@@ -79,6 +91,31 @@ const TrackPage = () => {
       handleFetchStatus(uuid);
     }
   }, [uuid]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (isLoginModalOpen) {
+          closeLoginModal();
+        }
+        if (isRegisterModalOpen) {
+          closeRegisterModal();
+        }
+      }
+    };
+
+    if (isLoginModalOpen || isRegisterModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isLoginModalOpen, isRegisterModalOpen]);
 
   const handleSearch = () => {
     if (!searchUuid || searchUuid.trim() === '') {
@@ -167,7 +204,10 @@ const TrackPage = () => {
 
   return (
     <div className={styles.trackPage}>
-      <PublicHeader />
+      <PublicHeader 
+        onLoginClick={openLoginModal}
+        onRegisterClick={openRegisterModal}
+      />
 
       <BackgroundImage overlayType="dark">
         <main className={styles.mainContent}>
@@ -304,7 +344,7 @@ const TrackPage = () => {
                               <p>Chúc mừng! Đơn đã kích hoạt. Bạn có thể đăng nhập bằng thông tin sau:</p>
                               <p><strong>Tài khoản:</strong> {tempCredentials.email}</p>
                               <p><strong>Mật khẩu:</strong> <span style={{ fontFamily: 'monospace', fontSize: '15px', color: '#d9534f', fontWeight: 'bold' }}>{tempCredentials.tempPassword}</span></p>
-                              <Button type="primary" size="small" onClick={() => navigate('/login')}>Đăng Nhập Ngay</Button>
+                              <Button type="primary" size="small" onClick={openLoginModal}>Đăng Nhập Ngay</Button>
                             </div>
                           }
                           type="success"
@@ -346,6 +386,30 @@ const TrackPage = () => {
       </BackgroundImage>
 
       <PublicFooter />
+
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <div className="login-modal-overlay" onClick={closeLoginModal}>
+          <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+            <LoginForm 
+              onSuccess={closeLoginModal}
+              onClose={closeLoginModal}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Register Modal */}
+      {isRegisterModalOpen && (
+        <div className="register-modal-overlay" onClick={closeRegisterModal}>
+          <div className="register-modal-content" onClick={(e) => e.stopPropagation()}>
+            <RegisterForm 
+              onSuccess={closeRegisterModal}
+              onClose={closeRegisterModal}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

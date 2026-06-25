@@ -9,6 +9,7 @@ import {
   ImpactStatsSection,
   DonorWallSection 
 } from '@components/sections/DonorsPage';
+import donorService from '@services/donorService';
 import styles from './DonorsPage.module.scss';
 
 /**
@@ -19,12 +20,34 @@ import styles from './DonorsPage.module.scss';
 const DonorsPage = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [donorsData, setDonorsData] = useState({ diamond: [], gold: [], silver: [] });
+  const [loadingDonors, setLoadingDonors] = useState(true);
 
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
   
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
+
+  // Fetch donors data at page level
+  useEffect(() => {
+    const fetchDonors = async () => {
+      try {
+        setLoadingDonors(true);
+        const data = await donorService.getDonorWall();
+        setDonorsData({
+          diamond: data.diamond || [],
+          gold: data.gold || [],
+          silver: data.silver || []
+        });
+      } catch (error) {
+        console.error('Error fetching donors for DonorsPage:', error);
+      } finally {
+        setLoadingDonors(false);
+      }
+    };
+    fetchDonors();
+  }, []);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -46,6 +69,8 @@ const DonorsPage = () => {
     };
   }, [isLoginModalOpen, isRegisterModalOpen]);
 
+  const totalWallDonors = (donorsData.diamond.length + donorsData.gold.length + donorsData.silver.length);
+
   return (
     <div className={styles.donorsPage}>
       <PublicHeader 
@@ -56,8 +81,8 @@ const DonorsPage = () => {
       <BackgroundImage overlayType="dark">
         <main className={styles.mainContent}>
           <DonorTitleSection />
-          <ImpactStatsSection />
-          <DonorWallSection />
+          <ImpactStatsSection totalDonors={totalWallDonors} />
+          <DonorWallSection donorsData={donorsData} loading={loadingDonors} />
         </main>
       </BackgroundImage>
 

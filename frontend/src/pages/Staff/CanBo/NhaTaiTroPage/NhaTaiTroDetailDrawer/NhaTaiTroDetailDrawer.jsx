@@ -7,12 +7,13 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
-import { getDonorDetail } from '@services/donorService';
+import { getDonorDetail, getPublicDonorDetail } from '@services/donorService';
 import styles from './NhaTaiTroDetailDrawer.module.scss';
 
 const LOAI_LABEL = {
   'Ca nhan': 'Cá nhân',
   'Doanh nghiep': 'Doanh nghiệp',
+  'To chuc': 'Tổ chức',
   'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
 };
 
@@ -52,18 +53,22 @@ const apiOrigin = () => {
   return base.replace(/\/api\/?$/, '');
 };
 
-const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro }) => {
+const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro, isPublic = false }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!sponsor?.nha_tai_tro_id) return;
     setLoading(true);
-    getDonorDetail(sponsor.nha_tai_tro_id)
+    const fetchDetail = isPublic
+      ? getPublicDonorDetail(sponsor.nha_tai_tro_id)
+      : getDonorDetail(sponsor.nha_tai_tro_id);
+
+    fetchDetail
       .then((res) => setDetail(res?.data || null))
       .catch(() => setDetail(null))
       .finally(() => setLoading(false));
-  }, [sponsor?.nha_tai_tro_id]);
+  }, [sponsor?.nha_tai_tro_id, isPublic]);
 
   if (!sponsor) return null;
 
@@ -79,14 +84,16 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro }) => {
         <div className={styles.header}>
           <h2 className={styles.headerTitle}>Thông tin nhà tài trợ</h2>
           <div className={styles.headerActions}>
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={<HiOutlinePlusCircle />}
-              onClick={onGhiTaiTro}
-            >
-              Ghi nhận tài trợ
-            </Button>
+            {!isPublic && onGhiTaiTro && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<HiOutlinePlusCircle />}
+                onClick={onGhiTaiTro}
+              >
+                Ghi nhận tài trợ
+              </Button>
+            )}
             <button
               type="button"
               className={styles.closeBtn}
@@ -112,13 +119,15 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro }) => {
             <span className={styles.loaiBadge}>
               {LOAI_LABEL[data.loai] || data.loai}
             </span>
-            <div className={styles.profileMeta}>
-              {data.email && <div>{data.email}</div>}
-              {data.so_dien_thoai && <div>{data.so_dien_thoai}</div>}
-              {data.dia_chi && (
-                <div className={styles.address}>{data.dia_chi}</div>
-              )}
-            </div>
+            {!isPublic && (
+              <div className={styles.profileMeta}>
+                {data.email && <div>{data.email}</div>}
+                {data.so_dien_thoai && <div>{data.so_dien_thoai}</div>}
+                {data.dia_chi && (
+                  <div className={styles.address}>{data.dia_chi}</div>
+                )}
+              </div>
+            )}
             <div className={styles.joinDate}>
               Thành viên từ {formatMonthYear(data.created_at)}
             </div>
@@ -182,20 +191,22 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro }) => {
                 </span>
               </span>
             </div>
-            {data.nguoidung_id ? (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Tài khoản liên kết:</span>
-                <span className={styles.detailValue}>
-                  <span className={styles.linkedUser}>
-                    {data.ho_ten} (ID: {data.nguoidung_id})
+            {!isPublic && (
+              data.nguoidung_id ? (
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Tài khoản liên kết:</span>
+                  <span className={styles.detailValue}>
+                    <span className={styles.linkedUser}>
+                      {data.ho_ten} (ID: {data.nguoidung_id})
+                    </span>
                   </span>
-                </span>
-              </div>
-            ) : (
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Tài khoản liên kết:</span>
-                <span className={styles.detailValue}>Không có (Nhà tài trợ vãng lai)</span>
-              </div>
+                </div>
+              ) : (
+                <div className={styles.detailRow}>
+                  <span className={styles.detailLabel}>Tài khoản liên kết:</span>
+                  <span className={styles.detailValue}>Không có (Nhà tài trợ vãng lai)</span>
+                </div>
+              )
             )}
           </div>
           {data.mota && (
@@ -245,7 +256,7 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro }) => {
                       status={STATUS_MAP[item.trang_thai] || 'pending'}
                       size="sm"
                     />
-                    {item.hinh_anh_minh_chung && (
+                    {!isPublic && item.hinh_anh_minh_chung && (
                       <a
                         href={`${apiOrigin()}/${item.hinh_anh_minh_chung}`}
                         target="_blank"

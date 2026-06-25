@@ -19,7 +19,7 @@ export const getDonorWall = async (req, res) => {
         nt.nhataitro_id,
         nt.tennhataitro,
         nt.loainhataitro,
-        nd.avatar,
+        COALESCE(nt.logo, nd.avatar) AS avatar,
         nd.email,
         nd.sodienthoai,
         COALESCE(SUM(CASE 
@@ -31,7 +31,7 @@ export const getDonorWall = async (req, res) => {
        FROM nhataitro nt
        INNER JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
        LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
-       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nd.avatar, nd.email, nd.sodienthoai
+       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo, nd.avatar, nd.email, nd.sodienthoai
        HAVING tong_dong_gop > 0
        ORDER BY tong_dong_gop DESC`
     );
@@ -251,6 +251,60 @@ export const getDonorDetail = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Lỗi server khi lấy chi tiết nhà tài trợ",
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/donors/public/:id (PUBLIC - KHÔNG CẦN TOKEN) ────────────────────
+// CÔNG DỤNG: Chi tiết 1 nhà tài trợ public (đã lọc bỏ thông tin nhạy cảm) + lịch sử đóng góp đã duyệt
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getPublicDonorDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID không hợp lệ" });
+    }
+
+    const donor = await DonorModel.getDonorWithStats(id);
+    if (!donor) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy nhà tài trợ" });
+    }
+    const history = await DonorModel.getDonationHistory(id);
+
+    // Lọc lịch sử đóng góp: chỉ lấy các khoản đã được phê duyệt thành công ("Da nhan")
+    const publicHistory = history.filter((h) => h.trangthai === 'Da nhan');
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        nha_tai_tro_id: donor.nhataitro_id,
+        ten_nha_tai_tro: donor.tennhataitro,
+        loai: donor.loainhataitro,
+        created_at: donor.ngaytao,
+        website: donor.website,
+        mota: donor.mota,
+        avatar: buildDonorAvatarUrl(donor.avatar),
+        trangthai: donor.trangthai,
+        tong_da_dong_gop: Number(donor.tong_da_dong_gop) || 0,
+        so_khoan: publicHistory.length,
+        lan_cuoi: donor.lan_cuoi,
+        lich_su: publicHistory.map((h) => ({
+          khoan_tai_tro_id: h.khoantaitro_id,
+          so_tien: Number(h.sotien) || 0,
+          trang_thai: h.trangthai,
+          ngay_tai_tro: h.ngaytaitro,
+          ghi_chu: h.ghichu,
+          quy_id: h.quy_id,
+          ten_quy: h.tenquy,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi getPublicDonorDetail:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy chi tiết nhà tài trợ công khai",
     });
   }
 };
