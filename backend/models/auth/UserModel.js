@@ -270,6 +270,9 @@ const getStats = async () => {
   const [[{ nhanVien }]] = await pool.query(
     `SELECT COUNT(*) AS nhanVien FROM nguoidung WHERE vaitro_id IN (1, 2, 3)`
   );
+  const [[{ nhanVienHoatDong }]] = await pool.query(
+    `SELECT COUNT(*) AS nhanVienHoatDong FROM nguoidung WHERE vaitro_id IN (1, 2, 3) AND trangthai = 'Hoat dong'`
+  );
   const [[{ admin }]] = await pool.query(
     `SELECT COUNT(*) AS admin FROM nguoidung WHERE vaitro_id = 1`
   );
@@ -295,6 +298,7 @@ const getStats = async () => {
     nhaTaiTroHoatDong: Number(nhaTaiTroHoatDong) || 0,
     taiKhoanBiKhoa: Number(taiKhoanBiKhoa) || 0,
     nhanVien: Number(nhanVien) || 0, // Tổng nhân viên (role 1,2,3)
+    nhanVienHoatDong: Number(nhanVienHoatDong) || 0,
     admin: Number(admin) || 0,
     keToan: Number(keToan) || 0,
     canBo: Number(canBo) || 0,

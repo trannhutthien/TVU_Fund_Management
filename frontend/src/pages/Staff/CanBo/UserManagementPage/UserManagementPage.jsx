@@ -114,6 +114,7 @@ const UserManagementPage = ({ isAdmin = false }) => {
     if (filters.trang_thai === 'KHOA') return 'locked';
     if (activeTab === 'sinh_vien') return 'students';
     if (activeTab === 'nha_tai_tro') return 'donors';
+    if (activeTab === 'nhan_vien') return 'staff';
     if (activeTab === 'tat_ca' && !filters.trang_thai && !filters.khoa_phong && !filters.loai_ntt) return 'all';
     return '';
   }, [activeTab, filters.trang_thai, filters.khoa_phong, filters.loai_ntt]);
@@ -134,6 +135,17 @@ const UserManagementPage = ({ isAdmin = false }) => {
 
     if (cardKey === 'donors') {
       setActiveTab('nha_tai_tro');
+      setFilters((current) => ({
+        ...current,
+        trang_thai: '',
+        khoa_phong: '',
+        loai_ntt: '',
+      }));
+      return;
+    }
+
+    if (cardKey === 'staff') {
+      setActiveTab('nhan_vien');
       setFilters((current) => ({
         ...current,
         trang_thai: '',

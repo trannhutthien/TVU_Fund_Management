@@ -3,6 +3,7 @@ import {
   HiOutlineAcademicCap,
   HiOutlineHandRaised,
   HiOutlineLockClosed,
+  HiOutlineShieldCheck,
 } from 'react-icons/hi2';
 import { StatCard } from '@components/common/Card';
 import styles from './UserStatsBar.module.scss';
@@ -49,6 +50,19 @@ const UserStatsBar = ({ stats, loading, activeKey, onCardClick }) => {
       iconBgColor: 'green',
     },
     {
+      key: 'staff',
+      label: 'Nhân viên hệ thống',
+      value: stats
+        ? stats.nhanVienHoatDong !== undefined
+          ? `${stats.nhanVienHoatDong}/${stats.nhanVien}`
+          : (stats.nhanVien ?? 0)
+        : 0,
+      icon: HiOutlineShieldCheck,
+      color: '#8b5cf6',
+      bg: 'rgba(139,92,246,0.08)',
+      iconBgColor: 'purple',
+    },
+    {
       key: 'locked',
       label: 'Tài khoản bị khóa',
       value: stats?.taiKhoanBiKhoa ?? 0,
@@ -62,7 +76,7 @@ const UserStatsBar = ({ stats, loading, activeKey, onCardClick }) => {
   if (loading) {
     return (
       <div className={styles.statsRow}>
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className={styles.skeleton} />
         ))}
       </div>
