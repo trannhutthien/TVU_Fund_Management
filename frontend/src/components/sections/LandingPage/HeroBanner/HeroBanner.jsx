@@ -116,8 +116,8 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
 
             {/* Main Heading */}
             <h1 className={styles.heading}>
-              Nền tảng quản lý
-              <span className={styles.highlight}> Quỹ học bổng</span>
+              Quỹ phát triển
+              
               <br />
               Đại học Trà Vinh
             </h1>

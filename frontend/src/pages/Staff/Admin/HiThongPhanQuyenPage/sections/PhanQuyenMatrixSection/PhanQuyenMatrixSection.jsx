@@ -23,6 +23,7 @@ const PAGE_GROUPS = [
       { key: 'donors', label: 'Đối tác & Nhà tài trợ', path: '/donors' },
       { key: 'profile', label: 'Cá nhân (Profile)', path: '/profile' },
       { key: 'apply', label: 'Tạo đơn hỗ trợ', path: '/apply' },
+      { key: 'lich_su_giao_dich', label: 'Lịch sử giao dịch công khai', path: '/lich-su-giao-dich' },
     ]
   },
   {

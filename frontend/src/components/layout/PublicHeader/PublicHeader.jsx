@@ -134,6 +134,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       ],
     },
     { label: 'TRA CỨU', path: '/track' },
+    { label: 'LỊCH SỬ GIAO DỊCH', path: '/lich-su-giao-dich' },
     { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
     ...(isAuthenticated
       ? [
@@ -203,6 +204,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     '/profile': 'profile',
     '/apply': 'apply',
     '/track': 'track',
+    '/lich-su-giao-dich': 'lich_su_giao_dich',
   };
 
   const filteredNavItems = navItems.map((item) => {

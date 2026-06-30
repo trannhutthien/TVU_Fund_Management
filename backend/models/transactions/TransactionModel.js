@@ -154,7 +154,10 @@ const getTransactionByIdDetailed = async (giaoDichId) => {
       nd.masodinhdanh as nguoinhan_mssv,
       dv.tenkhoa as nguoinhan_khoaphong,
       yc.sotiendenghi as yeucau_sotien,
-      nd_thuchien.hoten as nguoithuchien_hoten
+      nd_thuchien.hoten as nguoithuchien_hoten,
+      kt.khoantaitro_id as khoantaitro_id,
+      ntt.tennhataitro as ntt_ten,
+      ntt.loainhataitro as ntt_loai
      FROM giaodich gd
      INNER JOIN quy q ON gd.quy_id = q.quy_id
      LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
@@ -162,6 +165,14 @@ const getTransactionByIdDetailed = async (giaoDichId) => {
      LEFT JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
      LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
      LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
+     LEFT JOIN khoantaitro kt ON (
+       gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+       AND (
+         (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
+         OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
+       )
+     )
+     LEFT JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
      WHERE gd.giaodich_id = ?
      LIMIT 1`,
     [giaoDichId]
@@ -294,9 +305,10 @@ const getAllTransactions = async (filters, limit, offset) => {
       OR nd.masodinhdanh LIKE ?
       OR gd.ghichu LIKE ?
       OR gd.magiaodich LIKE ?
+      OR ntt.tennhataitro LIKE ?
     )`);
     const kw = `%${filters.keyword}%`;
-    queryParams.push(kw, kw, kw, kw, kw);
+    queryParams.push(kw, kw, kw, kw, kw, kw);
   }
 
   const whereClause = whereConditions.length > 0
@@ -308,6 +320,14 @@ const getAllTransactions = async (filters, limit, offset) => {
     SELECT COUNT(*) as total
     FROM giaodich gd
     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+    LEFT JOIN khoantaitro kt ON (
+      gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+      AND (
+        (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
+        OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
+      )
+    )
+    LEFT JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
     ${whereClause}
   `;
 
@@ -343,7 +363,10 @@ const getAllTransactions = async (filters, limit, offset) => {
       nd.masodinhdanh as nguoinhan_mssv,
       dv.tenkhoa as nguoinhan_khoaphong,
       yc.sotiendenghi as yeucau_sotien,
-      nd_thuchien.hoten as nguoithuchien_hoten
+      nd_thuchien.hoten as nguoithuchien_hoten,
+      kt.khoantaitro_id as khoantaitro_id,
+      ntt.tennhataitro as ntt_ten,
+      ntt.loainhataitro as ntt_loai
     FROM giaodich gd
     INNER JOIN quy q ON gd.quy_id = q.quy_id
     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
@@ -351,6 +374,14 @@ const getAllTransactions = async (filters, limit, offset) => {
     LEFT JOIN yeucauhotro yc ON gd.yeucauhotro_id = yc.yeucauhotro_id
     LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
     LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
+    LEFT JOIN khoantaitro kt ON (
+      gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+      AND (
+        (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
+        OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
+      )
+    )
+    LEFT JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
     ${whereClause}
     ORDER BY gd.ngaygiaodich DESC
     LIMIT ? OFFSET ?
@@ -417,9 +448,10 @@ const getTransactionsSummary = async (filters) => {
       OR nd.masodinhdanh LIKE ?
       OR gd.ghichu LIKE ?
       OR gd.magiaodich LIKE ?
+      OR ntt.tennhataitro LIKE ?
     )`);
     const kw = `%${filters.keyword}%`;
-    queryParams.push(kw, kw, kw, kw, kw);
+    queryParams.push(kw, kw, kw, kw, kw, kw);
   }
 
   const whereClause = whereConditions.length > 0
@@ -447,6 +479,14 @@ const getTransactionsSummary = async (filters) => {
        COUNT(CASE WHEN gd.doisoattrangthai = 'Bat_thuong' THEN 1 END) AS bat_thuong
      FROM giaodich gd
      LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+     LEFT JOIN khoantaitro kt ON (
+       gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+       AND (
+         (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
+         OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
+       )
+     )
+     LEFT JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
      ${whereClause}`,
     queryParams
   );

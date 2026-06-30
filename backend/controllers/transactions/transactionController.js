@@ -1,4 +1,6 @@
 import TransactionModel from "../../models/transactions/TransactionModel.js";
+import PheDuyetModel from "../../models/applications/PheDuyetModel.js";
+import DonationModel from "../../models/donations/DonationModel.js";
 import ExcelJS from "exceljs";
 
 const VALID_DOI_SOAT_STATUSES = ['Chua_doi_soat', 'Da_doi_soat', 'Bat_thuong'];
@@ -57,7 +59,13 @@ const mapTransactionRow = (tx) => {
       tenQuy: tx.tenquy,
       loaiQuy: tx.loaiquy_id
     },
-    khoanTaiTro: null,
+    khoanTaiTro: tx.khoantaitro_id ? {
+      id: tx.khoantaitro_id,
+      nhaTaiTro: {
+        ten: tx.ntt_ten,
+        loai: tx.ntt_loai === 'Ca nhan' ? 'Cá nhân' : tx.ntt_loai === 'To chuc' ? 'Tổ chức' : tx.ntt_loai === 'Doanh nghiep' ? 'Doanh nghiệp' : tx.ntt_loai || 'Tài trợ'
+      }
+    } : null,
     requestId: tx.yeucauhotro_id,
     sinhVien: tx.nguoinhan_id ? {
       id: tx.nguoinhan_id,
@@ -227,6 +235,16 @@ export const getTransactionById = async (req, res) => {
     }
 
     const formatted = mapTransactionRow(transaction);
+
+    // Lấy lịch sử phê duyệt đơn (Chi) hoặc xác nhận tài trợ (Thu)
+    let lichSuPheDuyet = [];
+    if (formatted.requestId) {
+      lichSuPheDuyet = await PheDuyetModel.getPheDuyetByRequestId(formatted.requestId);
+    } else if (formatted.khoanTaiTro && formatted.khoanTaiTro.id) {
+      lichSuPheDuyet = await DonationModel.getPheDuyetByKhoanTaiTro(formatted.khoanTaiTro.id);
+    }
+
+    formatted.lichSuPheDuyet = lichSuPheDuyet;
 
     return res.status(200).json({
       success: true,

@@ -10,6 +10,7 @@ import {
   HiOutlineMagnifyingGlassPlus,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import api from '@services/api';
 import styles from './GiaoDichDetailDrawer.module.scss';
 
 const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
@@ -50,8 +51,10 @@ const resolveUrl = (url) => {
   return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-const GiaoDichDetailDrawer = ({ giaoDich, onClose }) => {
+const GiaoDichDetailDrawer = ({ giaoDich, onClose, isPublic = false }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Đóng drawer khi nhấn ESC
   useEffect(() => {
@@ -65,11 +68,111 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose }) => {
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose, lightboxOpen]);
 
-  const tx = giaoDich;
+  // Tải thông tin chi tiết (lịch sử phê duyệt)
+  useEffect(() => {
+    if (!giaoDich?.transactionId) return;
+
+    let active = true;
+    setLoading(true);
+    const endpoint = isPublic
+      ? `/transactions/public/${giaoDich.transactionId}`
+      : `/transactions/${giaoDich.transactionId}`;
+
+    api.get(endpoint)
+      .then((res) => {
+        if (!active) return;
+        setDetail(res.data?.data || null);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Lỗi tải chi tiết giao dịch:', err);
+        if (!active) return;
+        setDetail(null);
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [giaoDich?.transactionId, isPublic]);
+
+  const tx = detail || giaoDich;
   const isThu = tx.loai === 'Thu';
   const minhChungUrl = tx.minhChung ? resolveUrl(tx.minhChung) : null;
   const minhChungIsImg = isImage(tx.minhChung);
   const minhChungIsPdf = isPdf(tx.minhChung);
+
+  const renderPheDuyetTimeline = () => {
+    if (loading) {
+      return (
+        <div className={styles.loadingTimeline}>
+          <div className={styles.spinnerMini} /> Đang tải lịch sử duyệt...
+        </div>
+      );
+    }
+
+    const approvals = tx.lichSuPheDuyet || [];
+    if (approvals.length === 0) {
+      return (
+        <div className={styles.emptyTimeline}>
+          Không có thông tin lịch sử phê duyệt.
+        </div>
+      );
+    }
+
+    return (
+      <div className={styles.timeline}>
+        {approvals.map((ap, idx) => {
+          const capDuyet = ap.capduyet || ap.cap_do_duyet || (idx + 1);
+          const nguoiDuyet = ap.nguoi_duyet_ho_ten || ap.nguoi_duyet_ten || '—';
+          const vaiTro = ap.nguoi_duyet_vai_tro || 'Người duyệt';
+          const ketQua = ap.ketqua || ap.ket_qua || 'Đã duyệt';
+          const ngayDuyet = ap.ngayduyet || ap.ngay_duyet;
+          const ghiChu = ap.ghichu || ap.ghi_chu;
+          const lyDo = ap.lydo || ap.ly_do_tu_choi;
+
+          let badgeClass = styles.badgeDuyet;
+          let labelKetQua = 'Đã duyệt';
+          if (ketQua === 'Tu choi') {
+            badgeClass = styles.badgeTuChoi;
+            labelKetQua = 'Từ chối';
+          } else if (ketQua === 'Da nhan' || ketQua === 'Da duyet') {
+            badgeClass = styles.badgeDuyet;
+            labelKetQua = ketQua === 'Da nhan' ? 'Đã nhận tiền' : 'Đã duyệt';
+          } else if (ketQua === 'Cho xac nhan' || ketQua === 'Cho duyet') {
+            badgeClass = styles.badgeCho;
+            labelKetQua = 'Chờ duyệt';
+          }
+
+          return (
+            <div key={ap.pheduyet_id || idx} className={styles.timelineItem}>
+              <div className={styles.timelineNode}>
+                <span className={styles.nodeNum}>{capDuyet}</span>
+              </div>
+              <div className={styles.timelineContent}>
+                <div className={styles.timelineHeader}>
+                  <span className={styles.timelineTitle}>Cấp {capDuyet}: {vaiTro}</span>
+                  <span className={`${styles.timelineBadge} ${badgeClass}`}>
+                    {labelKetQua}
+                  </span>
+                </div>
+                <div className={styles.timelineUser}>
+                  Duyệt bởi: <strong>{nguoiDuyet}</strong>
+                </div>
+                {ngayDuyet && (
+                  <div className={styles.timelineTime}>
+                    Thời gian: {formatDateTime(ngayDuyet)}
+                  </div>
+                )}
+                {ghiChu && <div className={styles.timelineNote}>Ghi chú: {ghiChu}</div>}
+                {lyDo && <div className={styles.timelineReject}>Lý do: {lyDo}</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -233,6 +336,12 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose }) => {
             </div>
           </section>
 
+          {/* Khối C.2 — Lịch sử phê duyệt */}
+          <section className={styles.block}>
+            <div className={styles.blockLabel}>LỊCH SỬ PHÊ DUYỆT</div>
+            {renderPheDuyetTimeline()}
+          </section>
+
           {/* Khối D — Minh chứng */}
           <section className={styles.block}>
             <div className={styles.blockLabel}>MINH CHỨNG CHUYỂN KHOẢN</div>
@@ -326,6 +435,7 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose }) => {
 GiaoDichDetailDrawer.propTypes = {
   giaoDich: PropTypes.object.isRequired,
   onClose: PropTypes.func.isRequired,
+  isPublic: PropTypes.bool,
 };
 
 export default GiaoDichDetailDrawer;

@@ -143,6 +143,15 @@
     "sinhvien": false,
     "nhataitro": false
   },
+  "lich_su_giao_dich": {
+    "label": "Lịch sử giao dịch công khai",
+    "path": "/lich-su-giao-dich",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
   "giao_dich": {
     "label": "Lịch sử giao dịch",
     "path": "/giao-dich",

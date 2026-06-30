@@ -23,6 +23,7 @@ import TrackPage from './pages/Public/TrackPage/TrackPage'
 import NewsDetailPage from './pages/Public/NewsDetailPage/NewsDetailPage'
 import NewsPage from './pages/Public/NewsPage'
 import TestimonialsPage from './pages/Public/TestimonialsPage'
+import PublicLichSuGiaoDichPage from './pages/Public/LichSuGiaoDichPage/PublicLichSuGiaoDichPage'
 
 // Pages - Auth
 import LoginPage from './pages/Auth/LoginPage'
@@ -89,6 +90,7 @@ function App() {
             <Route path="/news/:id" element={<NewsDetailPage />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/testimonials" element={<TestimonialsPage />} />
+            <Route path="/lich-su-giao-dich" element={<PublicLichSuGiaoDichPage />} />
           </Route>
           
           <Route element={<AuthLayout />}>
