@@ -129,6 +129,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       children: [
         { label: 'Tin tức & Sự kiện', path: '/news' },
         { label: 'Hướng dẫn & Quy định', path: '/guidelines' },
+        { label: 'Cựu sinh viên', path: '/alumni' },
         { label: 'Sinh viên nói gì về TVU Fund', path: '/testimonials' },
       ],
     },
@@ -142,7 +143,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       ],
     },
     { label: 'TRA CỨU', path: '/track' },
-    { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
+    { label: 'TẠO ĐƠN', path: '/apply?role=student', highlight: true },
     ...(isAuthenticated
       ? [
           { label: 'CÁ NHÂN', path: '/profile' },
@@ -209,21 +210,27 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     '/testimonials': 'landing_page',
     '/donors': 'donors',
     '/profile': 'profile',
-    '/apply': 'apply',
     '/track': 'track',
     '/lich-su-giao-dich': 'lich_su_giao_dich',
     '/ve-quy-phat-trien': 've_quy_phat_trien',
+    '/alumni': 'cuu_sinh_vien',
   };
 
   const filteredNavItems = navItems.map((item) => {
+    const getCleanKey = (path) => {
+      if (!path) return '';
+      const cleanPath = path.split('?')[0];
+      return PATH_KEYS[cleanPath];
+    };
+
     if (item.isDropdown) {
       const filteredChildren = item.children.filter((child) => {
-        const key = PATH_KEYS[child.path];
+        const key = getCleanKey(child.path);
         return checkPageAccess(key);
       });
       return filteredChildren.length > 0 ? { ...item, children: filteredChildren } : null;
     } else {
-      const key = PATH_KEYS[item.path];
+      const key = getCleanKey(item.path);
       return checkPageAccess(key) ? item : null;
     }
   }).filter(Boolean);

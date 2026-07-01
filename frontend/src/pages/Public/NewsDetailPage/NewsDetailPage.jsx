@@ -169,7 +169,7 @@ const NewsDetailPage = () => {
             variant="primary"
             size="md"
             className={styles.ctaButton}
-            onClick={() => navigate(isScholarship ? '/apply' : '/funds')}
+            onClick={() => navigate(isScholarship ? '/apply?role=student' : '/funds')}
           >
             {isScholarship ? 'Nộp đơn ngay' : 'Tài trợ ngay'}
             <HiOutlineArrowUpRight className={styles.ctaBtnIcon} />
@@ -219,11 +219,17 @@ const NewsDetailPage = () => {
           <div className={styles.breadcrumb}>
             <Link to="/" className={styles.breadcrumbLink}>Trang chủ</Link>
             <HiOutlineChevronRight className={styles.breadcrumbDivider} />
-            <Link to="/" className={styles.breadcrumbLink}>Tin tức</Link>
+            <Link to="/news" className={styles.breadcrumbLink}>Tin tức</Link>
             {news && (
               <>
                 <HiOutlineChevronRight className={styles.breadcrumbDivider} />
-                <span className={styles.breadcrumbActive}>{getCategoryLabel(news.category)}</span>
+                {news.phanloai === 'cuusinhvien' ? (
+                  <Link to="/alumni" className={styles.breadcrumbLink}>Cựu sinh viên</Link>
+                ) : news.phanloai === 'baocaohoatdong' ? (
+                  <Link to="/ve-quy-phat-trien" className={styles.breadcrumbLink}>Báo cáo hoạt động</Link>
+                ) : (
+                  <span className={styles.breadcrumbActive}>{getCategoryLabel(news.category)}</span>
+                )}
                 <HiOutlineChevronRight className={styles.breadcrumbDivider} />
                 <span className={styles.breadcrumbTitleActive}>
                   {truncateText(news.title, 40)}

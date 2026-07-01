@@ -161,6 +161,15 @@
     "sinhvien": true,
     "nhataitro": true
   },
+  "cuu_sinh_vien": {
+    "label": "Cựu sinh viên",
+    "path": "/alumni",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
   "giao_dich": {
     "label": "Lịch sử giao dịch",
     "path": "/giao-dich",

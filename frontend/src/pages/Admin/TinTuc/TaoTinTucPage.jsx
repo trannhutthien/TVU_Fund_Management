@@ -65,6 +65,7 @@ const PHANLOAI_OPTIONS = [
   { value: 'Tin noi bat', label: 'Tin nổi bật', note: 'Hiển thị trong section Tin Nổi Bật dưới tiến trình gây quỹ' },
   { value: 'baocaohoatdong', label: 'Báo cáo hoạt động', note: 'Phân loại Báo cáo hoạt động' },
   { value: 'chuongtrinh', label: 'Chương trình', note: 'Phân loại Chương trình' },
+  { value: 'cuusinhvien', label: 'Cựu sinh viên', note: 'Phân loại Cựu sinh viên' },
 ];
 
 const DANHMUC_LABEL = Object.fromEntries(DANHMUC_OPTIONS.map(o => [o.value, o.label]));

@@ -33,7 +33,8 @@ const PHANLOAI_CONFIG = [
   { key: 'Tin moi', label: 'Tin mới' },
   { key: 'Tin noi bat', label: 'Tin nổi bật' },
   { key: 'baocaohoatdong', label: 'Báo cáo hoạt động' },
-  { key: 'chuongtrinh', label: 'Chương trình' }
+  { key: 'chuongtrinh', label: 'Chương trình' },
+  { key: 'cuusinhvien', label: 'Cựu sinh viên' }
 ];
 
 const ITEMS_PER_PAGE = 6;
