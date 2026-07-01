@@ -10,14 +10,13 @@ import BackgroundImage from '@components/common/BackgroundImage';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
 import FundTitleSection from '@components/sections/FundsPage/FundTitleSection/FundTitleSection';
-import FormStepper from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/FormStepper/FormStepper';
 import FundSelectSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/FundSelectSection/FundSelectSection';
 import RequestContentSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/RequestContentSection/RequestContentSection';
 import BankInfoSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/BankInfoSection/BankInfoSection';
 import DonationAmountSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/DonationAmountSection/DonationAmountSection';
 import DocumentSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/DocumentSection/DocumentSection';
 import ApplicationFooter from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/ApplicationFooter/ApplicationFooter';
-import AppliSidebar from '@components/sections/AppliPage/AppliSectionLayout/AppliSidebar/AppliSidebar';
+import NewsSidebar from '@components/sections/AppliPage/AppliSectionLayout/NewsSidebar/NewsSidebar';
 import AppliSectionLayout from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionLayout';
 import useAuthStore from '@stores/authStore';
 import { bankAccountService } from '@services/bankAccountService';
@@ -252,6 +251,12 @@ const ApplyPage = () => {
       setGuestRole('donor');
     }
   }, [location.search, location.state]);
+
+  // Reset active step khi thay đổi vai trò hoặc trạng thái đăng nhập
+  useEffect(() => {
+    setActiveStep(1);
+  }, [guestRole, isAuthenticated]);
+
   const [guestFields, setGuestFields] = useState(INITIAL_GUEST_FIELDS);
   const guestDonorFieldsRef = useRef(INITIAL_GUEST_FIELDS);
   const [guestDonorInfoValid, setGuestDonorInfoValid] = useState(false);
@@ -262,6 +267,8 @@ const ApplyPage = () => {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [resendingOtp, setResendingOtp] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null); // { email, tempPassword, trackingUuid }
+
+  const [activeStep, setActiveStep] = useState(1);
 
   const handlePaymentMethodChange = useCallback((method) => {
     setPaymentMethod(method);
@@ -278,6 +285,7 @@ const ApplyPage = () => {
       setIsOnlinePaymentCompleted(false);
       setOnlineTxnId('');
     }
+    setActiveStep(1);
   }, []);
 
   // Xác định vai trò: Nhà tài trợ hoặc Sinh viên
@@ -375,122 +383,65 @@ const ApplyPage = () => {
     setGuestDonorInfoValid((prev) => (prev === isValid ? prev : isValid));
   }, []);
 
-  const fundSelectSection = useMemo(() => (
-    <FundSelectSection
-      onFundSelect={handleFundSelect}
-      selectedFund={selectedFund}
-      isDonor={isDonor}
-    />
-  ), [handleFundSelect, isDonor, selectedFund]);
 
-  const donationAmountSection = useMemo(() => (
-    <DonationAmountSection
-      selectedFund={selectedFund}
-      donationAmount={donationAmount}
-      onAmountChange={setDonationAmount}
-    />
-  ), [donationAmount, selectedFund]);
 
-  const donorDocumentSection = useMemo(() => (
-    <DocumentSection
-      files={uploadedFiles}
-      onFilesChange={handleFilesChange}
-      isDonor
-    />
-  ), [handleFilesChange, uploadedFiles]);
+  // Trạng thái hợp lệ của từng bước riêng lẻ
+  const isStep1Valid = useMemo(() => {
+    if (isDonor) {
+      return !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000;
+    }
+    return !!selectedFund;
+  }, [isDonor, selectedFund, donationAmount]);
 
-  const studentDocumentSection = useMemo(() => (
-    <DocumentSection
-      files={uploadedFiles}
-      onFilesChange={handleFilesChange}
-      isDonor={isDonor}
-    />
-  ), [handleFilesChange, isDonor, uploadedFiles]);
+  const isStep2Valid = useMemo(() => {
+    if (isDonor) {
+      return hasUploadedProof;
+    }
+    return !!(
+      contentValues.tieu_de?.length >= 10 &&
+      contentValues.mo_ta?.length >= 50 &&
+      contentValues.so_tien_yeu_cau &&
+      (isAuthenticated
+        ? parseFloat(contentValues.so_tien_yeu_cau) >= (selectedFund?.soTienToiThieu || 0) &&
+          parseFloat(contentValues.so_tien_yeu_cau) <= (selectedFund?.soTienToiDa || Infinity)
+        : parseFloat(contentValues.so_tien_yeu_cau) > 0)
+    );
+  }, [isDonor, hasUploadedProof, contentValues, isAuthenticated, selectedFund]);
 
-  // Tính toán validation status cho từng bước
-  const validationStatus = useMemo(() => {
+  const isStep3Valid = useMemo(() => {
+    if (isDonor) {
+      return guestDonorInfoValid;
+    }
+    return isAuthenticated
+      ? !!(bankValues.selectedBankId && bankValues.soDienThoai?.length > 0)
+      : isGuestStudentInfoValid(guestFields);
+  }, [isDonor, guestDonorInfoValid, isAuthenticated, bankValues, guestFields]);
+
+  const isStep4Valid = useMemo(() => {
+    return hasUploadedProof;
+  }, [hasUploadedProof]);
+
+  // Xác định bước cuối cùng của biểu mẫu hiện tại
+  const lastStepIndex = useMemo(() => {
+    if (isDonor) {
+      return isAuthenticated ? 2 : 3;
+    }
+    return 4;
+  }, [isDonor, isAuthenticated]);
+
+  // Tính toán tính hợp lệ của toàn bộ form dựa trên các bước
+  const isFormValid = useMemo(() => {
     if (isAuthenticated) {
       if (isDonor) {
-        return {
-          // Nhà tài trợ đăng nhập cần chọn quỹ, nhập số tiền và gửi minh chứng trực tuyến
-          step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000,
-          step2: hasUploadedProof,
-          step3: false,
-          step4: false,
-        };
+        return isStep1Valid && isStep2Valid;
       }
-
-      return {
-        // Sinh viên đăng nhập cần đủ 4 bước
-        step1: !!selectedFund,
-        step2: !!(
-          contentValues.tieu_de?.length >= 10 &&
-          contentValues.mo_ta?.length >= 50 &&
-          contentValues.so_tien_yeu_cau &&
-          parseFloat(contentValues.so_tien_yeu_cau) >= (selectedFund?.soTienToiThieu || 0) &&
-          parseFloat(contentValues.so_tien_yeu_cau) <= (selectedFund?.soTienToiDa || Infinity)
-        ),
-        step3: !!(
-          bankValues.selectedBankId &&
-          bankValues.soDienThoai?.length > 0
-        ),
-        step4: hasUploadedProof,
-      };
+      return isStep1Valid && isStep2Valid && isStep3Valid && isStep4Valid;
     }
-
     if (isDonor) {
-      return {
-        // Nhà tài trợ vãng lai cần: Chọn quỹ + nhập số tiền + thông tin cá nhân + minh chứng + xác nhận
-        step1: !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000 &&
-               guestDonorInfoValid,
-        step2: hasUploadedProof && captchaVerified,
-        step3: false,
-        step4: false,
-      };
+      return isStep1Valid && isStep2Valid && isStep3Valid && captchaVerified;
     }
-
-    return {
-      // Sinh viên vãng lai
-      step1: !!selectedFund,
-      step2: !!(
-        contentValues.tieu_de?.length >= 10 &&
-        contentValues.mo_ta?.length >= 50 &&
-        contentValues.so_tien_yeu_cau &&
-        parseFloat(contentValues.so_tien_yeu_cau) > 0
-      ),
-      step3: isGuestStudentInfoValid(guestFields),
-      step4: hasUploadedProof && captchaVerified,
-    };
-  }, [
-    bankValues.selectedBankId,
-    bankValues.soDienThoai,
-    captchaVerified,
-    contentValues.mo_ta,
-    contentValues.so_tien_yeu_cau,
-    contentValues.tieu_de,
-    donationAmount,
-    guestDonorInfoValid,
-    guestFields.guestChuTaiKhoan,
-    guestFields.guestEmail,
-    guestFields.guestHoTen,
-    guestFields.guestKhoa,
-    guestFields.guestLop,
-    guestFields.guestMssv,
-    guestFields.guestNganHang,
-    guestFields.guestSoDienThoai,
-    guestFields.guestSoTaiKhoan,
-    hasUploadedProof,
-    isAuthenticated,
-    isDonor,
-    selectedFund,
-  ]);
-
-  const isFormValid = isDonor
-    ? validationStatus.step1 && validationStatus.step2
-    : validationStatus.step1 && 
-      validationStatus.step2 && 
-      validationStatus.step3 && 
-      validationStatus.step4;
+    return isStep1Valid && isStep2Valid && isStep3Valid && isStep4Valid && captchaVerified;
+  }, [isAuthenticated, isDonor, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid, captchaVerified]);
 
   const handleReset = () => {
     // Reset tất cả state về giá trị ban đầu
@@ -508,6 +459,7 @@ const ApplyPage = () => {
     });
     setBankValues({ selectedBankId: null, soDienThoai: '' });
     setUploadedFiles([]);
+    setActiveStep(1);
     
     // Hiển thị toast thông báo
     toast.info('Đã làm mới toàn bộ form');
@@ -1029,14 +981,7 @@ const ApplyPage = () => {
             />
           </div>
 
-          {(!isDonor || paymentMethod === 'Khac') && (
-            <div className={styles.stepperSection}>
-              <FormStepper
-                validationStatus={validationStatus}
-                isDonor={isDonor}
-              />
-            </div>
-          )}
+
 
           <div className={styles.formSection}>
             <AppliSectionLayout
@@ -1075,14 +1020,50 @@ const ApplyPage = () => {
                     </div>
                   )}
 
-                  {/* BƯỚC 1: Chọn Quỹ */}
+                  {/* BƯỚC 1: Chọn Quỹ và Số tiền */}
                   {(!isDonor || paymentMethod === 'Khac') && (
-                    fundSelectSection
-                  )}
-
-                  {/* Phần Nhập số tiền cho Nhà tài trợ */}
-                  {isDonor && paymentMethod === 'Khac' && (
-                    donationAmountSection
+                    <div className={`${styles.stepSectionWrapper} ${activeStep < 1 ? styles.disabledSection : ''}`}>
+                      <FundSelectSection
+                        onFundSelect={handleFundSelect}
+                        selectedFund={selectedFund}
+                        isDonor={isDonor}
+                        nextButton={
+                          !isDonor && activeStep === 1 ? (
+                            <div className={styles.nextButtonRow}>
+                              <Button
+                                type="primary"
+                                onClick={() => setActiveStep(2)}
+                                disabled={!isStep1Valid}
+                                className={styles.nextStepBtn}
+                              >
+                                Tiếp theo
+                              </Button>
+                            </div>
+                          ) : null
+                        }
+                      />
+                      {isDonor && (
+                        <DonationAmountSection
+                          selectedFund={selectedFund}
+                          donationAmount={donationAmount}
+                          onAmountChange={setDonationAmount}
+                          nextButton={
+                            activeStep === 1 ? (
+                              <div className={styles.nextButtonRow}>
+                                <Button
+                                  type="primary"
+                                  onClick={() => setActiveStep(2)}
+                                  disabled={!isStep1Valid}
+                                  className={styles.nextStepBtn}
+                                >
+                                  Tiếp theo
+                                </Button>
+                              </div>
+                            ) : null
+                          }
+                        />
+                      )}
+                    </div>
                   )}
 
                   {/* CHI TIẾT TỪNG PHƯƠNG THỨC ĐÓNG GÓP */}
@@ -1173,166 +1154,240 @@ const ApplyPage = () => {
                   )}
 
                   {isDonor && paymentMethod === 'Khac' && (
-                    donorDocumentSection
+                    <div className={`${styles.stepSectionWrapper} ${(activeStep < 2 || !isStep1Valid) ? styles.disabledSection : ''}`}>
+                      <DocumentSection
+                        files={uploadedFiles}
+                        onFilesChange={handleFilesChange}
+                        isDonor
+                        nextButton={
+                          activeStep === 2 && !isAuthenticated ? (
+                            <div className={styles.nextButtonRow}>
+                              <Button
+                                type="primary"
+                                onClick={() => setActiveStep(3)}
+                                disabled={!isStep2Valid}
+                                className={styles.nextStepBtn}
+                              >
+                                Tiếp theo
+                              </Button>
+                            </div>
+                          ) : null
+                        }
+                      />
+                    </div>
                   )}
 
                   {/* THÔNG TIN LIÊN HỆ CỦA NHÀ TÀI TRỢ (Chỉ hiển thị khi thanh toán trực tuyến và là khách vãng lai) */}
                   {isDonor && paymentMethod === 'Khac' && !isAuthenticated && (
-                    <GuestDonorInfoSection
-                      initialValues={guestDonorFieldsRef.current}
-                      onFieldsChange={handleGuestDonorFieldsChange}
-                      onValidityChange={handleGuestDonorValidityChange}
-                      resetKey={guestDonorResetKey}
-                    />
+                    <div className={`${styles.stepSectionWrapper} ${(activeStep < 3 || !isStep1Valid || !isStep2Valid) ? styles.disabledSection : ''}`}>
+                      <GuestDonorInfoSection
+                        initialValues={guestDonorFieldsRef.current}
+                        onFieldsChange={handleGuestDonorFieldsChange}
+                        onValidityChange={handleGuestDonorValidityChange}
+                        resetKey={guestDonorResetKey}
+                      />
+                    </div>
                   )}
 
                   {/* BƯỚC 2: Nội dung yêu cầu hỗ trợ (chỉ cho sinh viên) */}
                   {!isDonor && (
-                    <RequestContentSection
-                      onChange={handleContentChange}
-                      values={contentValues}
-                      selectedFund={selectedFund}
-                      onOpenAI={handleOpenAI}
-                    />
+                    <div className={`${styles.stepSectionWrapper} ${(activeStep < 2 || !isStep1Valid) ? styles.disabledSection : ''}`}>
+                      <RequestContentSection
+                        onChange={handleContentChange}
+                        values={contentValues}
+                        selectedFund={selectedFund}
+                        onOpenAI={handleOpenAI}
+                        nextButton={
+                          activeStep === 2 ? (
+                            <div className={styles.nextButtonRow}>
+                              <Button
+                                type="primary"
+                                onClick={() => setActiveStep(3)}
+                                disabled={!isStep2Valid}
+                                className={styles.nextStepBtn}
+                              >
+                                Tiếp theo
+                              </Button>
+                            </div>
+                          ) : null
+                        }
+                      />
+                    </div>
                   )}
 
                   {/* BƯỚC 3: Thông tin nhận giải ngân / Thông tin cá nhân sinh viên */}
                   {!isDonor && (
-                    isAuthenticated ? (
-                      <BankInfoSection
-                        bankAccounts={bankAccounts}
-                        defaultPhone={null}
-                        onChange={handleBankChange}
-                        values={bankValues}
-                        loading={bankLoading}
-                      />
-                    ) : (
-                      <div className={styles.guestFormCard}>
-                        <h3>Thông tin cá nhân & Ngân hàng Sinh viên vãng lai</h3>
-                        <div className={styles.guestFormRowThree}>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="text" 
-                              label="Họ và tên"
-                              placeholder="Nhập họ và tên..."
-                              value={guestFields.guestHoTen}
-                              onChange={(e) => handleInputChange('guestHoTen', e.target.value)}
-                              required
-                            />
+                    <div className={`${styles.stepSectionWrapper} ${(activeStep < 3 || !isStep1Valid || !isStep2Valid) ? styles.disabledSection : ''}`}>
+                      {isAuthenticated ? (
+                        <BankInfoSection
+                          bankAccounts={bankAccounts}
+                          defaultPhone={null}
+                          onChange={handleBankChange}
+                          values={bankValues}
+                          loading={bankLoading}
+                          nextButton={
+                            activeStep === 3 ? (
+                              <div className={styles.nextButtonRow}>
+                                <Button
+                                  type="primary"
+                                  onClick={() => setActiveStep(4)}
+                                  disabled={!isStep3Valid}
+                                  className={styles.nextStepBtn}
+                                >
+                                  Tiếp theo
+                                </Button>
+                              </div>
+                            ) : null
+                          }
+                        />
+                      ) : (
+                        <div className={styles.guestFormCard}>
+                          <h3>Thông tin cá nhân & Ngân hàng Sinh viên vãng lai</h3>
+                          <div className={styles.guestFormRowThree}>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="text" 
+                                label="Họ và tên"
+                                placeholder="Nhập họ và tên..."
+                                value={guestFields.guestHoTen}
+                                onChange={(e) => handleInputChange('guestHoTen', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="email" 
+                                label="Email liên lạc"
+                                placeholder="Nhập email..."
+                                value={guestFields.guestEmail}
+                                onChange={(e) => handleInputChange('guestEmail', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="tel" 
+                                label="Số điện thoại"
+                                placeholder="Nhập SĐT..."
+                                value={guestFields.guestSoDienThoai}
+                                onChange={(e) => handleInputChange('guestSoDienThoai', e.target.value)}
+                                required
+                              />
+                            </div>
                           </div>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="email" 
-                              label="Email liên lạc"
-                              placeholder="Nhập email..."
-                              value={guestFields.guestEmail}
-                              onChange={(e) => handleInputChange('guestEmail', e.target.value)}
-                              required
-                            />
+                          <div className={styles.guestFormRowThree}>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="text" 
+                                label="Mã số sinh viên (MSSV)"
+                                placeholder="Nhập MSSV..."
+                                value={guestFields.guestMssv}
+                                onChange={(e) => handleInputChange('guestMssv', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="text" 
+                                label="Khoa / Phòng học"
+                                placeholder="Ví dụ: Công nghệ thông tin..."
+                                value={guestFields.guestKhoa}
+                                onChange={(e) => handleInputChange('guestKhoa', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="text" 
+                                label="Lớp học"
+                                placeholder="Ví dụ: DA20TTB..."
+                                value={guestFields.guestLop}
+                                onChange={(e) => handleInputChange('guestLop', e.target.value)}
+                                required
+                              />
+                            </div>
                           </div>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="tel" 
-                              label="Số điện thoại"
-                              placeholder="Nhập SĐT..."
-                              value={guestFields.guestSoDienThoai}
-                              onChange={(e) => handleInputChange('guestSoDienThoai', e.target.value)}
-                              required
-                            />
+                          <hr className={styles.divider} />
+                          <div className={styles.guestFormRowThree}>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="text" 
+                                label="Tên ngân hàng"
+                                placeholder="Ví dụ: Vietcombank..."
+                                value={guestFields.guestNganHang}
+                                onChange={(e) => handleInputChange('guestNganHang', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="text" 
+                                label="Số tài khoản"
+                                placeholder="Số tài khoản ngân hàng..."
+                                value={guestFields.guestSoTaiKhoan}
+                                onChange={(e) => handleInputChange('guestSoTaiKhoan', e.target.value)}
+                                required
+                              />
+                            </div>
+                            <div className={styles.inputGroup}>
+                              <Input 
+                                type="text" 
+                                label="Chủ tài khoản"
+                                placeholder="Tên viết hoa không dấu..."
+                                value={guestFields.guestChuTaiKhoan}
+                                onChange={(e) => handleInputChange('guestChuTaiKhoan', e.target.value)}
+                                required
+                              />
+                            </div>
                           </div>
+                          {activeStep === 3 && (
+                            <div className={styles.nextButtonRow}>
+                              <Button
+                                type="primary"
+                                onClick={() => setActiveStep(4)}
+                                disabled={!isStep3Valid}
+                                className={styles.nextStepBtn}
+                              >
+                                Tiếp theo
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        <div className={styles.guestFormRowThree}>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="text" 
-                              label="Mã số sinh viên (MSSV)"
-                              placeholder="Nhập MSSV..."
-                              value={guestFields.guestMssv}
-                              onChange={(e) => handleInputChange('guestMssv', e.target.value)}
-                              required
-                            />
-                          </div>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="text" 
-                              label="Khoa / Phòng học"
-                              placeholder="Ví dụ: Công nghệ thông tin..."
-                              value={guestFields.guestKhoa}
-                              onChange={(e) => handleInputChange('guestKhoa', e.target.value)}
-                              required
-                            />
-                          </div>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="text" 
-                              label="Lớp học"
-                              placeholder="Ví dụ: DA20TTB..."
-                              value={guestFields.guestLop}
-                              onChange={(e) => handleInputChange('guestLop', e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-                        <hr className={styles.divider} />
-                        <div className={styles.guestFormRowThree}>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="text" 
-                              label="Tên ngân hàng"
-                              placeholder="Ví dụ: Vietcombank..."
-                              value={guestFields.guestNganHang}
-                              onChange={(e) => handleInputChange('guestNganHang', e.target.value)}
-                              required
-                            />
-                          </div>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="text" 
-                              label="Số tài khoản"
-                              placeholder="Số tài khoản ngân hàng..."
-                              value={guestFields.guestSoTaiKhoan}
-                              onChange={(e) => handleInputChange('guestSoTaiKhoan', e.target.value)}
-                              required
-                            />
-                          </div>
-                          <div className={styles.inputGroup}>
-                            <Input 
-                              type="text" 
-                              label="Chủ tài khoản"
-                              placeholder="Tên viết hoa không dấu..."
-                              value={guestFields.guestChuTaiKhoan}
-                              onChange={(e) => handleInputChange('guestChuTaiKhoan', e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )
+                      )}
+                    </div>
                   )}
 
                   {/* BƯỚC 4: Tài liệu đính kèm minh chứng (Chỉ dành cho sinh viên đề nghị hỗ trợ) */}
                   {!isDonor && (
-                    studentDocumentSection
+                    <div className={`${styles.stepSectionWrapper} ${(activeStep < 4 || !isStep1Valid || !isStep2Valid || !isStep3Valid) ? styles.disabledSection : ''}`}>
+                      <DocumentSection
+                        files={uploadedFiles}
+                        onFilesChange={handleFilesChange}
+                        isDonor={isDonor}
+                      />
+                    </div>
                   )}
 
                   {/* Xác thực bảo mật Robot cho khách vãng lai (Chỉ hiển thị khi làm trực tuyến) */}
                   {!isAuthenticated && (!isDonor || paymentMethod === 'Khac') && (
-                    <div className={styles.guestFormCard}>
-                      <h3>Xác minh bảo mật chống spam</h3>
-                      <label className={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          checked={captchaVerified}
-                          onChange={(e) => setCaptchaVerified(e.target.checked)}
-                          className={styles.checkboxInput}
-                        />
-                        <span>Tôi xác nhận thông tin cung cấp là chính xác và đồng ý gửi đơn xét duyệt.</span>
-                      </label>
+                    <div className={`${styles.stepSectionWrapper} ${(activeStep < lastStepIndex || !isStep1Valid || !isStep2Valid || (lastStepIndex === 4 && !isStep3Valid)) ? styles.disabledSection : ''}`}>
+                      <div className={styles.guestFormCard}>
+                        <h3>Xác minh bảo mật chống spam</h3>
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            checked={captchaVerified}
+                            onChange={(e) => setCaptchaVerified(e.target.checked)}
+                            className={styles.checkboxInput}
+                          />
+                          <span>Tôi xác nhận thông tin cung cấp là chính xác và đồng ý gửi đơn xét duyệt.</span>
+                        </label>
+                      </div>
                     </div>
                   )}
 
-                  {/* Nút bấm Lưu nháp / Gửi đơn / Reset (Chỉ hiển thị khi làm trực tuyến) */}
-                  {(!isDonor || paymentMethod === 'Khac') && (
+                  {/* Nút bấm Lưu nháp / Gửi đơn / Reset (Chỉ hiển thị khi làm trực tuyến và đạt bước cuối) */}
+                  {(!isDonor || paymentMethod === 'Khac') && activeStep >= lastStepIndex && (
                     <ApplicationFooter
                       onSaveDraft={handleSaveDraft}
                       onSubmit={handleSubmit}
@@ -1346,14 +1401,7 @@ const ApplyPage = () => {
                 </>
               }
               rightContent={
-                !isDonor ? (
-                  <AppliSidebar
-                    moTa={contentValues.mo_ta}
-                    tieuDe={contentValues.tieu_de}
-                    onApplySuggestion={handleApplyAISuggestion}
-                    selectedFund={selectedFund}
-                  />
-                ) : null
+                <NewsSidebar />
               }
             />
           </div>

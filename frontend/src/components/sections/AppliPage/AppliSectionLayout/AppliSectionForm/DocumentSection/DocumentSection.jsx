@@ -22,7 +22,7 @@ const TOTAL_MAX_MB = 25;
 
 const formatSize = (bytes) => (bytes / 1024 / 1024).toFixed(2) + 'MB';
 
-const DocumentSection = ({ files = [], onFilesChange, isDonor = false }) => {
+const DocumentSection = ({ files = [], onFilesChange, isDonor = false, nextButton }) => {
   const REQUIRED_DOCS = isDonor ? REQUIRED_DOCS_DONOR : REQUIRED_DOCS_STUDENT;
   const OPTIONAL_DOCS = isDonor ? OPTIONAL_DOCS_DONOR : OPTIONAL_DOCS_STUDENT;
   const [isDragging, setIsDragging] = useState(false);
@@ -197,6 +197,8 @@ const DocumentSection = ({ files = [], onFilesChange, isDonor = false }) => {
           </div>
         </div>
       )}
+
+      {nextButton}
     </div>
   );
 };
@@ -205,6 +207,7 @@ DocumentSection.propTypes = {
   files: PropTypes.array,
   onFilesChange: PropTypes.func,
   isDonor: PropTypes.bool,
+  nextButton: PropTypes.node,
 };
 
 export default memo(DocumentSection);

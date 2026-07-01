@@ -43,7 +43,7 @@ const normalizeSelectedFund = (fund) => {
   };
 };
 
-const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
+const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextButton }) => {
   const [selectedLoaiQuy, setSelectedLoaiQuy] = useState(null);
   const [selectedFundId, setSelectedFundId] = useState(null);
   const [allFunds, setAllFunds] = useState([]); // Tất cả quỹ từ database
@@ -428,6 +428,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false }) => {
             </div>
           )}
 
+          {nextButton}
         </div>
       )}
     </div>
@@ -438,6 +439,7 @@ FundSelectSection.propTypes = {
   onFundSelect: PropTypes.func,
   selectedFund: PropTypes.object,
   isDonor: PropTypes.bool,
+  nextButton: PropTypes.node,
 };
 
 export default memo(FundSelectSection);

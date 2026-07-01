@@ -26,6 +26,7 @@ const BankInfoSection = ({
   onChange,
   values,
   loading = false,
+  nextButton,
 }) => {
   const navigate = useNavigate();
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -194,6 +195,8 @@ const BankInfoSection = ({
           mục đích khác.
         </span>
       </div>
+
+      {nextButton}
     </div>
   );
 };
@@ -207,6 +210,7 @@ BankInfoSection.propTypes = {
     soDienThoai: PropTypes.string,
   }),
   loading: PropTypes.bool,
+  nextButton: PropTypes.node,
 };
 
 export default BankInfoSection;

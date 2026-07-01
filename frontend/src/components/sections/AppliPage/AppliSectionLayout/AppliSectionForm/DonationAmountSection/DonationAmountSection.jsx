@@ -16,7 +16,7 @@ import styles from './DonationAmountSection.module.scss';
  *
  * (Phần hiển thị STK ngân hàng cứng đã được gỡ bỏ.)
  */
-const DonationAmountSection = ({ selectedFund, donationAmount, onAmountChange }) => {
+const DonationAmountSection = ({ selectedFund, donationAmount, onAmountChange, nextButton }) => {
   const [amountError, setAmountError] = useState('');
 
   const handleAmountChange = (e) => {
@@ -95,6 +95,8 @@ const DonationAmountSection = ({ selectedFund, donationAmount, onAmountChange })
           <div className={styles.successMessage}>✓ Số tiền hợp lệ</div>
         ) : null}
       </div>
+
+      {nextButton}
     </div>
   );
 };
@@ -106,6 +108,7 @@ DonationAmountSection.propTypes = {
   }),
   donationAmount: PropTypes.string,
   onAmountChange: PropTypes.func.isRequired,
+  nextButton: PropTypes.node,
 };
 
 export default memo(DonationAmountSection);

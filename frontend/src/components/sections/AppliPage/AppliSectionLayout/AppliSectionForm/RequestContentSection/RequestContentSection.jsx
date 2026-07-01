@@ -5,6 +5,7 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlineExclamationCircle,
 } from 'react-icons/hi2';
+import AIAssistantPanel from '../../AppliSidebar/AIAssistantPanel/AIAssistantPanel';
 import styles from './RequestContentSection.module.scss';
 
 const suggestTitle = (fund) => {
@@ -20,7 +21,8 @@ const getQuality = (length) => {
   return { label: 'Tốt', percent: 100, color: '#10b981' };
 };
 
-const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI }) => {
+const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextButton }) => {
+  const [showAiPanel, setShowAiPanel] = useState(false);
   const [touched, setTouched] = useState({ 
     tieu_de: false, 
     mo_ta: false,
@@ -57,6 +59,10 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI }) => 
     },
     [onChange]
   );
+
+  const handleApplyAISuggestion = useCallback((newText) => {
+    handleChange('mo_ta', newText);
+  }, [handleChange]);
 
   const handleBlur = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -210,8 +216,8 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI }) => 
           />
           <button
             type="button"
-            className={styles.aiBadge}
-            onClick={onOpenAI}
+            className={`${styles.aiBadge} ${showAiPanel ? styles.aiBadgeActive : ''}`}
+            onClick={() => setShowAiPanel(!showAiPanel)}
           >
             ✦ AI CONNECTED
           </button>
@@ -245,7 +251,19 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI }) => 
             </span>
           </div>
         )}
+
+        {showAiPanel && (
+          <div className={styles.aiPanelWrapper} style={{ marginTop: 20 }}>
+            <AIAssistantPanel
+              moTa={mo_ta}
+              tieuDe={tieu_de}
+              onApplySuggestion={handleApplyAISuggestion}
+              selectedFund={selectedFund}
+            />
+          </div>
+        )}
       </div>
+      {nextButton}
     </div>
   );
 };
@@ -259,6 +277,7 @@ RequestContentSection.propTypes = {
   }),
   selectedFund: PropTypes.object,
   onOpenAI: PropTypes.func,
+  nextButton: PropTypes.node,
 };
 
 export default RequestContentSection;
