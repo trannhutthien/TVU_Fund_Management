@@ -152,6 +152,15 @@
     "sinhvien": true,
     "nhataitro": true
   },
+  "ve_quy_phat_trien": {
+    "label": "Về Quỹ Phát Triển ĐHTV",
+    "path": "/ve-quy-phat-trien",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": true,
+    "nhataitro": true
+  },
   "giao_dich": {
     "label": "Lịch sử giao dịch",
     "path": "/giao-dich",

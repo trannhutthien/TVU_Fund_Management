@@ -122,7 +122,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
 
   // Navigation items
   const navItems = [
-    { label: 'DANH MỤC QUỸ', path: '/funds' },
+    { label: 'VỀ QUỸ PHÁT TRIỂN ĐHTV', path: '/ve-quy-phat-trien' },
     {
       label: 'TIN TỨC & HƯỚNG DẪN',
       isDropdown: true,
@@ -130,11 +130,18 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
         { label: 'Tin tức & Sự kiện', path: '/news' },
         { label: 'Hướng dẫn & Quy định', path: '/guidelines' },
         { label: 'Sinh viên nói gì về TVU Fund', path: '/testimonials' },
+      ],
+    },
+    {
+      label: 'TÀI CHÍNH & QUỸ',
+      isDropdown: true,
+      children: [
+        { label: 'Danh mục quỹ', path: '/funds' },
+        { label: 'Lịch sử giao dịch công khai', path: '/lich-su-giao-dich' },
         { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
       ],
     },
     { label: 'TRA CỨU', path: '/track' },
-    { label: 'LỊCH SỬ GIAO DỊCH', path: '/lich-su-giao-dich' },
     { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
     ...(isAuthenticated
       ? [
@@ -205,6 +212,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     '/apply': 'apply',
     '/track': 'track',
     '/lich-su-giao-dich': 'lich_su_giao_dich',
+    '/ve-quy-phat-trien': 've_quy_phat_trien',
   };
 
   const filteredNavItems = navItems.map((item) => {

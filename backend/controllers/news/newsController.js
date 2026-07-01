@@ -32,7 +32,7 @@ const buildNewsImageUrl = (imagePath) => {
   return `${BASE_URL}/${relativePath}`;
 };
 
-const PHANLOAI_VALUES = ['Tin moi', 'Tin noi bat'];
+const PHANLOAI_VALUES = ['Tin moi', 'Tin noi bat', 'baocaohoatdong', 'chuongtrinh'];
 const normalizePhanloai = (value) => (
   PHANLOAI_VALUES.includes(value) ? value : 'Tin moi'
 );

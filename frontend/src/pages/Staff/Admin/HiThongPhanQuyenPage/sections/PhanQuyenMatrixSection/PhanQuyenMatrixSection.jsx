@@ -24,6 +24,7 @@ const PAGE_GROUPS = [
       { key: 'profile', label: 'Cá nhân (Profile)', path: '/profile' },
       { key: 'apply', label: 'Tạo đơn hỗ trợ', path: '/apply' },
       { key: 'lich_su_giao_dich', label: 'Lịch sử giao dịch công khai', path: '/lich-su-giao-dich' },
+      { key: 've_quy_phat_trien', label: 'Về Quỹ Phát Triển ĐHTV', path: '/ve-quy-phat-trien' },
     ]
   },
   {

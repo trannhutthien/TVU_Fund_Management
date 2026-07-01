@@ -167,6 +167,7 @@ const getNewsCountByCategory = async (filters = {}) => {
     'Tin giao duc': 0,
     'Su kien': 0,
     'Thong bao': 0,
+    'Bao cao hoat dong': 0,
     'Khac': 0
   };
 

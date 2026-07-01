@@ -43,6 +43,7 @@ const DANHMUC_OPTIONS = [
   { value: 'Tin giao duc', label: 'Tin giáo dục' },
   { value: 'Su kien', label: 'Sự kiện' },
   { value: 'Thong bao', label: 'Thông báo' },
+  { value: 'Bao cao hoat dong', label: 'Báo cáo hoạt động' },
   { value: 'Khac', label: 'Khác' },
 ];
 
@@ -62,6 +63,8 @@ const LANOIBAT_OPTIONS = [
 const PHANLOAI_OPTIONS = [
   { value: 'Tin moi', label: 'Tin mới', note: 'Hiển thị trong section Tin Mới trên Landing Page' },
   { value: 'Tin noi bat', label: 'Tin nổi bật', note: 'Hiển thị trong section Tin Nổi Bật dưới tiến trình gây quỹ' },
+  { value: 'baocaohoatdong', label: 'Báo cáo hoạt động', note: 'Phân loại Báo cáo hoạt động' },
+  { value: 'chuongtrinh', label: 'Chương trình', note: 'Phân loại Chương trình' },
 ];
 
 const DANHMUC_LABEL = Object.fromEntries(DANHMUC_OPTIONS.map(o => [o.value, o.label]));

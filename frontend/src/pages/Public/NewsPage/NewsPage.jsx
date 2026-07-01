@@ -24,13 +24,16 @@ const CATEGORIES_CONFIG = [
   { key: 'Thong bao', label: 'Thông báo', class: 'announcement' },
   { key: 'Su kien', label: 'Sự kiện', class: 'event' },
   { key: 'Tin giao duc', label: 'Giáo dục', class: 'education' },
+  { key: 'Bao cao hoat dong', label: 'Báo cáo hoạt động', class: 'report' },
   { key: 'Khac', label: 'Khác', class: 'other' }
 ];
 
 const PHANLOAI_CONFIG = [
   { key: 'all', label: 'Tất cả tin' },
   { key: 'Tin moi', label: 'Tin mới' },
-  { key: 'Tin noi bat', label: 'Tin nổi bật' }
+  { key: 'Tin noi bat', label: 'Tin nổi bật' },
+  { key: 'baocaohoatdong', label: 'Báo cáo hoạt động' },
+  { key: 'chuongtrinh', label: 'Chương trình' }
 ];
 
 const ITEMS_PER_PAGE = 6;

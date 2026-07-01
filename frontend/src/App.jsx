@@ -24,6 +24,7 @@ import NewsDetailPage from './pages/Public/NewsDetailPage/NewsDetailPage'
 import NewsPage from './pages/Public/NewsPage'
 import TestimonialsPage from './pages/Public/TestimonialsPage'
 import PublicLichSuGiaoDichPage from './pages/Public/LichSuGiaoDichPage/PublicLichSuGiaoDichPage'
+import AboutFundPage from './pages/Public/AboutFundPage/AboutFundPage'
 
 // Pages - Auth
 import LoginPage from './pages/Auth/LoginPage'
@@ -91,6 +92,7 @@ function App() {
             <Route path="/news" element={<NewsPage />} />
             <Route path="/testimonials" element={<TestimonialsPage />} />
             <Route path="/lich-su-giao-dich" element={<PublicLichSuGiaoDichPage />} />
+            <Route path="/ve-quy-phat-trien" element={<AboutFundPage />} />
           </Route>
           
           <Route element={<AuthLayout />}>

@@ -186,6 +186,7 @@ const NewsDetailPage = () => {
       'Tin giao duc': 'Giáo dục',
       'Su kien': 'Sự kiện',
       'Thong bao': 'Thông báo',
+      'Bao cao hoat dong': 'Báo cáo hoạt động',
       'Khac': 'Khác'
     };
     return map[cat] || 'Thông báo';
