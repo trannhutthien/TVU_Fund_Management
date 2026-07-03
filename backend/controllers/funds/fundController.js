@@ -4,6 +4,113 @@ import BankAccountModel from "../../models/funds/BankAccountModel.js";
 import { buildFundImageUrl } from "../../utils/helpers/imageHelper.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 
+const DEFAULT_LOAI_DIEU_HANH = 'Tap trung - Be chung';
+const VALID_LOAI_DIEU_HANH = [DEFAULT_LOAI_DIEU_HANH, 'Tap trung - Muc chi'];
+
+const parseOptionalNumber = (value) => (
+  value !== undefined && value !== '' && value !== null ? Number(value) : null
+);
+
+const parseOptionalInteger = (value) => (
+  value !== undefined && value !== '' && value !== null ? Number(value) : null
+);
+
+const validateFundingPlan = ({ soTienMucTieu, soTienHoTroToiDa, soLuongChiTieu }) => {
+  const mucTieu = parseOptionalNumber(soTienMucTieu);
+  const hoTroToiDa = parseOptionalNumber(soTienHoTroToiDa);
+  const soSuat = parseOptionalInteger(soLuongChiTieu);
+
+  if (mucTieu !== null && (Number.isNaN(mucTieu) || mucTieu < 0)) {
+    return { field: 'soTienMucTieu', message: 'Số tiền mục tiêu phải là số và lớn hơn hoặc bằng 0' };
+  }
+
+  if (hoTroToiDa !== null && (Number.isNaN(hoTroToiDa) || hoTroToiDa < 0)) {
+    return { field: 'soTienHoTroToiDa', message: 'Số tiền hỗ trợ tối đa phải là số và lớn hơn hoặc bằng 0' };
+  }
+
+  if (soSuat !== null && (!Number.isInteger(soSuat) || soSuat <= 0)) {
+    return { field: 'soLuongChiTieu', message: 'Số suất phải là số nguyên lớn hơn 0' };
+  }
+
+  if (mucTieu !== null && mucTieu > 0 && hoTroToiDa !== null && hoTroToiDa > 0) {
+    const expectedSeats = mucTieu / hoTroToiDa;
+    if (!Number.isInteger(expectedSeats)) {
+      return {
+        field: 'soLuongChiTieu',
+        message: 'Số tiền mục tiêu phải chia hết cho số tiền hỗ trợ mỗi suất để xác định chính xác số suất',
+      };
+    }
+
+    if (soSuat === null) {
+      return {
+        field: 'soLuongChiTieu',
+        message: `Vui lòng nhập số suất bằng ${expectedSeats}`,
+      };
+    }
+
+    if (soSuat !== expectedSeats) {
+      return {
+        field: 'soLuongChiTieu',
+        message: `Số suất phải bằng Số tiền mục tiêu / Số tiền hỗ trợ mỗi suất: ${expectedSeats} suất`,
+      };
+    }
+  }
+
+  return null;
+};
+
+const normalizeFundOperationData = (body, currentFund = null) => {
+  const loaiDieuHanh = body.loaiDieuHanh || currentFund?.loai_dieu_hanh || DEFAULT_LOAI_DIEU_HANH;
+  const rawQuyChaId = body.quyChaId !== undefined ? body.quyChaId : currentFund?.quy_cha_id;
+  const normalizedLoaiDieuHanh = VALID_LOAI_DIEU_HANH.includes(loaiDieuHanh)
+    ? loaiDieuHanh
+    : loaiDieuHanh;
+
+  return {
+    loaiDieuHanh: normalizedLoaiDieuHanh,
+    quyChaId: normalizedLoaiDieuHanh === 'Tap trung - Muc chi'
+      ? (rawQuyChaId !== undefined && rawQuyChaId !== '' && rawQuyChaId !== null ? Number(rawQuyChaId) : null)
+      : null,
+    soTienMucTieu: parseOptionalNumber(body.soTienMucTieu),
+    soTienHoTroToiDa: parseOptionalNumber(body.soTienHoTroToiDa),
+    soLuongChiTieu: parseOptionalInteger(body.soLuongChiTieu),
+    soDu: parseOptionalNumber(body.soDu) ?? 0,
+  };
+};
+
+const validateParentFundForChild = async ({ loaiDieuHanh, quyChaId, childFundId = null, soDu = 0, checkBalance = false }) => {
+  if (!VALID_LOAI_DIEU_HANH.includes(loaiDieuHanh)) {
+    return 'Hình thức vận hành quỹ không hợp lệ';
+  }
+
+  if (loaiDieuHanh !== 'Tap trung - Muc chi') {
+    return null;
+  }
+
+  if (!quyChaId || Number.isNaN(quyChaId)) {
+    return 'Vui lòng chọn Quỹ mẹ cho Quỹ con mục chi';
+  }
+
+  if (childFundId && Number(quyChaId) === Number(childFundId)) {
+    return 'Quỹ con không thể chọn chính nó làm Quỹ mẹ';
+  }
+
+  const parentFund = await FundModel.getFundById(quyChaId);
+  if (!parentFund) {
+    return 'Không tìm thấy Quỹ mẹ đã chọn';
+  }
+
+  if (parentFund.loai_dieu_hanh !== 'Tap trung - Be chung') {
+    return 'Quỹ mẹ phải là Quỹ chung (Bể lớn)';
+  }
+
+  if (checkBalance && Number(soDu || 0) > Number(parentFund.so_du || 0)) {
+    return `Số dư khởi tạo không được vượt quá số dư hiện tại của Quỹ mẹ (${Number(parentFund.so_du || 0).toLocaleString('vi-VN')}đ)`;
+  }
+
+  return null;
+};
+
 // ─── POST /api/funds ──────────────────────────────────────────────────────────
 // Yêu cầu: phải có access token hợp lệ và quyền admin/giáo vụ (role_id: 1 hoặc 3)
 // Tạo quỹ mới trong hệ thống
@@ -23,6 +130,7 @@ export const createFund = async (req, res) => {
       trangThai,
       nguoiTao
     } = req.body;
+    const normalizedFundData = normalizeFundOperationData(req.body);
 
     // 1. Validate dữ liệu đầu vào
     if (!tenQuy || !loaiQuy) {
@@ -46,6 +154,32 @@ export const createFund = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Số dư phải là số và lớn hơn hoặc bằng 0",
+      });
+    }
+
+    const fundingPlanError = validateFundingPlan({
+      soTienMucTieu,
+      soTienHoTroToiDa,
+      soLuongChiTieu,
+    });
+    if (fundingPlanError) {
+      return res.status(400).json({
+        success: false,
+        message: fundingPlanError.message,
+        field: fundingPlanError.field,
+      });
+    }
+
+    const parentFundError = await validateParentFundForChild({
+      loaiDieuHanh: normalizedFundData.loaiDieuHanh,
+      quyChaId: normalizedFundData.quyChaId,
+      soDu: normalizedFundData.soDu,
+      checkBalance: true,
+    });
+    if (parentFundError) {
+      return res.status(400).json({
+        success: false,
+        message: parentFundError,
       });
     }
 
@@ -91,15 +225,17 @@ export const createFund = async (req, res) => {
       loaiQuy: loaiQuy,
       moTa: moTa ? moTa.trim() : null,
       hinhAnh: hinhAnh || null,
-      soTienMucTieu: soTienMucTieu !== undefined && soTienMucTieu !== '' ? parseFloat(soTienMucTieu) : null,
-      soTienHoTroToiDa: soTienHoTroToiDa !== undefined && soTienHoTroToiDa !== '' ? parseFloat(soTienHoTroToiDa) : null,
-      soLuongChiTieu: soLuongChiTieu !== undefined && soLuongChiTieu !== '' ? parseInt(soLuongChiTieu, 10) : null,
+      soTienMucTieu: normalizedFundData.soTienMucTieu,
+      soTienHoTroToiDa: normalizedFundData.soTienHoTroToiDa,
+      soLuongChiTieu: normalizedFundData.soLuongChiTieu,
       hanNopDon: hanNopDon || null,
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
-      soDu: soDu ? parseFloat(soDu) : 0.00,
+      soDu: normalizedFundData.soDu,
       trangThai: trangThai || 'Dang hoat dong',
       nguoiTao: nguoiTao || null,
-      ngayBatDau: new Date().toISOString().split('T')[0] // Tự động set ngày hôm nay (YYYY-MM-DD)
+      ngayBatDau: new Date().toISOString().split('T')[0], // Tự động set ngày hôm nay (YYYY-MM-DD)
+      loaiDieuHanh: normalizedFundData.loaiDieuHanh,
+      quyChaId: normalizedFundData.quyChaId
     };
 
     const result = await FundModel.createFund(fundData);
@@ -136,11 +272,38 @@ export const createFund = async (req, res) => {
         nguoiTao: newFund.nguoitao_id,
         ngayTao: newFund.ngay_tao,
         ngayCapNhat: newFund.ngay_cap_nhat,
-        trangThai: newFund.trang_thai
+        trangThai: newFund.trang_thai,
+        loaiDieuHanh: newFund.loai_dieu_hanh,
+        quyChaId: newFund.quy_cha_id,
+        tenQuyCha: newFund.ten_quy_cha
       }
     });
   } catch (error) {
     console.error("Lỗi createFund:", error);
+    if (error.message === 'PARENT_FUND_NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy Quỹ mẹ đã chọn"
+      });
+    }
+    if (error.message === 'CHILD_FUND_PARENT_REQUIRED') {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng chọn Quỹ mẹ cho Quỹ con mục chi"
+      });
+    }
+    if (error.message === 'INVALID_PARENT_FUND_TYPE') {
+      return res.status(400).json({
+        success: false,
+        message: "Quỹ mẹ phải là Quỹ chung (Bể lớn)"
+      });
+    }
+    if (error.message === 'INSUFFICIENT_PARENT_FUND_BALANCE') {
+      return res.status(400).json({
+        success: false,
+        message: "Số dư Quỹ mẹ không đủ để trích lập số dư khởi tạo cho Quỹ con"
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",
@@ -186,7 +349,10 @@ export const getFunds = async (req, res) => {
         ngayCapNhat: fund.ngay_cap_nhat,
         trangThai: fund.trang_thai,
         soDonDaNop: fund.so_don_da_nop,
-        phanTramDaNhan: fund.phan_tram_da_nhan
+        phanTramDaNhan: fund.phan_tram_da_nhan,
+        loaiDieuHanh: fund.loai_dieu_hanh,
+        quyChaId: fund.quy_cha_id,
+        tenQuyCha: fund.ten_quy_cha
       }))
     });
   } catch (error) {
@@ -236,7 +402,10 @@ export const getPublicFunds = async (req, res) => {
         ngayCapNhat: fund.ngay_cap_nhat,
         trangThai: fund.trang_thai,
         soDonDaNop: fund.so_don_da_nop,
-        phanTramDaNhan: fund.phan_tram_da_nhan
+        phanTramDaNhan: fund.phan_tram_da_nhan,
+        loaiDieuHanh: fund.loai_dieu_hanh,
+        quyChaId: fund.quy_cha_id,
+        tenQuyCha: fund.ten_quy_cha
       }))
     });
   } catch (error) {
@@ -380,6 +549,9 @@ export const getFundDetail = async (req, res) => {
         ngayTao: fund.ngay_tao,
         ngayCapNhat: fund.ngay_cap_nhat,
         trangThai: fund.trang_thai,
+        loaiDieuHanh: fund.loai_dieu_hanh,
+        quyChaId: fund.quy_cha_id,
+        tenQuyCha: fund.ten_quy_cha,
         // Thêm thống kê
         soKhoanTaiTro: stats.soKhoanTaiTro || 0,
         soDonDaHoTro: stats.soDonDaHoTro || 0,
@@ -460,6 +632,7 @@ export const updateFund = async (req, res) => {
         message: "Không tìm thấy quỹ",
       });
     }
+    const normalizedFundData = normalizeFundOperationData(req.body, fund);
 
     // 3. Validate tên và loại
     if (!tenQuy || !loaiQuy) {
@@ -486,6 +659,32 @@ export const updateFund = async (req, res) => {
       });
     }
 
+    const fundingPlanError = validateFundingPlan({
+      soTienMucTieu,
+      soTienHoTroToiDa,
+      soLuongChiTieu,
+    });
+    if (fundingPlanError) {
+      return res.status(400).json({
+        success: false,
+        message: fundingPlanError.message,
+        field: fundingPlanError.field,
+      });
+    }
+
+    const parentFundError = await validateParentFundForChild({
+      loaiDieuHanh: normalizedFundData.loaiDieuHanh,
+      quyChaId: normalizedFundData.quyChaId,
+      childFundId: id,
+      checkBalance: false,
+    });
+    if (parentFundError) {
+      return res.status(400).json({
+        success: false,
+        message: parentFundError,
+      });
+    }
+
     // 6. Kiểm tra trùng tên với quỹ khác
     const nameExists = await FundModel.checkFundNameExistsForOther(tenQuy.trim(), id);
     if (nameExists) {
@@ -501,13 +700,15 @@ export const updateFund = async (req, res) => {
       loaiQuy: loaiQuy,
       moTa: moTa ? moTa.trim() : null,
       hinhAnh: hinhAnh || null,
-      soTienMucTieu: soTienMucTieu !== undefined && soTienMucTieu !== '' ? parseFloat(soTienMucTieu) : null,
-      soTienHoTroToiDa: soTienHoTroToiDa !== undefined && soTienHoTroToiDa !== '' ? parseFloat(soTienHoTroToiDa) : null,
-      soLuongChiTieu: soLuongChiTieu !== undefined && soLuongChiTieu !== '' ? parseInt(soLuongChiTieu, 10) : null,
+      soTienMucTieu: normalizedFundData.soTienMucTieu,
+      soTienHoTroToiDa: normalizedFundData.soTienHoTroToiDa,
+      soLuongChiTieu: normalizedFundData.soLuongChiTieu,
       hanNopDon: hanNopDon || null,
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
-      soDu: soDu ? parseFloat(soDu) : 0.00,
-      trangThai: trangThai || fund.trang_thai
+      soDu: fund.so_du, // Luôn luôn giữ nguyên số dư hiện tại của quỹ khi cập nhật thông tin qua Form
+      trangThai: trangThai || fund.trang_thai,
+      loaiDieuHanh: normalizedFundData.loaiDieuHanh,
+      quyChaId: normalizedFundData.quyChaId
     };
 
     await FundModel.updateFund(id, fundData);
@@ -545,7 +746,10 @@ export const updateFund = async (req, res) => {
         nguoiTao: updatedFund.nguoitao_id,
         ngayTao: updatedFund.ngay_tao,
         ngayCapNhat: updatedFund.ngay_cap_nhat,
-        trangThai: updatedFund.trang_thai
+        trangThai: updatedFund.trang_thai,
+        loaiDieuHanh: updatedFund.loai_dieu_hanh,
+        quyChaId: updatedFund.quy_cha_id,
+        tenQuyCha: updatedFund.ten_quy_cha
       }
     });
   } catch (error) {

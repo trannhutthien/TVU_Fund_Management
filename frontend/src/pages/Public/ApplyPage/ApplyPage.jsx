@@ -290,7 +290,9 @@ const ApplyPage = () => {
 
   // Xác định vai trò: Nhà tài trợ hoặc Sinh viên
   const userType = user?.loai_tai_khoan || user?.loaiTaiKhoan || user?.loai_nguoi_dung;
-  const isDonor = isAuthenticated ? (userType === 'NHA_TAI_TRO') : (guestRole === 'donor');
+  const isStudent = userType === 'SINH_VIEN';
+  const isDonorUser = userType === 'NHA_TAI_TRO';
+  const isDonor = isDonorUser ? true : (isStudent ? false : (guestRole === 'donor'));
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
@@ -886,8 +888,9 @@ const ApplyPage = () => {
     );
   }
 
-  // ─── PHÂN NHÁNH GIAO DIỆN 3: CHƯA ĐĂNG NHẬP & CHƯA CHỌN VAI TRÒ
-  if (!isAuthenticated && !guestRole) {
+  // ─── PHÂN NHÁNH GIAO DIỆN 3: CHƯA ĐÃ XÁC ĐỊNH VAI TRÒ (CHƯA CHỌN VAI TRÒ HOẶC LÀ ADMIN/CÁN BỘ CHƯA CHỌN)
+  const isStrictUser = isAuthenticated && (isStudent || isDonorUser);
+  if (!isStrictUser && !guestRole) {
     return (
       <div className={styles.applyPage}>
         <PublicHeader onLoginClick={openLoginModal} onRegisterClick={openRegisterModal} />

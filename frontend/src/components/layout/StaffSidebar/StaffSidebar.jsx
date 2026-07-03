@@ -65,6 +65,7 @@ const NAV_CONFIG = [
       { label: 'Xét duyệt hồ sơ', path: '/admin/xet-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [1], badgeKey: 'pendingCount' },
       { label: 'Lịch sử phê duyệt', path: '/admin/phe-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [1] },
       { label: 'Danh sách Quỹ', path: '/admin/quy', icon: HiOutlineBuildingLibrary, roles: [1] },
+      { label: 'Trích lập Ngân sách', path: '/admin/phan-bo', icon: HiOutlineBanknotes, roles: [1] },
       { label: 'Nhà tài trợ', path: '/admin/nha-tai-tro', icon: HiOutlineHandRaised, roles: [1] },
       { label: 'Khoản tài trợ', path: '/admin/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [1] },
       { label: 'Lịch sử giao dịch', path: '/admin/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [1] },
@@ -102,6 +103,7 @@ const NAV_CONFIG = [
     roles: [2],
     items: [
       { label: 'Giải ngân hồ sơ', path: '/ke-toan/giai-ngan', icon: HiOutlineBanknotes, roles: [2], badgeKey: 'pendingCount' },
+      { label: 'Trích lập Ngân sách', path: '/ke-toan/phan-bo', icon: HiOutlineBanknotes, roles: [2] },
       { label: 'Lịch sử giao dịch', path: '/ke-toan/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [2] },
       { label: 'Khoản tài trợ', path: '/ke-toan/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [2] },
     ]
@@ -129,6 +131,7 @@ const NAV_CONFIG = [
     items: [
       { label: 'Xét duyệt hồ sơ', path: '/can-bo/xet-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [3], badgeKey: 'pendingCount' },
       { label: 'Danh sách Quỹ', path: '/can-bo/quy', icon: HiOutlineBuildingLibrary, roles: [3] },
+      { label: 'Trích lập Ngân sách', path: '/can-bo/phan-bo', icon: HiOutlineBanknotes, roles: [3] },
       { label: 'Nhà tài trợ', path: '/can-bo/nha-tai-tro', icon: HiOutlineHandRaised, roles: [3] },
     ]
   },
@@ -241,6 +244,7 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
     if (key === 'chung-tu') key = 'chung_tu';
     if (key === 'phe-duyet') key = 'phe_duyet';
     if (key === 'nhat-ky') key = 'nhat_ky';
+    if (key === 'phan-bo') key = 'phan_bo';
 
     const perm = permissions[key];
     if (!perm) return true;

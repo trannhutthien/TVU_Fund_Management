@@ -37,12 +37,19 @@ const storage = multer.diskStorage({
 
 // Validate file type
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+  const allowedTypes = [
+    'application/pdf', 
+    'image/jpeg', 
+    'image/jpg', 
+    'image/png',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ];
   
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Chỉ chấp nhận file PDF, JPG, JPEG, PNG'), false);
+    cb(new Error('Chỉ chấp nhận file PDF, Word, JPG, JPEG, PNG'), false);
   }
 };
 

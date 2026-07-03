@@ -61,7 +61,9 @@ import CanBoTaoQuyPage from './pages/Staff/CanBo/TaoQuyPage/TaoQuyPage'
 import CanBoNhaTaiTroPage from './pages/Staff/CanBo/NhaTaiTroPage/NhaTaiTroPage'
 import CanBoUserManagementPage from './pages/Staff/CanBo/UserManagementPage/UserManagementPage'
 import CanBoBaoCaoPage from './pages/Staff/CanBo/BaoCaoPage'
+import PhanBoPage from './pages/Staff/CanBo/PhanBoPage/PhanBoPage'
 import TaoTinTucPage from './pages/Admin/TinTuc/TaoTinTucPage'
+
 // Protected Route: Bảo vệ routes cần đăng nhập
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()
@@ -127,6 +129,7 @@ function App() {
             <Route path="/admin/quy" element={<CanBoQuyListPage isAdmin={true} />} />
             <Route path="/admin/quy/tao" element={<CanBoTaoQuyPage />} />
             <Route path="/admin/quy/sua/:id" element={<CanBoTaoQuyPage />} />
+            <Route path="/admin/phan-bo" element={<PhanBoPage />} />
             <Route path="/admin/nha-tai-tro" element={<CanBoNhaTaiTroPage isAdmin={true} />} />
             <Route path="/admin/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
             <Route path="/admin/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
@@ -145,6 +148,7 @@ function App() {
             <Route path="/ke-toan/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
             <Route path="/ke-toan/bao-cao" element={<ThongKeThuChiPage />} />
             <Route path="/ke-toan/chung-tu" element={<DoiSoatChungTuPage />} />
+            <Route path="/ke-toan/phan-bo" element={<PhanBoPage />} />
 
             {/* Cán bộ Quỹ Routes (role_id = 3) */}
             <Route path="/can-bo/dashboard" element={<CanBoDashboard />} />
@@ -153,6 +157,7 @@ function App() {
             <Route path="/can-bo/quy" element={<CanBoQuyListPage />} />
             <Route path="/can-bo/quy/tao" element={<CanBoTaoQuyPage />} />
             <Route path="/can-bo/quy/sua/:id" element={<CanBoTaoQuyPage />} />
+            <Route path="/can-bo/phan-bo" element={<PhanBoPage />} />
             <Route path="/can-bo/nha-tai-tro" element={<CanBoNhaTaiTroPage />} />
             <Route path="/can-bo/users" element={<CanBoUserManagementPage />} />
             <Route path="/can-bo/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
@@ -171,4 +176,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

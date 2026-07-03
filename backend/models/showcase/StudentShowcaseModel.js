@@ -11,19 +11,22 @@ import pool from "../../config/db.js";
 const getAllStudentShowcase = async () => {
   const [rows] = await pool.query(
     `SELECT 
-      sinhviennoibat_id,
-      nguoidung_id,
-      hoten,
-      khoaphong,
-      namhoc,
-      hinhanh,
-      thanhtich,
-      thutu,
-      trangthai,
-      ngaytao,
-      ngaycapnhat
-     FROM sinhviennoibat
-     ORDER BY thutu ASC, ngaytao DESC`
+      sv.sinhviennoibat_id,
+      sv.nguoidung_id,
+      nd.hoten,
+      nd.masodinhdanh AS masodinhdanh,
+      dv.tenkhoa AS khoaphong,
+      sv.namhoc,
+      nd.avatar AS hinhanh,
+      sv.thanhtich,
+      sv.thutu,
+      sv.trangthai,
+      sv.ngaytao,
+      sv.ngaycapnhat
+     FROM sinhviennoibat sv
+     INNER JOIN nguoidung nd ON sv.nguoidung_id = nd.nguoidung_id
+     LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
+     ORDER BY sv.thutu ASC, sv.ngaytao DESC`
   );
   return rows;
 };
@@ -37,17 +40,19 @@ const getPublicStudentShowcase = async () => {
     `SELECT 
       sv.sinhviennoibat_id,
       sv.nguoidung_id,
-      sv.hoten,
-      sv.khoaphong,
+      nd.hoten,
+      nd.masodinhdanh AS masodinhdanh,
+      dv.tenkhoa AS khoaphong,
       sv.namhoc,
-      NULLIF(TRIM(sv.hinhanh), '') AS hinhanh,
+      NULLIF(TRIM(nd.avatar), '') AS hinhanh,
       NULLIF(TRIM(nd.avatar), '') AS nguoidung_avatar,
       sv.thanhtich,
       sv.thutu,
       COALESCE(yc.so_lan_ho_tro, 0) AS so_lan_ho_tro,
       COALESCE(yc.tong_tien_ho_tro, 0) AS tong_tien_ho_tro
      FROM sinhviennoibat sv
-     LEFT JOIN nguoidung nd ON nd.nguoidung_id = sv.nguoidung_id
+     INNER JOIN nguoidung nd ON nd.nguoidung_id = sv.nguoidung_id
+     LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
      LEFT JOIN (
        SELECT 
          nguoidung_id,
@@ -71,19 +76,22 @@ const getPublicStudentShowcase = async () => {
 const getStudentShowcaseById = async (sinhviennoibatId) => {
   const [rows] = await pool.query(
     `SELECT 
-      sinhviennoibat_id,
-      nguoidung_id,
-      hoten,
-      khoaphong,
-      namhoc,
-      hinhanh,
-      thanhtich,
-      thutu,
-      trangthai,
-      ngaytao,
-      ngaycapnhat
-     FROM sinhviennoibat
-     WHERE sinhviennoibat_id = ?
+      sv.sinhviennoibat_id,
+      sv.nguoidung_id,
+      nd.hoten,
+      nd.masodinhdanh AS masodinhdanh,
+      dv.tenkhoa AS khoaphong,
+      sv.namhoc,
+      nd.avatar AS hinhanh,
+      sv.thanhtich,
+      sv.thutu,
+      sv.trangthai,
+      sv.ngaytao,
+      sv.ngaycapnhat
+     FROM sinhviennoibat sv
+     INNER JOIN nguoidung nd ON sv.nguoidung_id = nd.nguoidung_id
+     LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
+     WHERE sv.sinhviennoibat_id = ?
      LIMIT 1`,
     [sinhviennoibatId]
   );
@@ -97,10 +105,7 @@ const getStudentShowcaseById = async (sinhviennoibatId) => {
 const createStudentShowcase = async (data) => {
   const {
     nguoiDungId,
-    hoTen,
-    khoaPhong,
     namHoc,
-    hinhAnh,
     thanhTich,
     thuTu,
     trangThai
@@ -109,20 +114,14 @@ const createStudentShowcase = async (data) => {
   const [result] = await pool.execute(
     `INSERT INTO sinhviennoibat (
       nguoidung_id,
-      hoten,
-      khoaphong,
       namhoc,
-      hinhanh,
       thanhtich,
       thutu,
       trangthai
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?)`,
     [
-      nguoiDungId || null,
-      hoTen,
-      khoaPhong || null,
+      nguoiDungId,
       namHoc || null,
-      hinhAnh || null,
       thanhTich || null,
       thuTu || 0,
       trangThai || 'Hien thi'
@@ -139,10 +138,7 @@ const createStudentShowcase = async (data) => {
 const updateStudentShowcase = async (sinhviennoibatId, data) => {
   const {
     nguoiDungId,
-    hoTen,
-    khoaPhong,
     namHoc,
-    hinhAnh,
     thanhTich,
     thuTu,
     trangThai
@@ -151,21 +147,15 @@ const updateStudentShowcase = async (sinhviennoibatId, data) => {
   const [result] = await pool.execute(
     `UPDATE sinhviennoibat
      SET nguoidung_id = ?,
-         hoten = ?,
-         khoaphong = ?,
          namhoc = ?,
-         hinhanh = ?,
          thanhtich = ?,
          thutu = ?,
          trangthai = ?,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE sinhviennoibat_id = ?`,
     [
-      nguoiDungId || null,
-      hoTen,
-      khoaPhong || null,
+      nguoiDungId,
       namHoc || null,
-      hinhAnh || null,
       thanhTich || null,
       thuTu || 0,
       trangThai || 'Hien thi',

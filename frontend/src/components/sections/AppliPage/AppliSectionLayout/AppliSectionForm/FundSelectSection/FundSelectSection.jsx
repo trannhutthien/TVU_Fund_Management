@@ -50,6 +50,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
   const [loaiQuyOptions, setLoaiQuyOptions] = useState([]); // Danh sách loại quỹ động
   const [fundDetail, setFundDetail] = useState(null);
   const [loadingFunds, setLoadingFunds] = useState(false);
+  const [donationTarget, setDonationTarget] = useState('parent_fund'); // parent_fund hoặc custom_fund
   const selectedFundKey = selectedFund?.quyId ?? selectedFund?.quy_id ?? selectedFund?.id ?? null;
   const normalizedSelectedFund = useMemo(
     () => normalizeSelectedFund(selectedFund),
@@ -69,12 +70,42 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     ]
   );
 
+  // Tự động chọn Quỹ phát triển Đại học Trà Vinh khi ở chế độ parent_fund
+  useEffect(() => {
+    if (!isDonor || donationTarget !== 'parent_fund' || allFunds.length === 0) return;
+
+    const parentFund = allFunds.find(
+      (f) => f.tenQuy === 'Quỹ phát triển Đại học Trà Vinh'
+    );
+    if (parentFund) {
+      setSelectedLoaiQuy(parentFund.loaiQuy);
+      setSelectedFundId(parentFund.quyId);
+    }
+  }, [isDonor, donationTarget, allFunds]);
+
+  const handleTargetChange = (target) => {
+    setDonationTarget(target);
+    if (target === 'custom_fund') {
+      setSelectedLoaiQuy(null);
+      setSelectedFundId(null);
+      onFundSelect?.(null);
+    }
+  };
+
   const fundList = useMemo(() => {
     if (!selectedLoaiQuy) return [];
 
-    const filtered = allFunds.filter(
-      (fund) => fund.loaiQuy === selectedLoaiQuy && fund.trangThai === 'Dang hoat dong'
-    );
+    const filtered = allFunds.filter((fund) => {
+      const isMatchLoai = fund.loaiQuy === selectedLoaiQuy;
+      const isActive = fund.trangThai === 'Dang hoat dong';
+      const isNotBeChung = isDonor || fund.loaiDieuHanh !== 'Tap trung - Be chung';
+
+      // Ẩn Quỹ phát triển Đại học Trà Vinh khi người dùng chọn chế độ custom_fund
+      if (isDonor && donationTarget === 'custom_fund' && fund.tenQuy === 'Quỹ phát triển Đại học Trà Vinh') {
+        return false;
+      }
+      return isMatchLoai && isActive && isNotBeChung;
+    });
 
     if (
       normalizedSelectedFund?.quyId &&
@@ -92,6 +123,8 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     normalizedSelectedFund?.tenQuy,
     normalizedSelectedFund?.loaiQuy,
     normalizedSelectedFund?.trangThai,
+    isDonor,
+    donationTarget,
   ]);
 
   // Lấy tất cả quỹ và loại quỹ từ database khi component mount
@@ -197,6 +230,8 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     value: f.quyId,
     label: f.tenQuy,
     description: formatVND(f.soDu),
+    loaiDieuHanh: f.loaiDieuHanh,
+    tenQuyCha: f.tenQuyCha,
   }));
 
   const soDu = fundDetail?.soDu;
@@ -228,6 +263,39 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
         </span>
       </div>
 
+      {isDonor && (
+        <div className={styles.targetSelection}>
+          <div className={styles.fieldLabel}>Hình thức quyên góp</div>
+          <div className={styles.targetCards}>
+            <div
+              className={`${styles.targetCard} ${donationTarget === 'parent_fund' ? styles.targetCardActive : ''}`}
+              onClick={() => handleTargetChange('parent_fund')}
+            >
+              <div className={styles.targetCardHeader}>
+                <div className={`${styles.targetRadio} ${donationTarget === 'parent_fund' ? styles.targetRadioActive : ''}`} />
+                <span className={styles.targetTitle}>Quỹ phát triển chung (Quỹ mẹ)</span>
+              </div>
+              <p className={styles.targetDesc}>
+                Quyên góp trực tiếp vào Quỹ phát triển Đại học Trà Vinh.
+              </p>
+            </div>
+
+            <div
+              className={`${styles.targetCard} ${donationTarget === 'custom_fund' ? styles.targetCardActive : ''}`}
+              onClick={() => handleTargetChange('custom_fund')}
+            >
+              <div className={styles.targetCardHeader}>
+                <div className={`${styles.targetRadio} ${donationTarget === 'custom_fund' ? styles.targetRadioActive : ''}`} />
+                <span className={styles.targetTitle}>Mục đích / Quỹ cụ thể</span>
+              </div>
+              <p className={styles.targetDesc}>
+                Chọn loại quỹ và mục chi con mong muốn ủng hộ (Học bổng, Y tế...).
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.fieldGroup}>
         <div className={styles.fieldLabel}>Loại quỹ</div>
         <Dropdown
@@ -235,7 +303,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
           value={selectedLoaiQuy}
           onChange={(val) => setSelectedLoaiQuy(val)}
           placeholder="-- Chọn loại quỹ --"
-          disabled={loadingFunds || loaiQuyOptions.length === 0}
+          disabled={loadingFunds || loaiQuyOptions.length === 0 || (isDonor && donationTarget === 'parent_fund')}
           className={styles.dropdown}
         />
         {loadingFunds && (
@@ -255,14 +323,21 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
                 ? '-- Chọn quỹ bạn muốn quyên góp --'
                 : '-- Chọn quỹ bạn muốn đăng ký --'
             }
-            disabled={loadingFunds || fundList.length === 0}
+            disabled={loadingFunds || fundList.length === 0 || (isDonor && donationTarget === 'parent_fund')}
             className={styles.dropdown}
             renderOption={(option) => (
               <div className={styles.fundOption}>
                 <span className={styles.fundOptionName}>{option.label}</span>
-                <span className={styles.fundOptionBadge}>
-                  {option.description}
-                </span>
+                <div className={styles.fundOptionRight}>
+                  {isDonor && (
+                    <span className={`${styles.typeBadge} ${option.loaiDieuHanh === 'Tap trung - Be chung' ? styles.badgeParent : styles.badgeChild}`}>
+                      {option.loaiDieuHanh === 'Tap trung - Be chung' ? 'Bể lớn' : 'Mục chi con'}
+                    </span>
+                  )}
+                  <span className={styles.fundOptionBadge}>
+                    {option.description}
+                  </span>
+                </div>
               </div>
             )}
           />
@@ -294,6 +369,12 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
                   : 'Chưa có thông tin điều kiện cho quỹ này.'
                 )}
             </p>
+            {fundDetail.loaiDieuHanh === 'Tap trung - Muc chi' && fundDetail.tenQuyCha && (
+              <div className={styles.parentFundInfo}>
+                <span className={styles.parentLabel}>Thuộc bể tiền chung: </span>
+                <span className={styles.parentName}>{fundDetail.tenQuyCha}</span>
+              </div>
+            )}
           </div>
 
           {/* Info Grid - Khác nhau cho Donor và Student */}

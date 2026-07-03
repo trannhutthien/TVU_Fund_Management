@@ -130,6 +130,14 @@ export const createApplication = async (req, res) => {
       });
     }
 
+    // Không cho phép nộp đơn vào Bể tiền chung phát triển (Be chung)
+    if (fund.loai_dieu_hanh === 'Tap trung - Be chung') {
+      return res.status(400).json({
+        success: false,
+        message: "Không được phép nộp đơn xin hỗ trợ từ Bể tiền chung phát triển. Vui lòng nộp vào các Mục chi con.",
+      });
+    }
+
     // Kiểm tra số dư quỹ có đủ không
     if (fund.so_du < soTienYeuCau) {
       return res.status(400).json({

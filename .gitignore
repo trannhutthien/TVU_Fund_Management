@@ -22,6 +22,8 @@ logs/
 # ========================
 *.sql
 !docs/database/*.sql
+!backend/database/schemas/update_database_fund_allocation.sql
+!backend/database/schemas/retire_independent_funds.sql
 backend/database/local_dump.sql
 backend/database/import_to_aiven.js
 

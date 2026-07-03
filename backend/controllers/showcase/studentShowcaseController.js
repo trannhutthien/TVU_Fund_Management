@@ -1,6 +1,5 @@
 import StudentShowcaseModel from "../../models/showcase/StudentShowcaseModel.js";
 import {
-  buildStudentShowcaseImageUrl,
   buildUserAvatarUrl
 } from "../../utils/helpers/imageHelper.js";
 
@@ -20,11 +19,10 @@ export const getPublicStudentShowcase = async (req, res) => {
       students: students.map(student => ({
         id: student.sinhviennoibat_id,
         hoTen: student.hoten,
+        maSoDinhDanh: student.masodinhdanh,
         khoaPhong: student.khoaphong,
         namHoc: student.namhoc,
-        hinhAnh: student.hinhanh
-          ? buildStudentShowcaseImageUrl(student.hinhanh)
-          : buildUserAvatarUrl(student.nguoidung_avatar),
+        hinhAnh: buildUserAvatarUrl(student.hinhanh),
         thanhTich: student.thanhtich,
         thuTu: student.thutu,
         soLanHoTro: student.so_lan_ho_tro > 0 ? student.so_lan_ho_tro : ((student.sinhviennoibat_id % 2) + 1),
@@ -51,10 +49,12 @@ export const getAllStudentShowcase = async (req, res) => {
       total: students.length,
       students: students.map(student => ({
         id: student.sinhviennoibat_id,
+        nguoiDungId: student.nguoidung_id,
         hoTen: student.hoten,
+        maSoDinhDanh: student.masodinhdanh,
         khoaPhong: student.khoaphong,
         namHoc: student.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(student.hinhanh),
+        hinhAnh: buildUserAvatarUrl(student.hinhanh),
         thanhTich: student.thanhtich,
         thuTu: student.thutu,
         trangThai: student.trangthai,
@@ -97,10 +97,12 @@ export const getStudentShowcaseById = async (req, res) => {
       success: true,
       student: {
         id: student.sinhviennoibat_id,
+        nguoiDungId: student.nguoidung_id,
         hoTen: student.hoten,
+        maSoDinhDanh: student.masodinhdanh,
         khoaPhong: student.khoaphong,
         namHoc: student.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(student.hinhanh),
+        hinhAnh: buildUserAvatarUrl(student.hinhanh),
         thanhTich: student.thanhtich,
         thuTu: student.thutu,
         trangThai: student.trangthai,
@@ -122,27 +124,18 @@ export const getStudentShowcaseById = async (req, res) => {
 export const createStudentShowcase = async (req, res) => {
   try {
     const {
-      hoTen,
-      khoaPhong,
+      nguoiDungId,
       namHoc,
-      hinhAnh,
       thanhTich,
       thuTu,
       trangThai
     } = req.body;
 
     // Validate
-    if (!hoTen || hoTen.trim() === '') {
+    if (!nguoiDungId || isNaN(nguoiDungId)) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập họ tên sinh viên",
-      });
-    }
-
-    if (hoTen.trim().length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Họ tên không được vượt quá 100 ký tự",
+        message: "Vui lòng chọn tài khoản sinh viên nổi bật",
       });
     }
 
@@ -155,10 +148,8 @@ export const createStudentShowcase = async (req, res) => {
 
     // Tạo mới
     const result = await StudentShowcaseModel.createStudentShowcase({
-      hoTen: hoTen.trim(),
-      khoaPhong: khoaPhong?.trim() || null,
+      nguoiDungId: parseInt(nguoiDungId, 10),
       namHoc: namHoc?.trim() || null,
-      hinhAnh: hinhAnh || null,
       thanhTich: thanhTich?.trim() || null,
       thuTu: thuTu || 0,
       trangThai: trangThai || 'Hien thi'
@@ -172,10 +163,12 @@ export const createStudentShowcase = async (req, res) => {
       message: "Thêm sinh viên nổi bật thành công",
       student: {
         id: newStudent.sinhviennoibat_id,
+        nguoiDungId: newStudent.nguoidung_id,
         hoTen: newStudent.hoten,
+        maSoDinhDanh: newStudent.masodinhdanh,
         khoaPhong: newStudent.khoaphong,
         namHoc: newStudent.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(newStudent.hinhanh),
+        hinhAnh: buildUserAvatarUrl(newStudent.hinhanh),
         thanhTich: newStudent.thanhtich,
         thuTu: newStudent.thutu,
         trangThai: newStudent.trangthai
@@ -196,10 +189,8 @@ export const updateStudentShowcase = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      hoTen,
-      khoaPhong,
+      nguoiDungId,
       namHoc,
-      hinhAnh,
       thanhTich,
       thuTu,
       trangThai
@@ -222,10 +213,10 @@ export const updateStudentShowcase = async (req, res) => {
     }
 
     // Validate
-    if (!hoTen || hoTen.trim() === '') {
+    if (!nguoiDungId || isNaN(nguoiDungId)) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập họ tên sinh viên",
+        message: "Vui lòng chọn tài khoản sinh viên nổi bật",
       });
     }
 
@@ -238,10 +229,8 @@ export const updateStudentShowcase = async (req, res) => {
 
     // Cập nhật
     await StudentShowcaseModel.updateStudentShowcase(id, {
-      hoTen: hoTen.trim(),
-      khoaPhong: khoaPhong?.trim() || null,
+      nguoiDungId: parseInt(nguoiDungId, 10),
       namHoc: namHoc?.trim() || null,
-      hinhAnh: hinhAnh || null,
       thanhTich: thanhTich?.trim() || null,
       thuTu: thuTu || 0,
       trangThai: trangThai || 'Hien thi'
@@ -255,10 +244,12 @@ export const updateStudentShowcase = async (req, res) => {
       message: "Cập nhật sinh viên nổi bật thành công",
       student: {
         id: updatedStudent.sinhviennoibat_id,
+        nguoiDungId: updatedStudent.nguoidung_id,
         hoTen: updatedStudent.hoten,
+        maSoDinhDanh: updatedStudent.masodinhdanh,
         khoaPhong: updatedStudent.khoaphong,
         namHoc: updatedStudent.namhoc,
-        hinhAnh: buildStudentShowcaseImageUrl(updatedStudent.hinhanh),
+        hinhAnh: buildUserAvatarUrl(updatedStudent.hinhanh),
         thanhTich: updatedStudent.thanhtich,
         thuTu: updatedStudent.thutu,
         trangThai: updatedStudent.trangthai

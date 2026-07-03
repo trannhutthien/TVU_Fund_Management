@@ -217,6 +217,13 @@ export const submitGuestApplication = async (req, res) => {
       });
     }
 
+    if (fund.loai_dieu_hanh === "Tap trung - Be chung") {
+      return res.status(400).json({
+        success: false,
+        message: "Không được phép nộp đơn xin hỗ trợ từ Bể tiền chung phát triển. Vui lòng nộp vào các Mục chi con."
+      });
+    }
+
     // 3. Tạo bảo mật và tracking
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // OTP 6 số
     const otpExpiresAt = createGuestOtpExpiresAt();

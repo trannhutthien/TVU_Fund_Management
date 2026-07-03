@@ -81,6 +81,8 @@ const mapStatusToBadge = (trangThai) => {
   return 'pending';
 };
 
+const getLoaiDieuHanh = (fund) => fund?.loaiDieuHanh ?? fund?.loai_dieu_hanh ?? '';
+
 const generateMaLoai = (str) => {
   if (!str) return '';
   return str
@@ -254,15 +256,19 @@ const QuyListPage = ({ isAdmin = false }) => {
     const dangHoatDong = funds.filter((f) => f.trangThai === 'Dang hoat dong')
       .length;
     const tamDung = funds.filter((f) => f.trangThai === 'Tam dung').length;
-    const tongSoDu = funds
-      .filter((f) => f.trangThai === 'Dang hoat dong')
+    const activeFunds = funds.filter((f) => f.trangThai === 'Dang hoat dong');
+    const tongSoDuHeThong = activeFunds
+      .filter((f) => getLoaiDieuHanh(f) === 'Tap trung - Be chung')
+      .reduce((sum, f) => sum + Number(f.soDu || 0), 0);
+    const tongSoDuHoatDong = activeFunds
+      .filter((f) => getLoaiDieuHanh(f) === 'Tap trung - Muc chi')
       .reduce((sum, f) => sum + Number(f.soDu || 0), 0);
     const sapHetHan = funds.filter((f) => {
       if (f.trangThai !== 'Dang hoat dong') return false;
       const d = daysUntil(f.hanNopDon);
       return d !== null && d >= 0 && d <= 7;
     }).length;
-    return { dangHoatDong, tongSoDu, sapHetHan, tamDung };
+    return { dangHoatDong, tongSoDuHeThong, tongSoDuHoatDong, sapHetHan, tamDung };
   }, [funds]);
 
   // ─── Pagination ──────────────────────────────────
@@ -366,8 +372,14 @@ const QuyListPage = ({ isAdmin = false }) => {
             iconBgColor="blue"
           />
           <StatCard
-            title="Tổng số dư"
-            value={formatCurrency(stats.tongSoDu)}
+            title="Tổng số dư hệ thống"
+            value={formatCurrency(stats.tongSoDuHeThong)}
+            icon={<HiOutlineBanknotes size={20} />}
+            iconBgColor="green"
+          />
+          <StatCard
+            title="Số dư hoạt động DHTV"
+            value={formatCurrency(stats.tongSoDuHoatDong)}
             icon={<HiOutlineBanknotes size={20} />}
             iconBgColor="green"
           />

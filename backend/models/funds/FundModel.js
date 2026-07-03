@@ -9,7 +9,7 @@ const checkFundNameExists = async (tenQuy) => {
   return rows.length > 0;
 };
 
-// Tạo quỹ mới
+// Tạo quỹ mới (Chạy trong Transaction để trích lập số dư khởi tạo từ quỹ mẹ)
 const createFund = async (fundData) => {
   const {
     tenQuy,
@@ -24,47 +24,96 @@ const createFund = async (fundData) => {
     soDu,
     nguoiTao,
     trangThai,
-    ngayBatDau
+    ngayBatDau,
+    loaiDieuHanh,
+    quyChaId
   } = fundData;
 
-  const [result] = await pool.execute(
-    `INSERT INTO quy (
-      tenquy,
-      loaiquy_id,
-      mota, 
-      hinhanh,
-      sotienmuctieu,
-      sotienhotrotoida,
-      soluonghotrotoida,
-      dieukienhotro,
-      ngaybatdau,
-      ngayketthuc,
-      sodu, 
-      nguoitao_id,
-      trangthai
-    ) VALUES (
-      ?, 
-      (SELECT loaiquy_id FROM loaiquy WHERE maloai = ? LIMIT 1),
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-    )`,
-    [
-      tenQuy,
-      loaiQuy, // mã loại quỹ (DT, NC, ...)
-      moTa || null,
-      hinhAnh || null,
-      soTienMucTieu || null,
-      soTienHoTroToiDa || null,
-      soLuongChiTieu || null,
-      dieuKienTomTat || null,
-      ngayBatDau || null,
-      hanNopDon || null,
-      soDu || 0.00,
-      nguoiTao || null,
-      trangThai || 'Dang hoat dong'
-    ]
-  );
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  return result;
+    const parseSoDu = soDu ? parseFloat(soDu) : 0.00;
+
+    // 1. Nếu là Mục chi con, khóa Quỹ mẹ để kiểm tra và trừ số dư khởi tạo.
+    if (loaiDieuHanh === 'Tap trung - Muc chi') {
+      if (!quyChaId) {
+        throw new Error('CHILD_FUND_PARENT_REQUIRED');
+      }
+
+      const [parentRows] = await connection.query(
+        `SELECT sodu, tenquy, loaidieuhanh FROM quy WHERE quy_id = ? FOR UPDATE`,
+        [quyChaId]
+      );
+      const parent = parentRows[0];
+      if (!parent) {
+        throw new Error('PARENT_FUND_NOT_FOUND');
+      }
+      if (parent.loaidieuhanh !== 'Tap trung - Be chung') {
+        throw new Error('INVALID_PARENT_FUND_TYPE');
+      }
+      if (parseSoDu > 0 && parseFloat(parent.sodu) < parseSoDu) {
+        throw new Error('INSUFFICIENT_PARENT_FUND_BALANCE');
+      }
+
+      if (parseSoDu > 0) {
+        await connection.execute(
+          `UPDATE quy SET sodu = sodu - ?, ngaycapnhat = CURRENT_TIMESTAMP WHERE quy_id = ?`,
+          [parseSoDu, quyChaId]
+        );
+      }
+    }
+
+    // 2. Thêm mới Quỹ con
+    const [result] = await connection.execute(
+      `INSERT INTO quy (
+        tenquy,
+        loaiquy_id,
+        mota,
+        hinhanh,
+        sotienmuctieu,
+        sotienhotrotoida,
+        soluonghotrotoida,
+        dieukienhotro,
+        ngaybatdau,
+        ngayketthuc,
+        sodu,
+        nguoitao_id,
+        trangthai,
+        loaidieuhanh,
+        quy_cha_id
+      ) VALUES (
+        ?,
+        (SELECT loaiquy_id FROM loaiquy WHERE maloai = ? LIMIT 1),
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )`,
+      [
+        tenQuy,
+        loaiQuy, // mã loại quỹ (DT, NC, ...)
+        moTa || null,
+        hinhAnh || null,
+        soTienMucTieu || null,
+        soTienHoTroToiDa || null,
+        soLuongChiTieu || null,
+        dieuKienTomTat || null,
+        ngayBatDau || null,
+        hanNopDon || null,
+        parseSoDu,
+        nguoiTao || null,
+        trangThai || 'Dang hoat dong',
+        loaiDieuHanh || 'Tap trung - Be chung',
+        quyChaId || null
+      ]
+    );
+
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 // Lấy thông tin quỹ theo ID
@@ -90,9 +139,13 @@ const getFundById = async (quyId) => {
       q.nguoitao_id,
       q.ngaytao AS ngay_tao,
       q.ngaycapnhat AS ngay_cap_nhat,
-      q.trangthai AS trang_thai
+      q.trangthai AS trang_thai,
+      q.loaidieuhanh AS loai_dieu_hanh,
+      q.quy_cha_id,
+      qp.tenquy AS ten_quy_cha
      FROM quy q
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+     LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
      WHERE q.quy_id = ?
      LIMIT 1`,
     [quyId]
@@ -122,7 +175,9 @@ const updateFund = async (quyId, fundData) => {
     dieuKienTomTat,
     hanNopDon,
     soDu,
-    trangThai
+    trangThai,
+    loaiDieuHanh,
+    quyChaId
   } = fundData;
 
   const [result] = await pool.execute(
@@ -138,6 +193,8 @@ const updateFund = async (quyId, fundData) => {
          ngayketthuc = ?, 
          sodu = ?, 
          trangthai = ?,
+         loaidieuhanh = ?,
+         quy_cha_id = ?,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE quy_id = ?`,
     [
@@ -152,6 +209,8 @@ const updateFund = async (quyId, fundData) => {
       hanNopDon || null,
       soDu || 0.00,
       trangThai,
+      loaiDieuHanh || 'Tap trung - Be chung',
+      quyChaId || null,
       quyId
     ]
   );
@@ -182,6 +241,9 @@ const getAllFunds = async () => {
       q.ngaytao AS ngay_tao,
       q.ngaycapnhat AS ngay_cap_nhat,
       q.trangthai AS trang_thai,
+      q.loaidieuhanh AS loai_dieu_hanh,
+      q.quy_cha_id,
+      qp.tenquy AS ten_quy_cha,
       COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) as so_don_da_nop,
       CASE 
         WHEN q.soluonghotrotoida IS NOT NULL AND q.soluonghotrotoida > 0 
@@ -190,8 +252,9 @@ const getAllFunds = async () => {
       END as phan_tram_da_nhan
      FROM quy q
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+     LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
      LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
-     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao
+     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
      ORDER BY q.ngaytao DESC`
   );
   return rows;
@@ -219,6 +282,9 @@ const getPublicFunds = async () => {
         q.ngayketthuc AS ngay_ket_thuc,
         q.ngayketthuc AS han_nop_don,
         q.sodu AS so_du,
+        q.loaidieuhanh AS loai_dieu_hanh,
+        q.quy_cha_id,
+        qp.tenquy AS ten_quy_cha,
         -- Tính số dư thực tế (trừ đi các khoản đang chờ giải ngân)
         (q.sodu - COALESCE(SUM(CASE WHEN yc.trangthai = 'Cho giai ngan' THEN yc.sotiendenghi ELSE 0 END), 0)) as so_du_thuc_te,
         q.nguoitao_id,
@@ -235,9 +301,10 @@ const getPublicFunds = async () => {
         END as phan_tram_da_nhan
        FROM quy q
        LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+       LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
        LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
        WHERE q.trangthai IN ('Dang hoat dong', 'Tam dung')
-       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao
+       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
        ORDER BY q.ngaytao DESC`
     );
     return rows;

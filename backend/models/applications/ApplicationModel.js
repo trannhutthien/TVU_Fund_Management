@@ -214,18 +214,16 @@ const updateApplicationStatus = async (yeucauhotroId, trangThai, connection = nu
   // TỰ ĐỘNG THÊM SINH VIÊN NỔI BẬT KHI ĐÃ GIẢI NGÂN THÀNH CÔNG
   if (trangThai === 'Da giai ngan') {
     try {
-      // 1. Lấy thông tin nguoidung_id và ngành học/khoa từ yeucauhotro và nguoidung
+      // 1. Lấy thông tin nguoidung_id từ yeucauhotro và nguoidung
       const [appRows] = await executor.execute(
-        `SELECT yc.nguoidung_id, nd.hoten, dv.tenkhoa AS khoaphong 
+        `SELECT yc.nguoidung_id 
          FROM yeucauhotro yc
-         INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
-         LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
          WHERE yc.yeucauhotro_id = ?`,
         [yeucauhotroId]
       );
 
       if (appRows.length > 0) {
-        const { nguoidung_id, hoten, khoaphong } = appRows[0];
+        const { nguoidung_id } = appRows[0];
 
         // 2. Kiểm tra xem sinh viên này đã có trong sinhviennoibat chưa
         const [existing] = await executor.execute(
@@ -239,16 +237,12 @@ const updateApplicationStatus = async (yeucauhotroId, trangThai, connection = nu
           await executor.execute(
             `INSERT INTO sinhviennoibat (
               nguoidung_id,
-              hoten,
-              khoaphong,
               namhoc,
               thanhtich,
               trangthai
-            ) VALUES (?, ?, ?, ?, ?, 'Hien thi')`,
+            ) VALUES (?, ?, ?, 'Hien thi')`,
             [
               nguoidung_id,
-              hoten,
-              khoaphong || 'Sinh viên được hỗ trợ',
               namHocHienTai,
               'Nhận hỗ trợ từ TVU Fund và đạt thành tích tốt trong học tập.'
             ]

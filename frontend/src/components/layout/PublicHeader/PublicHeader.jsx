@@ -143,7 +143,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       ],
     },
     { label: 'TRA CỨU', path: '/track' },
-    { label: 'TẠO ĐƠN', path: '/apply?role=student', highlight: true },
+    { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
     ...(isAuthenticated
       ? [
           { label: 'CÁ NHÂN', path: '/profile' },

@@ -235,6 +235,24 @@ const QuyDetailDrawer = ({ fund, onClose, onStatusUpdated, loaiQuyList = [] }) =
             </div>
 
             <div className={styles.infoItem}>
+              <div className={styles.infoLabel}>Hình thức vận hành</div>
+              <div className={styles.infoValue}>
+                {fund.loaiDieuHanh === 'Tap trung - Muc chi'
+                  ? 'Mục chi con'
+                  : 'Quỹ chung (Bể lớn)'}
+              </div>
+            </div>
+
+            {fund.loaiDieuHanh === 'Tap trung - Muc chi' && fund.tenQuyCha && (
+              <div className={styles.infoItem}>
+                <div className={styles.infoLabel}>Thuộc bể tiền chung</div>
+                <div className={styles.infoValue} style={{ color: '#2563eb', fontWeight: 600 }}>
+                  {fund.tenQuyCha}
+                </div>
+              </div>
+            )}
+
+            <div className={styles.infoItem}>
               <div className={styles.infoLabel}>Ngày tạo</div>
               <div className={styles.infoValue}>
                 {formatDate(fund.ngayTao)}

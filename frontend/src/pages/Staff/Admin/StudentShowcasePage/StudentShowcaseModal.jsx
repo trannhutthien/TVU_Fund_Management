@@ -1,58 +1,60 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
   HiOutlineXMark,
-  HiOutlinePhoto,
-  HiOutlineArrowUpTray,
-  HiOutlineTrash,
+  HiOutlineUser,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import studentShowcaseService from '@services/studentShowcaseService';
-import { uploadService } from '@services/uploadService';
+import userService from '@services/userService';
 import styles from './StudentShowcaseModal.module.scss';
-
-const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'
-).replace(/\/api\/?$/, '');
-
-const buildImageUrl = (path) => {
-  if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  return `${API_BASE}/${path.replace(/^\//, '')}`;
-};
 
 const StudentShowcaseModal = ({ student, onClose, onSuccess }) => {
   const isEdit = !!student;
   
   const [formData, setFormData] = useState({
-    hoTen: '',
-    khoaPhong: '',
+    nguoiDungId: '',
     namHoc: '',
-    hinhAnh: '',
     thanhTich: '',
     thuTu: 0,
     trangThai: 'Hien thi',
   });
   
+  const [students, setStudents] = useState([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState('');
-  const [uploading, setUploading] = useState(false);
-  
-  const fileInputRef = useRef(null);
+
+  // Tải danh sách tài khoản sinh viên
+  useEffect(() => {
+    const loadStudents = async () => {
+      try {
+        setLoadingStudents(true);
+        const res = await userService.getAll({ tab: 'sinh_vien', page_size: 1000 });
+        if (res?.success) {
+          // Chỉ lấy sinh viên có trạng thái hoạt động để đưa vào danh sách nổi bật
+          const activeStudents = (res.data || []).filter(s => s.trang_thai === 'HOAT_DONG');
+          setStudents(activeStudents);
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải danh sách sinh viên:', err);
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
+    
+    loadStudents();
+  }, []);
 
   useEffect(() => {
     if (student) {
       setFormData({
-        hoTen: student.hoTen || '',
-        khoaPhong: student.khoaPhong || '',
+        nguoiDungId: student.nguoiDungId || '',
         namHoc: student.namHoc || '',
-        hinhAnh: student.hinhAnh || '',
         thanhTich: student.thanhTich || '',
         thuTu: student.thuTu || 0,
         trangThai: student.trangThai || 'Hien thi',
       });
-      setImagePreview(student.hinhAnh || '');
     }
   }, [student]);
 
@@ -69,73 +71,51 @@ const StudentShowcaseModal = ({ student, onClose, onSuccess }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
-      alert('Chỉ chấp nhận file ảnh định dạng JPG, JPEG hoặc PNG');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Kích thước ảnh tối đa là 5MB');
-      return;
-    }
-
-    try {
-      setUploading(true);
-      const res = await uploadService.uploadStudentImage(file);
-      if (res?.success && res?.data?.filePath) {
-        setFormData(prev => ({ ...prev, hinhAnh: res.data.filePath }));
-        setImagePreview(res.data.filePath);
-      } else {
-        alert('Không thể tải ảnh lên máy chủ');
-      }
-    } catch (err) {
-      console.error('Lỗi upload ảnh sinh viên nổi bật:', err);
-      alert('Lỗi hệ thống khi tải ảnh lên');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setFormData(prev => ({ ...prev, hinhAnh: '' }));
-    setImagePreview('');
-  };
-
-  const previewUrl = imagePreview ? buildImageUrl(imagePreview) : '';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate
-    if (!formData.hoTen.trim()) {
-      alert('Vui lòng nhập họ tên sinh viên');
+    if (!formData.nguoiDungId) {
+      alert('Vui lòng chọn một tài khoản sinh viên');
       return;
     }
 
     try {
       setSubmitting(true);
       
+      const payload = {
+        nguoiDungId: formData.nguoiDungId,
+        namHoc: formData.namHoc,
+        thanhTich: formData.thanhTich,
+        thuTu: formData.thuTu,
+        trangThai: formData.trangThai
+      };
+
       if (isEdit) {
-        await studentShowcaseService.updateStudentShowcase(student.id, formData);
+        await studentShowcaseService.updateStudentShowcase(student.id, payload);
         alert('Cập nhật thành công!');
       } else {
-        await studentShowcaseService.createStudentShowcase(formData);
+        await studentShowcaseService.createStudentShowcase(payload);
         alert('Thêm sinh viên thành công!');
       }
       
       onSuccess?.();
     } catch (error) {
-      console.error('Error saving student:', error);
-      alert('Có lỗi xảy ra. Vui lòng thử lại.');
+      console.error('Lỗi lưu sinh viên nổi bật:', error);
+      alert(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  // Xác định sinh viên được chọn để hiển thị xem trước
+  const selectedStudent = isEdit
+    ? {
+        ho_ten: student.hoTen,
+        ma_so_dinh_danh: student.maSoDinhDanh,
+        khoa_phong: student.khoaPhong,
+        avatar: student.hinhAnh
+      }
+    : students.find(s => String(s.user_id) === String(formData.nguoiDungId));
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -156,34 +136,66 @@ const StudentShowcaseModal = ({ student, onClose, onSuccess }) => {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGrid}>
-            {/* Họ tên */}
+            
+            {/* Chọn sinh viên */}
             <div className={styles.fullWidth}>
-              <Input
-                label="Họ và tên *"
-                name="hoTen"
-                value={formData.hoTen}
-                onChange={handleChange}
-                placeholder="Nguyễn Văn A"
-                required
-              />
-            </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Sinh viên nổi bật *</label>
+                {isEdit ? (
+                  <div className={styles.select} style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', cursor: 'not-allowed' }}>
+                    {student.hoTen} ({student.maSoDinhDanh})
+                  </div>
+                ) : (
+                  <select
+                    name="nguoiDungId"
+                    value={formData.nguoiDungId}
+                    onChange={handleChange}
+                    className={styles.select}
+                    required
+                    disabled={loadingStudents}
+                  >
+                    <option value="">-- Chọn sinh viên từ danh sách --</option>
+                    {students.map(s => (
+                      <option key={s.user_id} value={s.user_id}>
+                        {s.ho_ten} ({s.ma_so_dinh_danh} - {s.khoa_phong || 'Chưa rõ khoa'})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
 
-            {/* Khoa/Ngành */}
-            <Input
-              label="Khoa/Ngành"
-              name="khoaPhong"
-              value={formData.khoaPhong}
-              onChange={handleChange}
-              placeholder="Công nghệ Thông tin"
-            />
+              {/* Thông tin hồ sơ của sinh viên được chọn */}
+              {selectedStudent && (
+                <div className={styles.studentCard}>
+                  <div className={styles.studentAvatarBox}>
+                    {selectedStudent.avatar ? (
+                      <img
+                        src={selectedStudent.avatar}
+                        alt={selectedStudent.ho_ten}
+                        className={styles.studentAvatar}
+                      />
+                    ) : (
+                      <HiOutlineUser size={30} style={{ color: '#cbd5e1' }} />
+                    )}
+                  </div>
+                  <div className={styles.studentInfo}>
+                    <div className={styles.studentName}>{selectedStudent.ho_ten}</div>
+                    <div className={styles.studentMeta}>
+                      <span><strong>MSSV:</strong> {selectedStudent.ma_so_dinh_danh}</span>
+                      <span><strong>Khoa:</strong> {selectedStudent.khoa_phong || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Năm học */}
             <Input
-              label="Năm học"
+              label="Năm học tiêu biểu"
               name="namHoc"
               value={formData.namHoc}
               onChange={handleChange}
-              placeholder="2023-2024"
+              placeholder="Ví dụ: 2023-2024"
             />
 
             {/* Thứ tự */}
@@ -198,7 +210,7 @@ const StudentShowcaseModal = ({ student, onClose, onSuccess }) => {
 
             {/* Trạng thái */}
             <div className={styles.formGroup}>
-              <label className={styles.label}>Trạng thái</label>
+              <label className={styles.label}>Trạng thái hiển thị</label>
               <select
                 name="trangThai"
                 value={formData.trangThai}
@@ -210,73 +222,17 @@ const StudentShowcaseModal = ({ student, onClose, onSuccess }) => {
               </select>
             </div>
 
-            {/* Hình ảnh */}
-            <div className={styles.fullWidth}>
-              <label className={styles.label}>Hình ảnh sinh viên</label>
-              
-              <div className={styles.imageUploadWrapper}>
-                <div className={styles.imagePreviewBox}>
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt="Xem trước"
-                      className={styles.previewImg}
-                    />
-                  ) : (
-                    <div className={styles.previewPlaceholder}>
-                      <HiOutlinePhoto className={styles.placeholderIcon} size={28} />
-                      <span>Chưa có ảnh</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className={styles.uploadActions}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png"
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                  />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    leftIcon={<HiOutlineArrowUpTray />}
-                    onClick={() => fileInputRef.current?.click()}
-                    loading={uploading}
-                    type="button"
-                  >
-                    {previewUrl ? 'Đổi ảnh khác' : 'Tải ảnh lên'}
-                  </Button>
-                  {previewUrl && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      leftIcon={<HiOutlineTrash />}
-                      onClick={handleRemoveImage}
-                      type="button"
-                    >
-                      Xóa ảnh
-                    </Button>
-                  )}
-                </div>
-              </div>
-              
-              <p className={styles.hint}>
-                Chấp nhận file JPG, JPEG, PNG dung lượng dưới 5MB. Ảnh lưu tại backend/uploads/avatars/students/
-              </p>
-            </div>
-
             {/* Thành tích */}
             <div className={styles.fullWidth}>
-              <label className={styles.label}>Thành tích</label>
+              <label className={styles.label}>Thành tích nổi bật *</label>
               <textarea
                 name="thanhTich"
                 value={formData.thanhTich}
                 onChange={handleChange}
-                placeholder="Mô tả thành tích nổi bật của sinh viên..."
+                placeholder="Ví dụ: Đạt giải Nhất nghiên cứu khoa học cấp Trường năm 2024, GPA đạt xuất sắc 3.8/4.0..."
                 className={styles.textarea}
                 rows={4}
+                required
               />
             </div>
           </div>

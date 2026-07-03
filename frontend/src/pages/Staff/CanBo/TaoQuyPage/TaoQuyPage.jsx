@@ -18,6 +18,7 @@ import Input from '@components/common/Input/Input';
 import useAuthStore from '@stores/authStore';
 import { createFund, getFundById, updateFund, getAllLoaiQuy } from '@services/fundService';
 import { uploadService } from '@services/uploadService';
+import api from '@services/api';
 import styles from './TaoQuyPage.module.scss';
 
 const API_BASE = (
@@ -44,6 +45,8 @@ const INITIAL_FORM = {
   dieu_kien_tom_tat: '',
   so_du: '0',
   trang_thai: 'Dang hoat dong',
+  loai_dieuhanh: 'Tap trung - Be chung',
+  quy_cha_id: '',
 };
 
 const buildImageUrl = (path) => {
@@ -64,6 +67,7 @@ const TaoQuyPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [loaiQuyList, setLoaiQuyList] = useState([]);
+  const [beChungList, setBeChungList] = useState([]);
 
   // Load loai quy tu API
   useEffect(() => {
@@ -77,6 +81,22 @@ const TaoQuyPage = () => {
         console.error('Error fetching loai-quy in TaoQuyPage:', err);
       });
   }, []);
+
+  // Fetch danh sách bể tiền chung nguồn
+  useEffect(() => {
+    api.get('/funds')
+      .then((res) => {
+        if (res?.data?.funds && Array.isArray(res.data.funds)) {
+          const filtered = res.data.funds.filter(
+            (f) => f.loaiDieuHanh === 'Tap trung - Be chung' && String(f.quyId) !== String(id)
+          );
+          setBeChungList(filtered);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching parent funds:', err);
+      });
+  }, [id]);
 
   // Load fund details in edit mode
   useEffect(() => {
@@ -100,6 +120,10 @@ const TaoQuyPage = () => {
             dieu_kien_tom_tat: fund.dieuKienTomTat || '',
             so_du: String(fund.soDu || 0),
             trang_thai: fund.trangThai || 'Dang hoat dong',
+            loai_dieuhanh: fund.loaiDieuHanh === 'Tap trung - Muc chi'
+              ? 'Tap trung - Muc chi'
+              : 'Tap trung - Be chung',
+            quy_cha_id: fund.quyChaId !== null ? String(fund.quyChaId) : '',
           });
         }
       } catch (err) {
@@ -176,6 +200,10 @@ const TaoQuyPage = () => {
       next.loai_quy = 'Vui lòng chọn loại quỹ';
     }
 
+    if (form.loai_dieuhanh === 'Tap trung - Muc chi' && !form.quy_cha_id) {
+      next.quy_cha_id = 'Vui lòng chọn Quỹ phát triển chung (Bể lớn)';
+    }
+
     if (form.mo_ta && form.mo_ta.length > 255) {
       next.mo_ta = 'Mô tả tối đa 255 ký tự';
     }
@@ -187,10 +215,16 @@ const TaoQuyPage = () => {
     const soDu = form.so_du === '' ? 0 : Number(form.so_du);
     if (Number.isNaN(soDu) || soDu < 0) {
       next.so_du = 'Số dư phải là số ≥ 0';
+    } else if (!isEditMode && form.loai_dieuhanh === 'Tap trung - Muc chi' && form.quy_cha_id) {
+      const parentFund = beChungList.find((b) => String(b.quyId) === String(form.quy_cha_id));
+      if (parentFund && soDu > parseFloat(parentFund.soDu || 0)) {
+        next.so_du = `Số dư khởi tạo không được vượt quá số dư hiện tại của Quỹ mẹ (${parseFloat(parentFund.soDu || 0).toLocaleString('vi-VN')}đ)`;
+      }
     }
 
     const mucTieu = form.so_tien_muc_tieu === '' ? null : Number(form.so_tien_muc_tieu);
     const hoTroToiDa = form.so_tien_ho_tro_toi_da === '' ? null : Number(form.so_tien_ho_tro_toi_da);
+    const soLuongChiTieu = form.so_luong_chi_tieu === '' ? null : Number(form.so_luong_chi_tieu);
     
     if (mucTieu !== null && (Number.isNaN(mucTieu) || mucTieu < 0)) {
       next.so_tien_muc_tieu = 'Số tiền mục tiêu phải ≥ 0';
@@ -199,10 +233,27 @@ const TaoQuyPage = () => {
       next.so_tien_ho_tro_toi_da = 'Số tiền hỗ trợ tối đa phải ≥ 0';
     }
 
-    if (form.so_luong_chi_tieu !== '') {
-      const sl = Number(form.so_luong_chi_tieu);
-      if (Number.isNaN(sl) || sl <= 0 || !Number.isInteger(sl)) {
+    if (soLuongChiTieu !== null) {
+      if (Number.isNaN(soLuongChiTieu) || soLuongChiTieu <= 0 || !Number.isInteger(soLuongChiTieu)) {
         next.so_luong_chi_tieu = 'Số suất phải là số nguyên > 0';
+      }
+    }
+
+    if (
+      mucTieu !== null &&
+      mucTieu > 0 &&
+      hoTroToiDa !== null &&
+      hoTroToiDa > 0 &&
+      !next.so_tien_muc_tieu &&
+      !next.so_tien_ho_tro_toi_da
+    ) {
+      const expectedSeats = mucTieu / hoTroToiDa;
+      if (!Number.isInteger(expectedSeats)) {
+        next.so_luong_chi_tieu = 'Số tiền mục tiêu phải chia hết cho số tiền hỗ trợ mỗi suất';
+      } else if (soLuongChiTieu === null) {
+        next.so_luong_chi_tieu = `Vui lòng nhập số suất bằng ${expectedSeats}`;
+      } else if (!next.so_luong_chi_tieu && soLuongChiTieu !== expectedSeats) {
+        next.so_luong_chi_tieu = `Số suất phải bằng Số tiền mục tiêu / Số tiền hỗ trợ mỗi suất: ${expectedSeats} suất`;
       }
     }
 
@@ -239,6 +290,8 @@ const TaoQuyPage = () => {
       soDu: form.so_du === '' ? 0 : Number(form.so_du),
       trangThai: form.trang_thai,
       nguoiTao: user?.id || null, // Thêm ID người tạo từ user hiện tại
+      loaiDieuHanh: form.loai_dieuhanh,
+      quyChaId: form.loai_dieuhanh === 'Tap trung - Muc chi' ? Number(form.quy_cha_id) : null
     };
 
     try {
@@ -367,6 +420,45 @@ const TaoQuyPage = () => {
                 </select>
               </div>
 
+              <div className={styles.col}>
+                <label className={styles.label}>
+                  Hình thức vận hành <span className={styles.required}>*</span>
+                </label>
+                <select
+                  className={styles.select}
+                  value={form.loai_dieuhanh}
+                  onChange={handleChange('loai_dieuhanh')}
+                >
+                  <option value="Tap trung - Be chung">Quỹ chung (Bể lớn)</option>
+                  <option value="Tap trung - Muc chi">Mục chi con (Trích từ bể lớn)</option>
+                </select>
+              </div>
+
+              {form.loai_dieuhanh === 'Tap trung - Muc chi' && (
+                <div className={styles.col}>
+                  <label className={styles.label}>
+                    Chọn Quỹ phát triển chung (Bể lớn) <span className={styles.required}>*</span>
+                  </label>
+                  <select
+                    className={`${styles.select} ${
+                      errors.quy_cha_id ? styles.selectError : ''
+                    }`}
+                    value={form.quy_cha_id}
+                    onChange={handleChange('quy_cha_id')}
+                  >
+                    <option value="">-- Chọn Bể tiền lớn --</option>
+                    {beChungList.map((item) => (
+                      <option key={item.quyId} value={item.quyId}>
+                        {item.tenQuy} (Số dư: {parseFloat(item.soDu || 0).toLocaleString('vi-VN')}đ)
+                      </option>
+                    ))}
+                  </select>
+                  {errors.quy_cha_id && (
+                    <span className={styles.errorMsg}>{errors.quy_cha_id}</span>
+                  )}
+                </div>
+              )}
+
               <div className={styles.colFull}>
                 <label className={styles.label}>Mô tả ngắn</label>
                 <textarea
@@ -476,6 +568,7 @@ const TaoQuyPage = () => {
                   onChange={handleChange('so_du')}
                   error={!!errors.so_du}
                   errorMessage={errors.so_du}
+                  disabled={isEditMode}
                 />
               </div>
 
