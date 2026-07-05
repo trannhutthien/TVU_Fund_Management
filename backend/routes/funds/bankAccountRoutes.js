@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getSchoolBankAccounts,
   getBankAccounts,
   getBankAccountsByUserId,
   createBankAccount,
@@ -12,6 +13,10 @@ import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
 const router = express.Router();
 
 // ─── BANK ACCOUNT ROUTES (TÀI KHOẢN NGÂN HÀNG)
+
+// GET /api/bank-accounts/school — Lấy danh sách tài khoản nhà trường (PUBLIC - không cần auth)
+// CÔNG DỤNG: Hiển thị danh sách TK nhà trường trong form donation để nhà tài trợ chọn
+router.get("/school", getSchoolBankAccounts);
 
 // GET /api/bank-accounts — Lấy danh sách tài khoản ngân hàng của user
 // Middleware: protect (cần token hợp lệ)

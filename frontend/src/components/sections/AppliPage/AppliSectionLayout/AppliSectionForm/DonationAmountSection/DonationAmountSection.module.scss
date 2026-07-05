@@ -166,3 +166,158 @@
     font-size: 1rem;
   }
 }
+
+// Bank Account Selection Styles
+.bankAccountSelection {
+  margin-bottom: 1.5rem;
+}
+
+.accountCount {
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.bankAccountList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.bankAccountCard {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: var(--color-white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  &.selected {
+    border-color: var(--color-primary);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    box-shadow: 0 4px 12px rgba(26, 47, 94, 0.15);
+
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: var(--color-primary);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+.bankInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.infoRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-weight: 500;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.bankName {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex: 1;
+}
+
+.accountNumber {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+
+.accountHolder {
+  font-size: 0.9375rem;
+  color: #475569;
+  font-weight: 600;
+  flex: 1;
+}
+
+.branch {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-style: italic;
+  flex: 1;
+}
+
+// Transfer Content Box Styles
+.transferContentBox {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid var(--color-gold);
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
+
+.transferContentLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 0.5rem;
+}
+
+.transferContent {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #78350f;
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px dashed #d97706;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.transferNote {
+  font-size: 0.8125rem;
+  color: #92400e;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .bankAccountList {
+    grid-template-columns: 1fr;
+  }
+
+  .transferContent {
+    font-size: 0.9375rem;
+  }
+}

@@ -222,6 +222,9 @@ const ApplyPage = () => {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [selectedFund, setSelectedFund] = useState(null);
   const [donationAmount, setDonationAmount] = useState(''); // Số tiền quyên góp cho Nhà tài trợ
+  const [schoolBankAccounts, setSchoolBankAccounts] = useState([]); // Danh sách TK nhà trường
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState(null); // TK nhà trường được chọn
+  const [transactionId, setTransactionId] = useState(''); // Mã giao dịch để hiển thị trong nội dung CK
   const [contentValues, setContentValues] = useState({ 
     tieu_de: '', 
     mo_ta: '',
@@ -274,6 +277,40 @@ const ApplyPage = () => {
     });
   }, [location.search, location.state]);
 
+  // Fetch danh sách tài khoản ngân hàng nhà trường khi mount (cho cả guest và authenticated donor)
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchSchoolBankAccounts = async () => {
+      try {
+        const response = await bankAccountService.getSchoolBankAccounts();
+        if (isMounted && response.success) {
+          setSchoolBankAccounts(response.data || []);
+          // Auto-select first account if available
+          if (response.data && response.data.length > 0 && !selectedBankAccountId) {
+            setSelectedBankAccountId(response.data[0].taiKhoanId);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching school bank accounts:', error);
+        toast.error('Không thể tải danh sách tài khoản ngân hàng');
+      }
+    };
+
+    // Only fetch if user is donor (authenticated or guest)
+    if (isDonor) {
+      fetchSchoolBankAccounts();
+      // Generate transaction ID once for this session
+      if (!transactionId) {
+        setTransactionId('TXN' + Math.floor(10000000 + Math.random() * 90000000));
+      }
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isDonor, selectedBankAccountId, transactionId]);
+
   const handleFundSelect = useCallback((fund) => {
     setSelectedFund((prev) => (prev === fund ? prev : fund));
   }, []);
@@ -292,6 +329,10 @@ const ApplyPage = () => {
 
   const handleApplyAISuggestion = useCallback((newText) => {
     setContentValues((prev) => ({ ...prev, mo_ta: newText }));
+  }, []);
+
+  const handleBankAccountSelect = useCallback((bankAccountId) => {
+    setSelectedBankAccountId(bankAccountId);
   }, []);
 
   const handleFilesChange = useCallback((files) => {
@@ -314,10 +355,15 @@ const ApplyPage = () => {
   // Trạng thái hợp lệ của từng bước riêng lẻ
   const isStep1Valid = useMemo(() => {
     if (isDonor) {
-      return !!selectedFund && !!donationAmount && parseFloat(donationAmount) >= 10000;
+      return (
+        !!selectedFund && 
+        !!donationAmount && 
+        parseFloat(donationAmount) >= 10000 &&
+        !!selectedBankAccountId // Phải chọn tài khoản ngân hàng
+      );
     }
     return !!selectedFund;
-  }, [isDonor, selectedFund, donationAmount]);
+  }, [isDonor, selectedFund, donationAmount, selectedBankAccountId]);
 
   const isStep2Valid = useMemo(() => {
     if (isDonor) {
@@ -446,19 +492,39 @@ const ApplyPage = () => {
         let applicationData;
         if (isDonor) {
           const txnId = onlineTxnId || 'VNPAY' + Math.floor(10000000 + Math.random() * 90000000);
+          
+          // Lấy thông tin bank account được chọn
+          const selectedBankAccount = schoolBankAccounts.find(
+            acc => acc.taiKhoanId === selectedBankAccountId
+          );
+          
           applicationData = {
             quy_id: selectedFund.quyId,
             so_tien: parseFloat(donationAmount),
             hinh_anh_minh_chung: fileUrl,
             hinh_thuc: paymentMethod,
             ma_giao_dich: txnId,
-            ghi_chu: `Quyên góp trực tuyến từ ${user.ho_ten || user.email || 'Nhà tài trợ'}`
+            ghi_chu: `Quyên góp trực tuyến từ ${user.ho_ten || user.email || 'Nhà tài trợ'}`,
+            // Thêm thông tin tài khoản ngân hàng được chọn
+            tai_khoan_ngan_hang_id: selectedBankAccountId,
+            thong_tin_tai_khoan: selectedBankAccount ? {
+              soTaiKhoan: selectedBankAccount.soTaiKhoan,
+              nganHang: selectedBankAccount.tenNganHang,
+              chiNhanh: selectedBankAccount.chiNhanh,
+              chuTaiKhoan: selectedBankAccount.chuTaiKhoan
+            } : null
           };
           
           if (!donationAmount || parseFloat(donationAmount) < 10000) {
             toast.error('Vui lòng nhập số tiền quyên góp hợp lệ (tối thiểu 10,000đ)');
             return;
           }
+          
+          if (!selectedBankAccountId) {
+            toast.error('Vui lòng chọn tài khoản ngân hàng');
+            return;
+          }
+          
           response = await api.post('/donations/authenticated', applicationData);
         } else {
           const soTienNum = parseFloat(contentValues.so_tien_yeu_cau);
@@ -503,6 +569,12 @@ const ApplyPage = () => {
         if (isDonor) {
           const txnId = onlineTxnId || 'VNPAY' + Math.floor(10000000 + Math.random() * 90000000);
           const currentGuestFields = guestDonorFieldsRef.current;
+          
+          // Lấy thông tin bank account được chọn
+          const selectedBankAccount = schoolBankAccounts.find(
+            acc => acc.taiKhoanId === selectedBankAccountId
+          );
+          
           const payload = {
             guestHoTen: currentGuestFields.guestHoTen,
             guestEmail: currentGuestFields.guestEmail,
@@ -514,8 +586,22 @@ const ApplyPage = () => {
             hinhThuc: paymentMethod,
             maGiaoDich: txnId,
             chungTu: fileUrl,
-            ghiChu: currentGuestFields.ghiChu || 'Quyên góp trực tuyến vãng lai'
+            ghiChu: currentGuestFields.ghiChu || 'Quyên góp trực tuyến vãng lai',
+            // Thêm thông tin tài khoản ngân hàng được chọn
+            taiKhoanNganHangId: selectedBankAccountId,
+            thongTinTaiKhoan: selectedBankAccount ? {
+              soTaiKhoan: selectedBankAccount.soTaiKhoan,
+              nganHang: selectedBankAccount.tenNganHang,
+              chiNhanh: selectedBankAccount.chiNhanh,
+              chuTaiKhoan: selectedBankAccount.chuTaiKhoan
+            } : null
           };
+          
+          if (!selectedBankAccountId) {
+            toast.error('Vui lòng chọn tài khoản ngân hàng');
+            return;
+          }
+          
           response = await guestService.submitDonation(payload);
         } else {
           const payload = {
@@ -974,6 +1060,9 @@ const ApplyPage = () => {
                           selectedFund={selectedFund}
                           donationAmount={donationAmount}
                           onAmountChange={setDonationAmount}
+                          schoolBankAccounts={schoolBankAccounts}
+                          selectedBankAccountId={selectedBankAccountId}
+                          onBankAccountSelect={handleBankAccountSelect}
                           nextButton={
                             activeStep === 1 ? (
                               <div className={styles.nextButtonRow}>
@@ -1029,7 +1118,7 @@ const ApplyPage = () => {
                                       </button>
                                     </p>
                                     {defaultSponsorBank.chiNhanh && <p><strong>Chi nhánh:</strong> {defaultSponsorBank.chiNhanh}</p>}
-                                    <p><strong>Nội dung chuyển khoản gợi ý:</strong> {guestFields.guestHoTen || user?.ho_ten || 'Nha tai tro'} ung ho {selectedFund?.tenQuy || 'Quy phat trien'}</p>
+                                    <p><strong>Nội dung chuyển khoản:</strong> (tên nhà tài trợ) (số điện thoại) (email) (mã giao dịch chuyển khoản)</p>
                                   </div>
                                 </div>
                               </div>

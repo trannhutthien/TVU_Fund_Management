@@ -392,10 +392,15 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
 
               <div className={styles.infoCell}>
                 <div className={styles.infoLabel}>
-                  <HiOutlineUsers className={styles.infoIcon} /> Số người đã nhận hỗ trợ
+                  <HiOutlineUsers className={styles.infoIcon} /> 
+                  {fundDetail.loaiDieuHanh === 'Tap trung - Be chung' 
+                    ? 'Số quỹ con đang hoạt động' 
+                    : 'Số người đã nhận hỗ trợ'}
                 </div>
                 <div className={styles.infoValue}>
-                  {soDonDaNop || 0} người
+                  {fundDetail.loaiDieuHanh === 'Tap trung - Be chung'
+                    ? `${fundDetail.soQuyConHoatDong || 0} quỹ con`
+                    : `${soDonDaNop || 0} người`}
                 </div>
               </div>
 

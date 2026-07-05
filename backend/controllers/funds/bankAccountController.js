@@ -1,4 +1,36 @@
 import pool from "../../config/db.js";
+import BankAccountModel from "../../models/funds/BankAccountModel.js";
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/bank-accounts/school (LẤY DANH SÁCH TK NHÀ TRƯỜNG) ──────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getSchoolBankAccounts = async (req, res) => {
+  try {
+    const accounts = await BankAccountModel.getSchoolBankAccounts();
+
+    const data = accounts.map(acc => ({
+      taiKhoanId: acc.taikhoannganhang_id,
+      soTaiKhoan: acc.sotaikhoan,
+      tenNganHang: acc.nganhang,
+      chiNhanh: acc.chinhanh,
+      chuTaiKhoan: acc.chutaikhoan,
+      trangThai: acc.trangthai,
+      ngayTao: acc.ngaytao,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách tài khoản nhà trường thành công",
+      data
+    });
+  } catch (error) {
+    console.error("Lỗi getSchoolBankAccounts:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── GET /api/bank-accounts (LẤY DANH SÁCH TÀI KHOẢN NGÂN HÀNG CỦA USER) ──────
@@ -249,6 +281,7 @@ export const getBankAccountsByUserId = async (req, res) => {
 };
 
 export default {
+  getSchoolBankAccounts,
   getBankAccounts,
   getBankAccountsByUserId,
   createBankAccount,

@@ -356,6 +356,7 @@ export const getFunds = async (req, res) => {
         trangThai: fund.trang_thai,
         soDonDaNop: fund.so_don_da_nop,
         phanTramDaNhan: fund.phan_tram_da_nhan,
+        soQuyConHoatDong: fund.so_quy_con_hoat_dong, // Số quỹ con đang hoạt động (cho quỹ mẹ)
         loaiDieuHanh: fund.loai_dieu_hanh,
         quyChaId: fund.quy_cha_id,
         tenQuyCha: fund.ten_quy_cha
@@ -409,6 +410,7 @@ export const getPublicFunds = async (req, res) => {
         trangThai: fund.trang_thai,
         soDonDaNop: fund.so_don_da_nop,
         phanTramDaNhan: fund.phan_tram_da_nhan,
+        soQuyConHoatDong: fund.so_quy_con_hoat_dong, // Số quỹ con đang hoạt động (cho quỹ mẹ)
         loaiDieuHanh: fund.loai_dieu_hanh,
         quyChaId: fund.quy_cha_id,
         tenQuyCha: fund.ten_quy_cha
@@ -520,13 +522,11 @@ export const getFundDetail = async (req, res) => {
     }
 
     // Dữ liệu công khai đi kèm trang chi tiết quỹ
-    const [stats, khoanTaiTro, yeuCauHoTro, bankAccounts] = await Promise.all([
+    const [stats, khoanTaiTro, yeuCauHoTro] = await Promise.all([
       FundModel.getFundStats(id),
       FundModel.getReceivedDonationsByFundId(id),
       FundModel.getDisbursedApplicationsByFundId(id),
-      BankAccountModel.getBankAccountsByFundId(id),
     ]);
-    const activeBankAccounts = bankAccounts.filter(acc => acc.trangthai === 'Hoat dong');
 
     return res.status(200).json({
       success: true,
@@ -584,14 +584,6 @@ export const getFundDetail = async (req, res) => {
           trangThai: item.trangthai,
           ngayNop: item.ngaynop,
           ngayCapNhat: item.ngaycapnhat,
-        })),
-        bankAccounts: activeBankAccounts.map(acc => ({
-          taiKhoanNganHangId: acc.taikhoannganhang_id,
-          soTaiKhoan: acc.sotaikhoan,
-          nganHang: acc.nganhang,
-          chiNhanh: acc.chinhanh,
-          chuTaiKhoan: acc.chutaikhoan,
-          trangThai: acc.trangthai,
         })),
       }
     });
@@ -768,8 +760,9 @@ export const updateFund = async (req, res) => {
 };
 
 // ─── GET /api/funds/:id/bank-accounts ─────────────────────────────────────────
-// Yêu cầu: API công khai - KHÔNG CẦN AUTHENTICATION (cho trang donation)
-// Lấy danh sách tài khoản ngân hàng của quỹ
+// API công khai - KHÔNG CẦN AUTHENTICATION (cho trang donation)
+// LƯU Ý: Endpoint này đã DEPRECATED. Client nên dùng GET /api/bank-accounts/school thay thế
+// để lấy danh sách tài khoản nhà trường (không còn liên kết với quỹ cụ thể)
 export const getFundBankAccounts = async (req, res) => {
   try {
     const { id } = req.params;
@@ -791,13 +784,10 @@ export const getFundBankAccounts = async (req, res) => {
       });
     }
 
-    // 3. Lấy danh sách tài khoản ngân hàng của quỹ
-    const bankAccounts = await BankAccountModel.getBankAccountsByFundId(id);
+    // 3. Lấy danh sách tài khoản nhà trường (thay vì tài khoản của quỹ)
+    const schoolAccounts = await BankAccountModel.getSchoolBankAccounts();
 
-    // 4. Lọc chỉ lấy tài khoản đang hoạt động
-    const activeAccounts = bankAccounts.filter(acc => acc.trangthai === 'Hoat dong');
-
-    // 5. Trả về danh sách tài khoản
+    // 4. Trả về danh sách tài khoản nhà trường
     return res.status(200).json({
       success: true,
       message: "Lấy danh sách tài khoản ngân hàng thành công",
@@ -805,7 +795,7 @@ export const getFundBankAccounts = async (req, res) => {
         quyId: fund.quy_id,
         tenQuy: fund.ten_quy,
       },
-      bankAccounts: activeAccounts.map(acc => ({
+      bankAccounts: schoolAccounts.map(acc => ({
         taiKhoanNganHangId: acc.taikhoannganhang_id,
         soTaiKhoan: acc.sotaikhoan,
         nganHang: acc.nganhang,
@@ -813,7 +803,8 @@ export const getFundBankAccounts = async (req, res) => {
         chuTaiKhoan: acc.chutaikhoan,
         trangThai: acc.trangthai,
       })),
-      total: activeAccounts.length
+      total: schoolAccounts.length,
+      deprecationNotice: "Endpoint này sẽ bị loại bỏ trong phiên bản tương lai. Vui lòng dùng GET /api/bank-accounts/school"
     });
   } catch (error) {
     console.error("Lỗi getFundBankAccounts:", error);

@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import DonationModel from "../../models/donations/DonationModel.js";
 import pool from "../../config/db.js";
 import FundModel from "../../models/funds/FundModel.js";
@@ -205,38 +206,127 @@ export const createStaffDonation = async (req, res) => {
         return res.status(400).json({ success: false, message: "Thiếu thông tin tên nhà tài trợ mới" });
       }
 
-      // Check duplicate by email
-      if (donor_info.email?.trim()) {
+      // Validate email (bắt buộc để tạo tài khoản)
+      const email = donor_info.email?.trim();
+      if (!email) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ 
+          success: false, 
+          message: "Email là bắt buộc để tạo nhà tài trợ mới" 
+        });
+      }
+
+      const tenNhaTaiTro = donor_info.tenNhaTaiTro.trim();
+      const loaiNhaTaiTro = donor_info.loaiNhaTaiTro || 'Ca nhan';
+      const soDienThoai = donor_info.soDienThoai?.trim() || null;
+      const diaChi = donor_info.diaChi?.trim() || null;
+
+      let nguoiDungId = null;
+      let isNewUser = false;
+
+      // BƯỚC 1: Check xem email đã có trong nguoidung chưa
+      const [existingUsers] = await connection.query(
+        `SELECT nguoidung_id, loaitaikhoan FROM nguoidung WHERE email = ? LIMIT 1`,
+        [email]
+      );
+
+      if (existingUsers.length > 0) {
+        nguoiDungId = existingUsers[0].nguoidung_id;
+        const currentType = existingUsers[0].loaitaikhoan;
+        
+        // Log warning nếu loại tài khoản khác
+        if (currentType !== 'Nha tai tro' && currentType !== 'NHA_TAI_TRO') {
+          console.warn(`⚠️ User ${email} hiện là ${currentType}, sẽ thêm vai trò Nhà tài trợ`);
+        }
+        
+        // Check xem user này đã có nhataitro chưa
         const [existingDonors] = await connection.query(
-          "SELECT nhataitro_id FROM nhataitro WHERE email = ? LIMIT 1",
-          [donor_info.email.trim()]
+          `SELECT nhataitro_id FROM nhataitro WHERE nguoidung_id = ? LIMIT 1`,
+          [nguoiDungId]
         );
+        
         if (existingDonors.length > 0) {
+          // User đã có donor record → Sử dụng luôn
           resolvedNhaTaiTroId = existingDonors[0].nhataitro_id;
+          console.log(`✓ Sử dụng nhà tài trợ hiện có ID: ${resolvedNhaTaiTroId}`);
+        }
+        // Nếu chưa có donor record → Sẽ tạo ở BƯỚC 3
+      } else {
+        // Check orphan donor (có email nhưng nguoi_dung_id = NULL)
+        const [orphanDonors] = await connection.query(
+          `SELECT nhataitro_id FROM nhataitro 
+           WHERE email = ? AND nguoidung_id IS NULL LIMIT 1`,
+          [email]
+        );
+
+        if (orphanDonors.length > 0) {
+          // Có donor cũ chưa có user → Sẽ tạo user và link
+          resolvedNhaTaiTroId = orphanDonors[0].nhataitro_id;
+          console.log(`⚠️ Phát hiện orphan donor ID: ${resolvedNhaTaiTroId}, sẽ tạo user và link`);
         }
       }
 
+      // BƯỚC 2: Nếu chưa có nguoidung → Tạo mới
+      if (!nguoiDungId) {
+        // Generate temporary password (8 ký tự random)
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        
+        // Tạo mã số định danh unique
+        const maSoDinhDanh = `NTT${Date.now().toString().slice(-6)}`;
+
+        const [userInsert] = await connection.query(
+          `INSERT INTO nguoidung (
+            email, matkhau, hoten, masodinhdanh, sodienthoai, 
+            vaitro_id, loaitaikhoan, trangthai, diachi
+          ) VALUES (?, ?, ?, ?, ?, 4, 'NHA_TAI_TRO', 'Hoat dong', ?)`,
+          [email, hashedPassword, tenNhaTaiTro, maSoDinhDanh, soDienThoai, diaChi]
+        );
+        
+        nguoiDungId = userInsert.insertId;
+        isNewUser = true;
+
+        console.log(`✓ Tạo tài khoản người dùng mới ID: ${nguoiDungId}`);
+        console.log(`  Email: ${email}`);
+        console.log(`  Mật khẩu tạm thời: ${tempPassword}`);
+        console.log(`  ⚠️ Lưu ý: Gửi email thông báo cho nhà tài trợ!`);
+
+        // TODO: Gửi email thông báo tài khoản
+        // Uncomment khi emailService đã sẵn sàng:
+        // try {
+        //   await emailService.sendDonorWelcomeEmail({
+        //     email,
+        //     name: tenNhaTaiTro,
+        //     tempPassword,
+        //     loginUrl: process.env.FRONTEND_URL + '/login'
+        //   });
+        //   console.log(`✓ Đã gửi email thông báo đến ${email}`);
+        // } catch (emailError) {
+        //   console.error(`✗ Lỗi gửi email:`, emailError);
+        //   // Không fail transaction vì email
+        // }
+      }
+
+      // BƯỚC 3: Tạo hoặc update nhataitro
       if (!resolvedNhaTaiTroId) {
-        const loaiNhaTaiTro = donor_info.loaiNhaTaiTro || 'Ca nhan';
+        // Tạo mới nhataitro với link tới nguoidung
         const [donorInsert] = await connection.query(
           `INSERT INTO nhataitro (
-            nguoidung_id,
-            tennhataitro,
-            loainhataitro,
-            email,
-            sodienthoai,
-            diachi,
-            trangthai
-          ) VALUES (NULL, ?, ?, ?, ?, ?, 'Hoat dong')`,
-          [
-            donor_info.tenNhaTaiTro.trim(),
-            loaiNhaTaiTro,
-            donor_info.email?.trim() || null,
-            donor_info.soDienThoai?.trim() || null,
-            donor_info.diaChi?.trim() || null,
-          ]
+            nguoidung_id, tennhataitro, loainhataitro, 
+            email, sodienthoai, diachi, trangthai
+          ) VALUES (?, ?, ?, ?, ?, ?, 'Hoat dong')`,
+          [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, soDienThoai, diaChi]
         );
         resolvedNhaTaiTroId = donorInsert.insertId;
+        console.log(`✓ Tạo nhà tài trợ mới ID: ${resolvedNhaTaiTroId}, linked với user ${nguoiDungId}`);
+      } else {
+        // Update orphan donor với nguoi_dung_id
+        await connection.query(
+          `UPDATE nhataitro SET nguoidung_id = ? WHERE nhataitro_id = ?`,
+          [nguoiDungId, resolvedNhaTaiTroId]
+        );
+        console.log(`✓ Cập nhật orphan donor ID: ${resolvedNhaTaiTroId} với user ${nguoiDungId}`);
       }
     } else {
       if (!resolvedNhaTaiTroId || isNaN(resolvedNhaTaiTroId)) {
@@ -426,25 +516,16 @@ export const createPublicDonation = async (req, res) => {
     const result = await DonationModel.createPublicDonation(donationData);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 4: LẤY THÔNG TIN TÀI KHOẢN NGÂN HÀNG CỦA QUỸ
-    // ─────────────────────────────────────────────────────────────────────────
-    // Lấy danh sách tài khoản ngân hàng thuộc quỹ này
-    const bankAccounts = await BankAccountModel.getBankAccountsByFundId(quyId);
-    
-    // Lấy tài khoản chính (tài khoản đầu tiên đang hoạt động)
-    const primaryAccount = bankAccounts.find(acc => acc.trangthai === 'Hoat dong') || bankAccounts[0];
-    
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 5: TRẢ VỀ THÔNG TIN DONATION VÀ THÔNG TIN NGÂN HÀNG
+    // BƯỚC 4: TRẢ VỀ THÔNG TIN DONATION
     // ─────────────────────────────────────────────────────────────────────────
     // Người dùng sẽ nhận được:
     // - Thông tin donation vừa tạo (ID, trạng thái, số tiền...)
-    // - Thông tin tài khoản ngân hàng của quỹ để chuyển khoản
-    // - Nội dung chuyển khoản (để hệ thống tự động đối soát)
+    // - Nội dung chuyển khoản để hệ thống tự động đối soát
+    //   (Client sẽ tự lấy danh sách TK nhà trường từ API /api/bank-accounts/school)
     
     const responseData = {
       success: true,
-      message: "Đăng ký đóng góp thành công. Vui lòng chuyển khoản theo thông tin bên dưới.",
+      message: "Đăng ký đóng góp thành công. Vui lòng chuyển khoản theo thông tin đã chọn.",
       donation: {
         khoanTaiTroId: result.khoanTaiTroId,
         nhaTaiTro: {
@@ -463,23 +544,6 @@ export const createPublicDonation = async (req, res) => {
         ngayTaiTro: new Date()
       }
     };
-
-    // Nếu có tài khoản ngân hàng, thêm vào response
-    if (primaryAccount) {
-      responseData.bankInfo = {
-        tenNganHang: primaryAccount.nganhang,
-        chiNhanh: primaryAccount.chinhanh || null,
-        soTaiKhoan: primaryAccount.sotaikhoan,
-        chuTaiKhoan: primaryAccount.chutaikhoan,
-        noiDung: `DONATE ${result.khoanTaiTroId} ${donationData.ten}`,
-        soTien: donationData.soTien,
-        ghiChu: "Vui lòng chuyển khoản đúng nội dung để hệ thống tự động xác nhận"
-      };
-    } else {
-      // Nếu quỹ chưa có tài khoản ngân hàng, thông báo
-      responseData.message = "Đăng ký đóng góp thành công. Quỹ chưa có thông tin tài khoản ngân hàng. Vui lòng liên hệ quản trị viên.";
-      responseData.bankInfo = null;
-    }
 
     return res.status(201).json(responseData);
   } catch (error) {
@@ -924,10 +988,8 @@ export const createAuthenticatedDonation = async (req, res) => {
       isStaff: false,
     });
 
-    // Lấy thông tin tài khoản ngân hàng của quỹ
-    const bankAccounts = await BankAccountModel.getBankAccountsByFundId(quy_id);
-    const primaryAccount = bankAccounts.find(acc => acc.trangthai === 'Hoat dong') || bankAccounts[0];
-
+    // Trả về thông tin donation
+    // Client sẽ tự lấy danh sách TK nhà trường từ API /api/bank-accounts/school nếu cần
     const responseData = {
       success: true,
       message: "Quyên góp thành công! Cảm ơn bạn đã đồng hành cùng TVU Fund.",
@@ -939,19 +1001,6 @@ export const createAuthenticatedDonation = async (req, res) => {
         trang_thai: "Cho duyet",
       }
     };
-
-    // Thêm thông tin ngân hàng nếu có
-    if (primaryAccount) {
-      responseData.bankInfo = {
-        tenNganHang: primaryAccount.nganhang,
-        chiNhanh: primaryAccount.chinhanh || null,
-        soTaiKhoan: primaryAccount.sotaikhoan,
-        chuTaiKhoan: primaryAccount.chutaikhoan,
-        noiDung: `DONATE ${result.khoanTaiTroId} ${donor.tennhataitro}`,
-        soTien: Number(so_tien),
-        ghiChu: "Vui lòng chuyển khoản đúng nội dung để hệ thống tự động xác nhận"
-      };
-    }
 
     return res.status(201).json(responseData);
   } catch (error) {

@@ -4,12 +4,11 @@ import pool from "../../config/db.js";
 // ─── BANK ACCOUNT MODEL (TÀI KHOẢN NGÂN HÀNG CỦA QUỸ) ─────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Lấy tất cả tài khoản ngân hàng của quỹ
-const getBankAccountsByFundId = async (quyId) => {
+// Lấy tất cả tài khoản ngân hàng nhà trường (đang hoạt động)
+const getSchoolBankAccounts = async () => {
   const [rows] = await pool.query(
     `SELECT 
       taikhoannganhang_id,
-      quy_id,
       sotaikhoan,
       nganhang,
       chinhanh,
@@ -18,9 +17,9 @@ const getBankAccountsByFundId = async (quyId) => {
       ngaytao,
       ngaycapnhat
      FROM taikhoannganhang
-     WHERE quy_id = ?
-     ORDER BY ngaytao DESC`,
-    [quyId]
+     WHERE loaitaikhoan = 'Nha truong' 
+       AND trangthai = 'Hoat dong'
+     ORDER BY ngaytao DESC`
   );
   return rows;
 };
@@ -46,7 +45,7 @@ const getBankAccountById = async (accountId) => {
   return rows[0] || null;
 };
 
-// Tạo tài khoản ngân hàng mới cho quỹ
+// Tạo tài khoản ngân hàng mới
 const createBankAccount = async (accountData) => {
   const {
     quyId,
@@ -54,14 +53,15 @@ const createBankAccount = async (accountData) => {
     nganHang,
     chiNhanh,
     chuTaiKhoan,
-    trangThai
+    trangThai,
+    loaiTaiKhoan
   } = accountData;
 
   const [result] = await pool.query(
     `INSERT INTO taikhoannganhang 
-    (quy_id, sotaikhoan, nganhang, chinhanh, chutaikhoan, trangthai) 
-    VALUES (?, ?, ?, ?, ?, ?)`,
-    [quyId, soTaiKhoan, nganHang, chiNhanh || null, chuTaiKhoan, trangThai || 'Hoat dong']
+    (quy_id, sotaikhoan, nganhang, chinhanh, chutaikhoan, trangthai, loaitaikhoan) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [quyId || null, soTaiKhoan, nganHang, chiNhanh || null, chuTaiKhoan, trangThai || 'Hoat dong', loaiTaiKhoan || 'Sinh vien']
   );
   
   return result.insertId;
@@ -74,7 +74,8 @@ const updateBankAccount = async (accountId, accountData) => {
     nganHang,
     chiNhanh,
     chuTaiKhoan,
-    trangThai
+    trangThai,
+    loaiTaiKhoan
   } = accountData;
 
   const [result] = await pool.execute(
@@ -84,9 +85,10 @@ const updateBankAccount = async (accountId, accountData) => {
          chinhanh = ?, 
          chutaikhoan = ?, 
          trangthai = ?,
+         loaitaikhoan = ?,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE taikhoannganhang_id = ?`,
-    [soTaiKhoan, nganHang, chiNhanh || null, chuTaiKhoan, trangThai, accountId]
+    [soTaiKhoan, nganHang, chiNhanh || null, chuTaiKhoan, trangThai, loaiTaiKhoan || 'Sinh vien', accountId]
   );
   
   return result;
@@ -145,7 +147,7 @@ const getAllActiveBankAccounts = async () => {
 };
 
 export default {
-  getBankAccountsByFundId,
+  getSchoolBankAccounts,
   getBankAccountById,
   createBankAccount,
   updateBankAccount,

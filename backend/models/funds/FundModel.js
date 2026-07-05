@@ -328,7 +328,14 @@ const getPublicFunds = async () => {
           WHEN q.soluonghotrotoida IS NOT NULL AND q.soluonghotrotoida > 0 
           THEN ROUND((COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) / q.soluonghotrotoida) * 100, 0)
           ELSE 0
-        END as phan_tram_da_nhan
+        END as phan_tram_da_nhan,
+        -- Đếm số quỹ con đang hoạt động (cho quỹ mẹ - Bể chung)
+        -- Chỉ đếm quỹ con có loaidieuhanh = 'Tap trung - Muc chi'
+        (SELECT COUNT(*) 
+         FROM quy qc 
+         WHERE qc.quy_cha_id = q.quy_id 
+         AND qc.loaidieuhanh = 'Tap trung - Muc chi'
+         AND qc.trangthai = 'Dang hoat dong') as so_quy_con_hoat_dong
        FROM quy q
        LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
        LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id

@@ -59,7 +59,8 @@ const DonorInfoSection = memo(({
     setTouchedFields({});
     onFieldsChange(nextValues);
     onValidityChange(isDonorInfoComplete(nextValues, showTypeSelector));
-  }, [initialValues, onFieldsChange, onValidityChange, resetKey, showTypeSelector]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]);
 
   const handleLocalInputChange = useCallback((field, value) => {
     setFields((prev) => {

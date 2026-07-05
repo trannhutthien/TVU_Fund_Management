@@ -1,7 +1,13 @@
 import api from './api'
 
 export const bankAccountService = {
-  // Lấy danh sách tài khoản ngân hàng
+  // Lấy danh sách tài khoản ngân hàng nhà trường (PUBLIC API - không cần auth)
+  getSchoolBankAccounts: async () => {
+    const response = await api.get('/bank-accounts/school')
+    return response.data
+  },
+
+  // Lấy danh sách tài khoản ngân hàng của user hiện tại
   getAll: async () => {
     const response = await api.get('/bank-accounts')
     return response.data

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
   HiOutlineXMark,
@@ -56,6 +56,9 @@ const KhoanTaiTroModal = ({
   const [isNewDonorValid, setIsNewDonorValid] = useState(false);
   const [newDonorResetKey, setNewDonorResetKey] = useState(0);
   const [selectedFund, setSelectedFund] = useState(null);
+  const [schoolBankAccounts, setSchoolBankAccounts] = useState([]);
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState(null);
+  const [transactionId, setTransactionId] = useState('');
   
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -74,6 +77,8 @@ const KhoanTaiTroModal = ({
       setDonorMode(preselectedSponsor ? 'existing' : 'existing');
       setErrors({});
       setPreview(null);
+      // Generate transaction ID for this donation
+      setTransactionId('TXN' + Math.floor(10000000 + Math.random() * 90000000));
     }
   }, [isOpen, preselectedSponsor]);
 
@@ -87,6 +92,33 @@ const KhoanTaiTroModal = ({
         .catch(() => setSponsorList([]));
     }
   }, [isOpen, preselectedSponsor]);
+
+  // Fetch school bank accounts (optional - for reference only in staff modal)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    import('@services/bankAccountService').then(({ bankAccountService }) => {
+      bankAccountService.getSchoolBankAccounts()
+        .then((res) => {
+          if (res.success) {
+            setSchoolBankAccounts(res.data || []);
+            if (res.data?.length > 0) {
+              setSelectedBankAccountId(res.data[0].taiKhoanId);
+            }
+          }
+        })
+        .catch(() => setSchoolBankAccounts([]));
+    });
+  }, [isOpen]);
+
+  // CRITICAL: useCallback hooks MUST be before any conditional return
+  const handleNewDonorFieldsChange = useCallback((fields) => {
+    setNewDonor(fields);
+  }, []);
+
+  const handleNewDonorValidityChange = useCallback((isValid) => {
+    setIsNewDonorValid(isValid);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -122,14 +154,6 @@ const KhoanTaiTroModal = ({
 
   const handleAmountChange = (amount) => {
     setForm((f) => ({ ...f, so_tien: amount }));
-  };
-
-  const handleNewDonorFieldsChange = (fields) => {
-    setNewDonor(fields);
-  };
-
-  const handleNewDonorValidityChange = (isValid) => {
-    setIsNewDonorValid(isValid);
   };
 
   const validate = () => {
@@ -337,6 +361,9 @@ const KhoanTaiTroModal = ({
               selectedFund={selectedFund}
               donationAmount={form.so_tien}
               onAmountChange={handleAmountChange}
+              schoolBankAccounts={schoolBankAccounts}
+              selectedBankAccountId={selectedBankAccountId}
+              onBankAccountSelect={setSelectedBankAccountId}
             />
             {errors.so_tien && (
               <div className={styles.errorText}>{errors.so_tien}</div>

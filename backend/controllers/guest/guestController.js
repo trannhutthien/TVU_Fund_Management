@@ -254,12 +254,12 @@ export const submitGuestApplication = async (req, res) => {
       application: pendingApplication
     });
 
-    await sendOTPEmail(
+    sendOTPEmail(
       normalizedEmail,
       guestHoTen.trim(),
       otpCode,
       trackingUuid
-    );
+    ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
 
     return res.status(201).json({
       success: true,
@@ -378,12 +378,12 @@ export const submitGuestDonation = async (req, res) => {
       donation: pendingDonation
     });
 
-    await sendDonationOTPEmail(
+    sendDonationOTPEmail(
       normalizedEmail,
       guestHoTen.trim(),
       otpCode,
       trackingUuid
-    );
+    ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
 
     return res.status(201).json({
       success: true,
@@ -445,19 +445,19 @@ export const resendGuestOtp = async (req, res) => {
     const nextOtpToken = signGuestOtpPayload(nextPayload);
 
     if (type === "application") {
-      await sendOTPEmail(
+      sendOTPEmail(
         normalizedEmail,
         pending.application?.guestHoTen || "Khach vang lai",
         otpCode,
         pending.trackingUuid
-      );
+      ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
     } else {
-      await sendDonationOTPEmail(
+      sendDonationOTPEmail(
         normalizedEmail,
         pending.donation?.guestHoTen || "Nha tai tro",
         otpCode,
         pending.trackingUuid
-      );
+      ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
     }
 
     return res.status(200).json({
@@ -560,12 +560,12 @@ export const verifyOtp = async (req, res) => {
         guestName = guestApp.guest_hoten;
       }
 
-      await sendAccountCreatedEmail(
+      sendAccountCreatedEmail(
         normalizedEmail,
         guestName,
         plainPassword,
         result.trackingUuid
-      );
+      ).catch(err => console.error("Email created failed (non-blocking):", err.message));
 
       return res.status(200).json({
         success: true,
@@ -625,13 +625,13 @@ export const verifyOtp = async (req, res) => {
       donationAmount = guestDon.sotien;
     }
 
-    await sendDonationCreatedEmail(
+    sendDonationCreatedEmail(
       normalizedEmail,
       guestName,
       plainPassword,
       donationAmount,
       result.trackingUuid
-    );
+    ).catch(err => console.error("Email created failed (non-blocking):", err.message));
 
     return res.status(200).json({
       success: true,
