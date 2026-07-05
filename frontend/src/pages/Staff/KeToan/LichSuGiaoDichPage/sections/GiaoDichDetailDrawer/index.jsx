@@ -209,9 +209,8 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose, isPublic = false }) => {
         <div className={styles.body}>
           {/* Khối A — Tổng quan */}
           <div
-            className={`${styles.overviewCard} ${
-              isThu ? styles.overviewThu : styles.overviewChi
-            }`}
+            className={`${styles.overviewCard} ${isThu ? styles.overviewThu : styles.overviewChi
+              }`}
           >
             <div className={styles.overviewBadges}>
               <span className={styles.overviewBadge}>
@@ -316,13 +315,13 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose, isPublic = false }) => {
                 </div>
               </div>
               <div className={styles.metaItem}>
-                <div className={styles.metaLabel}>Người tạo</div>
+                <div className={styles.metaLabel}>Người duyệt</div>
                 <div className={styles.metaValue}>
                   {tx.nguoiTao?.hoTen || '—'}
                 </div>
               </div>
               <div className={styles.metaItem}>
-                <div className={styles.metaLabel}>Ngày tạo</div>
+                <div className={styles.metaLabel}>Ngày duyệt</div>
                 <div className={styles.metaValue}>
                   {formatDateTime(tx.ngayGiaoDich)}
                 </div>

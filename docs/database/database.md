@@ -190,7 +190,7 @@ CREATE TABLE `nguoidung` (
 CREATE TABLE `nhataitro` (
   `nhataitro_id` int(11) NOT NULL AUTO_INCREMENT,
   `tennhataitro` varchar(200) NOT NULL,
-  `loainhataitro` enum('Ca nhan','To chuc','Doanh nghiep') NOT NULL,
+  `loainhataitro` enum('Ca nhan','To chuc','Doanh nghiep','Doi tac') NOT NULL,
   `email` varchar(100) DEFAULT NULL,
   `sodienthoai` varchar(15) DEFAULT NULL,
   `diachi` text DEFAULT NULL,

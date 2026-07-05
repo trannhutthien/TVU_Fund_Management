@@ -1,18 +1,14 @@
-import { useState, useEffect } from 'react';
-import { 
-  HiOutlineAcademicCap, 
-  HiOutlineBanknotes, 
-  HiOutlineBuildingOffice2 
+import { useEffect, useState } from 'react';
+import {
+  HiOutlineAcademicCap,
+  HiOutlineBanknotes,
+  HiOutlineBuildingLibrary,
+  HiOutlineBuildingOffice2,
+  HiOutlineUsers,
 } from 'react-icons/hi2';
 import statisticsService from '@services/statisticsService';
 import styles from './ImpactStatsSection.module.scss';
 
-/**
- * Custom hook để animate đếm số từ 0 lên giá trị target
- * @param {number} targetValue - Giá trị đích cần đếm đến
- * @param {number} duration - Thời gian animation (ms)
- * @returns {number} - Giá trị hiện tại đang đếm
- */
 const useCountUp = (targetValue, duration = 1500) => {
   const [displayValue, setDisplayValue] = useState(0);
 
@@ -23,7 +19,7 @@ const useCountUp = (targetValue, duration = 1500) => {
 
     const timer = setInterval(() => {
       current += targetValue / steps;
-      
+
       if (current >= targetValue) {
         current = targetValue;
         clearInterval(timer);
@@ -42,32 +38,81 @@ const useCountUp = (targetValue, duration = 1500) => {
   return displayValue;
 };
 
-/**
- * StatItem Component - Hiển thị một stat với icon, số liệu và label
- */
-const StatItem = ({ icon: Icon, value, suffix, label }) => {
+const StatItem = ({ icon: Icon, value, suffix, label, formatter }) => {
   const animatedValue = useCountUp(value);
+  const displayValue = formatter
+    ? formatter(animatedValue)
+    : `${animatedValue.toLocaleString('vi-VN')}${suffix}`;
 
   return (
     <div className={styles.statItem}>
       <Icon className={styles.statIcon} />
       <div className={styles.statValue}>
-        {animatedValue}
-        <span className={styles.statSuffix}>{suffix}</span>
+        {displayValue}
       </div>
       <div className={styles.statLabel}>{label}</div>
     </div>
   );
 };
 
-/**
- * ImpactStatsSection Component
- * 
- * Section hiển thị thống kê tác động của quỹ
- * Hiển thị 3 chỉ số chính: Sinh viên, Giải ngân, Đối tác
- * Dữ liệu lấy từ API backend
- */
-const ImpactStatsSection = ({ totalDonors }) => {
+const formatCompactCurrency = (amount) => {
+  const value = Number(amount) || 0;
+
+  if (value >= 1000000000) {
+    const billions = value / 1000000000;
+    const display = billions >= 10 ? Math.round(billions) : parseFloat(billions.toFixed(1));
+    return `${display.toLocaleString('vi-VN')} tỷ đồng`;
+  }
+
+  if (value >= 1000000) {
+    const millions = value / 1000000;
+    const display = millions >= 10 ? Math.round(millions) : parseFloat(millions.toFixed(1));
+    return `${display.toLocaleString('vi-VN')} triệu đồng`;
+  }
+
+  if (value >= 1000) {
+    return `${Math.round(value / 1000).toLocaleString('vi-VN')} nghìn đồng`;
+  }
+
+  return `${Math.round(value).toLocaleString('vi-VN')} đồng`;
+};
+
+const buildStats = (data = {}) => [
+  {
+    icon: HiOutlineAcademicCap,
+    value: Number(data.totalStudents) || 0,
+    suffix: '+',
+    label: 'SINH VIÊN ĐƯỢC HỖ TRỢ',
+  },
+  {
+    icon: HiOutlineBanknotes,
+    value: Number(data.totalChildFundReceived) || 0,
+    suffix: '',
+    formatter: formatCompactCurrency,
+    label: 'TÀI TRỢ CHO HOẠT ĐỘNG',
+  },
+  {
+    icon: HiOutlineBuildingLibrary,
+    value: Number(data.totalParentFundReceived) || 0,
+    suffix: '',
+    formatter: formatCompactCurrency,
+    label: 'TÀI TRỢ VÀO QUỸ TVU',
+  },
+  {
+    icon: HiOutlineBuildingOffice2,
+    value: Number(data.totalPartners) || 0,
+    suffix: '+',
+    label: 'ĐỐI TÁC',
+  },
+  {
+    icon: HiOutlineUsers,
+    value: Number(data.totalSponsors) || 0,
+    suffix: '+',
+    label: 'NHÀ TÀI TRỢ',
+  },
+];
+
+const ImpactStatsSection = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState([]);
 
@@ -76,63 +121,17 @@ const ImpactStatsSection = ({ totalDonors }) => {
       try {
         setLoading(true);
         const data = await statisticsService.getImpactStats();
-        
-        // Convert số tiền từ VNĐ sang Tỷ VNĐ
-        const totalDisbursedInBillion = data.totalDisbursed / 1000000000;
-
-        // Map data từ API sang format của stats
-        const statsData = [
-          {
-            icon: HiOutlineAcademicCap,
-            value: data.totalStudents || 0,
-            suffix: '+',
-            label: 'SINH VIÊN ĐƯỢC HỖ TRỢ',
-          },
-          {
-            icon: HiOutlineBanknotes,
-            value: parseFloat(totalDisbursedInBillion.toFixed(1)),
-            suffix: ' VNĐ',
-            label: 'ĐÃ NHẬN TÀI TRỢ', // Tổng số tiền từ các khoản tài trợ có trạng thái "Da nhan"
-          },
-          {
-            icon: HiOutlineBuildingOffice2,
-            value: typeof totalDonors === 'number' ? totalDonors : (data.totalDonors || 0),
-            suffix: '+',
-            label: 'ĐỐI TÁC DOANH NGHIỆP',
-          },
-        ];
-
-        setStats(statsData);
+        setStats(buildStats(data));
       } catch (error) {
         console.error('Error fetching impact stats:', error);
-        // Fallback to default values on error
-        setStats([
-          {
-            icon: HiOutlineAcademicCap,
-            value: 0,
-            suffix: '+',
-            label: 'SINH VIÊN ĐƯỢC HỖ TRỢ',
-          },
-          {
-            icon: HiOutlineBanknotes,
-            value: 0,
-            suffix: 'VNĐ',
-            label: 'ĐÃ GIẢI NGÂN',
-          },
-          {
-            icon: HiOutlineBuildingOffice2,
-            value: typeof totalDonors === 'number' ? totalDonors : 0,
-            suffix: '+',
-            label: 'ĐỐI TÁC DOANH NGHIỆP',
-          },
-        ]);
+        setStats(buildStats());
       } finally {
         setLoading(false);
       }
     };
 
     fetchImpactStats();
-  }, [totalDonors]);
+  }, []);
 
   if (loading) {
     return (
@@ -156,11 +155,12 @@ const ImpactStatsSection = ({ totalDonors }) => {
         <div className={styles.statsCard}>
           <div className={styles.statsGrid}>
             {stats.map((stat, index) => (
-              <div key={index} className={styles.statWrapper}>
+              <div key={stat.label} className={styles.statWrapper}>
                 <StatItem
                   icon={stat.icon}
                   value={stat.value}
                   suffix={stat.suffix}
+                  formatter={stat.formatter}
                   label={stat.label}
                 />
                 {index < stats.length - 1 && (

@@ -97,8 +97,8 @@ const LichSuTableSection = ({
                   <th className={styles.colFund}>QUỸ</th>
                   <th className={styles.colAmount}>SỐ TIỀN</th>
                   <th className={styles.colStatus}>TRẠNG THÁI</th>
-                  <th className={styles.colCreator}>NGƯỜI TẠO</th>
-                  <th className={styles.colDate}>NGÀY TẠO</th>
+                  <th className={styles.colCreator}>NGƯỜI DUYỆT</th>
+                  <th className={styles.colDate}>NGÀY DUYỆT</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,11 +120,10 @@ const LichSuTableSection = ({
                       </td>
                       <td>
                         <span
-                          className={`${styles.typeBadge} ${
-                            isThu
+                          className={`${styles.typeBadge} ${isThu
                               ? styles.typeBadgeThu
                               : styles.typeBadgeChi
-                          }`}
+                            }`}
                         >
                           {isThu ? (
                             <HiArrowUp size={11} />
@@ -148,9 +147,8 @@ const LichSuTableSection = ({
                         {tx.quy?.tenQuy || '—'}
                       </td>
                       <td
-                        className={`${styles.cellAmount} ${
-                          isThu ? styles.amountThu : styles.amountChi
-                        }`}
+                        className={`${styles.cellAmount} ${isThu ? styles.amountThu : styles.amountChi
+                          }`}
                       >
                         {isThu ? '+' : '-'}
                         {formatCurrency(tx.soTien)}

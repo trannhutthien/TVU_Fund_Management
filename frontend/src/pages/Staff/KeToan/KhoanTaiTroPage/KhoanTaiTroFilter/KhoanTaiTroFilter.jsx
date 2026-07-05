@@ -11,8 +11,9 @@ import styles from './KhoanTaiTroFilter.module.scss';
 const LOAI_NTT_OPTIONS = [
   { value: '', label: '-- Tất cả loại NTT --' },
   { value: 'Ca nhan', label: 'Cá nhân' },
+  { value: 'To chuc', label: 'Tổ chức' },
   { value: 'Doanh nghiep', label: 'Doanh nghiệp' },
-  { value: 'To chuc phi loi nhuan', label: 'Tổ chức phi lợi nhuận' },
+  { value: 'Doi tac', label: 'Đối tác' },
 ];
 
 const TRANG_THAI_OPTIONS = [

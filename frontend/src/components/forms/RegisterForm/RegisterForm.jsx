@@ -398,8 +398,9 @@ const RegisterForm = ({ onSuccess, onClose }) => {
                   onChange={handleSponsorChange('loaiNhaTaiTro')}
                 >
                   <option value="Ca nhan">Cá nhân</option>
+                  <option value="To chuc">Tổ chức</option>
                   <option value="Doanh nghiep">Doanh nghiệp</option>
-                  <option value="To chuc phi loi nhuan">Tổ chức phi lợi nhuận</option>
+                  <option value="Doi tac">Đối tác</option>
                 </select>
                 <HiOutlineChevronDown className="register-form-select-icon" />
               </div>

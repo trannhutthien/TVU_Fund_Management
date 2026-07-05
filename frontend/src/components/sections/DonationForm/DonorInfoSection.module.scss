@@ -1,0 +1,82 @@
+.guestFormCard {
+  background: #ffffff;
+  border-radius: 12px;
+  border-left: 4px solid #1a2f5e;
+  padding: 28px 32px;
+  box-shadow: 0 2px 12px rgba(26, 47, 94, 0.07);
+  margin-bottom: 30px;
+}
+
+.sectionHeader {
+  color: #1a2f5e !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  margin-bottom: 24px !important;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 10px;
+  text-align: left;
+}
+
+.guestFormRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.guestFormRowThree {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.selectLabel {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  margin-bottom: 2px;
+}
+
+.selectInput, .textareaInput {
+  background: #f8fafc !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  font-size: 0.95rem !important;
+  width: 100%;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #3b6ff5 !important;
+    background: #ffffff !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.1);
+  }
+}
+
+.selectInput {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 16px !important;
+  padding-right: 40px !important;
+}

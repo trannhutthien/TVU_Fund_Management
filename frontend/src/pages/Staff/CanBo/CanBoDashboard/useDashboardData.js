@@ -34,6 +34,8 @@ const isApproved = (status) => [
   'Hoan thanh',
 ].includes(status);
 
+const getLoaiDieuHanh = (fund) => fund?.loaiDieuHanh ?? fund?.loai_dieu_hanh ?? '';
+
 const useDashboardData = (selectedYear) => {
   const [loading, setLoading] = useState(true);
   const [funds, setFunds] = useState([]);
@@ -76,11 +78,13 @@ const useDashboardData = (selectedYear) => {
       (a) => isProcessing(a.trangThai),
     ).length;
 
-    const soQuyHoatDong = funds.filter(
-      (f) => f.trangThai === 'Dang hoat dong',
-    ).length;
-    const tongSoDu = funds
-      .filter((f) => f.trangThai === 'Dang hoat dong')
+    const activeFunds = funds.filter((f) => f.trangThai === 'Dang hoat dong');
+    const soQuyHoatDong = activeFunds.length;
+    const tongSoDuQuyPhatTrien = activeFunds
+      .filter((f) => getLoaiDieuHanh(f) === 'Tap trung - Be chung')
+      .reduce((sum, f) => sum + Number(f.soDu || 0), 0);
+    const tongSoDuQuyHoatDong = activeFunds
+      .filter((f) => getLoaiDieuHanh(f) === 'Tap trung - Muc chi')
       .reduce((sum, f) => sum + Number(f.soDu || 0), 0);
 
     const now = new Date();
@@ -108,7 +112,8 @@ const useDashboardData = (selectedYear) => {
     return {
       choDuyet,
       dangXuLy,
-      tongSoDu,
+      tongSoDuQuyPhatTrien,
+      tongSoDuQuyHoatDong,
       soQuyHoatDong,
       daXuLyThangNay,
       tyLeDuyet,

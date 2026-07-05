@@ -163,21 +163,33 @@ export const getImpactStats = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     // QUERY 2: Tổng số tiền đã nhận (SUM sotien từ khoantaitro với trangthai = 'Da nhan')
     // ─────────────────────────────────────────────────────────────────────────
-    const [disbursedResult] = await pool.query(
-      `SELECT SUM(sotien) as total 
-       FROM khoantaitro 
-       WHERE trangthai = 'Da nhan'`
+    const [receivedByFundTypeResult] = await pool.query(
+      `SELECT
+        COALESCE(SUM(CASE WHEN q.loaidieuhanh = 'Tap trung - Muc chi' THEN kt.sotien ELSE 0 END), 0) AS childFundReceived,
+        COALESCE(SUM(CASE WHEN q.loaidieuhanh = 'Tap trung - Be chung' THEN kt.sotien ELSE 0 END), 0) AS parentFundReceived,
+        COALESCE(SUM(kt.sotien), 0) AS total
+       FROM khoantaitro kt
+       INNER JOIN quy q ON kt.quy_id = q.quy_id
+       WHERE kt.trangthai = 'Da nhan'`
     );
-    const totalDisbursed = parseFloat(disbursedResult[0].total || 0);
+    const totalDisbursed = parseFloat(receivedByFundTypeResult[0].total || 0);
+    const totalChildFundReceived = parseFloat(receivedByFundTypeResult[0].childFundReceived || 0);
+    const totalParentFundReceived = parseFloat(receivedByFundTypeResult[0].parentFundReceived || 0);
 
     // ─────────────────────────────────────────────────────────────────────────
     // QUERY 3: Tổng số nhà tài trợ (COUNT từ nhataitro)
     // ─────────────────────────────────────────────────────────────────────────
     const [donorsResult] = await pool.query(
-      `SELECT COUNT(*) as count 
-       FROM nhataitro`
+      `SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN loainhataitro = 'Doi tac' THEN 1 ELSE 0 END) AS partners,
+        SUM(CASE WHEN loainhataitro <> 'Doi tac' THEN 1 ELSE 0 END) AS sponsors
+       FROM nhataitro
+       WHERE trangthai = 'Hoat dong'`
     );
-    const totalDonors = donorsResult[0].count;
+    const totalDonors = Number(donorsResult[0].total) || 0;
+    const totalPartners = Number(donorsResult[0].partners) || 0;
+    const totalSponsors = Number(donorsResult[0].sponsors) || 0;
 
     // ─────────────────────────────────────────────────────────────────────────
     // TRẢ VỀ KẾT QUẢ
@@ -188,7 +200,11 @@ export const getImpactStats = async (req, res) => {
       data: {
         totalStudents,
         totalDisbursed,
-        totalDonors
+        totalChildFundReceived,
+        totalParentFundReceived,
+        totalDonors,
+        totalPartners,
+        totalSponsors
       }
     });
 
@@ -259,12 +275,22 @@ export const getKeToanSummary = async (req, res) => {
        WHERE trangthai = 'Da giai ngan'`
     );
 
+    const [[fundBalanceRow]] = await pool.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN loaidieuhanh = 'Tap trung - Be chung' THEN sodu ELSE 0 END), 0) AS parent_balance,
+         COALESCE(SUM(CASE WHEN loaidieuhanh = 'Tap trung - Muc chi' THEN sodu ELSE 0 END), 0) AS child_balance
+       FROM quy
+       WHERE trangthai = 'Dang hoat dong'`
+    );
+
     return res.status(200).json({
       success: true,
       message: "Lấy summary kế toán thành công",
       data: {
         tongThu: parseFloat(thuRow.total),
         tongChi: parseFloat(chiRow.total),
+        tongSoDuQuyPhatTrien: parseFloat(fundBalanceRow.parent_balance || 0),
+        tongSoDuQuyHoatDong: parseFloat(fundBalanceRow.child_balance || 0),
         choXacNhanThu: choXacNhanRow.total,
         choGiaiNgan: choGiaiNganRow.total,
         tongGiaiNgan: tongGiaiNganRow.total, // Thêm field mới
@@ -476,6 +502,7 @@ export const getKeToanFundHealth = async (req, res) => {
          q.quy_id,
          q.tenquy AS ten_quy,
          lq.tenloai AS loai_quy,
+         q.loaidieuhanh AS loai_dieu_hanh,
          q.sodu AS so_du,
          q.sotienmuctieu AS so_tien_toi_da,
          q.trangthai AS trang_thai
@@ -489,6 +516,7 @@ export const getKeToanFundHealth = async (req, res) => {
       quy_id: f.quy_id,
       ten_quy: f.ten_quy,
       loai_quy: f.loai_quy,
+      loai_dieu_hanh: f.loai_dieu_hanh,
       so_du: parseFloat(f.so_du || 0),
       so_tien_toi_da: parseFloat(f.so_tien_toi_da || 0),
       trang_thai: f.trang_thai,
@@ -496,6 +524,7 @@ export const getKeToanFundHealth = async (req, res) => {
       quyId: f.quy_id,
       tenQuy: f.ten_quy,
       loaiQuy: f.loai_quy,
+      loaiDieuHanh: f.loai_dieu_hanh,
       soDu: parseFloat(f.so_du || 0),
       soTienToiDa: parseFloat(f.so_tien_toi_da || 0),
       trangThai: f.trang_thai,

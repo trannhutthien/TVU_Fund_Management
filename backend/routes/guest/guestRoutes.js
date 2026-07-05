@@ -10,10 +10,15 @@ import { rateLimiter } from "../../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-// Giới hạn IP: tối đa 3 lần nộp đơn/1 giờ từ cùng một IP để chống spam
+const submissionLimitMax = Number.parseInt(
+  process.env.GUEST_SUBMISSION_RATE_LIMIT_MAX || "",
+  10
+) || (process.env.NODE_ENV === "production" ? 3 : 100);
+
+// Gioi han IP nop don. Dev/local cho phep nhieu lan hon de test du lieu.
 const submissionLimiter = rateLimiter({
   windowMs: 60 * 60 * 1000, // 1 giờ
-  max: 3,
+  max: submissionLimitMax,
   message: "Bạn đã gửi quá nhiều yêu cầu đăng ký."
 });
 

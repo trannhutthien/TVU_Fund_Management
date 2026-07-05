@@ -63,7 +63,15 @@ const mapTransactionRow = (tx) => {
       id: tx.khoantaitro_id,
       nhaTaiTro: {
         ten: tx.ntt_ten,
-        loai: tx.ntt_loai === 'Ca nhan' ? 'Cá nhân' : tx.ntt_loai === 'To chuc' ? 'Tổ chức' : tx.ntt_loai === 'Doanh nghiep' ? 'Doanh nghiệp' : tx.ntt_loai || 'Tài trợ'
+        loai: tx.ntt_loai === 'Ca nhan'
+          ? 'Cá nhân'
+          : tx.ntt_loai === 'To chuc'
+            ? 'Tổ chức'
+            : tx.ntt_loai === 'Doanh nghiep'
+              ? 'Doanh nghiệp'
+              : tx.ntt_loai === 'Doi tac'
+                ? 'Đối tác'
+                : tx.ntt_loai || 'Tài trợ'
       }
     } : null,
     requestId: tx.yeucauhotro_id,

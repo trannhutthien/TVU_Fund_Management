@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import {
   HiBanknotes,
+  HiBuildingLibrary,
   HiArrowTrendingDown,
   HiClock,
   HiExclamationCircle,
@@ -38,6 +39,26 @@ const KeToanStatsSection = ({ data, isLoading }) => {
       urgent: false,
     },
     {
+      key: 'tongSoDuQuyPhatTrien',
+      label: 'Số dư Quỹ phát triển TVU',
+      value: formatCurrency(data?.tongSoDuQuyPhatTrien),
+      sub: 'Số dư hiện tại của quỹ mẹ',
+      Icon: HiBuildingLibrary,
+      iconBg: 'rgba(26, 47, 94, 0.08)',
+      iconColor: 'var(--color-navy-blue, #1a2f5e)',
+      urgent: false,
+    },
+    {
+      key: 'tongSoDuQuyHoatDong',
+      label: 'Số dư quỹ hoạt động',
+      value: formatCurrency(data?.tongSoDuQuyHoatDong),
+      sub: 'Tổng số dư các mục chi con',
+      Icon: HiBanknotes,
+      iconBg: 'rgba(22, 163, 74, 0.10)',
+      iconColor: '#16a34a',
+      urgent: false,
+    },
+    {
       key: 'choXacNhanThu',
       label: 'Khoản chờ xác nhận thu',
       value: data?.choXacNhanThu ?? 0,
@@ -62,7 +83,7 @@ const KeToanStatsSection = ({ data, isLoading }) => {
   if (isLoading) {
     return (
       <div className={styles.grid}>
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className={styles.skeleton} />
         ))}
       </div>
@@ -101,6 +122,8 @@ KeToanStatsSection.propTypes = {
   data: PropTypes.shape({
     tongThu: PropTypes.number,
     tongChi: PropTypes.number,
+    tongSoDuQuyPhatTrien: PropTypes.number,
+    tongSoDuQuyHoatDong: PropTypes.number,
     choXacNhanThu: PropTypes.number,
     choGiaiNgan: PropTypes.number,
     thang: PropTypes.number,

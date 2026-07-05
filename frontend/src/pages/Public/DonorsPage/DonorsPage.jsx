@@ -69,8 +69,6 @@ const DonorsPage = () => {
     };
   }, [isLoginModalOpen, isRegisterModalOpen]);
 
-  const totalWallDonors = (donorsData.diamond.length + donorsData.gold.length + donorsData.silver.length);
-
   return (
     <div className={styles.donorsPage}>
       <PublicHeader 
@@ -81,7 +79,7 @@ const DonorsPage = () => {
       <BackgroundImage overlayType="dark">
         <main className={styles.mainContent}>
           <DonorTitleSection />
-          <ImpactStatsSection totalDonors={totalWallDonors} />
+          <ImpactStatsSection />
           <DonorWallSection donorsData={donorsData} loading={loadingDonors} />
         </main>
       </BackgroundImage>

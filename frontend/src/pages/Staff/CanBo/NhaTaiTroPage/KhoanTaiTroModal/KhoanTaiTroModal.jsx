@@ -6,36 +6,24 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlinePhoto,
   HiOutlineTrash,
+  HiOutlineUser,
+  HiOutlineUserPlus,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
-import Input from '@components/common/Input/Input';
 import api from '@services/api';
 import { uploadService } from '@services/uploadService';
 import { getStaffDonors } from '@services/donorService';
 import { createStaffDonation } from '@services/donationService';
+import FundSelectSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/FundSelectSection/FundSelectSection';
+import DonationAmountSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/DonationAmountSection/DonationAmountSection';
+import DonorInfoSection from '@components/sections/DonationForm/DonorInfoSection';
 import styles from './KhoanTaiTroModal.module.scss';
 
 const LOAI_LABEL = {
   'Ca nhan': 'Cá nhân',
+  'To chuc': 'Tổ chức',
   'Doanh nghiep': 'Doanh nghiệp',
-  'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
-};
-
-const formatNumber = (val) => {
-  if (val === '' || val === null || val === undefined) return '';
-  const n = Number(String(val).replace(/[^0-9]/g, ''));
-  if (Number.isNaN(n)) return '';
-  return n.toLocaleString('vi-VN');
-};
-
-const parseNumber = (val) => {
-  if (!val) return 0;
-  return Number(String(val).replace(/[^0-9]/g, '')) || 0;
-};
-
-const formatCurrency = (n) => {
-  const v = Number(n) || 0;
-  return v.toLocaleString('vi-VN') + 'đ';
+  'Doi tac': 'Đối tác',
 };
 
 const initialForm = (preselected) => ({
@@ -44,7 +32,17 @@ const initialForm = (preselected) => ({
   so_tien: '',
   ghi_chu: '',
   hinh_anh_minh_chung: null,
+  hinh_thuc: 'Tien mat', // Mặc định là Tiền mặt
 });
+
+const initialNewDonor = {
+  guestHoTen: '',
+  guestEmail: '',
+  guestSoDienThoai: '',
+  guestToChuc: '',
+  guestDiaChi: '',
+  loaiNhaTaiTro: 'Ca nhan',
+};
 
 const KhoanTaiTroModal = ({
   isOpen,
@@ -52,11 +50,16 @@ const KhoanTaiTroModal = ({
   preselectedSponsor,
   onSuccess,
 }) => {
+  const [donorMode, setDonorMode] = useState('existing');
   const [form, setForm] = useState(initialForm(preselectedSponsor));
+  const [newDonor, setNewDonor] = useState(initialNewDonor);
+  const [isNewDonorValid, setIsNewDonorValid] = useState(false);
+  const [newDonorResetKey, setNewDonorResetKey] = useState(0);
+  const [selectedFund, setSelectedFund] = useState(null);
+  
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [sponsorList, setSponsorList] = useState([]);
-  const [quyList, setQuyList] = useState([]);
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -64,12 +67,17 @@ const KhoanTaiTroModal = ({
   useEffect(() => {
     if (isOpen) {
       setForm(initialForm(preselectedSponsor));
+      setNewDonor(initialNewDonor);
+      setIsNewDonorValid(false);
+      setNewDonorResetKey((prev) => prev + 1);
+      setSelectedFund(null);
+      setDonorMode(preselectedSponsor ? 'existing' : 'existing');
       setErrors({});
       setPreview(null);
     }
   }, [isOpen, preselectedSponsor]);
 
-  // Fetch danh sách sponsor (nếu chưa có preselected) + danh sách quỹ
+  // Fetch danh sách sponsor (nếu chưa có preselected)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -78,25 +86,9 @@ const KhoanTaiTroModal = ({
         .then((res) => setSponsorList(res?.data || []))
         .catch(() => setSponsorList([]));
     }
-
-    api
-      .get('/funds')
-      .then((res) => {
-        const funds = res?.data?.funds || res?.data?.data || res?.data || [];
-        setQuyList(
-          (Array.isArray(funds) ? funds : []).filter(
-            (f) => f.trangThai === 'Dang hoat dong' || f.trang_thai === 'Dang hoat dong',
-          ),
-        );
-      })
-      .catch(() => setQuyList([]));
   }, [isOpen, preselectedSponsor]);
 
   if (!isOpen) return null;
-
-  const selectedQuy = quyList.find(
-    (q) => String(q.quyId || q.quy_id) === String(form.quy_id),
-  );
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -123,12 +115,40 @@ const KhoanTaiTroModal = ({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleFundSelect = (fund) => {
+    setSelectedFund(fund);
+    setForm((f) => ({ ...f, quy_id: fund ? (fund.quyId || fund.quy_id || fund.id) : '' }));
+  };
+
+  const handleAmountChange = (amount) => {
+    setForm((f) => ({ ...f, so_tien: amount }));
+  };
+
+  const handleNewDonorFieldsChange = (fields) => {
+    setNewDonor(fields);
+  };
+
+  const handleNewDonorValidityChange = (isValid) => {
+    setIsNewDonorValid(isValid);
+  };
+
   const validate = () => {
     const errs = {};
-    if (!form.nha_tai_tro_id) errs.nha_tai_tro_id = 'Bắt buộc chọn nhà tài trợ';
-    if (!form.quy_id) errs.quy_id = 'Bắt buộc chọn quỹ';
-    const amount = parseNumber(form.so_tien);
-    if (!amount || amount <= 0) errs.so_tien = 'Số tiền phải lớn hơn 0';
+    if (donorMode === 'existing' && !form.nha_tai_tro_id) {
+      errs.nha_tai_tro_id = 'Bắt buộc chọn nhà tài trợ';
+    }
+    if (donorMode === 'new' && !isNewDonorValid) {
+      errs.new_donor = 'Thông tin nhà tài trợ mới chưa hợp lệ';
+    }
+    if (!form.quy_id) {
+      errs.quy_id = 'Bắt buộc chọn quỹ';
+    }
+    const amount = Number(form.so_tien);
+    if (!amount || amount < 10000) {
+      errs.so_tien = 'Số tiền tối thiểu là 10,000đ';
+    } else if (amount > 1000000000) {
+      errs.so_tien = 'Số tiền tối đa là 1,000,000,000đ';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -145,14 +165,24 @@ const KhoanTaiTroModal = ({
       }
 
       await createStaffDonation({
-        nha_tai_tro_id: Number(form.nha_tai_tro_id),
+        donorMode,
+        nha_tai_tro_id: donorMode === 'existing' ? Number(form.nha_tai_tro_id) : undefined,
+        donor_info: donorMode === 'new' ? {
+          tenNhaTaiTro: newDonor.guestHoTen,
+          email: newDonor.guestEmail,
+          soDienThoai: newDonor.guestSoDienThoai,
+          loaiNhaTaiTro: newDonor.loaiNhaTaiTro,
+          diaChi: newDonor.guestDiaChi,
+          toChuc: newDonor.guestToChuc,
+        } : undefined,
         quy_id: Number(form.quy_id),
-        so_tien: parseNumber(form.so_tien),
+        so_tien: Number(form.so_tien),
         ghi_chu: form.ghi_chu?.trim() || null,
+        hinh_thuc: form.hinh_thuc,
         hinh_anh_minh_chung: urlMinhChung,
       });
 
-      toast.success('Đã ghi nhận khoản tài trợ. Chờ duyệt.');
+      toast.success('Đã ghi nhận khoản tài trợ thành công. Chờ duyệt.');
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -166,9 +196,10 @@ const KhoanTaiTroModal = ({
   };
 
   const formValid =
-    !!form.nha_tai_tro_id &&
+    (donorMode === 'existing' ? !!form.nha_tai_tro_id : isNewDonorValid) &&
     !!form.quy_id &&
-    parseNumber(form.so_tien) > 0;
+    Number(form.so_tien) >= 10000 &&
+    Number(form.so_tien) <= 1000000000;
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -180,7 +211,7 @@ const KhoanTaiTroModal = ({
         <div className={styles.header}>
           <h2 className={styles.title}>
             <HiOutlineCurrencyDollar className={styles.titleIcon} />
-            Ghi nhận khoản tài trợ mới
+            Tạo khoản tài trợ mới
           </h2>
           <button
             type="button"
@@ -192,125 +223,145 @@ const KhoanTaiTroModal = ({
           </button>
         </div>
 
-        {/* Form */}
+        {/* Form Body */}
         <div className={styles.body}>
-          {/* Field 1: Nhà tài trợ */}
-          <div className={styles.field}>
-            <label className={styles.label}>
-              Nhà tài trợ <span className={styles.required}>*Bắt buộc</span>
-            </label>
-            {preselectedSponsor ? (
-              <div className={styles.sponsorCard}>
-                <div className={styles.sponsorAvatar}>
-                  {preselectedSponsor.avatar ? (
-                    <img
-                      src={preselectedSponsor.avatar}
-                      alt={preselectedSponsor.ten_nha_tai_tro}
-                    />
-                  ) : (
-                    <span>
-                      {preselectedSponsor.ten_nha_tai_tro
-                        ?.charAt(0)
-                        .toUpperCase() || '?'}
-                    </span>
-                  )}
-                </div>
-                <div className={styles.sponsorInfo}>
-                  <div className={styles.sponsorName}>
-                    {preselectedSponsor.ten_nha_tai_tro}
-                  </div>
-                  <span className={styles.sponsorLoai}>
-                    {LOAI_LABEL[preselectedSponsor.loai] ||
-                      preselectedSponsor.loai}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <select
-                className={`${styles.select} ${
-                  errors.nha_tai_tro_id ? styles.selectError : ''
-                }`}
-                value={form.nha_tai_tro_id}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, nha_tai_tro_id: e.target.value }))
-                }
+          {/* Tabs switch mode (chỉ hiển thị khi không có preselected) */}
+          {!preselectedSponsor && (
+            <div className={styles.tabs}>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${donorMode === 'existing' ? styles.tabActive : ''}`}
+                onClick={() => setDonorMode('existing')}
               >
-                <option value="">-- Chọn nhà tài trợ --</option>
-                {sponsorList.map((s) => (
-                  <option key={s.nha_tai_tro_id} value={s.nha_tai_tro_id}>
-                    {s.ten_nha_tai_tro}
-                    {s.email ? ` (${s.email})` : ''}
-                  </option>
-                ))}
-              </select>
-            )}
-            {errors.nha_tai_tro_id && (
-              <div className={styles.errorText}>{errors.nha_tai_tro_id}</div>
+                <HiOutlineUser className={styles.tabIcon} />
+                Nhà tài trợ đã có tài khoản
+              </button>
+              <button
+                type="button"
+                className={`${styles.tabBtn} ${donorMode === 'new' ? styles.tabActive : ''}`}
+                onClick={() => setDonorMode('new')}
+              >
+                <HiOutlineUserPlus className={styles.tabIcon} />
+                Nhà tài trợ mới
+              </button>
+            </div>
+          )}
+
+          {/* Section: Nhà tài trợ */}
+          <div className={styles.field}>
+            {preselectedSponsor ? (
+              <>
+                <label className={styles.label}>Nhà tài trợ</label>
+                <div className={styles.sponsorCard}>
+                  <div className={styles.sponsorAvatar}>
+                    {preselectedSponsor.avatar ? (
+                      <img
+                        src={preselectedSponsor.avatar}
+                        alt={preselectedSponsor.ten_nha_tai_tro}
+                      />
+                    ) : (
+                      <span>
+                        {preselectedSponsor.ten_nha_tai_tro
+                          ?.charAt(0)
+                          .toUpperCase() || '?'}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.sponsorInfo}>
+                    <div className={styles.sponsorName}>
+                      {preselectedSponsor.ten_nha_tai_tro}
+                    </div>
+                    <span className={styles.sponsorLoai}>
+                      {LOAI_LABEL[preselectedSponsor.loai] ||
+                        preselectedSponsor.loai}
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : donorMode === 'existing' ? (
+              <>
+                <label className={styles.label}>
+                  Chọn nhà tài trợ <span className={styles.required}>*Bắt buộc</span>
+                </label>
+                <select
+                  className={`${styles.select} ${
+                    errors.nha_tai_tro_id ? styles.selectError : ''
+                  }`}
+                  value={form.nha_tai_tro_id}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, nha_tai_tro_id: e.target.value }))
+                  }
+                >
+                  <option value="">-- Chọn nhà tài trợ --</option>
+                  {sponsorList.map((s) => (
+                    <option key={s.nha_tai_tro_id} value={s.nha_tai_tro_id}>
+                      {s.ten_nha_tai_tro}
+                      {s.email ? ` (${s.email})` : ''}
+                    </option>
+                  ))}
+                </select>
+                {errors.nha_tai_tro_id && (
+                  <div className={styles.errorText}>{errors.nha_tai_tro_id}</div>
+                )}
+              </>
+            ) : (
+              <DonorInfoSection
+                initialValues={newDonor}
+                onFieldsChange={handleNewDonorFieldsChange}
+                onValidityChange={handleNewDonorValidityChange}
+                resetKey={newDonorResetKey}
+                showTypeSelector={true}
+                showGhiChu={false}
+              />
             )}
           </div>
 
-          {/* Field 2: Quỹ nhận */}
+          {/* Section: Quỹ nhận tài trợ (reused public component) */}
           <div className={styles.field}>
             <label className={styles.label}>
-              Quỹ nhận tài trợ{' '}
-              <span className={styles.required}>*Bắt buộc</span>
+              Chọn Quỹ nhận tài trợ <span className={styles.required}>*Bắt buộc</span>
             </label>
-            <select
-              className={`${styles.select} ${
-                errors.quy_id ? styles.selectError : ''
-              }`}
-              value={form.quy_id}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, quy_id: e.target.value }))
-              }
-            >
-              <option value="">-- Chọn quỹ --</option>
-              {quyList.map((q) => (
-                <option
-                  key={q.quyId || q.quy_id}
-                  value={q.quyId || q.quy_id}
-                >
-                  {q.tenQuy || q.ten_quy}
-                </option>
-              ))}
-            </select>
+            <FundSelectSection
+              selectedFund={selectedFund}
+              onFundSelect={handleFundSelect}
+              isDonor={true}
+            />
             {errors.quy_id && (
               <div className={styles.errorText}>{errors.quy_id}</div>
             )}
-            {selectedQuy && (
-              <div className={styles.fundInfo}>
-                <span>{selectedQuy.tenQuy || selectedQuy.ten_quy}</span>
-                <span className={styles.fundBalance}>
-                  Số dư:{' '}
-                  {formatCurrency(selectedQuy.soDu || selectedQuy.so_du)}
-                </span>
-              </div>
+          </div>
+
+          {/* Section: Số tiền (reused public component) */}
+          <div className={styles.field}>
+            <DonationAmountSection
+              selectedFund={selectedFund}
+              donationAmount={form.so_tien}
+              onAmountChange={handleAmountChange}
+            />
+            {errors.so_tien && (
+              <div className={styles.errorText}>{errors.so_tien}</div>
             )}
           </div>
 
-          {/* Field 3: Số tiền */}
+          {/* Section: Hình thức thanh toán */}
           <div className={styles.field}>
-            <Input
-              label="Số tiền (VNĐ)"
-              required
-              value={form.so_tien}
+            <label className={styles.label}>
+              Hình thức đóng góp <span className={styles.required}>*Bắt buộc</span>
+            </label>
+            <select
+              className={styles.select}
+              value={form.hinh_thuc}
               onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  so_tien: e.target.value.replace(/[^0-9]/g, ''),
-                }))
+                setForm((f) => ({ ...f, hinh_thuc: e.target.value }))
               }
-              onBlur={() =>
-                setForm((f) => ({ ...f, so_tien: formatNumber(f.so_tien) }))
-              }
-              inputMode="numeric"
-              leftIcon={<HiOutlineCurrencyDollar />}
-              error={!!errors.so_tien}
-              errorMessage={errors.so_tien}
-            />
+            >
+              <option value="Tien mat">Tiền mặt</option>
+              <option value="Chuyen khoan">Chuyển khoản</option>
+              <option value="Khac">Khác</option>
+            </select>
           </div>
 
-          {/* Field 4: Ghi chú */}
+          {/* Section: Ghi chú */}
           <div className={styles.field}>
             <label className={styles.label}>Ghi chú</label>
             <textarea
@@ -324,7 +375,7 @@ const KhoanTaiTroModal = ({
             />
           </div>
 
-          {/* Field 5: Minh chứng */}
+          {/* Section: Minh chứng */}
           <div className={styles.field}>
             <label className={styles.label}>
               Ảnh minh chứng{' '}

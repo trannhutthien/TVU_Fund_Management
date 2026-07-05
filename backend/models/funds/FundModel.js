@@ -106,6 +106,36 @@ const createFund = async (fundData) => {
       ]
     );
 
+    if (loaiDieuHanh === 'Tap trung - Muc chi' && parseSoDu > 0) {
+      if (!nguoiTao) {
+        throw new Error('ALLOCATION_ACTOR_REQUIRED');
+      }
+
+      await connection.execute(
+        `INSERT INTO phanbongansach (
+          quy_nguon_id,
+          quy_dich_id,
+          sotien,
+          soquyetdinh,
+          filequyetdinh,
+          trangthai,
+          nguoi_de_xuat_id,
+          nguoi_duyet_id,
+          ngayduyet,
+          ghichu
+        ) VALUES (?, ?, ?, ?, NULL, 'Da duyet', ?, ?, CURRENT_TIMESTAMP, ?)`,
+        [
+          quyChaId,
+          result.insertId,
+          parseSoDu,
+          `AUTO-TAO-QUY-${result.insertId}`,
+          nguoiTao,
+          nguoiTao,
+          `Tự động ghi nhận trích lập ngân sách khi tạo quỹ con "${tenQuy}".`
+        ]
+      );
+    }
+
     await connection.commit();
     return result;
   } catch (error) {

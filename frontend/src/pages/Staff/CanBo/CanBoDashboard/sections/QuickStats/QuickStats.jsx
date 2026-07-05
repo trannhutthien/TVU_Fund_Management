@@ -2,6 +2,7 @@ import {
   HiOutlineClock,
   HiOutlineArrowPath,
   HiOutlineBanknotes,
+  HiOutlineBuildingLibrary,
   HiOutlineCheckBadge,
 } from 'react-icons/hi2';
 import { useNavigate } from 'react-router-dom';
@@ -33,12 +34,20 @@ const QuickStats = ({ stats }) => {
       subText: 'Đã chuyển duyệt',
     },
     {
-      key: 'tongSoDu',
-      label: 'Tổng số dư quỹ',
-      value: formatCurrency(stats.tongSoDu),
+      key: 'tongSoDuQuyPhatTrien',
+      label: 'Số dư Quỹ phát triển TVU',
+      value: formatCurrency(stats.tongSoDuQuyPhatTrien),
+      icon: HiOutlineBuildingLibrary,
+      iconBgColor: 'blue',
+      subText: 'Số dư hiện tại của quỹ mẹ',
+    },
+    {
+      key: 'tongSoDuQuyHoatDong',
+      label: 'Số dư quỹ hoạt động',
+      value: formatCurrency(stats.tongSoDuQuyHoatDong),
       icon: HiOutlineBanknotes,
       iconBgColor: 'green',
-      subText: `${stats.soQuyHoatDong} quỹ đang hoạt động`,
+      subText: 'Tổng số dư các mục chi con',
     },
     {
       key: 'daXuLy',

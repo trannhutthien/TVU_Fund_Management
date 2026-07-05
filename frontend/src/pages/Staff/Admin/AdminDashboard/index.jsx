@@ -166,7 +166,8 @@ const AdminDashboard = () => {
         setFinanceData({
           tongThuHeThong: keToanData.tongThu || 0,
           tongChiHeThong: keToanData.tongChi || 0,
-          tongSoDuTatCaQuy: (keToanData.tongThu || 0) - (keToanData.tongChi || 0),
+          tongSoDuQuyPhatTrien: keToanData.tongSoDuQuyPhatTrien || 0,
+          tongSoDuQuyHoatDong: keToanData.tongSoDuQuyHoatDong || 0,
           tongKhoanTaiTro: donations.tongKhoanTaiTro || 0, // Số khoản tài trợ đã nhận (Da nhan)
           tongGiaiNgan: keToanData.tongGiaiNgan || 0, // Số đơn đã giải ngân (Da giai ngan)
         });

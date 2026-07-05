@@ -1,8 +1,8 @@
 export const formatCurrency = (amount) => {
   if (!amount && amount !== 0) return '0đ';
   const n = Number(amount);
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} tỷ`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} triệu`;
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} tỷ đ`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} triệu đ`;
   return n.toLocaleString('vi-VN') + 'đ';
 };
 

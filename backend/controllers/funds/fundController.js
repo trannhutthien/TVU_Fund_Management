@@ -232,7 +232,7 @@ export const createFund = async (req, res) => {
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
       soDu: normalizedFundData.soDu,
       trangThai: trangThai || 'Dang hoat dong',
-      nguoiTao: nguoiTao || null,
+      nguoiTao: nguoiTao || req.user?.id || null,
       ngayBatDau: new Date().toISOString().split('T')[0], // Tự động set ngày hôm nay (YYYY-MM-DD)
       loaiDieuHanh: normalizedFundData.loaiDieuHanh,
       quyChaId: normalizedFundData.quyChaId
@@ -302,6 +302,12 @@ export const createFund = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Số dư Quỹ mẹ không đủ để trích lập số dư khởi tạo cho Quỹ con"
+      });
+    }
+    if (error.message === 'ALLOCATION_ACTOR_REQUIRED') {
+      return res.status(400).json({
+        success: false,
+        message: "Không xác định được người tạo để ghi nhận trích lập ngân sách"
       });
     }
     return res.status(500).json({

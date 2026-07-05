@@ -27,10 +27,11 @@ export const getDonorWall = async (req, res) => {
           THEN kt.sotien 
           ELSE 0 
         END), 0) as tong_dong_gop,
-        COUNT(DISTINCT kt.quy_id) as so_quy_ho_tro
+        COUNT(DISTINCT CASE WHEN kt.trangthai = 'Da nhan' THEN kt.quy_id END) as so_quy_ho_tro
        FROM nhataitro nt
-       INNER JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
+       LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
        LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
+       WHERE nt.trangthai = 'Hoat dong'
        GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo, nd.avatar, nd.email, nd.sodienthoai
        HAVING tong_dong_gop > 0
        ORDER BY tong_dong_gop DESC`
@@ -84,14 +85,16 @@ export const getDonorWall = async (req, res) => {
         quote: null
       };
 
+      const displayPrefix = donorData.loai === 'Doi tac' ? 'Đối tác' : 'Nhà tài trợ';
+
       if (donorData.totalAmount >= DIAMOND_THRESHOLD) {
-        donorData.tenHienThi = 'Đối tác Kim cương';
+        donorData.tenHienThi = `${displayPrefix} Kim cương`;
         diamond.push(donorData);
       } else if (donorData.totalAmount >= GOLD_THRESHOLD) {
-        donorData.tenHienThi = 'Nhà tài trợ Vàng';
+        donorData.tenHienThi = `${displayPrefix} Vàng`;
         gold.push(donorData);
       } else {
-        donorData.tenHienThi = 'Nhà tài trợ Bạc';
+        donorData.tenHienThi = `${displayPrefix} Bạc`;
         silver.push(donorData);
       }
     });

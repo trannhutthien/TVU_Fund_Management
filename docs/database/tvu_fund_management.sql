@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th7 03, 2026 lúc 07:34 PM
+-- Thời gian đã tạo: Th7 04, 2026 lúc 08:02 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.1.25
 
@@ -92,6 +92,13 @@ CREATE TABLE `giaodich` (
   `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `giaodich`
+--
+
+INSERT INTO `giaodich` (`giaodich_id`, `yeucauhotro_id`, `quy_id`, `nguoinhan_id`, `sotien`, `hinhthuc`, `magiaodich`, `chungtu`, `trangthai`, `doisoattrangthai`, `sotienthucte`, `doisoatboiid`, `doisoatluc`, `doisoatghichu`, `ghichu`, `nguoithuchien_id`, `ngaygiaodich`, `ngaycapnhat`) VALUES
+(1, NULL, 1, NULL, 100000000.00, 'Chuyen khoan', NULL, 'uploads/documents/DHTV_1783161932756_70885091.jpg', 'Thanh cong', 'Da_doi_soat', 100000000.00, 1, '2026-07-04 23:52:17', 'Đả nhận được tiền', 'Đả nhận được tiền', 2, '2026-07-04 10:45:32', '2026-07-04 16:52:17');
+
 -- --------------------------------------------------------
 
 --
@@ -122,6 +129,13 @@ CREATE TABLE `guest_khoantaitro` (
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
   `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `guest_khoantaitro`
+--
+
+INSERT INTO `guest_khoantaitro` (`guest_khoantaitro_id`, `guest_hoten`, `guest_email`, `guest_sodienthoai`, `guest_tochuc`, `guest_diachi`, `quy_id`, `sotien`, `hinhthuc`, `magiaodich`, `ngaytaitro`, `chungtu`, `ghichu`, `trang_thai_staging`, `khoantaitro_id_ref`, `nhataitro_id_ref`, `otp_code`, `otp_expires_at`, `is_email_verified`, `tracking_uuid`, `ngaytao`, `ngaycapnhat`) VALUES
+(1, 'BIDV Trà Vinh.', 'dendung855@gmail.com', '0294385558', 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam – Chi nhánh Trà Vinh.', '2B, Đường Nguyễn Thị Minh Khai, Phường 2, Thành phố Trà Vinh, Tỉnh Trà Vinh.', 1, 100000000.00, 'Khac', 'VNPAY63872678', '2026-07-04', 'uploads/documents/1_1783161701612_439929109.jpg', 'Là những người đi trước đã từng học tập dưới mái trường Tra Vinh University, chúng tôi mong muốn được đóng góp một phần nguồn lực vào Quỹ Phát triển Trường. Hy vọng khoản tài trợ này sẽ góp phần tiếp sức cho thế hệ đàn em vững bước trên con đường lập nghiệp, đồng thời đồng hành cùng sự phát triển bền vững của Nhà trường.', 'DA_CHUYEN', 1, 1, NULL, NULL, 1, '536af03e-f920-4cdc-81b2-2082e765af04', '2026-07-04 10:42:14', '2026-07-04 10:42:14');
 
 -- --------------------------------------------------------
 
@@ -177,6 +191,17 @@ CREATE TABLE `khoantaitro` (
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
   `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `khoantaitro`
+--
+
+INSERT INTO `khoantaitro` (`khoantaitro_id`, `nhataitro_id`, `quy_id`, `sotien`, `hinhthuc`, `magiaodich`, `ngaytaitro`, `chungtu`, `trangthai`, `ghichu`, `nguoixacnhan_id`, `ngayxacnhan`, `ngaytao`, `ngaycapnhat`) VALUES
+(1, 1, 1, 100000000.00, 'Khac', 'VNPAY63872678', '2026-07-04', 'uploads/documents/DHTV_1783161932756_70885091.jpg', 'Da nhan', 'duyệt', 1, '2026-07-04 10:47:31', '2026-07-04 10:42:14', '2026-07-04 10:47:31'),
+(2, 1, 1, 200000000.00, 'Chuyen khoan', NULL, '2026-07-05', 'uploads/documents/1_1783186161875_959382373.jpg', 'Cho duyet', 'Gốp phần xây dựng Quỹ phát triển Đại học Trà Vinh phát triển hơn.', NULL, NULL, '2026-07-04 17:29:21', '2026-07-04 17:29:21'),
+(3, 2, 1, 300000000.00, 'Chuyen khoan', NULL, '2026-07-05', 'uploads/documents/1_1783186400923_478583297.jpg', 'Cho duyet', 'Vietcombank Trà Vinh mong muốn đồng hành cùng Quỹ Phát triển ĐHTV trong việc trao tặng các suất học bổng tài năng cho sinh viên xuất sắc vượt khó. Chúng tôi hy vọng sự đóng góp này sẽ góp phần nâng cao chất lượng nguồn nhân lực địa phương và thắt chặt hơn nữa mối quan hệ hợp tác chiến lược giữa hai đơn vị trong các dự án giáo dục tiếp theo.', NULL, NULL, '2026-07-04 17:33:20', '2026-07-04 17:33:20'),
+(4, 3, 1, 300000000.00, 'Chuyen khoan', NULL, '2026-07-05', 'uploads/documents/1_1783186647587_424996124.jpg', 'Cho duyet', 'Agribank Trà Vinh rất vinh dự khi được đóng góp một phần nguồn lực vào Quỹ Phát triển ĐHTV. Chúng tôi đặc biệt hướng tới các chương trình tài trợ tín dụng học tập ưu đãi và học bổng cho sinh viên thuộc diện chính sách, vùng sâu vùng xa, vùng đồng bào dân tộc thiểu số tại Trà Vinh để các em có cơ hội tiếp cận tri thức toàn diện.', NULL, NULL, '2026-07-04 17:37:27', '2026-07-04 17:37:27'),
+(5, 4, 1, 400000000.00, 'Chuyen khoan', NULL, '2026-07-05', 'uploads/documents/1_1783187129137_985720991.jpg', 'Cho duyet', 'Điện lực Trà Vinh gửi tặng khoản tài trợ này với mong muốn tiếp sức cho các đề tài nghiên cứu khoa học mang tính ứng dụng cao của giảng viên và sinh viên ĐHTV, đặc biệt là các sáng kiến về năng lượng xanh và chuyển đổi số. Rất mong Quỹ sử dụng hiệu quả và đúng mục đích.', NULL, NULL, '2026-07-04 17:45:29', '2026-07-04 17:45:29');
 
 -- --------------------------------------------------------
 
@@ -236,7 +261,8 @@ CREATE TABLE `nguoidung` (
 INSERT INTO `nguoidung` (`nguoidung_id`, `email`, `matkhau`, `hoten`, `masodinhdanh`, `ngaysinh`, `gioitinh`, `sodienthoai`, `diachi`, `donvihoc_id`, `avatar`, `vaitro_id`, `loaitaikhoan`, `trangthai`, `ngaytao`, `ngaycapnhat`, `taikhoannganhang_id`) VALUES
 (1, 'binh@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Nguyễn Văn Bình', 'ADMIN001', NULL, NULL, '0987654321', NULL, NULL, NULL, 1, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL),
 (2, 'ketoan@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Trần Thị Kế Toán', 'KT001', NULL, NULL, NULL, NULL, NULL, NULL, 2, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL),
-(3, 'canboquy@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Lê Văn Tùng', 'CB001', NULL, NULL, NULL, NULL, NULL, NULL, 3, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL);
+(3, 'canboquy@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Lê Văn Tùng', 'CB001', NULL, NULL, NULL, NULL, NULL, NULL, 3, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL),
+(4, 'dendung855@gmail.com', '$2b$10$.aYzHwopjs66jWh2PjsOIOClg3zRIaN8.ZQrrmF5UYLH51lnLMIlm', 'BIDV Trà Vinh.', 'GG1783161734523', NULL, NULL, '0294385558', '2B, Đường Nguyễn Thị Minh Khai, Phường 2, Thành phố Trà Vinh, Tỉnh Trà Vinh.', NULL, NULL, 4, 'Nha tai tro', 'Hoat dong', '2026-07-04 10:42:14', '2026-07-04 10:42:14', NULL);
 
 -- --------------------------------------------------------
 
@@ -247,7 +273,7 @@ INSERT INTO `nguoidung` (`nguoidung_id`, `email`, `matkhau`, `hoten`, `masodinhd
 CREATE TABLE `nhataitro` (
   `nhataitro_id` int(11) NOT NULL,
   `tennhataitro` varchar(200) NOT NULL,
-  `loainhataitro` enum('Ca nhan','To chuc','Doanh nghiep') NOT NULL,
+  `loainhataitro` enum('Ca nhan','To chuc','Doanh nghiep','Doi tac') NOT NULL,
   `email` varchar(100) DEFAULT NULL,
   `sodienthoai` varchar(15) DEFAULT NULL,
   `diachi` text DEFAULT NULL,
@@ -259,6 +285,16 @@ CREATE TABLE `nhataitro` (
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
   `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `nhataitro`
+--
+
+INSERT INTO `nhataitro` (`nhataitro_id`, `tennhataitro`, `loainhataitro`, `email`, `sodienthoai`, `diachi`, `website`, `mota`, `logo`, `nguoidung_id`, `trangthai`, `ngaytao`, `ngaycapnhat`) VALUES
+(1, 'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam – Chi nhánh Trà Vinh.', 'To chuc', 'dendung855@gmail.com', '0294385558', '2B, Đường Nguyễn Thị Minh Khai, Phường 2, Thành phố Trà Vinh, Tỉnh Trà Vinh.', NULL, NULL, NULL, 4, 'Hoat dong', '2026-07-04 10:42:14', '2026-07-04 10:42:14'),
+(2, 'Vietcombank Trà Vinh', 'To chuc', 'vietcombanktravinh@gmail.com', '02943855888', 'Số 26, Đường Nguyễn Thị Minh Khai, Khóm 3, Phường 2, TP. Trà Vinh, Tỉnh Trà Vinh', NULL, NULL, NULL, NULL, 'Hoat dong', '2026-07-04 17:33:20', '2026-07-04 17:33:20'),
+(3, 'Agribank Trà Vinh', 'To chuc', 'agribanktravinh@gmail.com', '02943862444', 'Số 50, Đường Võ Nguyên Giáp, Phường 6, TP. Trà Vinh, Tỉnh Trà Vinh', NULL, NULL, NULL, NULL, 'Hoat dong', '2026-07-04 17:37:27', '2026-07-04 17:37:27'),
+(4, 'Điện lực Trà Vinh', 'To chuc', 'dienluctravinh@gmail.com', '02943833444', 'Số 16, Đường Nguyễn Thái Học, Phường 1, TP. Trà Vinh, Tỉnh Trà Vinh', NULL, NULL, NULL, NULL, 'Hoat dong', '2026-07-04 17:45:29', '2026-07-04 17:45:29');
 
 -- --------------------------------------------------------
 
@@ -297,7 +333,37 @@ INSERT INTO `nhatkyhethong` (`nhatkyhethong_id`, `nguoidung_id`, `hanhdong`, `lo
 (11, 1, 'API_TAO_MOI', 'api', NULL, '[Nhân viên hệ thống] Nguyễn Văn Bình: POST /api/upload/fund - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/fund\",\"statusCode\":200,\"durationMs\":24,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-03 16:57:05'),
 (12, 1, 'THEM_MOI_QUY', 'quy', 4, '[Nhân viên hệ thống] Nguyễn Văn Bình: Thêm mới quỹ hỗ trợ: Quỹ Học bổng Đồng hành cùng Sinh viên Nghèo Vượt khó TVU', NULL, '{\"tenQuy\":\"Quỹ Học bổng Đồng hành cùng Sinh viên Nghèo Vượt khó TVU\",\"loaiQuy\":\"Hoc bong\",\"moTa\":\"Quỹ chuyên trách cung cấp kinh phí hỗ trợ học tập, sinh hoạt phí và trợ cấp đột xuất cho sinh viên hoàn cảnh khó khăn nhưng có tinh thần vươn lên, đạt thành tích khá tốt trở lên tại Đại học Trà Vinh.\",\"hinhAnh\":\"uploads/avatars/fund/153004-truong-dai-hoc-tra-vinh-ky-niem-ngay-nha-giao-viet-nam-va-trao-hoc-bong-cho-sinh-vien-vuot-kho-hoc-gioi_1781674663123_108544383_1783097825872_664555170.jpg\",\"soTienMucTieu\":400000000,\"soTienHoTroToiDa\":20000000,\"soLuongChiTieu\":20,\"hanNopDon\":\"2027-07-03\",\"dieuKienTomTat\":\"- Thuộc diện hộ nghèo hoặc hộ cận nghèo (có sổ hoặc giấy xác nhận từ địa phương).\\n- Điểm trung bình học tập tích lũy (GPA) từ 2.5/4.0 hoặc 7.0/10.0 trở lên.\\n- Điểm rèn luyện đạt loại Tốt trở lên.\",\"soDu\":300000000,\"trangThai\":\"Dang hoat dong\",\"nguoiTao\":1,\"ngayBatDau\":\"2026-07-03\"}', '127.0.0.1', '2026-07-03 17:00:13'),
 (13, 1, 'API_TAO_MOI', 'api', NULL, '[Nhân viên hệ thống] Nguyễn Văn Bình: POST /api/upload/fund - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/fund\",\"statusCode\":200,\"durationMs\":21,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-03 17:24:20'),
-(14, 1, 'THEM_MOI_QUY', 'quy', 5, '[Nhân viên hệ thống] Nguyễn Văn Bình: Thêm mới quỹ hỗ trợ: Quỹ Học bổng Đồng hành cùng Sinh viên Nghèo Vượt khó TVU', NULL, '{\"tenQuy\":\"Quỹ Học bổng Đồng hành cùng Sinh viên Nghèo Vượt khó TVU\",\"loaiQuy\":\"Hoc bong\",\"moTa\":\"- Thuộc diện hộ nghèo hoặc hộ cận nghèo (có sổ hoặc giấy xác nhận từ địa phương).\\n- Điểm trung bình học tập tích lũy (GPA) từ 2.5/4.0 hoặc 7.0/10.0 trở lên.\\n- Điểm rèn luyện đạt loại Tốt trở lên.\\n- Chưa nhận bất kỳ học bổng tài trợ nào khác trong cùng\",\"hinhAnh\":\"uploads/avatars/fund/153004-truong-dai-hoc-tra-vinh-ky-niem-ngay-nha-giao-viet-nam-va-trao-hoc-bong-cho-sinh-vien-vuot-kho-hoc-gioi_1781674663123_108544383_1783099460741_662453561.jpg\",\"soTienMucTieu\":400000000,\"soTienHoTroToiDa\":20000000,\"soLuongChiTieu\":20,\"hanNopDon\":\"2027-01-04\",\"dieuKienTomTat\":null,\"soDu\":300000000,\"trangThai\":\"Dang hoat dong\",\"nguoiTao\":1,\"ngayBatDau\":\"2026-07-03\",\"loaiDieuHanh\":\"Tap trung - Muc chi\",\"quyChaId\":1}', '127.0.0.1', '2026-07-03 17:26:02');
+(14, 1, 'THEM_MOI_QUY', 'quy', 5, '[Nhân viên hệ thống] Nguyễn Văn Bình: Thêm mới quỹ hỗ trợ: Quỹ Học bổng Đồng hành cùng Sinh viên Nghèo Vượt khó TVU', NULL, '{\"tenQuy\":\"Quỹ Học bổng Đồng hành cùng Sinh viên Nghèo Vượt khó TVU\",\"loaiQuy\":\"Hoc bong\",\"moTa\":\"- Thuộc diện hộ nghèo hoặc hộ cận nghèo (có sổ hoặc giấy xác nhận từ địa phương).\\n- Điểm trung bình học tập tích lũy (GPA) từ 2.5/4.0 hoặc 7.0/10.0 trở lên.\\n- Điểm rèn luyện đạt loại Tốt trở lên.\\n- Chưa nhận bất kỳ học bổng tài trợ nào khác trong cùng\",\"hinhAnh\":\"uploads/avatars/fund/153004-truong-dai-hoc-tra-vinh-ky-niem-ngay-nha-giao-viet-nam-va-trao-hoc-bong-cho-sinh-vien-vuot-kho-hoc-gioi_1781674663123_108544383_1783099460741_662453561.jpg\",\"soTienMucTieu\":400000000,\"soTienHoTroToiDa\":20000000,\"soLuongChiTieu\":20,\"hanNopDon\":\"2027-01-04\",\"dieuKienTomTat\":null,\"soDu\":300000000,\"trangThai\":\"Dang hoat dong\",\"nguoiTao\":1,\"ngayBatDau\":\"2026-07-03\",\"loaiDieuHanh\":\"Tap trung - Muc chi\",\"quyChaId\":1}', '127.0.0.1', '2026-07-03 17:26:02'),
+(15, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/upload/public - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/public\",\"statusCode\":200,\"durationMs\":14,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:20:27'),
+(16, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/upload/public - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/public\",\"statusCode\":200,\"durationMs\":4,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:20:45'),
+(17, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/upload/public - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/public\",\"statusCode\":200,\"durationMs\":4,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:21:06'),
+(18, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/upload/public - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/public\",\"statusCode\":200,\"durationMs\":4,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:21:17'),
+(19, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/upload/public - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/public\",\"statusCode\":200,\"durationMs\":4,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:31:14'),
+(20, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/upload/public - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/public\",\"statusCode\":200,\"durationMs\":22,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:37:48'),
+(21, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/guest/tai-tro - tác động dữ liệu thành công (201)', NULL, '{\"method\":\"POST\",\"path\":\"/api/guest/tai-tro\",\"statusCode\":201,\"durationMs\":3720,\"params\":{},\"query\":{},\"body\":{\"guestHoTen\":\"BIDV Trà Vinh.\",\"guestEmail\":\"travinh@bidv.com.vn\",\"guestSoDienThoai\":\"0294385535\",\"guestToChuc\":\"Ngân hàng TMCP Đầu tư và Phát triển Việt Nam – Chi nhánh Trà Vinh.\",\"guestDiaChi\":\"Số 2B, Đường Nguyễn Thị Minh Khai, Phường 2, Thành phố Trà Vinh, Tỉnh Trà Vinh.\",\"quyId\":1,\"soTien\":100000000,\"hinhThuc\":\"Khac\",\"maGiaoDich\":\"VNPAY74919026\",\"chungTu\":\"uploads/documents/1_1783161468305_188285289.jpg\",\"ghiChu\":\"Là những người đi trước đã từng học tập dưới mái trường Tra Vinh University, chúng tôi mong muốn được đóng góp một phần nguồn lực vào Quỹ Phát triển Trường. Hy vọng khoản tài trợ này sẽ góp phần tiếp sức cho thế hệ đàn em vững bước trên con đường lập nghiệp, đồng thời đồng hành cùng sự phát triển bền vững của Nhà trường.\"}}', '127.0.0.1', '2026-07-04 10:37:52'),
+(22, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/upload/public - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload/public\",\"statusCode\":200,\"durationMs\":7,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:41:41'),
+(23, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/guest/tai-tro - tác động dữ liệu thành công (201)', NULL, '{\"method\":\"POST\",\"path\":\"/api/guest/tai-tro\",\"statusCode\":201,\"durationMs\":3270,\"params\":{},\"query\":{},\"body\":{\"guestHoTen\":\"BIDV Trà Vinh.\",\"guestEmail\":\"dendung855@gmail.com\",\"guestSoDienThoai\":\"0294385558\",\"guestToChuc\":\"Ngân hàng TMCP Đầu tư và Phát triển Việt Nam – Chi nhánh Trà Vinh.\",\"guestDiaChi\":\"2B, Đường Nguyễn Thị Minh Khai, Phường 2, Thành phố Trà Vinh, Tỉnh Trà Vinh.\",\"quyId\":1,\"soTien\":100000000,\"hinhThuc\":\"Khac\",\"maGiaoDich\":\"VNPAY63872678\",\"chungTu\":\"uploads/documents/1_1783161701612_439929109.jpg\",\"ghiChu\":\"Là những người đi trước đã từng học tập dưới mái trường Tra Vinh University, chúng tôi mong muốn được đóng góp một phần nguồn lực vào Quỹ Phát triển Trường. Hy vọng khoản tài trợ này sẽ góp phần tiếp sức cho thế hệ đàn em vững bước trên con đường lập nghiệp, đồng thời đồng hành cùng sự phát triển bền vững của Nhà trường.\"}}', '127.0.0.1', '2026-07-04 10:41:44'),
+(24, NULL, 'API_TAO_MOI', 'api', NULL, 'POST /api/guest/verify-otp - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/guest/verify-otp\",\"statusCode\":200,\"durationMs\":3086,\"params\":{},\"query\":{},\"body\":{\"email\":\"dendung855@gmail.com\",\"otpCode\":\"491536\",\"type\":\"donation\",\"otpToken\":\"eyJ0eXBlIjoiZG9uYXRpb24iLCJlbWFpbCI6ImRlbmR1bmc4NTVAZ21haWwuY29tIiwidHJhY2tpbmdVdWlkIjoiNTM2YWYwM2UtZjkyMC00Y2RjLTgxYjItMjA4MmU3NjVhZjA0Iiwib3RwSGFzaCI6IjM2ZTRlZThlOGNlODkwMTVkODc1OWU1ZWRmYjdmNDJmYTdkNzQ3MGQ0ZjkzMWI3ZjkwNDg5MDZiODdlYjk1ZTMiLCJleHBpcmVzQXQiOiIyMDI2LTA3LTA0VDExOjExOjQxLjYyNVoiLCJkb25hdGlvbiI6eyJndWVzdEhvVGVuIjoiQklEViBUcsOgIFZpbmguIiwiZ3Vlc3RFbWFpbCI6ImRlbmR1bmc4NTVAZ21haWwuY29tIiwiZ3Vlc3RTb0RpZW5UaG9haSI6IjAyOTQzODU1NTgiLCJndWVzdFRvQ2h1YyI6Ik5nw6JuIGjDoG5nIFRNQ1AgxJDhuqd1IHTGsCB2w6AgUGjDoXQgdHJp4buDbiBWaeG7h3QgTmFtIOKAkyBDaGkgbmjDoW5oIFRyw6AgVmluaC4iLCJndWVzdERpYUNoaSI6IjJCLCDEkMaw4budbmcgTmd1eeG7hW4gVGjhu4sgTWluaCBLaGFpLCBQaMaw4budbmcgMiwgVGjDoG5oIHBo4buRIFRyw6AgVmluaCwgVOG7iW5oIFRyw6AgVmluaC4iLCJxdXlJZCI6MSwic29UaWVuIjoxMDAwMDAwMDAsImhpbmhUaHVjIjoiS2hhYyIsIm1hR2lhb0RpY2giOiJWTlBBWTYzODcyNjc4IiwibmdheVRhaVRybyI6IjIwMjYtMDctMDQiLCJjaHVuZ1R1IjoidXBsb2Fkcy9kb2N1bWVudHMvMV8xNzgzMTYxNzAxNjEyXzQzOTkyOTEwOS5qcGciLCJnaGlDaHUiOiJMw6Agbmjhu69uZyBuZ8aw4budaSDEkWkgdHLGsOG7m2MgxJHDoyB04burbmcgaOG7jWMgdOG6rXAgZMaw4bubaSBtw6FpIHRyxrDhu51uZyBUcmEgVmluaCBVbml2ZXJzaXR5LCBjaMO6bmcgdMO0aSBtb25nIG114buRbiDEkcaw4bujYyDEkcOzbmcgZ8OzcCBt4buZdCBwaOG6p24gbmd14buTbiBs4buxYyB2w6BvIFF14bu5IFBow6F0IHRyaeG7g24gVHLGsOG7nW5nLiBIeSB24buNbmcga2hv4bqjbiB0w6BpIHRy4bujIG7DoHkgc-G6vSBnw7NwIHBo4bqnbiB0aeG6v3Agc-G7qWMgY2hvIHRo4bq_IGjhu4cgxJHDoG4gZW0gduG7r25nIGLGsOG7m2MgdHLDqm4gY29uIMSRxrDhu51uZyBs4bqtcCBuZ2hp4buHcCwgxJHhu5NuZyB0aOG7nWkgxJHhu5NuZyBow6BuaCBjw7luZyBz4buxIHBow6F0IHRyaeG7g24gYuG7gW4gduG7r25nIGPhu6dhIE5ow6AgdHLGsOG7nW5nLiIsInRyYWNraW5nVXVpZCI6IjUzNmFmMDNlLWY5MjAtNGNkYy04MWIyLTIwODJlNzY1YWYwNCJ9fQ.hjV62WSNQkCZwKkPhxfwjInLrQKjUXPIG2PjZe42rXo\"}}', '127.0.0.1', '2026-07-04 10:42:17'),
+(25, 2, 'DANG_NHAP', 'nguoidung', 2, '[Nhân viên hệ thống] Trần Thị Kế Toán: Đăng nhập hệ thống thành công', NULL, NULL, '127.0.0.1', '2026-07-04 10:44:52'),
+(26, 2, 'API_TAO_MOI', 'api', NULL, '[Nhân viên hệ thống] Trần Thị Kế Toán: POST /api/upload - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload\",\"statusCode\":200,\"durationMs\":7,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 10:45:32'),
+(27, 2, 'DUYET_KHOAN_TAI_TRO', 'khoantaitro', 1, '[Nhân viên hệ thống] Trần Thị Kế Toán: Duyệt khoản tài trợ ID 1 số tiền 100000000.00 VNĐ của nhà tài trợ \'Ngân hàng TMCP Đầu tư và Phát triển Việt Nam – Chi nhánh Trà Vinh.\' vào quỹ \'Quỹ phát triển Đại học Trà Vinh\'', '{\"trangthai\":\"Cho duyet\"}', '{\"trangthai\":\"Da duyet\"}', '127.0.0.1', '2026-07-04 10:45:32'),
+(28, 2, 'DANG_XUAT', 'nguoidung', 2, '[Nhân viên hệ thống] Trần Thị Kế Toán: Đăng xuất khỏi hệ thống', NULL, NULL, '127.0.0.1', '2026-07-04 10:45:56'),
+(29, 1, 'DANG_NHAP', 'nguoidung', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: Đăng nhập hệ thống thành công', NULL, NULL, '127.0.0.1', '2026-07-04 10:46:16'),
+(30, 1, 'XAC_NHAN_KHOAN_TAI_TRO', 'khoantaitro', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: Xác nhận đã nhận tiền đóng góp số tiền 100000000.00 VNĐ cho khoản tài trợ ID 1', '{\"trangthai\":\"Da duyet\"}', '{\"trangthai\":\"Da nhan\"}', '127.0.0.1', '2026-07-04 10:47:31'),
+(31, 1, 'DANG_NHAP', 'nguoidung', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: Đăng nhập hệ thống thành công', NULL, NULL, '127.0.0.1', '2026-07-04 15:48:37'),
+(32, 1, 'DANG_NHAP', 'nguoidung', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: Đăng nhập hệ thống thành công', NULL, NULL, '127.0.0.1', '2026-07-04 16:51:16'),
+(33, 1, 'API_CAP_NHAT', 'doi-soat', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: PATCH /api/transactions/1/doi-soat - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"PATCH\",\"path\":\"/api/transactions/1/doi-soat\",\"statusCode\":200,\"durationMs\":16,\"params\":{\"id\":\"1\"},\"query\":{},\"body\":{\"doiSoatTrangThai\":\"Bat_thuong\",\"ghiChu\":\"Đả nhận được tiền\"}}', '127.0.0.1', '2026-07-04 16:52:05'),
+(34, 1, 'API_CAP_NHAT', 'doi-soat', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: PATCH /api/transactions/1/doi-soat - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"PATCH\",\"path\":\"/api/transactions/1/doi-soat\",\"statusCode\":200,\"durationMs\":9,\"params\":{\"id\":\"1\"},\"query\":{},\"body\":{\"doiSoatTrangThai\":\"Da_doi_soat\",\"ghiChu\":\"Đả nhận được tiền\"}}', '127.0.0.1', '2026-07-04 16:52:17'),
+(35, 1, 'DANG_XUAT', 'nguoidung', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: Đăng xuất khỏi hệ thống', NULL, NULL, '127.0.0.1', '2026-07-04 16:52:35'),
+(36, 1, 'DANG_NHAP', 'nguoidung', 1, '[Nhân viên hệ thống] Nguyễn Văn Bình: Đăng nhập hệ thống thành công', NULL, NULL, '127.0.0.1', '2026-07-04 16:53:21'),
+(37, 1, 'API_TAO_MOI', 'api', NULL, '[Nhân viên hệ thống] Nguyễn Văn Bình: POST /api/upload - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload\",\"statusCode\":200,\"durationMs\":28,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 17:29:21'),
+(38, 1, 'THEM_MOI_KHOAN_TAI_TRO', 'khoantaitro', 2, '[Nhân viên hệ thống] Nguyễn Văn Bình: Ghi nhận khoản tài trợ số tiền 200.000.000 VNĐ vào quỹ \'Quỹ phát triển Đại học Trà Vinh\'', NULL, '{\"nhaTaiTroId\":1,\"quyId\":1,\"soTien\":200000000}', '127.0.0.1', '2026-07-04 17:29:22'),
+(39, 1, 'API_TAO_MOI', 'api', NULL, '[Nhân viên hệ thống] Nguyễn Văn Bình: POST /api/upload - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload\",\"statusCode\":200,\"durationMs\":6,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 17:33:20'),
+(40, 1, 'THEM_MOI_KHOAN_TAI_TRO', 'khoantaitro', 3, '[Nhân viên hệ thống] Nguyễn Văn Bình: Ghi nhận khoản tài trợ số tiền 300.000.000 VNĐ vào quỹ \'Quỹ phát triển Đại học Trà Vinh\'', NULL, '{\"nhaTaiTroId\":2,\"quyId\":1,\"soTien\":300000000}', '127.0.0.1', '2026-07-04 17:33:20'),
+(41, 1, 'API_TAO_MOI', 'api', NULL, '[Nhân viên hệ thống] Nguyễn Văn Bình: POST /api/upload - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload\",\"statusCode\":200,\"durationMs\":7,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 17:37:27'),
+(42, 1, 'THEM_MOI_KHOAN_TAI_TRO', 'khoantaitro', 4, '[Nhân viên hệ thống] Nguyễn Văn Bình: Ghi nhận khoản tài trợ số tiền 300.000.000 VNĐ vào quỹ \'Quỹ phát triển Đại học Trà Vinh\'', NULL, '{\"nhaTaiTroId\":3,\"quyId\":1,\"soTien\":300000000}', '127.0.0.1', '2026-07-04 17:37:27'),
+(43, 1, 'API_TAO_MOI', 'api', NULL, '[Nhân viên hệ thống] Nguyễn Văn Bình: POST /api/upload - tác động dữ liệu thành công (200)', NULL, '{\"method\":\"POST\",\"path\":\"/api/upload\",\"statusCode\":200,\"durationMs\":17,\"params\":{},\"query\":{},\"body\":{}}', '127.0.0.1', '2026-07-04 17:45:29'),
+(44, 1, 'THEM_MOI_KHOAN_TAI_TRO', 'khoantaitro', 5, '[Nhân viên hệ thống] Nguyễn Văn Bình: Ghi nhận khoản tài trợ số tiền 400.000.000 VNĐ vào quỹ \'Quỹ phát triển Đại học Trà Vinh\'', NULL, '{\"nhaTaiTroId\":4,\"quyId\":1,\"soTien\":400000000}', '127.0.0.1', '2026-07-04 17:45:29');
 
 -- --------------------------------------------------------
 
@@ -370,7 +436,7 @@ CREATE TABLE `quy` (
 --
 
 INSERT INTO `quy` (`quy_id`, `tenquy`, `loaiquy_id`, `mota`, `hinhanh`, `sotienmuctieu`, `sodu`, `sotienhotrotoida`, `soluonghotrotoida`, `dieukienhotro`, `ngaybatdau`, `ngayketthuc`, `trangthai`, `nguoitao_id`, `ngaytao`, `ngaycapnhat`, `loaidieuhanh`, `quy_cha_id`) VALUES
-(1, 'Quỹ phát triển Đại học Trà Vinh', 2, NULL, 'uploads/avatars/fund/250_1781674629998_996093529_1783097566841_600534754.jpg', 5000000000.00, 700000000.00, NULL, NULL, NULL, '2026-07-03', '2027-12-29', 'Dang hoat dong', NULL, '2026-07-03 10:15:23', '2026-07-03 17:26:02', 'Tap trung - Be chung', NULL),
+(1, 'Quỹ phát triển Đại học Trà Vinh', 2, NULL, 'uploads/avatars/fund/250_1781674629998_996093529_1783097566841_600534754.jpg', 5000000000.00, 800000000.00, NULL, NULL, NULL, '2026-07-03', '2027-12-29', 'Dang hoat dong', NULL, '2026-07-03 10:15:23', '2026-07-04 10:45:32', 'Tap trung - Be chung', NULL),
 (5, 'Quỹ Học bổng Đồng hành cùng Sinh viên Nghèo Vượt khó TVU', 2, '- Thuộc diện hộ nghèo hoặc hộ cận nghèo (có sổ hoặc giấy xác nhận từ địa phương).\n- Điểm trung bình học tập tích lũy (GPA) từ 2.5/4.0 hoặc 7.0/10.0 trở lên.\n- Điểm rèn luyện đạt loại Tốt trở lên.\n- Chưa nhận bất kỳ học bổng tài trợ nào khác trong cùng', 'uploads/avatars/fund/153004-truong-dai-hoc-tra-vinh-ky-niem-ngay-nha-giao-viet-nam-va-trao-hoc-bong-cho-sinh-vien-vuot-kho-hoc-gioi_1781674663123_108544383_1783099460741_662453561.jpg', 400000000.00, 300000000.00, 20000000.00, 20, NULL, '2026-07-03', '2027-01-04', 'Dang hoat dong', 1, '2026-07-03 17:26:02', '2026-07-03 17:26:02', 'Tap trung - Muc chi', 1);
 
 -- --------------------------------------------------------
@@ -681,13 +747,13 @@ ALTER TABLE `donvihoc`
 -- AUTO_INCREMENT cho bảng `giaodich`
 --
 ALTER TABLE `giaodich`
-  MODIFY `giaodich_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `giaodich_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT cho bảng `guest_khoantaitro`
 --
 ALTER TABLE `guest_khoantaitro`
-  MODIFY `guest_khoantaitro_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `guest_khoantaitro_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT cho bảng `guest_yeucauhotro`
@@ -699,7 +765,7 @@ ALTER TABLE `guest_yeucauhotro`
 -- AUTO_INCREMENT cho bảng `khoantaitro`
 --
 ALTER TABLE `khoantaitro`
-  MODIFY `khoantaitro_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `khoantaitro_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT cho bảng `loaiquy`
@@ -711,19 +777,19 @@ ALTER TABLE `loaiquy`
 -- AUTO_INCREMENT cho bảng `nguoidung`
 --
 ALTER TABLE `nguoidung`
-  MODIFY `nguoidung_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `nguoidung_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT cho bảng `nhataitro`
 --
 ALTER TABLE `nhataitro`
-  MODIFY `nhataitro_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `nhataitro_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT cho bảng `nhatkyhethong`
 --
 ALTER TABLE `nhatkyhethong`
-  MODIFY `nhatkyhethong_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `nhatkyhethong_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT cho bảng `phanbongansach`

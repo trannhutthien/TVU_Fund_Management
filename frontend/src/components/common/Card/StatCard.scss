@@ -11,6 +11,7 @@
   display: flex;
   align-items: flex-start;
   gap: $space-4; // 16px
+  min-width: 0;
   padding: $space-6; // 24px
   background: $bg-card;
   border: 1px solid $border-card;
@@ -128,17 +129,19 @@
   font-weight: $font-medium;
   color: $text-secondary;
   text-transform: uppercase;
-  letter-spacing: $tracking-wide;
+  letter-spacing: 0;
   line-height: $leading-tight;
+  overflow-wrap: anywhere;
 }
 
 // ── VALUE ───────────────────────────────────
 .stat-card-value {
-  font-size: $text-3xl; // 28px
+  font-size: clamp(20px, 2vw, #{$text-3xl}); // 28px max
   font-weight: $font-bold;
   color: $text-heading;
   line-height: $leading-tight;
-  letter-spacing: $tracking-tight;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
   
   // Animation khi hover
   .stat-card:hover & {
@@ -151,6 +154,7 @@
 .stat-card-footer {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: $space-2; // 8px
   margin-top: $space-1; // 4px
 }
@@ -189,7 +193,8 @@
 .stat-card-subtitle {
   font-size: $text-xs; // 11.2px
   color: $text-muted;
-  line-height: 1;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 // ── HOVER INDICATOR ─────────────────────────

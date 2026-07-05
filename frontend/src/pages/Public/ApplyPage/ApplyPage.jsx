@@ -14,6 +14,7 @@ import FundSelectSection from '@components/sections/AppliPage/AppliSectionLayout
 import RequestContentSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/RequestContentSection/RequestContentSection';
 import BankInfoSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/BankInfoSection/BankInfoSection';
 import DonationAmountSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/DonationAmountSection/DonationAmountSection';
+import DonorInfoSection from '@components/sections/DonationForm/DonorInfoSection';
 import DocumentSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/DocumentSection/DocumentSection';
 import ApplicationFooter from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/ApplicationFooter/ApplicationFooter';
 import NewsSidebar from '@components/sections/AppliPage/AppliSectionLayout/NewsSidebar/NewsSidebar';
@@ -87,90 +88,13 @@ const GuestDonorInfoSection = memo(({
   onValidityChange,
   resetKey,
 }) => {
-  const [fields, setFields] = useState(initialValues);
-
-  useEffect(() => {
-    setFields(initialValues);
-    onFieldsChange(initialValues);
-    onValidityChange(isDonorGuestInfoComplete(initialValues));
-  }, [initialValues, onFieldsChange, onValidityChange, resetKey]);
-
-  const handleLocalInputChange = useCallback((field, value) => {
-    setFields((prev) => {
-      if (prev[field] === value) return prev;
-
-      const next = { ...prev, [field]: value };
-      onFieldsChange(next);
-      onValidityChange(isDonorGuestInfoComplete(next));
-      return next;
-    });
-  }, [onFieldsChange, onValidityChange]);
-
   return (
-    <div className={styles.guestFormCard}>
-      <h3>Thông tin nhà tài trợ vãng lai</h3>
-      <div className={styles.guestFormRow}>
-        <div className={styles.inputGroup}>
-          <Input
-            type="text"
-            label="Họ và tên"
-            placeholder="Nhập họ và tên..."
-            value={fields.guestHoTen}
-            onChange={(e) => handleLocalInputChange('guestHoTen', e.target.value)}
-            required
-          />
-        </div>
-        <div className={styles.inputGroup}>
-          <Input
-            type="email"
-            label="Email liên lạc"
-            placeholder="Nhập email..."
-            value={fields.guestEmail}
-            onChange={(e) => handleLocalInputChange('guestEmail', e.target.value)}
-            required
-          />
-        </div>
-      </div>
-      <div className={styles.guestFormRowThree}>
-        <div className={styles.inputGroup}>
-          <Input
-            type="tel"
-            label="Số điện thoại"
-            placeholder="Nhập SĐT..."
-            value={fields.guestSoDienThoai}
-            onChange={(e) => handleLocalInputChange('guestSoDienThoai', e.target.value)}
-          />
-        </div>
-        <div className={styles.inputGroup}>
-          <Input
-            type="text"
-            label="Tên tổ chức (nếu có)"
-            placeholder="Doanh nghiệp/Tổ chức..."
-            value={fields.guestToChuc}
-            onChange={(e) => handleLocalInputChange('guestToChuc', e.target.value)}
-          />
-        </div>
-        <div className={styles.inputGroup}>
-          <Input
-            type="text"
-            label="Địa chỉ"
-            placeholder="Nhập địa chỉ..."
-            value={fields.guestDiaChi}
-            onChange={(e) => handleLocalInputChange('guestDiaChi', e.target.value)}
-          />
-        </div>
-      </div>
-      <div className={styles.inputGroup} style={{ marginTop: 20 }}>
-        <label className={styles.selectLabel}>Ghi chú đóng góp</label>
-        <textarea
-          rows={3}
-          placeholder="Lời nhắn gửi tới quỹ..."
-          value={fields.ghiChu}
-          onChange={(e) => handleLocalInputChange('ghiChu', e.target.value)}
-          className={styles.textareaInput}
-        />
-      </div>
-    </div>
+    <DonorInfoSection
+      initialValues={initialValues}
+      onFieldsChange={onFieldsChange}
+      onValidityChange={onValidityChange}
+      resetKey={resetKey}
+    />
   );
 });
 

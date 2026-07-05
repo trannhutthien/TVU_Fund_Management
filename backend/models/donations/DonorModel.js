@@ -168,12 +168,18 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
       orderBy = 'tong_da_dong_gop DESC';
   }
 
-  // Đếm tổng
+  // Đếm tổng (chỉ tính nhà tài trợ có ít nhất 1 khoản Da nhan / Da duyet)
   const [countRows] = await pool.query(
     `SELECT COUNT(*) as total
-     FROM nhataitro nt
-     LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
-     ${whereClause}`,
+     FROM (
+       SELECT nt.nhataitro_id
+       FROM nhataitro nt
+       LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
+       LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
+       ${whereClause}
+       GROUP BY nt.nhataitro_id
+       HAVING COUNT(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN 1 END) > 0
+     ) AS sub`,
     params
   );
   const total = countRows[0]?.total || 0;
@@ -197,13 +203,14 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
         nd.hoten,
         COALESCE(nt.logo, nd.avatar) AS avatar,
         COALESCE(SUM(CASE WHEN kt.trangthai = 'Da nhan' THEN kt.sotien ELSE 0 END), 0) AS tong_da_dong_gop,
-        COUNT(kt.khoantaitro_id) AS so_khoan,
-        MAX(kt.ngaytaitro) AS lan_cuoi
+        COUNT(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN 1 END) AS so_khoan,
+        MAX(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN kt.ngaytaitro END) AS lan_cuoi
      FROM nhataitro nt
      LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
      ${whereClause}
      GROUP BY nt.nhataitro_id
+     HAVING COUNT(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN 1 END) > 0
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`,
     [...params, pageSize, offset]

@@ -19,8 +19,9 @@ import styles from './UserDetailDrawer.module.scss';
 
 const LOAI_NTT_LABEL = {
   'Ca nhan': 'Cá nhân',
+  'To chuc': 'Tổ chức',
   'Doanh nghiep': 'Doanh nghiệp',
-  'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
+  'Doi tac': 'Đối tác',
 };
 
 const ROLE_BADGES = {

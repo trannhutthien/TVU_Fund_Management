@@ -157,66 +157,140 @@ export const getDonationDetail = async (req, res) => {
 //   nha_tai_tro_id, quy_id, so_tien (>0), ghi_chu?, hinh_anh_minh_chung?
 //
 export const createStaffDonation = async (req, res) => {
+  const connection = await pool.getConnection();
   try {
-    const { nha_tai_tro_id, quy_id, so_tien, ghi_chu, hinh_anh_minh_chung } = req.body;
+    await connection.beginTransaction();
 
-    if (!nha_tai_tro_id || isNaN(nha_tai_tro_id)) {
-      return res.status(400).json({ success: false, message: "Thiếu hoặc sai nha_tai_tro_id" });
-    }
+    const {
+      donorMode,
+      nha_tai_tro_id,
+      donor_info,
+      quy_id,
+      so_tien,
+      ghi_chu,
+      hinh_anh_minh_chung,
+      hinh_thuc,
+    } = req.body;
+
     if (!quy_id || isNaN(quy_id)) {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ success: false, message: "Thiếu hoặc sai quy_id" });
     }
     const amount = Number(so_tien);
     if (isNaN(amount) || amount <= 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ success: false, message: "Số tiền phải lớn hơn 0" });
-    }
-
-    const donor = await DonorModel.getDonorById(nha_tai_tro_id);
-    if (!donor) {
-      return res.status(404).json({ success: false, message: "Nhà tài trợ không tồn tại" });
     }
 
     const fund = await FundModel.getFundById(quy_id);
     if (!fund) {
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ success: false, message: "Quỹ không tồn tại" });
     }
     if (fund.trang_thai !== 'Dang hoat dong') {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ success: false, message: "Quỹ hiện không nhận đóng góp" });
     }
 
-    const result = await DonationModel.createStaffDonation({
-      nhaTaiTroId: nha_tai_tro_id,
-      quyId: quy_id,
-      soTien: amount,
-      ghiChu: ghi_chu ? String(ghi_chu).trim() : null,
-      hinhThuc: 'Chuyen khoan', // Cán bộ ghi nhận thường là chuyển khoản
-      chungTu: hinh_anh_minh_chung || null,
-      hinhAnhMinhChung: hinh_anh_minh_chung || null,
-      creatorId: req.user?.id || null,
-      isStaff: true,
-    });
+    let resolvedNhaTaiTroId = nha_tai_tro_id;
+
+    if (donorMode === 'new') {
+      if (!donor_info || !donor_info.tenNhaTaiTro?.trim()) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ success: false, message: "Thiếu thông tin tên nhà tài trợ mới" });
+      }
+
+      // Check duplicate by email
+      if (donor_info.email?.trim()) {
+        const [existingDonors] = await connection.query(
+          "SELECT nhataitro_id FROM nhataitro WHERE email = ? LIMIT 1",
+          [donor_info.email.trim()]
+        );
+        if (existingDonors.length > 0) {
+          resolvedNhaTaiTroId = existingDonors[0].nhataitro_id;
+        }
+      }
+
+      if (!resolvedNhaTaiTroId) {
+        const loaiNhaTaiTro = donor_info.loaiNhaTaiTro || 'Ca nhan';
+        const [donorInsert] = await connection.query(
+          `INSERT INTO nhataitro (
+            nguoidung_id,
+            tennhataitro,
+            loainhataitro,
+            email,
+            sodienthoai,
+            diachi,
+            trangthai
+          ) VALUES (NULL, ?, ?, ?, ?, ?, 'Hoat dong')`,
+          [
+            donor_info.tenNhaTaiTro.trim(),
+            loaiNhaTaiTro,
+            donor_info.email?.trim() || null,
+            donor_info.soDienThoai?.trim() || null,
+            donor_info.diaChi?.trim() || null,
+          ]
+        );
+        resolvedNhaTaiTroId = donorInsert.insertId;
+      }
+    } else {
+      if (!resolvedNhaTaiTroId || isNaN(resolvedNhaTaiTroId)) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ success: false, message: "Thiếu hoặc sai nha_tai_tro_id" });
+      }
+      const donor = await DonorModel.getDonorById(resolvedNhaTaiTroId);
+      if (!donor) {
+        await connection.rollback();
+        connection.release();
+        return res.status(404).json({ success: false, message: "Nhà tài trợ không tồn tại" });
+      }
+    }
+
+    const proofDoc = hinh_anh_minh_chung || null;
+    const finalMethod = hinh_thuc || 'Tien mat';
+
+    const [insertRes] = await connection.execute(
+      `INSERT INTO khoantaitro (
+         nhataitro_id, quy_id, sotien, hinhthuc, ngaytaitro, trangthai, ghichu, chungtu
+       ) VALUES (?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?)`,
+      [resolvedNhaTaiTroId, quy_id, amount, finalMethod, ghi_chu ? String(ghi_chu).trim() : null, proofDoc]
+    );
+    const newDonationId = insertRes.insertId;
+
+    await connection.commit();
+    connection.release();
+
+    const fundName = fund.ten_quy || fund.tenquy || 'Quỹ';
 
     // Ghi nhật ký hệ thống
     await logSystemActivity(req, {
       hanhdong: "THEM_MOI_KHOAN_TAI_TRO",
       loaidoituong: "khoantaitro",
-      doituong_id: result.khoanTaiTroId,
-      mota: `Ghi nhận khoản tài trợ số tiền ${amount.toLocaleString('vi-VN')} VNĐ vào quỹ '${fund.tenquy}'`,
-      dulieumoi: { nhaTaiTroId: nha_tai_tro_id, quyId: quy_id, soTien: amount }
+      doituong_id: newDonationId,
+      mota: `Ghi nhận khoản tài trợ số tiền ${amount.toLocaleString('vi-VN')} VNĐ vào quỹ '${fundName}'`,
+      dulieumoi: { nhaTaiTroId: resolvedNhaTaiTroId, quyId: quy_id, soTien: amount }
     });
 
     return res.status(201).json({
       success: true,
       message: "Ghi nhận khoản tài trợ thành công. Chờ duyệt.",
       data: {
-        khoan_tai_tro_id: result.khoanTaiTroId,
-        nha_tai_tro_id,
+        khoan_tai_tro_id: newDonationId,
+        nha_tai_tro_id: resolvedNhaTaiTroId,
         quy_id,
         so_tien: amount,
         trang_thai: 'Cho duyet',
       },
     });
   } catch (error) {
+    await connection.rollback();
+    connection.release();
     console.error("Lỗi createStaffDonation:", error);
     return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
   }

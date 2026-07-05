@@ -14,7 +14,7 @@ const LOAI_LABEL = {
   'Ca nhan': 'Cá nhân',
   'Doanh nghiep': 'Doanh nghiệp',
   'To chuc': 'Tổ chức',
-  'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
+  'Doi tac': 'Đối tác',
 };
 
 const STATUS_MAP = {

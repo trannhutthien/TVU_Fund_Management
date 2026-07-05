@@ -146,8 +146,10 @@ const UserTable = ({ data, loading, activeTab, onViewDetail, onEdit, onToggleSta
                 <span className={styles.loaiText}>
                   {u.loai_nha_tai_tro === 'Doanh nghiep'
                     ? 'Doanh nghiệp'
-                    : u.loai_nha_tai_tro === 'To chuc phi loi nhuan'
+                    : u.loai_nha_tai_tro === 'To chuc'
                       ? 'Tổ chức'
+                      : u.loai_nha_tai_tro === 'Doi tac'
+                        ? 'Đối tác'
                       : 'Cá nhân'}
                 </span>
               </div>

@@ -16,8 +16,9 @@ import styles from './KhoanTaiTroDetailDrawer.module.scss';
 
 const LOAI_LABEL = {
   'Ca nhan': 'Cá nhân',
+  'To chuc': 'Tổ chức',
   'Doanh nghiep': 'Doanh nghiệp',
-  'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
+  'Doi tac': 'Đối tác',
 };
 
 const STATUS_CONFIG = {

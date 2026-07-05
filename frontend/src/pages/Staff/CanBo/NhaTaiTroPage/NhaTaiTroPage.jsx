@@ -197,7 +197,7 @@ const NhaTaiTroPage = () => {
             leftIcon={<HiOutlinePlusCircle />}
             onClick={() => handleOpenCreateModal(null)}
           >
-            Ghi nhận tài trợ mới
+            Tạo khoản tài trợ
           </Button>
         </header>
 

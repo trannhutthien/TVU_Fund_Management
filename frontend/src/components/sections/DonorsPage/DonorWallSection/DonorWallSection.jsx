@@ -241,20 +241,20 @@ const DonorWallSection = ({ donorsData = { diamond: [], gold: [], silver: [] }, 
   // Filter donor arrays based on activeTab
   const filteredDiamond = donorsData.diamond.filter((donor) =>
     activeTab === 'doi-tac'
-      ? donor.loai === 'To chuc' || donor.loai === 'Doanh nghiep'
-      : donor.loai === 'Ca nhan'
+      ? donor.loai === 'Doi tac'
+      : donor.loai !== 'Doi tac'
   );
 
   const filteredGold = donorsData.gold.filter((donor) =>
     activeTab === 'doi-tac'
-      ? donor.loai === 'To chuc' || donor.loai === 'Doanh nghiep'
-      : donor.loai === 'Ca nhan'
+      ? donor.loai === 'Doi tac'
+      : donor.loai !== 'Doi tac'
   );
 
   const filteredSilver = donorsData.silver.filter((donor) =>
     activeTab === 'doi-tac'
-      ? donor.loai === 'To chuc' || donor.loai === 'Doanh nghiep'
-      : donor.loai === 'Ca nhan'
+      ? donor.loai === 'Doi tac'
+      : donor.loai !== 'Doi tac'
   );
 
   const hasFilteredDonors =
@@ -292,14 +292,14 @@ const DonorWallSection = ({ donorsData = { diamond: [], gold: [], silver: [] }, 
               onClick={() => setActiveTab('doi-tac')}
             >
               <HiOutlineBuildingOffice2 className={styles.tabIcon} />
-              Đối tác (Tổ chức & Doanh nghiệp)
+              Đối tác
             </button>
             <button
               className={`${styles.navTab} ${activeTab === 'nha-tai-tro' ? styles.navTabActive : ''}`}
               onClick={() => setActiveTab('nha-tai-tro')}
             >
               <HiOutlineUser className={styles.tabIcon} />
-              Nhà tài trợ (Cá nhân)
+              Nhà tài trợ
             </button>
           </div>
         </div>

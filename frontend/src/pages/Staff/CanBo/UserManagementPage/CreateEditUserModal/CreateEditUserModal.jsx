@@ -23,8 +23,9 @@ import styles from './CreateEditUserModal.module.scss';
 
 const LOAI_NTT_OPTIONS = [
   { value: 'Ca nhan', label: 'Cá nhân' },
+  { value: 'To chuc', label: 'Tổ chức' },
   { value: 'Doanh nghiep', label: 'Doanh nghiệp' },
-  { value: 'To chuc phi loi nhuan', label: 'Tổ chức phi lợi nhuận' },
+  { value: 'Doi tac', label: 'Đối tác' },
 ];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -3,6 +3,7 @@ import {
   HiArrowTrendingUp,
   HiArrowTrendingDown,
   HiBuildingLibrary,
+  HiBanknotes,
   HiGift,
   HiAcademicCap,
 } from 'react-icons/hi2';
@@ -12,7 +13,7 @@ import styles from './AdminFinanceSection.module.scss';
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── ADMIN FINANCE SECTION ─────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-// CÔNG DỤNG: Hiển thị 5 stats cards tài chính quan trọng
+// CÔNG DỤNG: Hiển thị các stats cards tài chính quan trọng
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const AdminFinanceSection = ({ financeData }) => {
@@ -21,14 +22,11 @@ const AdminFinanceSection = ({ financeData }) => {
   const {
     tongThuHeThong,
     tongChiHeThong,
-    tongSoDuTatCaQuy,
+    tongSoDuQuyPhatTrien,
+    tongSoDuQuyHoatDong,
     tongKhoanTaiTro,
     tongGiaiNgan,
   } = financeData;
-
-  // ─── CALCULATE BALANCE PERCENTAGE ──────────────────────────────────────────
-  const balancePercentage =
-    tongThuHeThong > 0 ? (tongSoDuTatCaQuy / tongThuHeThong) * 100 : 0;
 
   // ─── FORMAT CURRENCY ───────────────────────────────────────────────────────
   const formatCurrency = (value) => {
@@ -64,18 +62,24 @@ const AdminFinanceSection = ({ financeData }) => {
           iconBgColor="red"
         />
 
-        {/* Card 3 - Tổng số dư */}
+        {/* Card 3 - Số dư quỹ mẹ */}
         <StatCard
-          title="Tổng số dư các quỹ"
-          value={formatCurrency(tongSoDuTatCaQuy)}
-          subtitle="Số dư khả dụng hiện tại"
+          title="Số dư Quỹ phát triển TVU"
+          value={formatCurrency(tongSoDuQuyPhatTrien)}
+          subtitle="Số dư hiện tại của quỹ mẹ"
           icon={<HiBuildingLibrary size={20} />}
           iconBgColor="blue"
-          trend={balancePercentage >= 50 ? 'up' : balancePercentage >= 20 ? 'neutral' : 'down'}
-          trendValue={`${balancePercentage.toFixed(1)}%`}
         />
 
-        {/* Card 4 - Tổng khoản tài trợ */}
+        <StatCard
+          title="Số dư quỹ hoạt động"
+          value={formatCurrency(tongSoDuQuyHoatDong)}
+          subtitle="Tổng số dư các mục chi con"
+          icon={<HiBanknotes size={20} />}
+          iconBgColor="green"
+        />
+
+        {/* Card 5 - Tổng khoản tài trợ */}
         <StatCard
           title="Khoản tài trợ đã nhận"
           value={tongKhoanTaiTro}
@@ -84,7 +88,7 @@ const AdminFinanceSection = ({ financeData }) => {
           iconBgColor="yellow"
         />
 
-        {/* Card 5 - Tổng giải ngân */}
+        {/* Card 6 - Tổng giải ngân */}
         <StatCard
           title="Lượt giải ngân cho SV"
           value={tongGiaiNgan}
@@ -101,7 +105,8 @@ AdminFinanceSection.propTypes = {
   financeData: PropTypes.shape({
     tongThuHeThong: PropTypes.number,
     tongChiHeThong: PropTypes.number,
-    tongSoDuTatCaQuy: PropTypes.number,
+    tongSoDuQuyPhatTrien: PropTypes.number,
+    tongSoDuQuyHoatDong: PropTypes.number,
     tongKhoanTaiTro: PropTypes.number,
     tongGiaiNgan: PropTypes.number,
   }),

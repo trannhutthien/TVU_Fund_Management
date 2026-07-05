@@ -237,7 +237,13 @@ const buildDanhSachNhaTaiTro = async ({ quy_id, tu_ngay, den_ngay }) => {
     rows: rows.map((r, idx) => ({
       stt: idx + 1,
       ten_nha_tai_tro: r.tennhataitro || "",
-      loai: r.loainhataitro === "Ca nhan" ? "Cá nhân" : (r.loainhataitro === "To chuc" ? "Tổ chức" : "Doanh nghiệp"),
+      loai: r.loainhataitro === "Ca nhan"
+        ? "Cá nhân"
+        : r.loainhataitro === "To chuc"
+          ? "Tổ chức"
+          : r.loainhataitro === "Doi tac"
+            ? "Đối tác"
+            : "Doanh nghiệp",
       email: r.email || "—",
       so_dien_thoai: r.so_dien_thoai || "—",
       dia_chi: r.dia_chi || "—",
