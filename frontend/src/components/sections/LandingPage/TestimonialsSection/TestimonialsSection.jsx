@@ -9,6 +9,7 @@ import {
   TestimonialCard,
   TestimonialModal,
 } from '@components/common/Testimonials';
+import { useSystemSettings } from '@hooks/useSystemSettings';
 import danhGiaService from '@services/danhGiaService';
 import styles from './TestimonialsSection.module.scss';
 
@@ -16,6 +17,7 @@ const DISPLAY_SIZE = 3;
 
 const TestimonialsSection = () => {
   const navigate = useNavigate();
+  const { settings } = useSystemSettings();
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -64,10 +66,10 @@ const TestimonialsSection = () => {
         <div className={styles.header}>
           <div className={styles.titleContainer}>
             <span className={styles.decoratorLine} />
-            <h2 className={styles.title}>SINH VIÊN NÓI GÌ VỀ TVU FUND</h2>
+            <h2 className={styles.title}>{settings?.testimonials_title || 'SINH VIÊN NÓI GÌ VỀ TVU FUND'}</h2>
           </div>
           <p className={styles.subtitle}>
-            Những chia sẻ chân thành từ sinh viên đã nhận được sự đồng hành của TVU Fund
+            {settings?.testimonials_subtitle || 'Những chia sẻ chân thành từ sinh viên đã nhận được sự đồng hành của TVU Fund'}
           </p>
         </div>
 

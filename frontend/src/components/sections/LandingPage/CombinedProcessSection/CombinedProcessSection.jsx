@@ -13,6 +13,7 @@ import {
 import Button from '@components/common/Button';
 import StatusBadge from '@components/common/StatusBadge';
 import useAuthStore from '@stores/authStore';
+import { useSystemSettings } from '@hooks/useSystemSettings';
 import styles from './CombinedProcessSection.module.scss';
 
 // Quy trình sinh viên (bên trái)
@@ -89,6 +90,7 @@ const DONOR_STEPS = [
 const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const { settings } = useSystemSettings();
   
   // Handle "Bắt đầu ngay" (Sinh viên)
   const handleStudentClick = () => {
@@ -105,10 +107,10 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
       <div className={styles.container}>
         {/* Main Header */}
         <div className={styles.mainHeader}>
-          <div className={styles.label}>QUY TRÌNH ĐƠN GIẢN</div>
-          <h2 className={styles.mainTitle}>Hai hành trình, một sứ mệnh chung</h2>
+          <div className={styles.label}>{settings?.process_label || 'QUY TRÌNH ĐƠN GIẢN'}</div>
+          <h2 className={styles.mainTitle}>{settings?.process_title || 'Hai hành trình, một sứ mệnh chung'}</h2>
           <p className={styles.subtitle}>
-            Dù bạn là sinh viên cần hỗ trợ hay nhà tài trợ muốn đóng góp, chúng tôi đều có quy trình rõ ràng và minh bạch
+            {settings?.process_subtitle || 'Dù bạn là sinh viên cần hỗ trợ hay nhà tài trợ muốn đóng góp, chúng tôi đều có quy trình rõ ràng và minh bạch'}
           </p>
         </div>
 
@@ -119,9 +121,9 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
             <div className={styles.columnHeader}>
               <h3 className={styles.columnTitle}>
                 <span className={styles.iconWrapper}>👨‍🎓</span>
-                Dành cho Sinh viên
+                {settings?.process_student_title || 'Dành cho Sinh viên'}
               </h3>
-              <p className={styles.columnDesc}>Quy trình nhận hỗ trợ 4 bước</p>
+              <p className={styles.columnDesc}>{settings?.process_student_desc || 'Quy trình nhận hỗ trợ 4 bước'}</p>
             </div>
 
             <div className={styles.timeline}>
@@ -178,9 +180,9 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
             <div className={styles.columnHeader}>
               <h3 className={styles.columnTitle}>
                 <span className={styles.iconWrapper}>🤝</span>
-                Dành cho Nhà tài trợ
+                {settings?.process_donor_title || 'Dành cho Nhà tài trợ'}
               </h3>
-              <p className={styles.columnDesc}>Quy trình tài trợ 4 bước</p>
+              <p className={styles.columnDesc}>{settings?.process_donor_desc || 'Quy trình tài trợ 4 bước'}</p>
             </div>
 
             <div className={styles.timeline}>

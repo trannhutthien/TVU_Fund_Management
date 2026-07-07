@@ -1,28 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '@components/common/Logo/Logo';
 import SocialLinks from '@components/common/SocialLinks/SocialLinks';
-import { DEFAULT_PUBLIC_SETTINGS, systemSettingsService } from '@services/systemSettingsService';
+import { useSystemSettings } from '@hooks/useSystemSettings';
 import styles from './PublicFooter.module.scss';
 
 const PublicFooter = () => {
-  const [settings, setSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    systemSettingsService.getPublicSettings()
-      .then((data) => {
-        if (isMounted) setSettings(data);
-      })
-      .catch((error) => {
-        console.error('Error fetching public footer settings:', error);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { settings } = useSystemSettings();
 
   const navigationLinks = [
     { label: 'Điều lệ Quỹ', path: '/regulations' },
@@ -117,7 +101,7 @@ const PublicFooter = () => {
           </div>
 
           <div className={styles.column}>
-            <h3 className={styles.columnTitle}>VỀ CHÚNG TÔI</h3>
+            <h3 className={styles.columnTitle}>{settings?.footer_about_title || 'VỀ CHÚNG TÔI'}</h3>
             <nav className={styles.navList}>
               {navigationLinks.map((link) => (
                 <Link
@@ -132,7 +116,7 @@ const PublicFooter = () => {
           </div>
 
           <div className={styles.column}>
-            <h3 className={styles.columnTitle}>KẾT NỐI VỚI CHÚNG TÔI</h3>
+            <h3 className={styles.columnTitle}>{settings?.footer_social_title || 'KẾT NỐI VỚI CHÚNG TÔI'}</h3>
 
             {socialLinks.length > 0 && (
               <div className={styles.socialSection}>
@@ -146,7 +130,7 @@ const PublicFooter = () => {
             )}
 
             <p className={styles.socialDescription}>
-              Theo dõi chúng tôi để cập nhật thông tin học bổng và hỗ trợ sinh viên mới nhất.
+              {settings?.footer_social_desc || 'Theo dõi chúng tôi để cập nhật thông tin học bổng và hỗ trợ sinh viên mới nhất.'}
             </p>
           </div>
         </div>

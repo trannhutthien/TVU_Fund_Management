@@ -53,4 +53,11 @@ export const API_ENDPOINTS = {
   GUEST_VERIFY_OTP: '/guest/verify-otp',
   GUEST_RESEND_OTP: '/guest/resend-otp',
   GUEST_TRACK: (uuid) => `/guest/track/${uuid}`,
+
+  // System Settings
+  SYSTEM_SETTINGS: '/system/settings',
+  SYSTEM_SETTINGS_PUBLIC: '/system/settings/public',
+
+  // Bank Accounts
+  BANK_ACCOUNTS_SCHOOL: '/bank-accounts/school',
 }

@@ -12,6 +12,7 @@ import StatCard from '@components/common/Card/StatCard';
 import StudentShowcase from '@components/common/StudentShowcase';
 import statisticsService from '@services/statisticsService';
 import useAuthStore from '@stores/authStore';
+import { useSystemSettings } from '@hooks/useSystemSettings';
 import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './HeroBanner.module.scss';
 
@@ -27,6 +28,7 @@ import styles from './HeroBanner.module.scss';
 const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const { settings } = useSystemSettings();
   const [stats, setStats] = useState({
     supportedRequests: 0,
     totalFundAmount: 0,
@@ -111,22 +113,17 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
             {/* Badge */}
             <div className={styles.badge}>
               <span className={styles.badgeIcon}>🎓</span>
-              <span className={styles.badgeText}>Hỗ trợ sinh viên TVU</span>
+              <span className={styles.badgeText}>{settings?.hero_badge || 'Hỗ trợ sinh viên TVU'}</span>
             </div>
 
             {/* Main Heading */}
             <h1 className={styles.heading}>
-              Quỹ phát triển
-              
-              <br />
-              Đại học Trà Vinh
+              {settings?.hero_title || 'Quỹ phát triển\nĐại học Trà Vinh'}
             </h1>
 
             {/* Description */}
             <p className={styles.description}>
-              Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. 
-              Kết nối sinh viên với các cơ hội hỗ trợ tài chính, 
-              giúp các em yên tâm theo đuổi ước mơ học tập.
+              {settings?.hero_description || 'Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. Kết nối sinh viên với các cơ hội hỗ trợ tài chính, giúp các em yên tâm theo đuổi ước mơ học tập.'}
             </p>
 
             {/* CTA Buttons */}
@@ -160,45 +157,45 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
         {/* Bottom Stats Bar (merged from StatsSection) */}
         <div className={styles.statsBar}>
           <StatCard
-            title="Sinh viên được hỗ trợ"
+            title={settings?.hero_stat_sinhvien || 'Sinh viên được hỗ trợ'}
             value={formatNumber(stats.supportedRequests)}
             icon={<HiOutlineCheckCircle />}
             iconBgColor="green"
             trend="up"
             trendValue="+12.5%"
-            subtitle="So với năm trước"
+            subtitle={settings?.hero_stat_sinhvien_sub || 'So với năm trước'}
             loading={loading}
             className={styles.statCard}
           />
           <StatCard
-            title="Tổng giá trị hỗ trợ"
+            title={settings?.hero_stat_giatri || 'Tổng giá trị hỗ trợ'}
             value={`${formatCurrency(stats.totalFundAmount)} đ`}
             icon={<HiOutlineBanknotes />}
             iconBgColor="blue"
             trend="up"
             trendValue="+8.3%"
-            subtitle="Tích lũy từ các quỹ"
+            subtitle={settings?.hero_stat_giatri_sub || 'Tích lũy từ các quỹ'}
             loading={loading}
             className={styles.statCard}
           />
           <StatCard
-            title="Nhà hảo tâm"
+            title={settings?.hero_stat_nhahaotam || 'Nhà hảo tâm'}
             value={formatNumber(stats.totalDonors)}
             icon={<HiOutlineHeart />}
             iconBgColor="red"
             trend="up"
             trendValue="+5"
-            subtitle="Đối tác đồng hành"
+            subtitle={settings?.hero_stat_nhahaotam_sub || 'Đối tác đồng hành'}
             loading={loading}
             className={styles.statCard}
           />
           <StatCard
-            title="Quỹ đang hoạt động"
+            title={settings?.hero_stat_quy || 'Quỹ đang hoạt động'}
             value={formatNumber(stats.totalFunds)}
             icon={<HiOutlineArchiveBox />}
             iconBgColor="purple"
             trend="neutral"
-            subtitle="Đa dạng hình thức"
+            subtitle={settings?.hero_stat_quy_sub || 'Đa dạng hình thức'}
             loading={loading}
             className={styles.statCard}
           />

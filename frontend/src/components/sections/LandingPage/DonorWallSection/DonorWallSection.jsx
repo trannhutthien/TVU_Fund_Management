@@ -6,6 +6,7 @@ import { message } from 'antd';
 import Button from '@components/common/Button';
 import Logo from '@components/common/Logo';
 import useAuthStore from '@stores/authStore';
+import { useSystemSettings } from '@hooks/useSystemSettings';
 import donorService from '@services/donorService';
 import styles from './DonorWallSection.module.scss';
 
@@ -82,6 +83,7 @@ const DonorCard = ({ donor, onClick }) => {
 const DonorWallSection = ({ onRegisterClick }) => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
+  const { settings } = useSystemSettings();
   const [loading, setLoading] = useState(true);
   const [topDonors, setTopDonors] = useState([]);
   const [tickerDonors, setTickerDonors] = useState([]);
@@ -184,11 +186,10 @@ const DonorWallSection = ({ onRegisterClick }) => {
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <div className={styles.label}>GHI NHẬN ĐÓNG GÓP</div>
-          <h2 className={styles.title}>Bảng Vàng Nhà Tài Trợ</h2>
+          <div className={styles.label}>{settings?.donor_wall_label || 'GHI NHẬN ĐÓNG GÓP'}</div>
+          <h2 className={styles.title}>{settings?.donor_wall_title || 'Bảng Vàng Nhà Tài Trợ'}</h2>
           <p className={styles.description}>
-            Tri ân những cá nhân và tổ chức đã đồng hành cùng TVU Fund 
-            trong hành trình hỗ trợ sinh viên.
+            {settings?.donor_wall_description || 'Tri ân những cá nhân và tổ chức đã đồng hành cùng TVU Fund trong hành trình hỗ trợ sinh viên.'}
           </p>
         </div>
 
@@ -245,9 +246,9 @@ const DonorWallSection = ({ onRegisterClick }) => {
         <div className={styles.ctaBanner}>
           <div className={styles.ctaContent}>
             <div className={styles.ctaText}>
-              <h3 className={styles.ctaTitle}>Trở thành Nhà Tài Trợ</h3>
+              <h3 className={styles.ctaTitle}>{settings?.donor_wall_cta_title || 'Trở thành Nhà Tài Trợ'}</h3>
               <p className={styles.ctaDesc}>
-                Đồng hành cùng chúng tôi trong việc hỗ trợ sinh viên TVU
+                {settings?.donor_wall_cta_desc || 'Đồng hành cùng chúng tôi trong việc hỗ trợ sinh viên TVU'}
               </p>
             </div>
             <div className={styles.ctaAction}>

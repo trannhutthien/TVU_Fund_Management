@@ -30,7 +30,75 @@ const DEFAULT_SETTINGS = {
   kich_thuoc_toi_da_mb: 5,
   so_file_toi_da: 5,
   dinh_dang_cho_phep: ["PDF", "JPG", "PNG", "DOC"],
-  maintenanceMode: false
+  maintenanceMode: false,
+
+  // ─── HERO BANNER ─────────────────────────────────────────────
+  hero_badge: "Hỗ trợ sinh viên TVU",
+  hero_title: "Quỹ phát triển Đại học Trà Vinh",
+  hero_description: "Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. Kết nối sinh viên với các cơ hội hỗ trợ tài chính, giúp các em yên tâm theo đuổi ước mơ học tập.",
+  hero_stat_sinhvien: "Sinh viên được hỗ trợ",
+  hero_stat_sinhvien_sub: "So với năm trước",
+  hero_stat_giatri: "Tổng giá trị hỗ trợ",
+  hero_stat_giatri_sub: "Tích lũy từ các quỹ",
+  hero_stat_nhahaotam: "Nhà hảo tâm",
+  hero_stat_nhahaotam_sub: "Đối tác đồng hành",
+  hero_stat_quy: "Quỹ đang hoạt động",
+  hero_stat_quy_sub: "Đa dạng hình thức",
+
+  // ─── COMBINED PROCESS SECTION ────────────────────────────────
+  process_label: "QUY TRÌNH ĐƠN GIẢN",
+  process_title: "Hai hành trình, một sứ mệnh chung",
+  process_subtitle: "Dù bạn là sinh viên cần hỗ trợ hay nhà tài trợ muốn đóng góp, chúng tôi đều có quy trình rõ ràng và minh bạch",
+  process_student_title: "Dành cho Sinh viên",
+  process_student_desc: "Quy trình nhận hỗ trợ 4 bước",
+  process_student_steps: [
+    { title: "Đăng nhập", duration: "~1 phút", desc: "Sử dụng tài khoản Email sinh viên TVU để bắt đầu hành trình." },
+    { title: "Tạo hồ sơ", duration: "~5 phút", desc: "Tải lên minh chứng và sử dụng AI để hoàn thiện hồ sơ." },
+    { title: "Nhận phản hồi", duration: "3–5 ngày", desc: "Theo dõi trạng thái xét duyệt và nhận kết quả." },
+    { title: "Theo dõi", duration: "Thời gian thực", desc: "Xem lịch sử hỗ trợ và số tiền đã nhận." }
+  ],
+  process_donor_title: "Dành cho Nhà tài trợ",
+  process_donor_desc: "Quy trình tài trợ 4 bước",
+  process_donor_steps: [
+    { title: "Đăng ký tài trợ", duration: "~3 phút", desc: "Đăng ký thông tin và lựa chọn quỹ muốn đóng góp." },
+    { title: "Chọn quỹ", duration: "~2 phút", desc: "Học bổng, Hỗ trợ khẩn cấp, Nghiên cứu khoa học." },
+    { title: "Chuyển khoản", duration: "1–2 ngày", desc: "Hệ thống tự động xác nhận khi nhận được tiền." },
+    { title: "Báo cáo", duration: "Định kỳ", desc: "Nhận báo cáo minh bạch về việc sử dụng kinh phí." }
+  ],
+
+  // ─── DONOR WALL ──────────────────────────────────────────────
+  donor_wall_label: "GHI NHẬN ĐÓNG GÓP",
+  donor_wall_title: "Bảng Vàng Nhà Tài Trợ",
+  donor_wall_description: "Tri ân những cá nhân và tổ chức đã đồng hành cùng TVU Fund trong hành trình hỗ trợ sinh viên.",
+  donor_wall_cta_title: "Trở thành Nhà Tài Trợ",
+  donor_wall_cta_desc: "Đồng hành cùng chúng tôi trong việc hỗ trợ sinh viên TVU",
+
+  // ─── AI SUPPORT SECTION ──────────────────────────────────────
+  ai_label: "CÔNG NGHỆ TIÊN PHONG",
+  ai_title: "Hỗ trợ thông minh với công nghệ AI",
+  ai_features: [
+    { title: "Viết thư ngỏ thông minh", description: "Hỗ trợ sinh viên viết thư ngỏ, trình bày hoàn cảnh một cách thuyết phục và chuyên nghiệp thông qua gợi ý ngôn ngữ tối ưu." },
+    { title: "Kiểm tra hồ sơ tự động", description: "Hệ thống tự động quét và kiểm tra tính hợp lệ của hồ sơ, thông báo ngay lập tức các thiếu sót cần bổ sung để tăng tỷ lệ duyệt." },
+    { title: "Theo dõi thời gian thực", description: "Theo dõi tiến độ duyệt hồ sơ minh bạch từng bước. Bạn sẽ luôn biết hồ sơ của mình đang ở giai đoạn nào trong quy trình." }
+  ],
+
+  // ─── TESTIMONIALS ────────────────────────────────────────────
+  testimonials_title: "SINH VIÊN NÓI GÌ VỀ TVU FUND",
+  testimonials_subtitle: "Những chia sẻ chân thành từ sinh viên đã nhận được sự đồng hành của TVU Fund",
+
+  // ─── FUND PROGRESS ───────────────────────────────────────────
+  progress_title: "TIẾN TRÌNH GÂY QUỸ",
+  progress_subtitle: "Theo dõi thời gian thực dòng tiền đóng góp từ các nhà hảo tâm và tiến độ giải ngân hỗ trợ sinh viên TVU.",
+
+  // ─── FOOTER ──────────────────────────────────────────────────
+  footer_about_title: "VỀ CHÚNG TÔI",
+  footer_social_title: "KẾT NỐI VỚI CHÚNG TÔI",
+  footer_social_desc: "Theo dõi chúng tôi để cập nhật thông tin học bổng và hỗ trợ sinh viên mới nhất.",
+
+  // ─── GUIDELINES / CONTACT ────────────────────────────────────
+  guidelines_contact_phone: "(0294) 3855 246",
+  guidelines_contact_email: "phongctsv@tvu.edu.vn",
+  guidelines_contact_address: "126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh, Trà Vinh"
 };
 
 const mergeSettingsWithDefaults = (settings = {}) => ({
@@ -56,7 +124,53 @@ const getPublicSettingsPayload = (settings = {}) => {
     facebook_url: cfg.facebook_url,
     youtube_url: cfg.youtube_url,
     linkedin_url: cfg.linkedin_url,
-    tai_khoan_nhan_tai_tro: cfg.tai_khoan_nhan_tai_tro
+    tai_khoan_nhan_tai_tro: cfg.tai_khoan_nhan_tai_tro,
+    // Hero
+    hero_badge: cfg.hero_badge,
+    hero_title: cfg.hero_title,
+    hero_description: cfg.hero_description,
+    hero_stat_sinhvien: cfg.hero_stat_sinhvien,
+    hero_stat_sinhvien_sub: cfg.hero_stat_sinhvien_sub,
+    hero_stat_giatri: cfg.hero_stat_giatri,
+    hero_stat_giatri_sub: cfg.hero_stat_giatri_sub,
+    hero_stat_nhahaotam: cfg.hero_stat_nhahaotam,
+    hero_stat_nhahaotam_sub: cfg.hero_stat_nhahaotam_sub,
+    hero_stat_quy: cfg.hero_stat_quy,
+    hero_stat_quy_sub: cfg.hero_stat_quy_sub,
+    // Process
+    process_label: cfg.process_label,
+    process_title: cfg.process_title,
+    process_subtitle: cfg.process_subtitle,
+    process_student_title: cfg.process_student_title,
+    process_student_desc: cfg.process_student_desc,
+    process_student_steps: cfg.process_student_steps,
+    process_donor_title: cfg.process_donor_title,
+    process_donor_desc: cfg.process_donor_desc,
+    process_donor_steps: cfg.process_donor_steps,
+    // Donor Wall
+    donor_wall_label: cfg.donor_wall_label,
+    donor_wall_title: cfg.donor_wall_title,
+    donor_wall_description: cfg.donor_wall_description,
+    donor_wall_cta_title: cfg.donor_wall_cta_title,
+    donor_wall_cta_desc: cfg.donor_wall_cta_desc,
+    // AI
+    ai_label: cfg.ai_label,
+    ai_title: cfg.ai_title,
+    ai_features: cfg.ai_features,
+    // Testimonials
+    testimonials_title: cfg.testimonials_title,
+    testimonials_subtitle: cfg.testimonials_subtitle,
+    // Progress
+    progress_title: cfg.progress_title,
+    progress_subtitle: cfg.progress_subtitle,
+    // Footer
+    footer_about_title: cfg.footer_about_title,
+    footer_social_title: cfg.footer_social_title,
+    footer_social_desc: cfg.footer_social_desc,
+    // Guidelines
+    guidelines_contact_phone: cfg.guidelines_contact_phone,
+    guidelines_contact_email: cfg.guidelines_contact_email,
+    guidelines_contact_address: cfg.guidelines_contact_address,
   };
 };
 

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
 import viVN from 'antd/locale/vi_VN'
 import { useAuth } from './hooks/useAuth'
+import { SystemSettingsProvider } from './hooks/useSystemSettings'
 import ScrollToTop from './components/common/ScrollToTop'
 import AuthGuard from './components/auth/AuthGuard'
 import '@styles/main.scss'
@@ -76,8 +77,9 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <ConfigProvider locale={viVN}>
-      <AuthGuard>
-        <ScrollToTop />
+      <SystemSettingsProvider>
+        <AuthGuard>
+          <ScrollToTop />
         <Routes>
           {/* Public Routes - Wrap trong PublicLayoutWithSidebar */}
           <Route element={<PublicLayoutWithSidebar />}>
@@ -171,7 +173,8 @@ function App() {
           {/* Wildcard Fallback Route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </AuthGuard>
+        </AuthGuard>
+      </SystemSettingsProvider>
     </ConfigProvider>
   )
 }

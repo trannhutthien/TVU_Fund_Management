@@ -5,7 +5,10 @@ import {
   getBankAccountsByUserId,
   createBankAccount,
   deleteBankAccount,
-  setDefaultBankAccount
+  setDefaultBankAccount,
+  createSchoolBankAccount,
+  updateSchoolBankAccount,
+  deleteSchoolBankAccount
 } from "../../controllers/funds/bankAccountController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
@@ -14,31 +17,31 @@ const router = express.Router();
 
 // ─── BANK ACCOUNT ROUTES (TÀI KHOẢN NGÂN HÀNG)
 
-// GET /api/bank-accounts/school — Lấy danh sách tài khoản nhà trường (PUBLIC - không cần auth)
-// CÔNG DỤNG: Hiển thị danh sách TK nhà trường trong form donation để nhà tài trợ chọn
+// GET /api/bank-accounts/school — Lấy danh sách tài khoản nhà trường (PUBLIC)
 router.get("/school", getSchoolBankAccounts);
 
+// POST /api/bank-accounts/school — Thêm tài khoản nhà trường (Admin only)
+router.post("/school", protect, authorizeRoles(1), createSchoolBankAccount);
+
+// PUT /api/bank-accounts/school/:id — Sửa tài khoản nhà trường (Admin only)
+router.put("/school/:id", protect, authorizeRoles(1), updateSchoolBankAccount);
+
+// DELETE /api/bank-accounts/school/:id — Xóa tài khoản nhà trường (Admin only)
+router.delete("/school/:id", protect, authorizeRoles(1), deleteSchoolBankAccount);
+
 // GET /api/bank-accounts — Lấy danh sách tài khoản ngân hàng của user
-// Middleware: protect (cần token hợp lệ)
 router.get("/", protect, getBankAccounts);
 
 // GET /api/bank-accounts/user/:userId — Lấy danh sách TK của một user bất kỳ
-// CÔNG DỤNG: Admin / Cán bộ Quỹ xem TK ngân hàng nhận giải ngân của sinh viên
-//            khi xét duyệt hồ sơ.
-// Middleware: protect + authorizeRoles(1, 3) (chỉ Admin và Cán bộ)
 router.get("/user/:userId", protect, authorizeRoles(1, 2, 3), getBankAccountsByUserId);
 
 // POST /api/bank-accounts — Thêm tài khoản ngân hàng mới
-// Middleware: protect (cần token hợp lệ)
-// Body: { soTaiKhoan, tenNganHang, chuTaiKhoan, laMacDinh }
 router.post("/", protect, createBankAccount);
 
 // DELETE /api/bank-accounts/:id — Xóa tài khoản ngân hàng
-// Middleware: protect (cần token hợp lệ)
 router.delete("/:id", protect, deleteBankAccount);
 
 // PUT /api/bank-accounts/:id/set-default — Đặt tài khoản mặc định
-// Middleware: protect (cần token hợp lệ)
 router.put("/:id/set-default", protect, setDefaultBankAccount);
 
 export default router;

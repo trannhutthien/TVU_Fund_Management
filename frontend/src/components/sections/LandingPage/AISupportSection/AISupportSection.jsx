@@ -4,9 +4,10 @@ import {
   HiOutlineClock 
 } from 'react-icons/hi2';
 import { FeatureCard } from '@components/common/Card';
+import { useSystemSettings } from '@hooks/useSystemSettings';
 import styles from './AISupportSection.module.scss';
 
-const FEATURES_DATA = [
+const DEFAULT_FEATURES = [
   {
     id: 1,
     icon: HiOutlinePencilSquare,
@@ -30,6 +31,12 @@ const FEATURES_DATA = [
   },
 ];
 
+const ICON_MAP = {
+  HiOutlinePencilSquare,
+  HiOutlineShieldCheck,
+  HiOutlineClock,
+};
+
 /**
  * AISupportSection Component
  * 
@@ -37,18 +44,29 @@ const FEATURES_DATA = [
  * trong quy trình nộp đơn và theo dõi hồ sơ
  */
 const AISupportSection = () => {
+  const { settings } = useSystemSettings();
+
+  const featuresData = settings?.ai_features?.length
+    ? settings.ai_features.map((f, i) => ({
+        ...f,
+        id: f.id || i + 1,
+        icon: ICON_MAP[f.iconName] || DEFAULT_FEATURES[i]?.icon || HiOutlinePencilSquare,
+        iconBgColor: f.iconBgColor || DEFAULT_FEATURES[i]?.iconBgColor || 'primary',
+      }))
+    : DEFAULT_FEATURES;
+
   return (
     <section className={styles.aiSupportSection}>
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <div className={styles.label}>CÔNG NGHỆ TIÊN PHONG</div>
-          <h2 className={styles.title}>Hỗ trợ thông minh với công nghệ AI</h2>
+          <div className={styles.label}>{settings?.ai_label || 'CÔNG NGHỆ TIÊN PHONG'}</div>
+          <h2 className={styles.title}>{settings?.ai_title || 'Hỗ trợ thông minh với công nghệ AI'}</h2>
         </div>
 
         {/* Features Grid */}
         <div className={styles.featuresGrid}>
-          {FEATURES_DATA.map((feature) => {
+          {featuresData.map((feature) => {
             const IconComponent = feature.icon;
             
             return (

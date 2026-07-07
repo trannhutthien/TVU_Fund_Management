@@ -288,3 +288,110 @@ export default {
   deleteBankAccount,
   setDefaultBankAccount
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ADMIN: QUẢN LÝ TÀI KHOẢN NGÂN HÀNH NHÀ TRƯỜNG ─────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// POST /api/bank-accounts/school — Thêm tài khoản nhà trường (admin only)
+export const createSchoolBankAccount = async (req, res) => {
+  try {
+    const { nganHang, chiNhanh, soTaiKhoan, chuTaiKhoan } = req.body;
+
+    if (!nganHang || !soTaiKhoan || !chuTaiKhoan) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập đầy đủ: ngân hàng, số tài khoản, chủ tài khoản",
+      });
+    }
+
+    if (!/^\d{10,16}$/.test(soTaiKhoan.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Số tài khoản không hợp lệ (10-16 chữ số)",
+      });
+    }
+
+    const accountId = await BankAccountModel.createBankAccount({
+      soTaiKhoan: soTaiKhoan.trim(),
+      nganHang: nganHang.trim(),
+      chiNhanh: chiNhanh?.trim() || null,
+      chuTaiKhoan: chuTaiKhoan.trim().toUpperCase(),
+      trangThai: 'Hoat dong',
+      loaiTaiKhoan: 'Nha truong'
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Thêm tài khoản nhà trường thành công",
+      data: { taiKhoanId: accountId, nganHang, soTaiKhoan, chiNhanh, chuTaiKhoan }
+    });
+  } catch (error) {
+    console.error("Lỗi createSchoolBankAccount:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
+  }
+};
+
+// PUT /api/bank-accounts/school/:id — Sửa tài khoản nhà trường (admin only)
+export const updateSchoolBankAccount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nganHang, chiNhanh, soTaiKhoan, chuTaiKhoan } = req.body;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID tài khoản không hợp lệ" });
+    }
+
+    const existing = await BankAccountModel.getBankAccountById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản" });
+    }
+
+    if (soTaiKhoan && !/^\d{10,16}$/.test(soTaiKhoan.trim())) {
+      return res.status(400).json({ success: false, message: "Số tài khoản không hợp lệ (10-16 chữ số)" });
+    }
+
+    await BankAccountModel.updateBankAccount(id, {
+      soTaiKhoan: (soTaiKhoan || existing.sotaikhoan).trim(),
+      nganHang: (nganHang || existing.nganhang).trim(),
+      chiNhanh: (chiNhanh ?? existing.chinhanh)?.trim() || null,
+      chuTaiKhoan: (chuTaiKhoan || existing.chutaikhoan).trim().toUpperCase(),
+      trangThai: existing.trangthai,
+      loaiTaiKhoan: 'Nha truong'
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật tài khoản nhà trường thành công"
+    });
+  } catch (error) {
+    console.error("Lỗi updateSchoolBankAccount:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
+  }
+};
+
+// DELETE /api/bank-accounts/school/:id — Xóa tài khoản nhà trường (admin only)
+export const deleteSchoolBankAccount = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID tài khoản không hợp lệ" });
+    }
+
+    const existing = await BankAccountModel.getBankAccountById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản" });
+    }
+
+    await BankAccountModel.deleteBankAccount(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa tài khoản nhà trường thành công"
+    });
+  } catch (error) {
+    console.error("Lỗi deleteSchoolBankAccount:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
+  }
+};
