@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, getMe, refreshToken, updatePassword, logout } from "../../controllers/auth/authController.js";
+import { register, login, getMe, refreshToken, updatePassword, logout, forgotPassword } from "../../controllers/auth/authController.js";
 import { googleLogin, googleCallback } from "../../controllers/auth/googleAuthController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 
@@ -20,6 +20,9 @@ router.get("/me", protect, getMe);
 
 // PUT /api/auth/update-password — cần access token hợp lệ
 router.put("/update-password", protect, updatePassword);
+
+// POST /api/auth/forgot-password — công khai, không cần token
+router.post("/forgot-password", forgotPassword);
 
 // POST /api/auth/logout        — cần access token hợp lệ
 router.post("/logout", protect, logout);

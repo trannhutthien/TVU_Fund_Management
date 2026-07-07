@@ -4,6 +4,7 @@ import LoginForm from '@components/forms/LoginForm';
  * LoginPage Component
  * 
  * Trang đăng nhập đơn giản, chỉ chứa LoginForm component
+ * LoginForm tự quản lý modal quên mật khẩu bên trong
  */
 const LoginPage = () => {
   return (

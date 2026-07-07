@@ -6,6 +6,7 @@ import NguoiDungModel from "../../models/auth/NguoiDungModel.js";
 import DonorModel from "../../models/donations/DonorModel.js";
 import { buildUserAvatarUrl } from "../../utils/helpers/imageHelper.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
+import { sendPasswordResetEmail } from "../../services/emailService.js";
 
 const getMaintenanceMode = () => {
   try {
@@ -501,6 +502,70 @@ export const updatePassword = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi updatePassword:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ─── POST /api/auth/forgot-password ────────────────────────────────────────────
+// Public - không cần auth. Nhập email → tạo mật khẩu mới → gửi qua email
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập email",
+      });
+    }
+
+    // 1. Tìm user theo email
+    const user = await NguoiDungModel.getUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Email không tồn tại trong hệ thống",
+      });
+    }
+
+    // 2. Kiểm tra tài khoản có bị khóa không
+    if (user.trangthai === 'KHOA') {
+      return res.status(403).json({
+        success: false,
+        message: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.",
+      });
+    }
+
+    // 3. Tạo mật khẩu ngẫu nhiên 8 ký tự
+    const generateRandomPassword = (length = 8) => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let pass = '';
+      for (let i = 0; i < length; i++) {
+        pass += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return pass;
+    };
+
+    const newPassword = generateRandomPassword(8);
+
+    // 4. Hash mật khẩu mới và cập nhật vào DB
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await NguoiDungModel.updatePassword(user.nguoidung_id, hashedPassword);
+
+    // 5. Gửi mật khẩu mới qua email
+    await sendPasswordResetEmail(email, user.hoten, newPassword);
+
+    // 6. Trả về kết quả thành công
+    return res.status(200).json({
+      success: true,
+      message: "Mật khẩu mới đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.",
+    });
+  } catch (error) {
+    console.error("Lỗi forgotPassword:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",

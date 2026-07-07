@@ -20,6 +20,7 @@ import FundBankInfo from '@components/common/FundBankInfo';
 import SocialLinks from '@components/common/SocialLinks';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import Table from '@components/common/Table';
+import DisbursementTimeline from '@components/common/DisbursementTimeline';
 import { getFundById } from '@services/fundService';
 import {
   DEFAULT_PUBLIC_SETTINGS,
@@ -545,6 +546,14 @@ const FundDetailPage = () => {
                   <strong>{formatDate(normalized.endDate)}</strong>
                 </div>
               </div>
+            </SectionCard>
+
+            <SectionCard title="Tiến độ giải ngân" icon={<HiOutlineCalendar />}>
+              <DisbursementTimeline
+                fundId={normalized.id}
+                ngayBatDau={normalized.startDate}
+                ngayKetThuc={normalized.endDate}
+              />
             </SectionCard>
           </div>
 

@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
   LOGOUT: '/auth/logout',
   ME: '/auth/me',
   UPDATE_PASSWORD: '/auth/update-password',
+  FORGOT_PASSWORD: '/auth/forgot-password',
 
   // Users
   USERS: '/users',

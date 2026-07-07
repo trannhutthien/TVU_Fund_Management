@@ -199,3 +199,31 @@ export const sendDonationCreatedEmail = async (toEmail, hoTen, matKhau, soTien, 
 
   await sendMailWrapper(mailOptions);
 };
+
+// 5. Gửi mật khẩu mới khi user quên mật khẩu
+export const sendPasswordResetEmail = async (toEmail, hoTen, newPassword) => {
+  const mailOptions = {
+    from: process.env.MAIL_FROM || 'TVU Fund <no-reply@tvufund.com>',
+    to: toEmail,
+    subject: '[TVU Fund] Khôi phục mật khẩu',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #1a2f5e; text-align: center;">KHÔI PHỤC MẬT KHẨU</h2>
+        <p>Xin chào <strong>${hoTen}</strong>,</p>
+        <p>Bạn đã yêu cầu khôi phục mật khẩu cho tài khoản TVU Fund. Mật khẩu mới của bạn là:</p>
+        <div style="font-size: 24px; font-weight: bold; color: #d9534f;
+                    letter-spacing: 6px; text-align: center; padding: 16px;
+                    background: #fdf2f2; border-radius: 8px; margin: 16px 0; border: 1px dashed #d9534f;">
+          ${newPassword}
+        </div>
+        <p style="color: #d9534f; font-size: 13px;">* Lưu ý: Vui lòng đăng nhập và đổi mật khẩu ngay để bảo mật tài khoản.</p>
+        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
+        <p style="color: #888; font-size: 11px; text-align: center;">
+          Đây là email tự động từ hệ thống TVU Fund, vui lòng không phản hồi email này.
+        </p>
+      </div>
+    `,
+  };
+
+  await sendMailWrapper(mailOptions);
+};

@@ -9,6 +9,7 @@ import {
 import Button from '@components/common/Button';
 import StatusBadge from '@components/common/StatusBadge';
 import Logo from '@components/common/Logo';
+import DisbursementTimeline from '@components/common/DisbursementTimeline';
 import styles from './FundCard.module.scss';
 
 /**
@@ -204,6 +205,14 @@ const FundCard = ({ fund }) => {
             <div className={styles.unlimitedText}>Không giới hạn suất</div>
           )}
         </div>
+
+        {/* Disbursement Timeline */}
+        <DisbursementTimeline
+          fundId={fund.quy_id}
+          ngayBatDau={fund.ngay_bat_dau}
+          ngayKetThuc={fund.ngay_ket_thuc}
+          compact
+        />
 
         {/* Action Buttons */}
         <div className={styles.actionButtons}>

@@ -31,4 +31,10 @@ export const authService = {
     const response = await api.put(API_ENDPOINTS.UPDATE_PASSWORD, passwordData)
     return response.data
   },
+
+  // Quên mật khẩu - gửi mật khẩu mới qua email
+  forgotPassword: async (email) => {
+    const response = await api.post(API_ENDPOINTS.FORGOT_PASSWORD, { email })
+    return response.data
+  },
 }
