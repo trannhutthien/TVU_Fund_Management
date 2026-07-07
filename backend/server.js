@@ -23,6 +23,7 @@ import loaiQuyRoutes from "./routes/funds/loaiQuyRoutes.js";
 import { vaiTroRouter, nguoiDungRouter, nhatKyRouter, settingsRouter } from "./routes/system/systemRoutes.js";
 import guestRoutes from "./routes/guest/guestRoutes.js";
 import newsRoutes from "./routes/news/newsRoutes.js";
+import disbursementRoundRoutes from "./routes/funds/disbursementRoundRoutes.js";
 import { auditLogMiddleware } from "./middleware/auditLogMiddleware.js";
 
 dotenv.config();
@@ -67,6 +68,7 @@ app.use("/api/bao-cao", baoCaoRoutes);
 app.use("/api/pheduyet", pheDuyetRoutes);
 app.use("/api/student-showcase", studentShowcaseRoutes);
 app.use("/api/danhgia", danhGiaRoutes);
+app.use("/api/disbursement-rounds", disbursementRoundRoutes);
 app.use("/api/loai-quy", loaiQuyRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/vaitro", vaiTroRouter);

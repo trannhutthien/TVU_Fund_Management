@@ -20,7 +20,7 @@ import styles from './DonorsPage.module.scss';
 const DonorsPage = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [donorsData, setDonorsData] = useState({ diamond: [], gold: [], silver: [] });
+  const [donorsData, setDonorsData] = useState({ donors: [] });
   const [loadingDonors, setLoadingDonors] = useState(true);
 
   const openLoginModal = () => setIsLoginModalOpen(true);
@@ -36,9 +36,7 @@ const DonorsPage = () => {
         setLoadingDonors(true);
         const data = await donorService.getDonorWall();
         setDonorsData({
-          diamond: data.diamond || [],
-          gold: data.gold || [],
-          silver: data.silver || []
+          donors: data.donors || []
         });
       } catch (error) {
         console.error('Error fetching donors for DonorsPage:', error);

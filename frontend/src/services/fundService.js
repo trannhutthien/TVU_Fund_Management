@@ -76,12 +76,42 @@ export const createLoaiQuy = async (maLoai, tenLoai) => {
   return response.data;
 };
 
+/**
+ * Lấy danh sách đợt giải ngân của một quỹ (PUBLIC - không cần auth)
+ * GET /api/disbursement-rounds/public/fund/:quyId
+ */
+export const getPublicDisbursementRounds = async (quyId) => {
+  const response = await axios.get(`${API_URL}/disbursement-rounds/public/fund/${quyId}`);
+  return response.data;
+};
+
+/**
+ * Lấy danh sách đợt giải ngân của một quỹ (PROTECTED)
+ * GET /api/disbursement-rounds/fund/:quyId
+ */
+export const getDisbursementRounds = async (quyId) => {
+  const response = await api.get(`/disbursement-rounds/fund/${quyId}`);
+  return response.data;
+};
+
+/**
+ * Hoàn tất đợt giải ngân
+ * PUT /api/disbursement-rounds/:dotId/complete
+ */
+export const completeDisbursementRound = async (dotId) => {
+  const response = await api.put(`/disbursement-rounds/${dotId}/complete`);
+  return response.data;
+};
+
 export default {
   getPublicFunds,
+  getPublicDisbursementRounds,
   getFundById,
   createFund,
   updateFund,
   updateFundStatus,
   getAllLoaiQuy,
   createLoaiQuy,
+  getDisbursementRounds,
+  completeDisbursementRound,
 };

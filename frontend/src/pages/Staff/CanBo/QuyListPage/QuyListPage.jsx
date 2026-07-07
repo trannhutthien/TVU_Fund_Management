@@ -21,7 +21,7 @@ import Input from '@components/common/Input/Input';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import { StatCard } from '@components/common/Card';
 import api from '@services/api';
-import { getAllLoaiQuy, createLoaiQuy } from '@services/fundService';
+import { getAllLoaiQuy, createLoaiQuy, getDisbursementRounds } from '@services/fundService';
 import QuyDetailDrawer from './QuyDetailDrawer/QuyDetailDrawer';
 import styles from './QuyListPage.module.scss';
 
@@ -56,6 +56,22 @@ const INITIAL_FILTERS = {
 
 const formatCurrency = (value) => {
   const n = Number(value || 0);
+  return `${n.toLocaleString('vi-VN')}đ`;
+};
+
+const formatCompactCurrency = (value) => {
+  const n = Number(value || 0);
+  if (n >= 1000000000) {
+    const val = n / 1000000000;
+    return `${val % 1 === 0 ? val : val.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
+  }
+  if (n >= 1000000) {
+    const val = n / 1000000;
+    return `${val % 1 === 0 ? val : val.toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
+  }
+  if (n >= 1000) {
+    return `${(n / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })} nghìn`;
+  }
   return `${n.toLocaleString('vi-VN')}đ`;
 };
 
@@ -103,6 +119,7 @@ const QuyListPage = ({ isAdmin = false }) => {
   const [loading, setLoading] = useState(false);
   const [selectedFund, setSelectedFund] = useState(null);
   const [page, setPage] = useState(1);
+  const [fundRounds, setFundRounds] = useState({}); // { quyId: rounds[] }
 
   const [loaiQuyList, setLoaiQuyList] = useState([]);
   const [isOpenAddLoaiQuyModal, setIsOpenAddLoaiQuyModal] = useState(false);
@@ -195,6 +212,22 @@ const QuyListPage = ({ isAdmin = false }) => {
         if (!mounted) return;
         const list = Array.isArray(res.data?.funds) ? res.data.funds : [];
         setFunds(list);
+
+        // Fetch disbursement rounds for each fund
+        list.forEach((fund) => {
+          if (fund.quyId) {
+            getDisbursementRounds(fund.quyId)
+              .then((roundRes) => {
+                if (mounted && roundRes?.success) {
+                  setFundRounds((prev) => ({
+                    ...prev,
+                    [fund.quyId]: roundRes.data || []
+                  }));
+                }
+              })
+              .catch(() => {});
+          }
+        });
       })
       .catch(() => {
         if (mounted) setFunds([]);
@@ -373,15 +406,17 @@ const QuyListPage = ({ isAdmin = false }) => {
           />
           <StatCard
             title="Tổng số dư hệ thống"
-            value={formatCurrency(stats.tongSoDuHeThong)}
+            value={formatCompactCurrency(stats.tongSoDuHeThong)}
+            subtitle={formatCurrency(stats.tongSoDuHeThong)}
             icon={<HiOutlineBanknotes size={20} />}
             iconBgColor="green"
           />
           <StatCard
             title="Số dư hoạt động DHTV"
-            value={formatCurrency(stats.tongSoDuHoatDong)}
+            value={formatCompactCurrency(stats.tongSoDuHoatDong)}
+            subtitle={formatCurrency(stats.tongSoDuHoatDong)}
             icon={<HiOutlineBanknotes size={20} />}
-            iconBgColor="green"
+            iconBgColor="teal"
           />
           <StatCard
             title="Quỹ sắp hết hạn"
@@ -616,6 +651,37 @@ const QuyListPage = ({ isAdmin = false }) => {
                         </div>
                       </div>
                     )}
+
+                    {/* Disbursement Round Progress */}
+                    {fundRounds[fund.quyId]?.length > 0 && (
+                      <div className={styles.roundsBlock}>
+                        <div className={styles.roundsLabel}>Tiến độ giải ngân</div>
+                        <div className={styles.roundsTimeline}>
+                          {fundRounds[fund.quyId].map((round, idx) => (
+                            <div
+                              key={round.dotId}
+                              className={`${styles.roundItem} ${
+                                round.trangThai === 'hoanthanh' ? styles.roundCompleted :
+                                round.trangThai === 'dangchodutien' ? styles.roundActive : ''
+                              }`}
+                            >
+                              <div className={styles.roundDot} />
+                              <div className={styles.roundInfo}>
+                                <span className={styles.roundName}>{round.tenDot || `Đợt ${round.thutu}`}</span>
+                                <span className={styles.roundDate}>
+                                  {round.ngayThucTe
+                                    ? formatDate(round.ngayThucTe)
+                                    : formatDate(round.ngayDuKien) + ' (dự kiến)'}
+                                </span>
+                                <span className={styles.roundAmount}>
+                                  {formatCurrency(round.soTienDuKien)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -654,7 +720,6 @@ const QuyListPage = ({ isAdmin = false }) => {
             </div>
           </div>
         )}
-      </div>
 
       {/* Modal Thêm loại quỹ mới */}
       {isOpenAddLoaiQuyModal && (
@@ -708,6 +773,7 @@ const QuyListPage = ({ isAdmin = false }) => {
         onStatusUpdated={handleStatusUpdated}
         loaiQuyList={loaiQuyList}
       />
+      </div>
     </div>
   );
 };

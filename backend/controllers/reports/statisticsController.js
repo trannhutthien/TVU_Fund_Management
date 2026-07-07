@@ -1269,13 +1269,18 @@ export const getAdminAdvancedStats = async (req, res) => {
          AND ngaycapnhat >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)`
     );
 
-    // Tổng số dư các quỹ hiện tại
-    const [[totalBalanceRow]] = await pool.query(
-      `SELECT COALESCE(SUM(sodu), 0) AS total_balance FROM quy`
+    // Tổng số dư các quỹ hiện tại - tách theo loaidieuhanh
+    const [[balanceByType]] = await pool.query(
+      `SELECT 
+        COALESCE(SUM(CASE WHEN loaidieuhanh = 'Tap trung - Be chung' THEN sodu ELSE 0 END), 0) AS quy_phat_trien,
+        COALESCE(SUM(CASE WHEN loaidieuhanh = 'Tap trung - Muc chi' THEN sodu ELSE 0 END), 0) AS hoat_dong
+       FROM quy`
     );
 
     const avgSpend = parseFloat(monthlySpendRow.avg_monthly_spend) || 0;
-    const totalBalance = parseFloat(totalBalanceRow.total_balance) || 0;
+    const quyPhatTrien = parseFloat(balanceByType.quy_phat_trien) || 0;
+    const hoatDong = parseFloat(balanceByType.hoat_dong) || 0;
+    const totalBalance = quyPhatTrien + hoatDong;
     const remainingMonths = avgSpend > 0 ? Math.round((totalBalance / avgSpend) * 10) / 10 : 99;
 
     // Gợi ý chính sách
@@ -1315,6 +1320,8 @@ export const getAdminAdvancedStats = async (req, res) => {
         duBao: {
           avgSpend,
           totalBalance,
+          quyPhatTrien,
+          hoatDong,
           remainingMonths,
           recommendation,
           warningLevel

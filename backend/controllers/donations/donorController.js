@@ -37,17 +37,16 @@ export const getDonorWall = async (req, res) => {
        ORDER BY tong_dong_gop DESC`
     );
 
-    // Lấy thông tin các quỹ đã hỗ trợ cho từng nhà tài trợ
+    // Lấy thông tin tên quỹ đã hỗ trợ cho từng nhà tài trợ
     const [fundsInfo] = await pool.query(
       `SELECT 
         kt.nhataitro_id,
-        lq.tenloai AS loai_quy,
-        COUNT(DISTINCT q.quy_id) as so_luong
+        q.tenquy AS ten_quy,
+        COUNT(DISTINCT kt.khoantaitro_id) as so_luong
        FROM khoantaitro kt
        INNER JOIN quy q ON kt.quy_id = q.quy_id
-       INNER JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
        WHERE kt.trangthai = 'Da nhan'
-       GROUP BY kt.nhataitro_id, lq.tenloai`
+       GROUP BY kt.nhataitro_id, q.tenquy`
     );
 
     // Map funds info theo donor
@@ -57,55 +56,29 @@ export const getDonorWall = async (req, res) => {
         fundsMap[fund.nhataitro_id] = [];
       }
       fundsMap[fund.nhataitro_id].push({
-        loaiQuy: fund.loai_quy,
+        tenQuy: fund.ten_quy,
         soLuong: fund.so_luong
       });
     });
 
-    const DIAMOND_THRESHOLD = 100000000; // 100M
-    const GOLD_THRESHOLD = 50000000;     // 50M
-    
-    const diamond = [];
-    const gold = [];
-    const silver = [];
-
-    donors.forEach(donor => {
-      const donorData = {
-        id: donor.nhataitro_id,
-        ten: donor.tennhataitro,
-        tenHienThi: '',
-        loai: donor.loainhataitro,
-        moTa: null, // Bảng nhataitro không có cột mo_ta
-        email: donor.email,
-        phone: donor.sodienthoai,
-        totalAmount: parseFloat(donor.tong_dong_gop),
-        soQuyHoTro: donor.so_quy_ho_tro,
-        cacQuyHoTro: fundsMap[donor.nhataitro_id] || [],
-        logo: buildDonorAvatarUrl(donor.avatar),
-        quote: null
-      };
-
-      const displayPrefix = donorData.loai === 'Doi tac' ? 'Đối tác' : 'Nhà tài trợ';
-
-      if (donorData.totalAmount >= DIAMOND_THRESHOLD) {
-        donorData.tenHienThi = `${displayPrefix} Kim cương`;
-        diamond.push(donorData);
-      } else if (donorData.totalAmount >= GOLD_THRESHOLD) {
-        donorData.tenHienThi = `${displayPrefix} Vàng`;
-        gold.push(donorData);
-      } else {
-        donorData.tenHienThi = `${displayPrefix} Bạc`;
-        silver.push(donorData);
-      }
-    });
+    // Trả về flat list, sắp xếp theo tổng đóng góp giảm dần
+    const donorsList = donors.map(donor => ({
+      id: donor.nhataitro_id,
+      ten: donor.tennhataitro,
+      loai: donor.loainhataitro,
+      email: donor.email,
+      phone: donor.sodienthoai,
+      totalAmount: parseFloat(donor.tong_dong_gop),
+      soQuyHoTro: donor.so_quy_ho_tro,
+      cacQuyHoTro: fundsMap[donor.nhataitro_id] || [],
+      logo: buildDonorAvatarUrl(donor.avatar),
+    }));
 
     return res.status(200).json({
       success: true,
       message: "Lấy danh sách nhà tài trợ thành công",
       data: {
-        diamond,
-        gold,
-        silver,
+        donors: donorsList,
         total: donors.length
       }
     });

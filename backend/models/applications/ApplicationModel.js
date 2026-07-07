@@ -14,21 +14,24 @@ const createApplication = async (applicationData) => {
     quyId,
     lyDo,
     soTienDeNghi,
-    taiLieuDinhKem
+    taiLieuDinhKem,
+    dotId
   } = applicationData;
 
   const [result] = await pool.execute(
     `INSERT INTO yeucauhotro (
       nguoidung_id,
       quy_id,
+      dot_id,
       lydo,
       sotiendenghi,
       tailieudinhkem,
       trangthai
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       nguoiDungId,
       quyId,
+      dotId || null,
       lyDo,
       soTienDeNghi,
       taiLieuDinhKem || null,
@@ -40,6 +43,7 @@ const createApplication = async (applicationData) => {
     yeucauhotroId: result.insertId,
     nguoiDungId,
     quyId,
+    dotId: dotId || null,
     soTienDeNghi,
     trangThai: 'Cho duyet cap 1'
   };

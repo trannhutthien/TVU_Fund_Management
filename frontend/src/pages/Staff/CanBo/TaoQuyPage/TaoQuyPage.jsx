@@ -47,6 +47,7 @@ const INITIAL_FORM = {
   trang_thai: 'Dang hoat dong',
   loai_dieuhanh: 'Tap trung - Be chung',
   quy_cha_id: '',
+  so_dot_giai_ngan: '', // Số đợt giải ngân (1-4)
 };
 
 const buildImageUrl = (path) => {
@@ -68,6 +69,7 @@ const TaoQuyPage = () => {
   const [uploading, setUploading] = useState(false);
   const [loaiQuyList, setLoaiQuyList] = useState([]);
   const [beChungList, setBeChungList] = useState([]);
+  const [dotGiaiNgan, setDotGiaiNgan] = useState([]); // Chi tiết các đợt giải ngân
 
   // Load loai quy tu API
   useEffect(() => {
@@ -138,6 +140,34 @@ const TaoQuyPage = () => {
     };
   }, [id, isEditMode]);
 
+  // Auto-calculate default values for disbursement rounds when number changes
+  useEffect(() => {
+    const soDot = parseInt(form.so_dot_giai_ngan) || 0;
+    const mucTieu = parseFloat(form.so_tien_muc_tieu) || 0;
+
+    if (soDot > 0) {
+      const today = new Date();
+      const endDate = form.han_nop_don ? new Date(form.han_nop_don) : new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000); // mặc định 3 tháng
+      const tongThoiGian = endDate - today;
+      const tienMoiDot = mucTieu > 0 ? mucTieu / soDot : 0;
+
+      const newDots = [];
+      for (let i = 1; i <= soDot; i++) {
+        const ngayDuKien = new Date(today.getTime() + tongThoiGian * (i / (soDot + 1)));
+        newDots.push({
+          thutu: i,
+          tenDot: `Đợt ${i}`,
+          mota: `Đợt giải ngân thứ ${i}`,
+          sotiendukien: Math.round(tienMoiDot),
+          ngaydukien: ngayDuKien.toISOString().split('T')[0]
+        });
+      }
+      setDotGiaiNgan(newDots);
+    } else {
+      setDotGiaiNgan([]);
+    }
+  }, [form.so_dot_giai_ngan, form.so_tien_muc_tieu, form.han_nop_don]);
+
   // ─── Handlers ─────────────────────────────────────
   const handleChange = (key) => (e) => {
     const value = e.target.value;
@@ -149,6 +179,16 @@ const TaoQuyPage = () => {
         return next;
       });
     }
+  };
+
+  // Handler for updating individual disbursement round fields
+  const handleDotChange = (index, field) => (e) => {
+    const value = e.target.value;
+    setDotGiaiNgan((prev) => {
+      const newDots = [...prev];
+      newDots[index] = { ...newDots[index], [field]: value };
+      return newDots;
+    });
   };
 
   const handleFileChange = async (e) => {
@@ -208,8 +248,8 @@ const TaoQuyPage = () => {
       next.mo_ta = 'Mô tả tối đa 255 ký tự';
     }
 
-    if (form.dieu_kien_tom_tat && form.dieu_kien_tom_tat.length > 200) {
-      next.dieu_kien_tom_tat = 'Điều kiện tối đa 200 ký tự';
+    if (form.dieu_kien_tom_tat && form.dieu_kien_tom_tat.length > 100000) {
+      next.dieu_kien_tom_tat = 'Điều kiện tối đa 100000 ký tự';
     }
 
     const soDu = form.so_du === '' ? 0 : Number(form.so_du);
@@ -291,7 +331,9 @@ const TaoQuyPage = () => {
       trangThai: form.trang_thai,
       nguoiTao: user?.id || null, // Thêm ID người tạo từ user hiện tại
       loaiDieuHanh: form.loai_dieuhanh,
-      quyChaId: form.loai_dieuhanh === 'Tap trung - Muc chi' ? Number(form.quy_cha_id) : null
+      quyChaId: form.loai_dieuhanh === 'Tap trung - Muc chi' ? Number(form.quy_cha_id) : null,
+      soDotGiaiNgan: form.so_dot_giai_ngan ? Number(form.so_dot_giai_ngan) : 0,
+      dotGiaiNgan: dotGiaiNgan // Chi tiết các đợt giải ngân
     };
 
     try {
@@ -647,17 +689,89 @@ const TaoQuyPage = () => {
                 />
               </div>
 
+              <div className={styles.col}>
+                <label className={styles.label}>Số đợt giải ngân</label>
+                <select
+                  className={styles.select}
+                  value={form.so_dot_giai_ngan}
+                  onChange={handleChange('so_dot_giai_ngan')}
+                >
+                  <option value="">Không chia đợt</option>
+                  <option value="1">1 đợt</option>
+                  <option value="2">2 đợt</option>
+                  <option value="3">3 đợt</option>
+                  <option value="4">4 đợt</option>
+                </select>
+              </div>
+
+              {/* Chi tiết các đợt giải ngân */}
+              {dotGiaiNgan.length > 0 && (
+                <div className={styles.colFull}>
+                  <label className={styles.label}>Chi tiết đợt giải ngân</label>
+                  <div className={styles.dotsContainer}>
+                    {dotGiaiNgan.map((dot, index) => (
+                      <div key={index} className={styles.dotCard}>
+                        <div className={styles.dotHeader}>
+                          <span className={styles.dotBadge}>Đợt {dot.thutu}</span>
+                        </div>
+                        <div className={styles.dotGrid}>
+                          <div className={styles.dotField}>
+                            <label className={styles.dotLabel}>Tên đợt</label>
+                            <input
+                              type="text"
+                              className={styles.dotInput}
+                              value={dot.tenDot}
+                              onChange={handleDotChange(index, 'tenDot')}
+                              placeholder={`Đợt ${dot.thutu}`}
+                            />
+                          </div>
+                          <div className={styles.dotField}>
+                            <label className={styles.dotLabel}>Số tiền dự kiến (VNĐ)</label>
+                            <input
+                              type="number"
+                              className={styles.dotInput}
+                              value={dot.sotiendukien}
+                              onChange={handleDotChange(index, 'sotiendukien')}
+                              min="0"
+                            />
+                          </div>
+                          <div className={styles.dotField}>
+                            <label className={styles.dotLabel}>Ngày dự kiến</label>
+                            <input
+                              type="date"
+                              className={styles.dotInput}
+                              value={dot.ngaydukien}
+                              onChange={handleDotChange(index, 'ngaydukien')}
+                            />
+                          </div>
+                          <div className={styles.dotField}>
+                            <label className={styles.dotLabel}>Mô tả</label>
+                            <input
+                              type="text"
+                              className={styles.dotInput}
+                              value={dot.mota}
+                              onChange={handleDotChange(index, 'mota')}
+                              placeholder="Mô tả đợt giải ngân"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className={styles.colFull}>
                 <label className={styles.label}>Điều kiện tóm tắt</label>
                 <textarea
                   className={`${styles.textarea} ${
                     errors.dieu_kien_tom_tat ? styles.textareaError : ''
                   }`}
-                  placeholder="Điều kiện ngắn hiển thị trên thẻ (tối đa 200 ký tự)"
+                  placeholder="Điều kiện hiển thị trên thẻ (tối đa 100000 ký tự)"
                   value={form.dieu_kien_tom_tat}
                   onChange={handleChange('dieu_kien_tom_tat')}
-                  rows={2}
-                  maxLength={200}
+                  rows={6}
+                  maxLength={100000}
                 />
                 <div className={styles.fieldFoot}>
                   {errors.dieu_kien_tom_tat && (
@@ -666,7 +780,7 @@ const TaoQuyPage = () => {
                     </span>
                   )}
                   <span className={styles.counter}>
-                    {form.dieu_kien_tom_tat.length}/200
+                    {form.dieu_kien_tom_tat.length}/100000
                   </span>
                 </div>
               </div>

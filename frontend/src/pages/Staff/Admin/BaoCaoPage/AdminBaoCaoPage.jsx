@@ -191,9 +191,14 @@ const AdminBaoCaoPage = () => {
             {/* KPIs Grid */}
             <div className={styles.kpiGrid}>
               <div className={styles.kpiCard} style={{ '--theme-color': '#1a2f5e' }}>
-                <span className={styles.kpiLabel}>Tổng số dư quỹ</span>
-                <span className={styles.kpiVal}>{formatCurrency(advancedStats?.duBao?.totalBalance)}</span>
-                <span className={styles.kpiSub}>Tổng số tiền hiện có trong các quỹ</span>
+                <span className={styles.kpiLabel}>Quỹ phát triển ĐH Trà Vinh</span>
+                <span className={styles.kpiVal}>{formatCurrency(advancedStats?.duBao?.quyPhatTrien)}</span>
+                <span className={styles.kpiSub}>Quỹ mẹ - Tap trung - Be chung</span>
+              </div>
+              <div className={styles.kpiCard} style={{ '--theme-color': '#f0a500' }}>
+                <span className={styles.kpiLabel}>Quỹ hoạt động</span>
+                <span className={styles.kpiVal}>{formatCurrency(advancedStats?.duBao?.hoatDong)}</span>
+                <span className={styles.kpiSub}>Các quỹ con - Tap trung - Muc chi</span>
               </div>
               <div className={styles.kpiCard} style={{ '--theme-color': '#0891b2' }}>
                 <span className={styles.kpiLabel}>Doanh thu tài trợ (Thu)</span>
@@ -597,6 +602,14 @@ const AdminBaoCaoPage = () => {
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Tổng số dư quỹ toàn hệ thống:</span>
                 <span className={styles.statVal}>{formatCurrency(advancedStats?.duBao?.totalBalance)}</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>- Quỹ phát triển ĐH Trà Vinh:</span>
+                <span className={styles.statVal}>{formatCurrency(advancedStats?.duBao?.quyPhatTrien)}</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>- Quỹ hoạt động:</span>
+                <span className={styles.statVal}>{formatCurrency(advancedStats?.duBao?.hoatDong)}</span>
               </div>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Chi tiêu trung bình mỗi tháng (3 tháng qua):</span>

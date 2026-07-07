@@ -128,7 +128,9 @@ export const createFund = async (req, res) => {
       dieuKienTomTat,
       soDu,
       trangThai,
-      nguoiTao
+      nguoiTao,
+      soDotGiaiNgan,
+      dotGiaiNgan
     } = req.body;
     const normalizedFundData = normalizeFundOperationData(req.body);
 
@@ -235,7 +237,9 @@ export const createFund = async (req, res) => {
       nguoiTao: nguoiTao || req.user?.id || null,
       ngayBatDau: new Date().toISOString().split('T')[0], // Tự động set ngày hôm nay (YYYY-MM-DD)
       loaiDieuHanh: normalizedFundData.loaiDieuHanh,
-      quyChaId: normalizedFundData.quyChaId
+      quyChaId: normalizedFundData.quyChaId,
+      soDotGiaiNgan: soDotGiaiNgan ? parseInt(soDotGiaiNgan) : 0,
+      dotGiaiNgan: dotGiaiNgan || [] // Chi tiết các đợt giải ngân
     };
 
     const result = await FundModel.createFund(fundData);

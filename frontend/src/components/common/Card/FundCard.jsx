@@ -172,17 +172,22 @@ const FundCard = ({ fund }) => {
 
         {/* Progress Section */}
         <div className={styles.progressSection}>
+          {/* Luôn hiển thị số dư */}
+          <div className={styles.progressHeader}>
+            <div className={styles.balanceInfo}>
+              <span className={styles.balanceLabel}>Số tiền còn lại: </span>
+              <span className={styles.balanceValue}>
+                {formatCurrency(fund.so_du_thuc_te ?? fund.so_du)}
+              </span>
+            </div>
+            {fund.so_luong_chi_tieu !== null && (
+              <div className={styles.percentValue}>{fund.phan_tram_da_nhan}%</div>
+            )}
+          </div>
+
+          {/* Thanh tiến trình + số suất - chỉ hiện khi có giới hạn */}
           {fund.so_luong_chi_tieu !== null ? (
             <>
-              <div className={styles.progressHeader}>
-                <div className={styles.balanceInfo}>
-                  <span className={styles.balanceLabel}>Số tiền còn lại: </span>
-                  <span className={styles.balanceValue}>
-                    {formatCurrency(fund.so_du_thuc_te ?? fund.so_du)}
-                  </span>
-                </div>
-                <div className={styles.percentValue}>{fund.phan_tram_da_nhan}%</div>
-              </div>
               <div className={styles.progressBar}>
                 <div
                   className={`${styles.progressFill} ${

@@ -391,6 +391,114 @@
   background: #f59e0b;
 }
 
+// ── Disbursement Rounds ──────────────────────
+.roundsBlock {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.roundsLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+}
+
+.roundsTimeline {
+  display: flex;
+  gap: 6px;
+}
+
+.roundItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    right: -50%;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 0;
+  }
+
+  &:last-child::before {
+    display: none;
+  }
+}
+
+.roundDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #e2e8f0;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.roundCompleted .roundDot {
+  background: #10b981;
+  box-shadow: 0 0 0 1px #10b981;
+}
+
+.roundActive .roundDot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 1px #f59e0b;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 1px #f59e0b; }
+  50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
+}
+
+.roundInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.roundName {
+  font-size: 10px;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.roundDate {
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+.roundAmount {
+  font-size: 9px;
+  color: var(--color-primary, #3b6ff5);
+  font-weight: 600;
+}
+
+.roundCompleted .roundName {
+  color: #10b981;
+}
+
+.roundActive .roundName {
+  color: #f59e0b;
+}
+
 // ── Skeleton ────────────────────────────────
 .skeletonCard {
   background: #fff;

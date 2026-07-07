@@ -150,9 +150,15 @@ export const createApplication = async (req, res) => {
     // BƯỚC 3: TẠO ĐƠN XIN HỖ TRỢ
     // ─────────────────────────────────────────────────────────────────────────
     
+    // Tự động gán dot_id dựa trên ngày nộp đơn
+    const DisbursementRoundModel = (await import("../../models/funds/DisbursementRoundModel.js")).default;
+    const today = new Date().toISOString().split('T')[0];
+    const dotId = await DisbursementRoundModel.assignDotToApplication(quyId, today);
+
     const applicationData = {
       nguoiDungId: userId,
       quyId,
+      dotId,
       lyDo: moTa.trim(),
       soTienDeNghi: parseFloat(soTienYeuCau),
       taiLieuDinhKem: fileDinhKem.trim() // Bắt buộc, đã validate ở trên

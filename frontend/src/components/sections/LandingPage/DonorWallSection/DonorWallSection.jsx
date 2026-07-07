@@ -12,7 +12,7 @@ import styles from './DonorWallSection.module.scss';
 /**
  * DonorCard Component - Card hiển thị thông tin nhà tài trợ
  */
-const DonorCard = ({ donor, isFeatured = false, onClick }) => {
+const DonorCard = ({ donor, onClick }) => {
   const getInitial = (name) => {
     if (!name || typeof name !== 'string') return '?';
     return name.charAt(0).toUpperCase();
@@ -23,19 +23,19 @@ const DonorCard = ({ donor, isFeatured = false, onClick }) => {
     if (donor.avatar || donor.logo) {
       return (
         <Logo
-          size={isFeatured ? "xxl" : "xl"}
+          size="xl"
           variant="icon-only"
           imageVariant="circular"
           imageSrc={donor.avatar || donor.logo}
           imageAlt={donor.name || donor.ten || 'Nhà tài trợ'}
-          className={isFeatured ? styles.featuredDonorLogo : styles.donorLogo}
+          className={styles.donorLogo}
         />
       );
     }
 
-    // Nếu không có avatar, hiển thị chữ cái đầu trong circle Gold
+    // Nếu không có avatar, hiển thị chữ cái đầu trong circle
     return (
-      <div className={isFeatured ? styles.featuredAvatarLetter : styles.avatarLetter}>
+      <div className={styles.avatarLetter}>
         {getInitial(donor.name || donor.ten)}
       </div>
     );
@@ -51,7 +51,7 @@ const DonorCard = ({ donor, isFeatured = false, onClick }) => {
 
   return (
     <div
-      className={`${styles.donorCard} ${isFeatured ? styles.featuredDonorCard : ''}`}
+      className={styles.donorCard}
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role="button"
@@ -59,7 +59,6 @@ const DonorCard = ({ donor, isFeatured = false, onClick }) => {
       aria-label={`Xem trang đối tác nhà tài trợ ${donor.name || donor.ten || ''}`.trim()}
     >
       <div className={styles.cardContent}>
-        {isFeatured && <span className={styles.featuredBadge}>⭐ TOP 1 NHÀ TÀI TRỢ</span>}
         {renderAvatar()}
         <h3 className={styles.donorName}>{donor.name || donor.ten || 'Nhà tài trợ'}</h3>
         {donor.desc && <p className={styles.donorDesc}>{donor.desc}</p>}
@@ -100,12 +99,8 @@ const DonorWallSection = ({ onRegisterClick }) => {
           return;
         }
         
-        // Gộp tất cả donors từ 3 tiers
-        const allDonors = [
-          ...(data.diamond || []),
-          ...(data.gold || []),
-          ...(data.silver || [])
-        ];
+        // Lấy danh sách donors từ flat list
+        const allDonors = data.donors || [];
         
         // Map data để đảm bảo có field name
         const mappedDonors = allDonors.map(donor => ({
@@ -197,29 +192,16 @@ const DonorWallSection = ({ onRegisterClick }) => {
           </p>
         </div>
 
-        {/* Top 6 Donors - 2 Columns (Featured on Left, Grid on Right) */}
+        {/* Top 6 Donors - Grid đều */}
         {topDonors.length > 0 ? (
-          <div className={styles.donorLayout}>
-            {/* Top 1 Featured Donor */}
-            <div className={styles.featuredSection}>
-              <DonorCard
-                donor={topDonors[0]}
-                isFeatured={true}
+          <div className={styles.donorsGrid}>
+            {topDonors.map((donor, index) => (
+              <DonorCard 
+                key={donor.id || index} 
+                donor={donor}
                 onClick={() => navigate('/donors')}
               />
-            </div>
-
-            {/* Other Donors Grid */}
-            <div className={styles.otherDonorsGrid}>
-              {topDonors.slice(1).map((donor, index) => (
-                <DonorCard 
-                  key={donor.id || index} 
-                  donor={donor}
-                  isFeatured={false}
-                  onClick={() => navigate('/donors')}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         ) : (
           <div className={styles.emptyState}>

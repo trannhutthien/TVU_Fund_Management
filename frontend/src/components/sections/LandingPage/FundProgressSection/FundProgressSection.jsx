@@ -1,34 +1,42 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  HiOutlineBanknotes, 
+import {
+  HiOutlineBanknotes,
   HiOutlineArrowRight,
   HiCheck,
   HiCalendarDays,
   HiAcademicCap,
   HiDocumentCheck
 } from 'react-icons/hi2';
-import { getPublicFunds } from '@services/fundService';
+import { getPublicFunds, getPublicDisbursementRounds } from '@services/fundService';
 import Button from '@components/common/Button';
 import styles from './FundProgressSection.module.scss';
 
-// Cột mốc gây quỹ cố định để biểu diễn tiến trình
-const MILESTONES = [
-  { percent: 25, label: 'Khởi động', desc: 'Mở đơn & Nhận đóng góp' },
-  { percent: 50, label: 'Giải ngân đợt 1', desc: 'Hỗ trợ các ca khẩn cấp' },
-  { percent: 75, label: 'Giải ngân đợt 2', desc: 'Hỗ trợ mở rộng diện học bổng' },
-  { percent: 100, label: 'Hoàn thành', desc: 'Đạt chỉ tiêu ngân sách năm' }
+// Static milestone labels for donation progress bar
+const DONATION_MILESTONES = [
+  { percent: 25, label: '25%' },
+  { percent: 50, label: '50%' },
+  { percent: 75, label: '75%' },
+  { percent: 100, label: '100%' }
 ];
 
-// Định nghĩa mã màu và thuộc tính CSS động theo từng loại quỹ
+// Fixed milestone labels for disbursement timeline (always 4 steps)
+const DISBURSEMENT_STEPS = [
+  { key: 'mo_don', label: 'Mở đơn', desc: 'Bắt đầu nhận hồ sơ' },
+  { key: 'dot_1', label: 'Đợt 1', desc: 'Giải ngân đợt 1' },
+  { key: 'dot_2', label: 'Đợt 2', desc: 'Giải ngân đợt 2' },
+  { key: 'hoan_thanh', label: 'Hoàn thành', desc: 'Kết thúc giải ngân' }
+];
+
+// Theme per fund category
 const getCategoryTheme = (category) => {
   switch (category) {
     case 'Tu thien':
       return {
         name: 'Từ thiện',
-        primaryColor: '#f59e0b', // Amber 500
+        primaryColor: '#f59e0b',
         primaryHover: '#d97706',
-        lightBg: '#fef3c7', // Amber 100
+        lightBg: '#fef3c7',
         darkText: '#78350f',
         gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
         shadow: 'rgba(245, 158, 11, 0.15)',
@@ -37,9 +45,9 @@ const getCategoryTheme = (category) => {
     case 'Hoc bong':
       return {
         name: 'Học bổng',
-        primaryColor: '#2563eb', // Blue 600
+        primaryColor: '#2563eb',
         primaryHover: '#1d4ed8',
-        lightBg: '#dbeafe', // Blue 100
+        lightBg: '#dbeafe',
         darkText: '#1e3a8a',
         gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
         shadow: 'rgba(59, 130, 246, 0.15)',
@@ -48,9 +56,9 @@ const getCategoryTheme = (category) => {
     case 'Y te':
       return {
         name: 'Y tế',
-        primaryColor: '#10b981', // Emerald 500
+        primaryColor: '#10b981',
         primaryHover: '#059669',
-        lightBg: '#d1fae5', // Emerald 100
+        lightBg: '#d1fae5',
         darkText: '#064e3b',
         gradient: 'linear-gradient(135deg, #10b981, #059669)',
         shadow: 'rgba(16, 185, 129, 0.15)',
@@ -59,9 +67,9 @@ const getCategoryTheme = (category) => {
     case 'Moi truong':
       return {
         name: 'Môi trường',
-        primaryColor: '#06b6d4', // Cyan 500
+        primaryColor: '#06b6d4',
         primaryHover: '#0891b2',
-        lightBg: '#ecfeff', // Cyan 50
+        lightBg: '#ecfeff',
         darkText: '#164e63',
         gradient: 'linear-gradient(135deg, #06b6d4, #0891b2)',
         shadow: 'rgba(6, 182, 212, 0.15)',
@@ -70,9 +78,9 @@ const getCategoryTheme = (category) => {
     default:
       return {
         name: category || 'Khác',
-        primaryColor: '#8b5cf6', // Violet 500
+        primaryColor: '#8b5cf6',
         primaryHover: '#7c3aed',
-        lightBg: '#ede9fe', // Violet 100
+        lightBg: '#ede9fe',
         darkText: '#4c1d95',
         gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
         shadow: 'rgba(139, 92, 246, 0.15)',
@@ -101,6 +109,7 @@ const FundProgressSection = () => {
   const [funds, setFunds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFundId, setSelectedFundId] = useState(null);
+  const [disbursementRounds, setDisbursementRounds] = useState([]);
 
   useEffect(() => {
     const fetchFunds = async () => {
@@ -133,6 +142,8 @@ const FundProgressSection = () => {
               image: fund.hinhAnh || null,
               soDonDaNop: fund.soDonDaNop || 0,
               hanNopDon: fund.hanNopDon || null,
+              ngayBatDau: fund.ngayBatDau || fund.ngay_batdau || null,
+              ngayKetThuc: fund.ngayKetThuc || fund.ngay_ketthuc || null,
               maxSupportAmount,
               maxSupportCount
             };
@@ -152,6 +163,28 @@ const FundProgressSection = () => {
 
     fetchFunds();
   }, []);
+
+  // Fetch disbursement rounds when selectedFund changes
+  useEffect(() => {
+    if (!selectedFundId) {
+      setDisbursementRounds([]);
+      return;
+    }
+
+    const fetchRounds = async () => {
+      try {
+        const response = await getPublicDisbursementRounds(selectedFundId);
+        if (response.success && response.data) {
+          setDisbursementRounds(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching disbursement rounds:', error);
+        setDisbursementRounds([]);
+      }
+    };
+
+    fetchRounds();
+  }, [selectedFundId]);
 
   const selectedFund = funds.find(f => f.id === selectedFundId);
 
@@ -194,6 +227,78 @@ const FundProgressSection = () => {
     });
   };
 
+  const formatDateShort = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  // Build disbursement milestone data from rounds + fund dates
+  const buildDisbursementMilestones = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const startDate = selectedFund?.ngayBatDau;
+    const endDate = selectedFund?.ngayKetThuc;
+
+    // If no rounds, return 4 default steps with fund dates
+    if (!disbursementRounds || disbursementRounds.length === 0) {
+      return DISBURSEMENT_STEPS.map((step, i) => {
+        let date = null;
+        let status = 'pending';
+        if (i === 0 && startDate) {
+          date = startDate;
+          status = new Date(startDate) <= today ? 'completed' : 'upcoming';
+        } else if (i === DISBURSEMENT_STEPS.length - 1 && endDate) {
+          date = endDate;
+          status = new Date(endDate) <= today ? 'completed' : 'pending';
+        }
+        return { ...step, status, date, expected: status !== 'completed' && !!date };
+      });
+    }
+
+    // Sort rounds by thutu
+    const sorted = [...disbursementRounds].sort((a, b) => (a.thutu || 0) - (b.thutu || 0));
+
+    // Step 0: Mở đơn — use fund start date or earliest round date
+    const moDonDate = startDate || sorted[0]?.ngayDuKien;
+    const moDonStatus = moDonDate ? (new Date(moDonDate) <= today ? 'completed' : 'upcoming') : 'pending';
+
+    // Step 1..n: Đợt 1, Đợt 2, ... from rounds
+    const roundSteps = sorted.map((round, i) => {
+      const hasActualDate = round.ngayThucTe && round.trangThai === 'hoanthanh';
+      const isCompleted = hasActualDate;
+      const isUpcoming = round.ngayDuKien && new Date(round.ngayDuKien) > today;
+
+      return {
+        key: round.dotId,
+        label: round.tenDot || `Đợt ${i + 1}`,
+        desc: round.moTa || round.tenDot || `Đợt giải ngân ${i + 1}`,
+        status: isCompleted ? 'completed' : isUpcoming ? 'upcoming' : 'pending',
+        date: isCompleted ? round.ngayThucTe : round.ngayDuKien,
+        expected: !isCompleted
+      };
+    });
+
+    // Last step: Hoàn thành — use fund end date or last round's ngayThucTe
+    const lastRound = sorted[sorted.length - 1];
+    const hoanThanhDate = endDate || lastRound?.ngayThucTe || lastRound?.ngayDuKien;
+    const hoanThanhStatus = hoanThanhDate ? (new Date(hoanThanhDate) <= today ? 'completed' : 'pending') : 'pending';
+
+    return [
+      { key: 'mo_don', label: 'Mở đơn', desc: 'Bắt đầu nhận hồ sơ', status: moDonStatus, date: moDonDate, expected: moDonStatus !== 'completed' && !!moDonDate },
+      ...roundSteps,
+      { key: 'hoan_thanh', label: 'Hoàn thành', desc: 'Kết thúc giải ngân', status: hoanThanhStatus, date: hoanThanhDate, expected: hoanThanhStatus !== 'completed' && !!hoanThanhDate }
+    ];
+  };
+
+  const disbursementMilestones = buildDisbursementMilestones();
+
   const handleDonateClick = (fund) => {
     if (!fund?.id) return;
 
@@ -228,7 +333,6 @@ const FundProgressSection = () => {
     return null;
   }
 
-  // Lấy các biến style theo chủ đề của quỹ được chọn
   const theme = selectedFund ? getCategoryTheme(selectedFund.category) : getCategoryTheme('');
   const themeStyles = {
     '--theme-primary': theme.primaryColor,
@@ -250,13 +354,13 @@ const FundProgressSection = () => {
             <h2 className={styles.title}>TIẾN TRÌNH GÂY QUỸ</h2>
           </div>
           <p className={styles.subtitle}>
-            Theo dõi thời gian thực dòng tiền đóng góp từ các nhà hảo tâm và tiến độ đạt cột mốc giải ngân hỗ trợ sinh viên TVU.
+            Theo dõi thời gian thực dòng tiền đóng góp từ các nhà hảo tâm và tiến độ giải ngân hỗ trợ sinh viên TVU.
           </p>
         </div>
 
         {/* 2-Column layout */}
         <div className={styles.layoutGrid}>
-          
+
           {/* Left Column: Compact fund list */}
           <div className={styles.fundListPanel}>
             <div className={styles.fundListHeader}>
@@ -271,7 +375,7 @@ const FundProgressSection = () => {
               {funds.map((fund) => {
                 const isSelected = fund.id === selectedFundId;
                 const fundTheme = getCategoryTheme(fund.category);
-                
+
                 const itemStyles = {
                   '--item-primary': fundTheme.primaryColor,
                   '--item-bg': fundTheme.badgeBg,
@@ -281,8 +385,8 @@ const FundProgressSection = () => {
                 };
 
                 return (
-                  <button 
-                    key={fund.id} 
+                  <button
+                    key={fund.id}
                     type="button"
                     className={`${styles.fundItem} ${isSelected ? styles.activeItem : ''}`}
                     style={itemStyles}
@@ -297,10 +401,10 @@ const FundProgressSection = () => {
                       <span className={styles.fundName}>{fund.name}</span>
                       <span className={styles.fundAmount}>{formatCompactCurrency(fund.balance)}</span>
                     </span>
-                    
+
                     <span className={styles.progressTrack} aria-hidden="true">
                       <span
-                        className={styles.progressBar} 
+                        className={styles.progressBar}
                         style={{ width: `${Math.min(100, fund.progress)}%`, background: fundTheme.gradient }}
                       />
                     </span>
@@ -315,7 +419,7 @@ const FundProgressSection = () => {
             </div>
           </div>
 
-          {/* Right Column: Detailed selected fund with dynamic styles */}
+          {/* Right Column: Detailed selected fund */}
           {selectedFund && (
             <div className={styles.fundDetailCard} style={themeStyles}>
               <div className={styles.detailHeader}>
@@ -324,30 +428,29 @@ const FundProgressSection = () => {
                 <p className={styles.detailDesc}>{selectedFund.description}</p>
               </div>
 
-              {/* Progress details & Milestones */}
+              {/* ── Block 1: Tiến độ quyên góp ── */}
               <div className={styles.progressBox}>
                 <div className={styles.progressLabelRow}>
-                  <span>Hành trình tích lũy & Giải ngân</span>
+                  <span>Tiến độ quyên góp</span>
                   <span className={styles.percentageText}>{selectedFund.progress}%</span>
                 </div>
-                
-                {/* Thanh tiến trình lớn */}
+
+                {/* Large progress bar */}
                 <div className={styles.largeProgressTrack}>
-                  <div 
+                  <div
                     className={styles.largeProgressBar}
                     style={{ width: `${Math.min(100, selectedFund.progress)}%` }}
                   />
-                  
-                  {/* Vẽ các điểm mốc trên thanh tiến trình */}
+
+                  {/* Milestone nodes on bar */}
                   <div className={styles.milestonesTrackNodes}>
-                    {MILESTONES.map((milestone) => {
+                    {DONATION_MILESTONES.map((milestone) => {
                       const isReached = selectedFund.progress >= milestone.percent;
                       return (
-                        <div 
-                          key={milestone.percent} 
+                        <div
+                          key={milestone.percent}
                           className={`${styles.milestoneNode} ${isReached ? styles.nodeReached : ''}`}
                           style={{ left: `${milestone.percent}%` }}
-                          title={`${milestone.label}: ${milestone.desc}`}
                         >
                           <div className={styles.nodeInner}>
                             {isReached ? <HiCheck className={styles.checkIcon} /> : <span className={styles.dotIndicator} />}
@@ -358,24 +461,23 @@ const FundProgressSection = () => {
                   </div>
                 </div>
 
-                {/* Nhãn nhãn cho các cột mốc bên dưới thanh tiến trình */}
-                <div className={styles.milestonesLabels}>
-                  {MILESTONES.map((milestone) => {
+                {/* Labels below bar */}
+                <div className={styles.milestoneLabels}>
+                  {DONATION_MILESTONES.map((milestone) => {
                     const isReached = selectedFund.progress >= milestone.percent;
                     return (
-                      <div 
-                        key={milestone.percent} 
-                        className={`${styles.milestoneLabelCol} ${isReached ? styles.labelColReached : ''}`}
+                      <span
+                        key={milestone.percent}
+                        className={`${styles.milestoneLabel} ${isReached ? styles.milestoneLabelReached : ''}`}
                         style={{ left: `${milestone.percent}%` }}
                       >
-                        <span className={styles.milestoneLabelName}>{milestone.label}</span>
-                        <span className={styles.milestoneLabelDesc}>{milestone.desc}</span>
-                      </div>
+                        {milestone.label}
+                      </span>
                     );
                   })}
                 </div>
 
-                {/* Số dư hiện tại vs Mục tiêu */}
+                {/* Values row */}
                 <div className={styles.progressValuesRow}>
                   <div>
                     <span className={styles.valueLabel}>Đã tiếp nhận</span>
@@ -388,9 +490,65 @@ const FundProgressSection = () => {
                 </div>
               </div>
 
-              {/* Grid 4 thẻ thống kê từ dữ liệu quỹ */}
+              {/* ── Divider between two blocks ── */}
+              <div className={styles.sectionDivider} />
+
+              {/* ── Block 2: Tiến độ giải ngân ── */}
+              <div className={styles.disbursementBox}>
+                <div className={styles.disbursementTitleRow}>
+                  <span>Tiến độ giải ngân</span>
+                </div>
+
+                {/* Timeline */}
+                <div className={styles.disbursementTimeline}>
+                  {disbursementMilestones.map((ms, index) => (
+                    <div
+                      key={ms.key}
+                      className={`${styles.timelineStep} ${
+                        ms.status === 'completed' ? styles.stepCompleted :
+                        ms.status === 'upcoming' ? styles.stepUpcoming : styles.stepPending
+                      }`}
+                    >
+                      {/* Connector line */}
+                      {index < disbursementMilestones.length - 1 && (
+                        <div className={`${styles.connectorLine} ${
+                          ms.status === 'completed' ? styles.connectorCompleted : ''
+                        }`} />
+                      )}
+
+                      {/* Step node */}
+                      <div className={styles.stepNode}>
+                        {ms.status === 'completed' ? (
+                          <div className={styles.stepCheck}><HiCheck /></div>
+                        ) : (
+                          <div className={styles.stepDot} />
+                        )}
+                      </div>
+
+                      {/* Step content */}
+                      <div className={styles.stepContent}>
+                        <span className={styles.stepLabel}>{ms.label}</span>
+                        {ms.status === 'completed' && ms.date && (
+                          <span className={styles.stepDate}>
+                            {formatDateShort(ms.date)}
+                          </span>
+                        )}
+                        {ms.expected && ms.date && (
+                          <span className={styles.stepDate}>
+                            ~{formatDateShort(ms.date)}
+                          </span>
+                        )}
+                        {ms.status === 'pending' && !ms.date && (
+                          <span className={styles.stepDatePending}>{ms.desc}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Grid 4 thẻ thống kê */}
               <div className={styles.statsGrid}>
-                {/* 1. Số lượng hỗ trợ tối đa */}
                 <div className={styles.statCard}>
                   <div className={styles.statIconWrapper}>
                     <HiAcademicCap className={styles.statIcon} />
@@ -401,7 +559,6 @@ const FundProgressSection = () => {
                   </div>
                 </div>
 
-                {/* 2. Mức hỗ trợ tối đa mỗi suất */}
                 <div className={styles.statCard}>
                   <div className={styles.statIconWrapper}>
                     <HiOutlineBanknotes className={styles.statIcon} />
@@ -412,7 +569,6 @@ const FundProgressSection = () => {
                   </div>
                 </div>
 
-                {/* 3. Số hồ sơ đã ghi nhận */}
                 <div className={styles.statCard}>
                   <div className={styles.statIconWrapper}>
                     <HiDocumentCheck className={styles.statIcon} />
@@ -423,7 +579,6 @@ const FundProgressSection = () => {
                   </div>
                 </div>
 
-                {/* 4. Hạn nộp đơn */}
                 <div className={styles.statCard}>
                   <div className={styles.statIconWrapper}>
                     <HiCalendarDays className={styles.statIcon} />
@@ -439,8 +594,8 @@ const FundProgressSection = () => {
 
               {/* Action Banner */}
               <div className={styles.detailAction}>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   size="lg"
                   className={styles.btnAction}
                   onClick={() => handleDonateClick(selectedFund)}

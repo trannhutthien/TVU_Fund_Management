@@ -120,11 +120,23 @@ const upsertApplicationBankAccount = async (connection, nguoiDungId, app) => {
 };
 
 const createMainApplicationRecords = async (connection, app, nguoiDungId) => {
+  // Tự động gán dot_id dựa trên ngày nộp đơn
+  const today = new Date().toISOString().split('T')[0];
+  const [dotRows] = await connection.query(
+    `SELECT dot_id FROM dotgiaingan 
+     WHERE quy_id = ? 
+       AND ngaydukien <= ?
+       AND trangthai IN ('chuatoi', 'dangchodutien')
+     ORDER BY thutu DESC LIMIT 1`,
+    [app.quy_id, today]
+  );
+  const dotId = dotRows[0]?.dot_id || null;
+
   const [appInsert] = await connection.query(
     `INSERT INTO yeucauhotro (
-      nguoidung_id, quy_id, lydo, sotiendenghi, tailieudinhkem, trangthai
-    ) VALUES (?, ?, ?, ?, ?, 'Cho duyet cap 1')`,
-    [nguoiDungId, app.quy_id, app.lydo, app.sotiendenghi, app.tailieudinhkem]
+      nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai
+    ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1')`,
+    [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem]
   );
   const yeucauhotroId = appInsert.insertId;
 
@@ -448,11 +460,23 @@ const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword) => 
     // 3. Migrate đơn sang yeucauhotro chính
     await upsertApplicationBankAccount(connection, nguoiDungId, app);
 
+    // Tự động gán dot_id dựa trên ngày nộp đơn
+    const today = new Date().toISOString().split('T')[0];
+    const [dotRows] = await connection.query(
+      `SELECT dot_id FROM dotgiaingan 
+       WHERE quy_id = ? 
+         AND ngaydukien <= ?
+         AND trangthai IN ('chuatoi', 'dangchodutien')
+       ORDER BY thutu DESC LIMIT 1`,
+      [app.quy_id, today]
+    );
+    const dotId = dotRows[0]?.dot_id || null;
+
     const [appInsert] = await connection.query(
       `INSERT INTO yeucauhotro (
-        nguoidung_id, quy_id, lydo, sotiendenghi, tailieudinhkem, trangthai
-      ) VALUES (?, ?, ?, ?, ?, 'Cho duyet cap 1')`,
-      [nguoiDungId, app.quy_id, app.lydo, app.sotiendenghi, app.tailieudinhkem]
+        nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai
+      ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1')`,
+      [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem]
     );
     const yeucauhotroId = appInsert.insertId;
 

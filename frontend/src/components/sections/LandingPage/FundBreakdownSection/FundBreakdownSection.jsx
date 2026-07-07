@@ -5,13 +5,15 @@ import { HiArrowRight } from 'react-icons/hi2';
 import statisticsService from '@services/statisticsService';
 import styles from './FundBreakdownSection.module.scss';
 
-// Màu sắc cho các loại quỹ - KHỚP CHÍNH XÁC với database
+// Màu sắc cho các loại quỹ - KHỚP CHÍNH XÁC với tenloai trong database
 const FUND_COLORS_MAP = {
-  'Tu thien': '#f0a500',      // Gold
-  'Hoc bong': '#1a2f5e',      // Navy Blue
-  'Y te': '#10b981',          // Green
-  'Moi truong': '#3b82f6',    // Blue
-  'Khac': '#94a3b8',          // Gray
+  'Từ thiện': '#f0a500',              // Gold
+  'Học bổng': '#1a2f5e',              // Navy Blue
+  'Y tế': '#10b981',                  // Green
+  'Môi trường': '#3b82f6',            // Blue
+  'Khác': '#94a3b8',                  // Gray
+  'Quỷ thi đua': '#8b5cf6',          // Purple
+  'Phát triển ĐH Trà Vinh': '#dc2626', // Red
 };
 
 // Màu mặc định cho các loại quỹ NULL, rỗng, hoặc không xác định
@@ -27,6 +29,7 @@ const FALLBACK_COLORS = [
   '#ec4899',  // Pink
   '#f59e0b',  // Amber
   '#06b6d4',  // Cyan
+  '#dc2626',  // Red
 ];
 
 // Function để lấy màu cho loại quỹ - ĐƠN GIẢN

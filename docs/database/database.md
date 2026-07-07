@@ -394,3 +394,22 @@ ALTER TABLE `tintuc` ADD CONSTRAINT `tintuc_ibfk_1` FOREIGN KEY (`nguoitao_id`) 
 ALTER TABLE `tintuc` ADD CONSTRAINT `tintuc_ibfk_2` FOREIGN KEY (`nguoisua_id`) REFERENCES `nguoidung` (`nguoidung_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE `yeucauhotro` ADD CONSTRAINT `yeucauhotro_ibfk_1` FOREIGN KEY (`nguoidung_id`) REFERENCES `nguoidung` (`nguoidung_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE `yeucauhotro` ADD CONSTRAINT `yeucauhotro_ibfk_2` FOREIGN KEY (`quy_id`) REFERENCES `quy` (`quy_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+CREATE TABLE dotgiaingan (
+  dot_id INT PRIMARY KEY AUTO_INCREMENT,
+  quy_id INT NOT NULL,
+  thutu INT NOT NULL,
+  tendot VARCHAR(100),
+  mota VARCHAR(255),
+  sotiendukien DECIMAL(15,2) NOT NULL DEFAULT 0,
+  sotiendachi DECIMAL(15,2) NOT NULL DEFAULT 0,
+  ngaydukien DATE,
+  ngaythucte DATE NULL,
+  trangthai ENUM('chuatoi', 'dangchodutien', 'hoanthanh') NOT NULL DEFAULT 'chuatoi',
+  ngaytao DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (quy_id) REFERENCES quy(quy_id)
+);
+
+ALTER TABLE yeucauhotro
+ADD COLUMN dot_id INT NULL AFTER quy_id,
+ADD FOREIGN KEY (dot_id) REFERENCES dotgiaingan(dot_id);

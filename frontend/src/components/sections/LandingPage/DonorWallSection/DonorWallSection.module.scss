@@ -49,28 +49,15 @@
 }
 
 // ── DONORS GRID (Top 6) ─────────────────────
-// ── DONOR LAYOUT (FEATURED + GRID) ─────────
-.donorLayout {
+.donorsGrid {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 32px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
   margin-bottom: 48px;
-  align-items: stretch;
 
   @media (max-width: 968px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
-}
-
-.featuredSection {
-  display: flex;
-  flex-direction: column;
-}
-
-.otherDonorsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
 
   @media (max-width: 576px) {
     grid-template-columns: 1fr;
@@ -104,60 +91,20 @@
   }
 }
 
-// Top 1 Featured Donor Style
+// Featured Donor Style (giống card thường)
 .featuredDonorCard {
-  background: rgba(240, 165, 0, 0.1);
-  border: 2px solid var(--color-gold) !important;
-  box-shadow: 0 4px 25px rgba(240, 165, 0, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   min-height: 100%;
-  padding: 32px;
 
   &:hover {
-    background: rgba(240, 165, 0, 0.15) !important;
-    transform: translateY(-6px) !important;
-    box-shadow: 0 12px 35px rgba(240, 165, 0, 0.25) !important;
+    background: rgba(255, 255, 255, 0.12);
   }
-
-  .donorName {
-    font-size: 20px;
-    color: var(--color-gold);
-  }
-
-  .donorAmount {
-    font-size: 18px;
-    font-weight: 700;
-  }
-}
-
-.featuredBadge {
-  background: var(--color-gold);
-  color: var(--color-primary);
-  font-size: 11px;
-  font-weight: 800;
-  padding: 4px 12px;
-  border-radius: 100px;
-  margin-bottom: 12px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(240, 165, 0, 0.3);
 }
 
 .featuredDonorLogo {
-  border: 3px solid var(--color-gold);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-}
-
-.featuredAvatarLetter {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  color: var(--color-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.2);
 }
 
 .emptyState {

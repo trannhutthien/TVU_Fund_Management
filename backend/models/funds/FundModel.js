@@ -26,7 +26,9 @@ const createFund = async (fundData) => {
     trangThai,
     ngayBatDau,
     loaiDieuHanh,
-    quyChaId
+    quyChaId,
+    soDotGiaiNgan,
+    dotGiaiNgan
   } = fundData;
 
   const connection = await pool.getConnection();
@@ -134,6 +136,49 @@ const createFund = async (fundData) => {
           `Tự động ghi nhận trích lập ngân sách khi tạo quỹ con "${tenQuy}".`
         ]
       );
+    }
+
+    // 3. Tự sinh đợt giải ngân nếu có yêu cầu
+    const soDot = parseInt(soDotGiaiNgan) || 0;
+    if (soDot > 0 && dotGiaiNgan && dotGiaiNgan.length > 0) {
+      // Dùng chi tiết đợt giải ngân từ form
+      for (const dot of dotGiaiNgan) {
+        await connection.execute(
+          `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, sotiendukien, ngaydukien, trangthai)
+           VALUES (?, ?, ?, ?, ?, ?, 'chuatoi')`,
+          [
+            result.insertId,
+            dot.thutu,
+            dot.tenDot || `Đợt ${dot.thutu}`,
+            dot.mota || null,
+            parseFloat(dot.sotiendukien) || 0,
+            dot.ngaydukien || null
+          ]
+        );
+      }
+    } else if (soDot > 0 && ngayBatDau && hanNopDon) {
+      // Fallback: Tự tính nếu không có chi tiết từ form
+      const startDate = new Date(ngayBatDau);
+      const endDate = new Date(hanNopDon);
+      const totalTime = endDate - startDate;
+      const targetAmount = parseFloat(soTienMucTieu) || 0;
+      const amountPerRound = targetAmount / soDot;
+
+      for (let i = 1; i <= soDot; i++) {
+        const roundDate = new Date(startDate.getTime() + totalTime * (i / (soDot + 1)));
+        await connection.execute(
+          `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, sotiendukien, ngaydukien, trangthai)
+           VALUES (?, ?, ?, ?, ?, ?, 'chuatoi')`,
+          [
+            result.insertId,
+            i,
+            `Đợt ${i}`,
+            `Đợt giải ngân thứ ${i} của quỹ "${tenQuy}"`,
+            amountPerRound,
+            roundDate.toISOString().split('T')[0]
+          ]
+        );
+      }
     }
 
     await connection.commit();
