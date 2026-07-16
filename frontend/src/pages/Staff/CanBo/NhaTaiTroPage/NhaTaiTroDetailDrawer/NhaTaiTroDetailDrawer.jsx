@@ -8,6 +8,7 @@ import {
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import { getDonorDetail, getPublicDonorDetail } from '@services/donorService';
+import { formatCurrency, getInitial } from '@utils/formatters';
 import styles from './NhaTaiTroDetailDrawer.module.scss';
 
 const LOAI_LABEL = {
@@ -24,14 +25,6 @@ const STATUS_MAP = {
   'Tu choi': 'rejected',
 };
 
-const formatCurrency = (amount) => {
-  if (!amount && amount !== 0) return '0đ';
-  const n = Number(amount);
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} tỷ`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} triệu`;
-  return n.toLocaleString('vi-VN') + 'đ';
-};
-
 const formatDate = (value) => {
   if (!value) return '—';
   const d = new Date(value);
@@ -45,8 +38,6 @@ const formatMonthYear = (value) => {
   if (Number.isNaN(d.getTime())) return '—';
   return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
 };
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const apiOrigin = () => {
   const base = import.meta.env?.VITE_API_BASE_URL || '';

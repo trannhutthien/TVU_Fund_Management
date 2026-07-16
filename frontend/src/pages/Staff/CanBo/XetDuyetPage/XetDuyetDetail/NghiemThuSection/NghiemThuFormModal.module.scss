@@ -1,0 +1,264 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// ── Header ──────────────────────────────
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerIcon {
+  color: var(--color-primary, #3b6ff5);
+}
+
+.headerTitle h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+
+  &:hover { background: #f1f5f9; }
+}
+
+// ── Body ────────────────────────────────
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+// ── Radio cards ─────────────────────────
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radioCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: #cbd5e1; background: #f8fafc; }
+}
+
+.radioCardActive {
+  border-color: var(--color-primary, #3b6ff5) !important;
+  background: rgba(59, 111, 245, 0.04) !important;
+}
+
+.radioInput {
+  margin-top: 2px;
+  accent-color: var(--color-primary, #3b6ff5);
+}
+
+.radioContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radioLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.radioDesc {
+  font-size: 12px;
+  color: #64748b;
+}
+
+// ── Kết quả buttons ─────────────────────
+.ketQuaGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.ketQuaBtn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { border-color: var(--accent, #94a3b8); }
+}
+
+.ketQuaBtnActive {
+  border-color: var(--accent, #3b6ff5) !important;
+  background: color-mix(in srgb, var(--accent, #3b6ff5) 8%, transparent) !important;
+  color: var(--accent, #3b6ff5) !important;
+}
+
+// ── Textarea / Input ────────────────────
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.15s;
+
+  &:focus { outline: none; border-color: var(--color-primary, #3b6ff5); }
+}
+
+.charCount {
+  text-align: right;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+
+  &:focus { outline: none; border-color: var(--color-primary, #3b6ff5); }
+}
+
+// ── Warning / Confirm boxes ─────────────
+.warningBox {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(220, 38, 38, 0.05);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 10px;
+}
+
+.warningIcon {
+  flex-shrink: 0;
+  color: #dc2626;
+  margin-top: 2px;
+}
+
+.warningTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 4px;
+}
+
+.warningDesc {
+  font-size: 13px;
+  color: #7f1d1d;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.confirmBox {
+  padding: 14px;
+  background: rgba(59, 111, 245, 0.05);
+  border: 1px solid rgba(59, 111, 245, 0.2);
+  border-radius: 10px;
+}
+
+.confirmTitle {
+  font-size: 14px;
+  color: #1e40af;
+  margin-bottom: 10px;
+}
+
+.warningActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+// ── Footer ──────────────────────────────
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid #e5e7eb;
+}

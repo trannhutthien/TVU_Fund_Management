@@ -12,6 +12,7 @@ import {
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import { updateFundStatus } from '@services/fundService';
+import { formatCurrency } from '@utils/formatters';
 import styles from './QuyDetailDrawer.module.scss';
 
 const LOAI_QUY_LABEL = {
@@ -20,11 +21,6 @@ const LOAI_QUY_LABEL = {
   'Y te': 'Y tế',
   'Moi truong': 'Môi trường',
   'Khac': 'Khác',
-};
-
-const formatCurrency = (value) => {
-  const n = Number(value || 0);
-  return `${n.toLocaleString('vi-VN')}đ`;
 };
 
 const formatDate = (value) => {

@@ -1,3 +1,7 @@
+import { formatCurrencyShort, formatCurrency } from '@utils/formatters';
+
+export { formatCurrencyShort as formatCurrency, formatCurrency as formatCurrencyFull };
+
 export const CHART_COLORS = {
   primary: '#1a2f5e',
   gold: '#f0a500',
@@ -22,28 +26,6 @@ export const LOAI_QUY_LABEL = {
   'Y te': 'Y tế',
   'Moi truong': 'Môi trường',
   Khac: 'Khác',
-};
-
-export const formatCurrency = (amount) => {
-  if (amount === null || amount === undefined) return '0đ';
-  const n = Number(amount);
-  if (Number.isNaN(n)) return '0đ';
-  if (n >= 1_000_000_000) {
-    const val = n / 1_000_000_000;
-    return val % 1 === 0 ? `${val.toFixed(0)} tỷ` : `${val.toFixed(1)} tỷ`;
-  }
-  if (n >= 1_000_000) {
-    const val = n / 1_000_000;
-    return val % 1 === 0 ? `${val.toFixed(0)} triệu` : `${val.toFixed(1)} triệu`;
-  }
-  return n.toLocaleString('vi-VN') + 'đ';
-};
-
-export const formatCurrencyFull = (amount) => {
-  if (amount === null || amount === undefined) return '0 đ';
-  const n = Number(amount);
-  if (Number.isNaN(n)) return '0 đ';
-  return n.toLocaleString('vi-VN') + ' đ';
 };
 
 export const formatDateShort = (value) => {

@@ -6,12 +6,8 @@ import {
   HiClock,
   HiExclamationCircle,
 } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import styles from './KeToanStatsSection.module.scss';
-
-const formatCurrency = (amount) => {
-  const n = Number(amount) || 0;
-  return n.toLocaleString('vi-VN') + ' đ';
-};
 
 const KeToanStatsSection = ({ data, isLoading }) => {
   const thang = data?.thang ?? new Date().getMonth() + 1;

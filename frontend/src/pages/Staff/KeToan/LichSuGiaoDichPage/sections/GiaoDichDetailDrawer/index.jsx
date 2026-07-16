@@ -11,9 +11,9 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import api from '@services/api';
+import { formatCurrency, getInitial } from '@utils/formatters';
 import styles from './GiaoDichDetailDrawer.module.scss';
 
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 const formatDateTime = (v) => {
   if (!v) return '—';
   const d = new Date(v);
@@ -36,8 +36,6 @@ const STATUS_LABEL = {
 
 const isImage = (url) => /\.(jpe?g|png|gif|webp)$/i.test(url || '');
 const isPdf = (url) => /\.pdf$/i.test(url || '');
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const resolveUrl = (url) => {
   if (!url) return '';

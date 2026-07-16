@@ -10,6 +10,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import api from '@services/api';
+import { formatCurrency } from '@utils/formatters';
 import useAdminBaoCaoData from './useAdminBaoCaoData';
 import styles from './AdminBaoCaoPage.module.scss';
 
@@ -22,11 +23,6 @@ const TABS = [
 ];
 
 const CHART_COLORS = ['#1a2f5e', '#0891b2', '#7c3aed', '#f0a500', '#10b981', '#ef4444', '#64748b'];
-
-const formatCurrency = (val) => {
-  if (val === null || val === undefined) return '0 đ';
-  return Number(val).toLocaleString('vi-VN') + ' đ';
-};
 
 const AdminBaoCaoPage = () => {
   const [activeTab, setActiveTab] = useState('tong_quan');

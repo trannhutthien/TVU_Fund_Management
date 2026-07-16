@@ -10,11 +10,12 @@ import {
 } from 'react-icons/hi2';
 import Dropdown from '@components/common/Dropdown/Dropdown';
 import fundService from '@services/fundService';
+import { formatCurrency } from '@utils/formatters';
 import styles from './FundSelectSection.module.scss';
 
 const formatVND = (amount) => {
   if (amount == null) return '—';
-  return amount.toLocaleString('vi-VN') + 'đ';
+  return formatCurrency(amount);
 };
 
 const formatDate = (dateStr) => {

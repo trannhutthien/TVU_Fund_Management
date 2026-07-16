@@ -1,7 +1,4 @@
-import axios from 'axios';
 import api from './api';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 /**
  * Lấy danh sách quỹ công khai (không cần authentication)
@@ -9,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_UR
  */
 export const getPublicFunds = async () => {
   try {
-    const response = await axios.get(`${API_URL}/funds/public`);
+    const response = await api.get('/funds/public');
     return response.data;
   } catch (error) {
     console.error('Error fetching public funds:', error);
@@ -23,7 +20,7 @@ export const getPublicFunds = async () => {
  */
 export const getFundById = async (fundId) => {
   try {
-    const response = await axios.get(`${API_URL}/quy/${fundId}`);
+    const response = await api.get(`/quy/${fundId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching fund detail:', error);
@@ -63,7 +60,7 @@ export const updateFundStatus = async (fundId, trangThai) => {
  * GET /api/loai-quy
  */
 export const getAllLoaiQuy = async () => {
-  const response = await axios.get(`${API_URL}/loai-quy`);
+  const response = await api.get('/loai-quy');
   return response.data;
 };
 
@@ -81,7 +78,7 @@ export const createLoaiQuy = async (maLoai, tenLoai) => {
  * GET /api/disbursement-rounds/public/fund/:quyId
  */
 export const getPublicDisbursementRounds = async (quyId) => {
-  const response = await axios.get(`${API_URL}/disbursement-rounds/public/fund/${quyId}`);
+  const response = await api.get(`/disbursement-rounds/public/fund/${quyId}`);
   return response.data;
 };
 

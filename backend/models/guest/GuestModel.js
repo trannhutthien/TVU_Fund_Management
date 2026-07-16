@@ -14,6 +14,8 @@ const toApplicationRow = (data) => ({
   lydo: data.lydo ?? data.lyDo,
   sotiendenghi: data.sotiendenghi ?? data.soTienDeNghi,
   tailieudinhkem: data.tailieudinhkem ?? data.taiLieuDinhKem ?? null,
+  loai_hotro: data.loai_hotro ?? data.loaiHoTro ?? 'Tai tro khong hoan lai',
+  tong_kinh_phi_du_an: data.tong_kinh_phi_du_an ?? data.tongKinhPhiDuAn ?? null,
   tracking_uuid: data.tracking_uuid ?? data.trackingUuid,
 });
 
@@ -54,7 +56,7 @@ const ensureApplicationDonViHocId = async (connection, tenKhoa) => {
   return dvInsert.insertId;
 };
 
-const ensureApplicationUser = async (connection, app, email, plainPassword) => {
+const ensureApplicationUser = async (connection, app, email, plainPassword, loaitaikhoan = 'Sinh vien') => {
   const [users] = await connection.query(
     "SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1",
     [email]
@@ -72,8 +74,8 @@ const ensureApplicationUser = async (connection, app, email, plainPassword) => {
   const [userInsert] = await connection.query(
     `INSERT INTO nguoidung (
       email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, donvihoc_id, trangthai
-    ) VALUES (?, ?, ?, ?, ?, 4, 'Sinh vien', ?, 'Hoat dong')`,
-    [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, donvihocId]
+    ) VALUES (?, ?, ?, ?, ?, 4, ?, ?, 'Hoat dong')`,
+    [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, loaitaikhoan, donvihocId]
   );
 
   return userInsert.insertId;
@@ -134,9 +136,9 @@ const createMainApplicationRecords = async (connection, app, nguoiDungId) => {
 
   const [appInsert] = await connection.query(
     `INSERT INTO yeucauhotro (
-      nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai
-    ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1')`,
-    [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem]
+      nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, laidetac, tongkinhphidudan
+    ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?, ?)`,
+    [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', app.loai_hotro === 'Cho vay' || app.laDeTai === 1 ? 1 : 0, app.laDeTai || 0, app.tong_kinh_phi_du_an || null]
   );
   const yeucauhotroId = appInsert.insertId;
 
@@ -152,7 +154,7 @@ const createMainApplicationRecords = async (connection, app, nguoiDungId) => {
   return yeucauhotroId;
 };
 
-const ensureDonationUser = async (connection, don, email, plainPassword) => {
+const ensureDonationUser = async (connection, don, email, plainPassword, loaitaikhoan = 'Nha tai tro') => {
   const [users] = await connection.query(
     "SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1",
     [email]
@@ -169,8 +171,8 @@ const ensureDonationUser = async (connection, don, email, plainPassword) => {
   const [userInsert] = await connection.query(
     `INSERT INTO nguoidung (
       email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, trangthai, diachi
-    ) VALUES (?, ?, ?, ?, ?, 4, 'Nha tai tro', 'Hoat dong', ?)`,
-    [email, hashedPassword, don.guest_hoten, maSoDinhDanh, don.guest_sodienthoai, don.guest_diachi]
+    ) VALUES (?, ?, ?, ?, ?, 4, ?, 'Hoat dong', ?)`,
+    [email, hashedPassword, don.guest_hoten, maSoDinhDanh, don.guest_sodienthoai, loaitaikhoan, don.guest_diachi]
   );
 
   return userInsert.insertId;
@@ -366,7 +368,7 @@ const findDonationByEmailAndOtp = async (email, otpCode) => {
 /**
  * Xác minh OTP và di chuyển đơn xin hỗ trợ sang bảng chính (Sử dụng Transaction)
  */
-const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword) => {
+const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword, loaitaikhoan = 'Sinh vien') => {
   const connection = await pool.getConnection();
 
   try {
@@ -435,8 +437,8 @@ const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword) => 
       const [userInsert] = await connection.query(
         `INSERT INTO nguoidung (
           email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, donvihoc_id, trangthai
-        ) VALUES (?, ?, ?, ?, ?, 4, 'Sinh vien', ?, 'Hoat dong')`,
-        [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, donvihoc_id]
+        ) VALUES (?, ?, ?, ?, ?, 4, ?, ?, 'Hoat dong')`,
+        [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, loaitaikhoan, donvihoc_id]
       );
       nguoiDungId = userInsert.insertId;
 
@@ -474,9 +476,9 @@ const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword) => 
 
     const [appInsert] = await connection.query(
       `INSERT INTO yeucauhotro (
-        nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai
-      ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1')`,
-      [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem]
+        nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, laidetac
+      ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?)`,
+      [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', app.loai_hotro === 'Cho vay' || app.laDeTai === 1 ? 1 : 0, app.laDeTai || 0]
     );
     const yeucauhotroId = appInsert.insertId;
 
@@ -553,13 +555,15 @@ const verifyOTPAndCreateApplication = async (applicationData, plainPassword) => 
         quy_id,
         lydo,
         sotiendenghi,
+        loaihotro,
+        tongkinhphidudan,
         tailieudinhkem,
         otp_code,
         otp_expires_at,
         tracking_uuid,
         trang_thai_staging,
         is_email_verified
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
       [
         app.guest_hoten,
         app.guest_email,
@@ -573,6 +577,8 @@ const verifyOTPAndCreateApplication = async (applicationData, plainPassword) => 
         app.quy_id,
         app.lydo,
         app.sotiendenghi,
+        app.loai_hotro,
+        app.tong_kinh_phi_du_an,
         app.tailieudinhkem,
         app.tracking_uuid,
       ]
@@ -690,7 +696,7 @@ const verifyOTPAndCreateDonation = async (donationData, plainPassword) => {
   }
 };
 
-const verifyOTPAndMigrateDonation = async (email, otpCode, plainPassword) => {
+const verifyOTPAndMigrateDonation = async (email, otpCode, plainPassword, loaitaikhoan = 'Nha tai tro') => {
   const connection = await pool.getConnection();
 
   try {
@@ -740,8 +746,8 @@ const verifyOTPAndMigrateDonation = async (email, otpCode, plainPassword) => {
       const [userInsert] = await connection.query(
         `INSERT INTO nguoidung (
           email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, trangthai, diachi
-        ) VALUES (?, ?, ?, ?, ?, 4, 'Nha tai tro', 'Hoat dong', ?)`,
-        [email, hashedPassword, don.guest_hoten, maSoDinhDanh, don.guest_sodienthoai, don.guest_diachi]
+        ) VALUES (?, ?, ?, ?, ?, 4, ?, 'Hoat dong', ?)`,
+        [email, hashedPassword, don.guest_hoten, maSoDinhDanh, don.guest_sodienthoai, loaitaikhoan, don.guest_diachi]
       );
       nguoiDungId = userInsert.insertId;
     }

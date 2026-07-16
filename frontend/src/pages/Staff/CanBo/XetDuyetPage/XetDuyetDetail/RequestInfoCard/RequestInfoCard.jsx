@@ -1,14 +1,10 @@
 import PropTypes from 'prop-types';
 import { HiOutlineDocumentText, HiOutlinePaperClip } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import styles from './RequestInfoCard.module.scss';
 
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|bmp|svg)$/i;
 const PDF_EXT = /\.pdf$/i;
-
-const formatCurrency = (value) => {
-  const n = Number(value || 0);
-  return `${n.toLocaleString('vi-VN')}đ`;
-};
 
 const getFileName = (url) => {
   if (!url) return 'file';

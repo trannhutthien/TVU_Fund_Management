@@ -20,6 +20,7 @@ import {
   HiUserPlus,
   HiChartPie,
 } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import styles from './AdminChartSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -60,7 +61,7 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
         <p className={styles.tooltipLabel}>{payload[0].payload.month}</p>
         {payload.map((entry, index) => (
           <p key={index} className={styles.tooltipItem} style={{ color: entry.color }}>
-            {entry.name}: {entry.value.toLocaleString('vi-VN')}đ
+            {entry.name}: {formatCurrency(entry.value)}
           </p>
         ))}
       </div>

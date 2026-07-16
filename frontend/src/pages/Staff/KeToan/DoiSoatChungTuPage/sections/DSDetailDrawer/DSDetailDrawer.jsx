@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { HiPaperClip, HiArrowDownTray, HiDocumentArrowDown } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import CloseButton from '@components/common/CloseButton';
+import CurrencyInput from '@components/common/CurrencyInput';
+import { formatCurrency, formatDateTime } from '@utils/formatters';
 import styles from './DSDetailDrawer.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -80,7 +82,7 @@ const DSDetailDrawer = ({
           <span className={styles.bannerText}>
             Đã đối soát bởi {giaoDich.doi_soat_boi_ten || 'Kế toán'} lúc{' '}
             {giaoDich.doi_soat_luc
-              ? new Date(giaoDich.doi_soat_luc).toLocaleString('vi-VN')
+              ? formatDateTime(giaoDich.doi_soat_luc)
               : '—'}
           </span>
         </div>
@@ -120,7 +122,7 @@ const DSDetailDrawer = ({
 
     return (
       <div className={styles.chenhLechDanger}>
-        ⚠ Lệch {Math.abs(chenhLech).toLocaleString('vi-VN')} đ
+        ⚠ Lệch {formatCurrency(Math.abs(chenhLech))}
       </div>
     );
   };
@@ -163,7 +165,7 @@ const DSDetailDrawer = ({
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Số tiền:</span>
                 <span className={styles.infoValue}>
-                  {giaoDich.so_tien.toLocaleString('vi-VN')} đ
+                  {formatCurrency(giaoDich.so_tien)}
                 </span>
               </div>
               <div className={styles.infoRow}>
@@ -219,16 +221,15 @@ const DSDetailDrawer = ({
               <div className={styles.checkRow}>
                 <span className={styles.checkLabel}>Số tiền hệ thống:</span>
                 <span className={styles.checkValue}>
-                  {giaoDich.so_tien.toLocaleString('vi-VN')} đ
+                  {formatCurrency(giaoDich.so_tien)}
                 </span>
               </div>
               <div className={styles.checkRow}>
                 <span className={styles.checkLabel}>Số tiền thực tế:</span>
-                <input
-                  type="number"
-                  className={styles.checkInput}
+                <CurrencyInput
                   value={soTienThucTe}
-                  onChange={(e) => setSoTienThucTe(e.target.value)}
+                  onChange={(raw) => setSoTienThucTe(raw)}
+                  className={styles.checkInput}
                   placeholder="Nhập số tiền thực tế trên sao kê"
                   disabled={!canEditDoiSoat}
                 />
@@ -259,7 +260,7 @@ const DSDetailDrawer = ({
                   <div className={styles.timelineDot} />
                   <div className={styles.timelineContent}>
                     {giaoDich.doi_soat_boi_ten || 'Kế toán'} — Đánh dấu đã đối soát —{' '}
-                    {new Date(giaoDich.doi_soat_luc).toLocaleString('vi-VN')}
+                    {formatDateTime(giaoDich.doi_soat_luc)}
                   </div>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import express from "express";
+import { protect } from "../../middleware/authMiddleware.js";
 import { xuatBaoCao } from "../../controllers/reports/baoCaoController.js";
 
 const router = express.Router();
@@ -18,6 +19,6 @@ const router = express.Router();
 //   - dinh_dang: 'docx' | 'xlsx'
 //
 // Response: file binary (Blob)
-router.post("/xuat", xuatBaoCao);
+router.post("/xuat", protect, xuatBaoCao);
 
 export default router;

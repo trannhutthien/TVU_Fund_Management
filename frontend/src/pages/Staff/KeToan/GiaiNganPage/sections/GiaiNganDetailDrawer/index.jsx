@@ -16,9 +16,9 @@ import {
   HiOutlineXCircle,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import { getInitial, formatCurrency } from '@utils/formatters';
 import styles from './GiaiNganDetailDrawer.module.scss';
 
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 const formatDate = (v) => {
   if (!v) return '—';
   const d = new Date(v);
@@ -37,8 +37,6 @@ const formatDateTime = (v) => {
     minute: '2-digit',
   });
 };
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const copyToClipboard = (text, label) => {
   navigator.clipboard?.writeText(text).then(

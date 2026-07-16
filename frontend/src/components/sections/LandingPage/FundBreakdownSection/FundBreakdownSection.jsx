@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { HiArrowRight } from 'react-icons/hi2';
 import statisticsService from '@services/statisticsService';
+import { formatCurrencyShort } from '@utils/formatters';
 import styles from './FundBreakdownSection.module.scss';
 
 // Màu sắc cho các loại quỹ - KHỚP CHÍNH XÁC với tenloai trong database
@@ -145,24 +146,12 @@ const FundBreakdownSection = () => {
     };
   }, []);
 
-  // Format số tiền
-  const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return '0';
-    
-    if (amount >= 1000000000) {
-      return `${(amount / 1000000000).toFixed(1)} tỷ`;
-    } else if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(1)} triệu`;
-    }
-    return amount.toLocaleString('vi-VN');
-  };
-
   // Custom label cho center của donut chart
   const renderCenterLabel = () => {
     return (
       <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
         <tspan x="50%" dy="-0.5em" fontSize="24" fontWeight="700" fill="#1a2f5e">
-          {formatCurrency(totalAmount)}
+          {formatCurrencyShort(totalAmount)}
         </tspan>
         <tspan x="50%" dy="1.5em" fontSize="12" fill="#64748b">
           Tổng ngân sách
@@ -178,7 +167,7 @@ const FundBreakdownSection = () => {
         <div className={styles.customTooltip}>
           <p className={styles.tooltipLabel}>{payload[0].name}</p>
           <p className={styles.tooltipValue}>{payload[0].value}%</p>
-          <p className={styles.tooltipAmount}>{formatCurrency(payload[0].payload.amount)}</p>
+          <p className={styles.tooltipAmount}>{formatCurrencyShort(payload[0].payload.amount)}</p>
         </div>
       );
     }
@@ -261,7 +250,7 @@ const FundBreakdownSection = () => {
                     {/* Label Row */}
                     <div className={styles.progressHeader}>
                       <span className={styles.progressLabel}>{item.name}</span>
-                      <span className={styles.progressPercent}>{barWidth}% ({formatCurrency(item.amount)})</span>
+                      <span className={styles.progressPercent}>{barWidth}% ({formatCurrencyShort(item.amount)})</span>
                     </div>
 
                     {/* Progress Bar - Dùng shouldAnimate thay vì isVisible */}

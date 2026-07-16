@@ -1,7 +1,4 @@
-import axios from 'axios';
 import api from './api';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 /**
  * News Service
@@ -14,7 +11,7 @@ const newsService = {
    */
   getLandingNews: async () => {
     try {
-      const response = await axios.get(`${API_URL}/news/landing`);
+      const response = await api.get('/news/landing');
       return response.data;
     } catch (error) {
       console.error('Error fetching landing news:', error);
@@ -28,7 +25,7 @@ const newsService = {
    */
   getPublicNews: async (params = {}) => {
     try {
-      const response = await axios.get(`${API_URL}/news/public`, { params });
+      const response = await api.get('/news/public', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching public news:', error);
@@ -42,7 +39,7 @@ const newsService = {
    */
   getNewsCountByCategory: async (params = {}) => {
     try {
-      const response = await axios.get(`${API_URL}/news/count-by-category`, { params });
+      const response = await api.get('/news/count-by-category', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching news counts:', error);
@@ -56,7 +53,7 @@ const newsService = {
    */
   getNewsById: async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/news/${id}`);
+      const response = await api.get(`/news/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching news detail ${id}:`, error);

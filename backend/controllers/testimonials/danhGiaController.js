@@ -24,7 +24,6 @@ const mapDanhGia = (row) => ({
   nguoiDungId: row.nguoidung_id,
   hoTen: row.hoten,
   khoa: row.khoa,
-  nienKhoa: row.nienkhoa,
   avatar: buildUserAvatarUrl(row.avatar),
   noiDung: row.noidung,
   trangThai: row.trangthai,
@@ -38,13 +37,6 @@ const mapDanhGia = (row) => ({
   ngayTao: row.ngaytao,
   ngayCapNhat: row.ngaycapnhat,
 });
-
-const getBodyField = (body, ...keys) => {
-  for (const key of keys) {
-    if (body[key] !== undefined) return body[key];
-  }
-  return undefined;
-};
 
 export const getLandingDanhGia = async (req, res) => {
   try {
@@ -98,39 +90,17 @@ export const getPublicDanhGia = async (req, res) => {
 export const createDanhGia = async (req, res) => {
   try {
     const nguoiDungId = req.user?.id || null;
-    const userProfile = nguoiDungId
-      ? await DanhGiaModel.getUserProfile(nguoiDungId)
-      : null;
 
-    const hoTen = trimOrNull(
-      getBodyField(req.body, "hoTen", "hoten", "ho_ten"),
-    ) || trimOrNull(userProfile?.hoten);
-    const khoa = trimOrNull(
-      getBodyField(req.body, "khoa", "khoaPhong", "khoa_phong"),
-    ) || trimOrNull(userProfile?.khoa);
-    const nienKhoa = trimOrNull(
-      getBodyField(req.body, "nienKhoa", "nienkhoa", "khoaHoc", "khoa_hoc"),
-    );
-    const avatar = trimOrNull(
-      getBodyField(req.body, "avatar", "hinhAnh", "hinhanh"),
-    ) || trimOrNull(userProfile?.avatar);
+    if (!nguoiDungId) {
+      return res.status(401).json({
+        success: false,
+        message: "Vui lòng đăng nhập để gửi đánh giá",
+      });
+    }
+
     const noiDung = trimOrNull(
-      getBodyField(req.body, "noiDung", "noidung", "noi_dung"),
+      req.body?.noiDung || req.body?.noidung || req.body?.noi_dung,
     );
-
-    if (!hoTen) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng nhập họ tên",
-      });
-    }
-
-    if (hoTen.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Họ tên không được vượt quá 100 ký tự",
-      });
-    }
 
     if (!noiDung) {
       return res.status(400).json({
@@ -146,26 +116,8 @@ export const createDanhGia = async (req, res) => {
       });
     }
 
-    if (khoa && khoa.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Tên khoa không được vượt quá 100 ký tự",
-      });
-    }
-
-    if (nienKhoa && nienKhoa.length > 20) {
-      return res.status(400).json({
-        success: false,
-        message: "Niên khóa không được vượt quá 20 ký tự",
-      });
-    }
-
     const result = await DanhGiaModel.create({
       nguoiDungId,
-      hoTen,
-      khoa,
-      nienKhoa,
-      avatar,
       noiDung,
     });
 

@@ -15,6 +15,7 @@ import {
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import api from '@services/api';
+import { formatCurrency, getInitial } from '@utils/formatters';
 import styles from './UserDetailDrawer.module.scss';
 
 const LOAI_NTT_LABEL = {
@@ -49,18 +50,11 @@ const formatDateTime = (value) => {
   });
 };
 
-const formatCurrency = (n) => {
-  const v = Number(n) || 0;
-  return v.toLocaleString('vi-VN') + 'đ';
-};
-
 const maskAccount = (acc) => {
   if (!acc) return '';
   if (acc.length <= 4) return acc;
   return '•••• ' + acc.slice(-4);
 };
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const getRoleBadge = (user) => {
   if (Number(user.role_id) === 4) {

@@ -8,6 +8,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button';
 import { getMyDonations } from '@services/donorService';
+import { formatCurrency } from '@utils/formatters';
 import styles from './DonationHistorySection.module.scss';
 
 /**
@@ -59,11 +60,6 @@ const DonationHistorySection = () => {
       }
       return newSet;
     });
-  };
-
-  const formatCurrency = (amount) => {
-    if (!amount) return '0 ₫';
-    return `${amount.toLocaleString('vi-VN')} ₫`;
   };
 
   const formatDate = (dateString) => {

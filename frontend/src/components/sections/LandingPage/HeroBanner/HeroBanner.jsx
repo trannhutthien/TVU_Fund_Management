@@ -13,6 +13,7 @@ import StudentShowcase from '@components/common/StudentShowcase';
 import statisticsService from '@services/statisticsService';
 import useAuthStore from '@stores/authStore';
 import { useSystemSettings } from '@hooks/useSystemSettings';
+import { formatCurrencyShort } from '@utils/formatters';
 import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './HeroBanner.module.scss';
 
@@ -75,18 +76,6 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
   const formatNumber = (num) => {
     if (!num && num !== 0) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  };
-
-  // Format currency (VNĐ)
-  const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return '0';
-    
-    if (amount >= 1000000000) {
-      return `${(amount / 1000000000).toFixed(1)} tỷ`;
-    } else if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(1)} triệu`;
-    }
-    return formatNumber(amount);
   };
 
   const handleLoginClick = () => {
@@ -161,19 +150,15 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
             value={formatNumber(stats.supportedRequests)}
             icon={<HiOutlineCheckCircle />}
             iconBgColor="green"
-            trend="up"
-            trendValue="+12.5%"
             subtitle={settings?.hero_stat_sinhvien_sub || 'So với năm trước'}
             loading={loading}
             className={styles.statCard}
           />
           <StatCard
             title={settings?.hero_stat_giatri || 'Tổng giá trị hỗ trợ'}
-            value={`${formatCurrency(stats.totalFundAmount)} đ`}
+            value={`${formatCurrencyShort(stats.totalFundAmount)} đ`}
             icon={<HiOutlineBanknotes />}
             iconBgColor="blue"
-            trend="up"
-            trendValue="+8.3%"
             subtitle={settings?.hero_stat_giatri_sub || 'Tích lũy từ các quỹ'}
             loading={loading}
             className={styles.statCard}
@@ -183,8 +168,6 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
             value={formatNumber(stats.totalDonors)}
             icon={<HiOutlineHeart />}
             iconBgColor="red"
-            trend="up"
-            trendValue="+5"
             subtitle={settings?.hero_stat_nhahaotam_sub || 'Đối tác đồng hành'}
             loading={loading}
             className={styles.statCard}

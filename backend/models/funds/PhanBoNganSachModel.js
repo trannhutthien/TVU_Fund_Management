@@ -4,7 +4,7 @@ import pool from "../../config/db.js";
 // HÀM: createRequest
 // MỤC ĐÍCH: Cán bộ đề xuất trích lập ngân sách
 // ─────────────────────────────────────────────────────────────────────────────
-const createRequest = async ({ quyNguonId, quyDichId, soTien, soQuyetDinh, fileQuyetDinh, nguoiDeXuatId, ghiChu }) => {
+const createRequest = async ({ quyNguonId, quyDichId, soTien, soQuyetDinh, fileQuyetDinh, nguoiDeXuatId, ghiChu, namTaiChinh }) => {
   const [result] = await pool.execute(
     `INSERT INTO phanbongansach (
       quy_nguon_id,
@@ -14,9 +14,10 @@ const createRequest = async ({ quyNguonId, quyDichId, soTien, soQuyetDinh, fileQ
       filequyetdinh,
       nguoi_de_xuat_id,
       trangthai,
-      ghichu
-    ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet', ?)`,
-    [quyNguonId, quyDichId, soTien, soQuyetDinh, fileQuyetDinh || null, nguoiDeXuatId, ghiChu || null]
+      ghichu,
+      namtaichinh
+    ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet', ?, ?)`,
+    [quyNguonId, quyDichId, soTien, soQuyetDinh, fileQuyetDinh || null, nguoiDeXuatId, ghiChu || null, namTaiChinh || new Date().getFullYear()]
   );
   return result;
 };
@@ -41,6 +42,7 @@ const getRequestById = async (id) => {
       pb.ngaydexuat,
       pb.ngayduyet,
       pb.ghichu,
+      pb.namtaichinh,
       qn.tenquy AS ten_quy_nguon,
       qn.sodu AS so_du_quy_nguon,
       qd.tenquy AS ten_quy_dich,
@@ -252,6 +254,7 @@ const listRequests = async ({
   quy_nguon_id = '',
   quy_dich_id = '',
   trang_thai = '',
+  namtaichinh = '',
   page = 1,
   page_size = 15
 }) => {
@@ -261,6 +264,7 @@ const listRequests = async ({
   if (quy_nguon_id) { conds.push(`pb.quy_nguon_id = ?`); params.push(quy_nguon_id); }
   if (quy_dich_id) { conds.push(`pb.quy_dich_id = ?`); params.push(quy_dich_id); }
   if (trang_thai) { conds.push(`pb.trangthai = ?`); params.push(trang_thai); }
+  if (namtaichinh) { conds.push(`pb.namtaichinh = ?`); params.push(namtaichinh); }
 
   const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
   const offset = (page - 1) * page_size;
@@ -285,6 +289,7 @@ const listRequests = async ({
       pb.ngaydexuat,
       pb.ngayduyet,
       pb.ghichu,
+      pb.namtaichinh,
       qn.tenquy AS ten_quy_nguon,
       qd.tenquy AS ten_quy_dich,
       nd_dx.hoten AS nguoi_de_xuat_ten,
@@ -303,11 +308,33 @@ const listRequests = async ({
   return { rows, total: Number(total) || 0 };
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getAllocationStatsByYear
+// MỤC ĐÍCH: Thống kê tổng phân bổ theo năm tài chính và quỹ nguồn
+// ─────────────────────────────────────────────────────────────────────────────
+const getAllocationStatsByYear = async () => {
+  const [rows] = await pool.query(
+    `SELECT 
+      pb.namtaichinh,
+      pb.quy_nguon_id,
+      qn.tenquy AS ten_quy_nguon,
+      SUM(pb.sotien) AS tong_tien,
+      COUNT(*) AS so_luong_phan_bo
+     FROM phanbongansach pb
+     INNER JOIN quy qn ON pb.quy_nguon_id = qn.quy_id
+     WHERE pb.trangthai = 'Da duyet'
+     GROUP BY pb.namtaichinh, pb.quy_nguon_id, qn.tenquy
+     ORDER BY pb.namtaichinh DESC, pb.quy_nguon_id`
+  );
+  return rows;
+};
+
 export default {
   createRequest,
   getRequestById,
   approveRequest,
   rejectRequest,
   rollbackRequest,
-  listRequests
+  listRequests,
+  getAllocationStatsByYear
 };

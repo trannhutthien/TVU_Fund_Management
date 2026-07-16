@@ -23,6 +23,22 @@ const getOrCreateDonViHocId = async (tenKhoa) => {
   return result.insertId;
 };
 
+const toDbAccountType = (type) => {
+  if (type === 'SINH_VIEN') return 'Sinh vien';
+  if (type === 'NHA_TAI_TRO') return 'Nha tai tro';
+  if (type === 'CAN_BO') return 'Can bo';
+  if (type === 'NHA_KHOA_HOC') return 'Nha khoa hoc';
+  return type;
+};
+
+const fromDbAccountType = (dbType) => {
+  if (dbType === 'Sinh vien') return 'SINH_VIEN';
+  if (dbType === 'Nha tai tro') return 'NHA_TAI_TRO';
+  if (dbType === 'Can bo') return 'CAN_BO';
+  if (dbType === 'Nha khoa hoc') return 'NHA_KHOA_HOC';
+  return dbType;
+};
+
 // Kiểm tra email đã tồn tại chưa
 const checkEmailExists = async (email) => {
   const [rows] = await pool.query(
@@ -45,19 +61,21 @@ const createUser = async (userData) => {
     soDienThoai,
     trangThai,
     avatar,
-    diaChi
+    diaChi,
+    tinhTrangCongTac,
+    donViCongTac
   } = userData;
 
   const donvihoc_id = await getOrCreateDonViHocId(khoaPhong);
 
   const dbStatus = trangThai === 'HOAT_DONG' ? 'Hoat dong' : (trangThai === 'KHOA' ? 'Khoa' : (trangThai === 'CHO_DUYET' ? 'Cho duyet' : (trangThai || 'Hoat dong')));
-  const dbLoaiTaiKhoan = loaiTaiKhoan === 'SINH_VIEN' ? 'Sinh vien' : (loaiTaiKhoan === 'NHA_TAI_TRO' ? 'Nha tai tro' : loaiTaiKhoan);
+  const dbLoaiTaiKhoan = toDbAccountType(loaiTaiKhoan);
 
   const [result] = await pool.query(
     `INSERT INTO nguoidung 
-    (hoten, masodinhdanh, email, matkhau, vaitro_id, loaitaikhoan, donvihoc_id, sodienthoai, trangthai, avatar, diachi) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [hoTen, maSoDinhDanh, email, matKhau, roleId, dbLoaiTaiKhoan || null, donvihoc_id, soDienThoai, dbStatus, avatar, diaChi]
+    (hoten, masodinhdanh, email, matkhau, vaitro_id, loaitaikhoan, donvihoc_id, sodienthoai, trangthai, avatar, diachi, tinhtrangcongtac, donvicongtac) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [hoTen, maSoDinhDanh, email, matKhau, roleId, dbLoaiTaiKhoan || null, donvihoc_id, soDienThoai, dbStatus, avatar, diaChi, tinhTrangCongTac || null, donViCongTac || null]
   );
   return result.insertId;
 };
@@ -73,6 +91,8 @@ const getUserForLogin = async (email) => {
       nd.matkhau, 
       nd.vaitro_id, 
       nd.loaitaikhoan, 
+      nd.tinhtrangcongtac,
+      nd.donvicongtac,
       nd.trangthai,
       nd.ngaytao,
       vt.tenvaitro,
@@ -85,7 +105,7 @@ const getUserForLogin = async (email) => {
   );
   if (rows[0]) {
     rows[0].trangthai = rows[0].trangthai === 'Hoat dong' ? 'HOAT_DONG' : (rows[0].trangthai === 'Khoa' ? 'KHOA' : (rows[0].trangthai === 'Cho duyet' ? 'CHO_DUYET' : rows[0].trangthai));
-    rows[0].loaitaikhoan = rows[0].loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (rows[0].loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : rows[0].loaitaikhoan);
+    rows[0].loaitaikhoan = fromDbAccountType(rows[0].loaitaikhoan);
   }
   return rows[0] || null;
 };
@@ -106,6 +126,8 @@ const getUserForProfile = async (userId) => {
       nd.vaitro_id, 
       nd.loaitaikhoan, 
       dv.tenkhoa AS khoaphong, 
+      nd.tinhtrangcongtac,
+      nd.donvicongtac,
       nd.trangthai,
       nd.ngaytao,
       vt.tenvaitro,
@@ -119,7 +141,7 @@ const getUserForProfile = async (userId) => {
   );
   if (rows[0]) {
     rows[0].trangthai = rows[0].trangthai === 'Hoat dong' ? 'HOAT_DONG' : (rows[0].trangthai === 'Khoa' ? 'KHOA' : (rows[0].trangthai === 'Cho duyet' ? 'CHO_DUYET' : rows[0].trangthai));
-    rows[0].loaitaikhoan = rows[0].loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (rows[0].loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : rows[0].loaitaikhoan);
+    rows[0].loaitaikhoan = fromDbAccountType(rows[0].loaitaikhoan);
   }
   return rows[0] || null;
 };
@@ -166,7 +188,7 @@ const getUserByEmail = async (email) => {
   );
   if (rows[0]) {
     rows[0].trangthai = rows[0].trangthai === 'Hoat dong' ? 'HOAT_DONG' : (rows[0].trangthai === 'Khoa' ? 'KHOA' : (rows[0].trangthai === 'Cho duyet' ? 'CHO_DUYET' : rows[0].trangthai));
-    rows[0].loaitaikhoan = rows[0].loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (rows[0].loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : rows[0].loaitaikhoan);
+    rows[0].loaitaikhoan = fromDbAccountType(rows[0].loaitaikhoan);
   }
   return rows[0] || null;
 };

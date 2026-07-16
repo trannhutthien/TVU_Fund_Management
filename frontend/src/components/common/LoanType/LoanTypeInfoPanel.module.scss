@@ -1,0 +1,176 @@
+// ============================================
+// LOAN TYPE INFO PANEL — Panel mô tả động
+// Hiển thị bên dưới radio chọn loại hình hỗ trợ
+// ============================================
+
+.panel {
+  margin-top: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid var(--info-color, #3b6ff5);
+  border-radius: 8px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// HEADER
+// ============================================
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.iconBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.headerText {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.legalRef {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+// ============================================
+// SHORT DESC
+// ============================================
+.shortDesc {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+// ============================================
+// BODY
+// ============================================
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.listItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.checkIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.examples {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+// ============================================
+// NOTE
+// ============================================
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.noteIcon {
+  font-size: 15px;
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@media (max-width: 640px) {
+  .panel {
+    padding: 12px;
+  }
+
+  .iconBadge {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+
+  .label {
+    font-size: 13px;
+  }
+
+  .listItem {
+    font-size: 12px;
+  }
+}

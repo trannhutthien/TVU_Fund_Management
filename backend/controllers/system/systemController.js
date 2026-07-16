@@ -31,6 +31,7 @@ const DEFAULT_SETTINGS = {
   so_file_toi_da: 5,
   dinh_dang_cho_phep: ["PDF", "JPG", "PNG", "DOC"],
   maintenanceMode: false,
+  laisuatnganhangthamchieu: null,
 
   // ─── HERO BANNER ─────────────────────────────────────────────
   hero_badge: "Hỗ trợ sinh viên TVU",
@@ -649,12 +650,29 @@ const readPermissionsFile = async () => {
 };
 
 // ─── GET /api/system/permissions ─────────────────────────────────────────────
+// Endpoint công khai — trả về ma trận quyền hiển thị cho frontend nav
+// Chỉ trả về visibility flags + label/path (không曝pose cấu trúc nội bộ)
 export const getPagePermissions = async (req, res) => {
   try {
-    const permissions = await readPermissionsFile();
+    const raw = await readPermissionsFile();
+
+    // Transform: giữ label, path, visibility flags — bỏ mọi field khác nếu có
+    const sanitized = {};
+    for (const [key, value] of Object.entries(raw)) {
+      sanitized[key] = {
+        label: value.label || '',
+        path: value.path || '',
+        admin: !!value.admin,
+        canbo: !!value.canbo,
+        ketoan: !!value.ketoan,
+        sinhvien: !!value.sinhvien,
+        nhataitro: !!value.nhataitro,
+      };
+    }
+
     return res.status(200).json({
       success: true,
-      permissions
+      permissions: sanitized
     });
   } catch (error) {
     console.error("Lỗi getPagePermissions:", error);

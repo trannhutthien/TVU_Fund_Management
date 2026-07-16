@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { formatCurrency } from '@utils/formatters';
 import styles from './TKCashFlowSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -70,7 +71,7 @@ const TKCashFlowSection = ({
             />
             <span className={styles.tooltipName}>{entry.name}:</span>
             <span className={styles.tooltipValue}>
-              {entry.value.toLocaleString('vi-VN')} đ
+              {formatCurrency(entry.value)}
             </span>
           </div>
         ))}

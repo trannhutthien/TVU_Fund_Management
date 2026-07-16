@@ -24,6 +24,7 @@ export const createUser = async (req, res) => {
       avatar,
       tenNhaTaiTro,
       loaiNhaTaiTro,
+      xacNhanDocLap,
     } = req.body;
 
     // 1. Validate dữ liệu đầu vào
@@ -43,10 +44,18 @@ export const createUser = async (req, res) => {
     }
 
     // 3. Validate giá trị loaiTaiKhoan nếu có
-    if (loaiTaiKhoan && !['SINH_VIEN', 'NHA_TAI_TRO'].includes(loaiTaiKhoan)) {
+    if (loaiTaiKhoan && !['SINH_VIEN', 'NHA_TAI_TRO', 'CAN_BO', 'NHA_KHOA_HOC'].includes(loaiTaiKhoan)) {
       return res.status(400).json({
         success: false,
-        message: "Loại tài khoản chỉ được là SINH_VIEN hoặc NHA_TAI_TRO",
+        message: "Loại tài khoản không hợp lệ",
+      });
+    }
+
+    // 3.5. Validate xacNhanDocLap cho role 5 (Ban Kiem Soat)
+    if (Number(roleId) === 5 && !xacNhanDocLap) {
+      return res.status(400).json({
+        success: false,
+        message: "Cần xác nhận không có quan hệ thân nhân theo Điều 8 Điều lệ (xacNhanDocLap = true)",
       });
     }
 
@@ -101,7 +110,8 @@ export const createUser = async (req, res) => {
       soDienThoai: soDienThoai || null,
       diaChi: diaChi || null,
       loaiTaiKhoan: (Number(roleId) === 4 && loaiTaiKhoan) ? loaiTaiKhoan : null,
-      avatar: avatar || null
+      avatar: avatar || null,
+      xacNhanDocLap: (Number(roleId) === 5 && xacNhanDocLap) ? 1 : null
     };
 
     const userId = await UserModel.createUser(userData);

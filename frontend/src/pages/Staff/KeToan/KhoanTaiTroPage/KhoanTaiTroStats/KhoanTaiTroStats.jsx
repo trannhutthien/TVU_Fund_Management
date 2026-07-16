@@ -5,15 +5,8 @@ import {
   HiOutlineArrowPathRoundedSquare,
 } from 'react-icons/hi2';
 import { StatCard } from '@components/common/Card';
+import { formatCurrency } from '@utils/formatters';
 import styles from './KhoanTaiTroStats.module.scss';
-
-const formatCurrency = (amount) => {
-  if (!amount && amount !== 0) return '0đ';
-  const n = Number(amount);
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} tỷ`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} triệu`;
-  return n.toLocaleString('vi-VN') + 'đ';
-};
 
 const KhoanTaiTroStats = ({ stats, loading, isKeToan, isAdmin }) => {
   const cards = [

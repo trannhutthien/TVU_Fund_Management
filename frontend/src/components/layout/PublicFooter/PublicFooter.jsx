@@ -6,7 +6,8 @@ import { useSystemSettings } from '@hooks/useSystemSettings';
 import styles from './PublicFooter.module.scss';
 
 const PublicFooter = () => {
-  const { settings } = useSystemSettings();
+  const { settings: rawSettings } = useSystemSettings();
+  const settings = rawSettings || {};
 
   const navigationLinks = [
     { label: 'Điều lệ Quỹ', path: '/regulations' },

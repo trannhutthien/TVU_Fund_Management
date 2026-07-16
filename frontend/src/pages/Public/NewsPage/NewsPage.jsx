@@ -74,6 +74,17 @@ const NewsPage = () => {
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscape = (e) => {
@@ -482,6 +493,7 @@ const NewsPage = () => {
             <LoginForm 
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -494,6 +506,7 @@ const NewsPage = () => {
             <RegisterForm 
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

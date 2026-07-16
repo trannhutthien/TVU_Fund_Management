@@ -173,6 +173,127 @@
   }
 }
 
+// ── Nghiem thu section ────────────────────
+.nghiemThuSection {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.nghiemThuHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.nghiemThuIcon {
+  color: var(--color-primary, #3b6ff5);
+}
+
+.nghiemThuTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  flex: 1;
+}
+
+.nghiemThuBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.nghiemThuBadgeFailed {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.nghiemThuBtn {
+  width: 100%;
+  margin-top: 12px;
+}
+
+// ── Tài trợ thu hồi section (Admin duyệt cấp 2) ──────
+.thuHoiSection {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.thuHoiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.thuHoiTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.thuHoiRequired {
+  font-size: 11px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.thuHoiField {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.thuHoiLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.thuHoiInput {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:focus {
+    border-color: var(--color-primary, #3b6ff5);
+  }
+}
+
+.thuHoiInputError {
+  border-color: #ef4444;
+}
+
+.thuHoiError {
+  display: block;
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 3px;
+}
+
 // ── Responsive ──────────────────────────────
 @media (max-width: 1024px) {
   .layout {

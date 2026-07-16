@@ -5,9 +5,8 @@ import {
   HiCheckCircle,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import { formatCurrency } from '@utils/formatters';
 import styles from './PendingDonationSection.module.scss';
-
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 
 const PendingDonationSection = ({ data, isLoading, onConfirm }) => {
   const count = data.length;

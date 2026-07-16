@@ -12,6 +12,7 @@ import {
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import { getDonationById } from '@services/donationService';
+import { formatCurrency, getInitial } from '@utils/formatters';
 import styles from './KhoanTaiTroDetailDrawer.module.scss';
 
 const LOAI_LABEL = {
@@ -35,11 +36,6 @@ const KET_QUA_LABEL = {
   'Yeu cau bo sung': { text: 'Yêu cầu bổ sung', icon: HiOutlineClock, color: '#3b82f6' },
 };
 
-const formatCurrency = (amount) => {
-  const n = Number(amount) || 0;
-  return n.toLocaleString('vi-VN') + 'đ';
-};
-
 const formatDateTime = (value) => {
   if (!value) return '—';
   const d = new Date(value);
@@ -49,8 +45,6 @@ const formatDateTime = (value) => {
     hour: '2-digit', minute: '2-digit',
   });
 };
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const apiOrigin = () => {
   const base = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5001/api';

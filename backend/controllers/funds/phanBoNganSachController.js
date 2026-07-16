@@ -8,7 +8,7 @@ import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 // ─────────────────────────────────────────────────────────────────────────────
 export const requestAllocation = async (req, res) => {
   try {
-    const { quyNguonId, quyDichId, soTien, soQuyetDinh, fileQuyetDinh, ghiChu } = req.body;
+    const { quyNguonId, quyDichId, soTien, soQuyetDinh, fileQuyetDinh, ghiChu, namTaiChinh } = req.body;
     const nguoiDeXuatId = req.user.id;
 
     // 1. Validate các thông tin bắt buộc
@@ -76,7 +76,8 @@ export const requestAllocation = async (req, res) => {
       soQuyetDinh,
       fileQuyetDinh,
       nguoiDeXuatId,
-      ghiChu
+      ghiChu,
+      namTaiChinh: namTaiChinh || new Date().getFullYear()
     });
 
     // Ghi nhật ký
@@ -299,12 +300,13 @@ export const rollbackAllocation = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 export const getAllocationRequests = async (req, res) => {
   try {
-    const { quy_nguon_id, quy_dich_id, trang_thai, page = 1, page_size = 15 } = req.query;
+    const { quy_nguon_id, quy_dich_id, trang_thai, namtaichinh, page = 1, page_size = 15 } = req.query;
 
     const result = await PhanBoNganSachModel.listRequests({
       quy_nguon_id,
       quy_dich_id,
       trang_thai,
+      namtaichinh,
       page: parseInt(page),
       page_size: parseInt(page_size)
     });
@@ -329,11 +331,39 @@ export const getAllocationRequests = async (req, res) => {
         tenNguoiDuyet: item.nguoi_duyet_ten,
         ngayDeXuat: item.ngaydexuat,
         ngayDuyet: item.ngayduyet,
-        ghiChu: item.ghichu
+        ghiChu: item.ghichu,
+        namTaiChinh: item.namtaichinh
       }))
     });
   } catch (error) {
     console.error("Lỗi getAllocationRequests:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/funds/allocate/stats
+// Thống kê tổng phân bổ theo năm tài chính và quỹ nguồn
+// ─────────────────────────────────────────────────────────────────────────────
+export const getAllocationStats = async (req, res) => {
+  try {
+    const stats = await PhanBoNganSachModel.getAllocationStatsByYear();
+
+    return res.status(200).json({
+      success: true,
+      data: stats.map(row => ({
+        namTaiChinh: row.namtaichinh,
+        quyNguonId: row.quy_nguon_id,
+        tenQuyNguon: row.ten_quy_nguon,
+        tongTien: row.tong_tien,
+        soLuongPhanBo: row.so_luong_phan_bo
+      }))
+    });
+  } catch (error) {
+    console.error("Lỗi getAllocationStats:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",

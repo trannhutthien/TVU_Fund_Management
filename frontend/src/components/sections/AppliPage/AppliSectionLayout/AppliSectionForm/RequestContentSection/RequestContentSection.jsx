@@ -4,7 +4,14 @@ import {
   HiOutlineDocumentText,
   HiOutlineCurrencyDollar,
   HiOutlineExclamationCircle,
+  HiOutlineCheckCircle,
+  HiOutlineInformationCircle,
+  HiOutlineArrowsRightLeft,
 } from 'react-icons/hi2';
+import CurrencyInput from '@components/common/CurrencyInput';
+import { LOAI_HO_TRO, LOAI_HO_TRO_OPTIONS } from '@constants/loaiHoTro';
+import LoanTypeInfoPanel from '@components/common/LoanType/LoanTypeInfoPanel';
+import LoanTypeCompareModal from '@components/common/LoanType/LoanTypeCompareModal';
 import AIAssistantPanel from '../../AppliSidebar/AIAssistantPanel/AIAssistantPanel';
 import styles from './RequestContentSection.module.scss';
 
@@ -23,15 +30,19 @@ const getQuality = (length) => {
 
 const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextButton }) => {
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   const [touched, setTouched] = useState({ 
     tieu_de: false, 
     mo_ta: false,
-    so_tien_yeu_cau: false 
+    so_tien_yeu_cau: false,
+    tong_kinh_phi_du_an: false,
   });
 
   const tieu_de = values?.tieu_de || '';
   const mo_ta = values?.mo_ta || '';
   const so_tien_yeu_cau = values?.so_tien_yeu_cau || '';
+  const loai_hotro = values?.loai_hotro || LOAI_HO_TRO.TAI_TRO_KHONG_HOAN_LAI;
+  const tong_kinh_phi_du_an = values?.tong_kinh_phi_du_an || '';
 
   const tieu_deError =
     touched.tieu_de && tieu_de.length > 0 && tieu_de.length < 10;
@@ -40,15 +51,30 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
     touched.mo_ta && mo_ta.length > 0 && mo_ta.length < 50;
   const mo_taRequired = touched.mo_ta && mo_ta.length === 0;
 
-  // Validation số tiền
+  // Validation số tiền (dựa trên trần quỹ `sotienhotrotoida`)
   const soTienNum = parseFloat(so_tien_yeu_cau) || 0;
   const soTienMin = selectedFund?.soTienToiThieu || 0;
-  const soTienMax = selectedFund?.soTienToiDa || 0;
-  
+  const soTienMax = selectedFund?.soTienToiDa || selectedFund?.soTienHoTroToiDa || 0;
+  const hasMaxLimit = soTienMax > 0;
+
   const soTienRequired = touched.so_tien_yeu_cau && !so_tien_yeu_cau;
-  const soTienTooLow = touched.so_tien_yeu_cau && soTienNum > 0 && soTienNum < soTienMin;
-  const soTienTooHigh = touched.so_tien_yeu_cau && soTienNum > soTienMax;
+  const soTienTooLow = touched.so_tien_yeu_cau && soTienNum > 0 && soTienMin > 0 && soTienNum < soTienMin;
+  const soTienTooHigh = touched.so_tien_yeu_cau && hasMaxLimit && soTienNum > soTienMax;
   const soTienError = soTienRequired || soTienTooLow || soTienTooHigh;
+
+  // Validation tổng kinh phí dự án
+  const tongKinhPhiNum = parseFloat(tong_kinh_phi_du_an) || 0;
+  const tongKinhPhiRequired = touched.tong_kinh_phi_du_an && !tong_kinh_phi_du_an;
+  const tongKinhPhiTooLow = touched.tong_kinh_phi_du_an && tongKinhPhiNum > 0 && tongKinhPhiNum < soTienNum;
+  const tongKinhPhiError = tongKinhPhiRequired || tongKinhPhiTooLow;
+  const showTongKinhPhi = loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI;
+  const showChoVayAlert = loai_hotro === LOAI_HO_TRO.CHO_VAY;
+
+  // Tỷ lệ phần trăm
+  const percentRatio = (soTienNum > 0 && tongKinhPhiNum > 0)
+    ? ((soTienNum / tongKinhPhiNum) * 100).toFixed(1)
+    : null;
+  const isOver30 = percentRatio && parseFloat(percentRatio) > 30;
 
   const handleChange = useCallback(
     (field, value) => {
@@ -60,6 +86,13 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
     [onChange]
   );
 
+  const handleLoaiHoTroChange = useCallback((value) => {
+    handleChange('loai_hotro', value);
+    if (value !== LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) {
+      handleChange('tong_kinh_phi_du_an', null);
+    }
+  }, [handleChange]);
+
   const handleApplyAISuggestion = useCallback((newText) => {
     handleChange('mo_ta', newText);
   }, [handleChange]);
@@ -68,11 +101,10 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  // Format số tiền hiển thị
-  const formatCurrency = (value) => {
+  // Format số tiền hiển thị — dùng shared utility
+  const formatCurrencyPlain = (value) => {
     if (value === null || value === undefined || value === '') return '';
-    // Nếu value là string, loại bỏ dấu phẩy trước khi parse
-    const cleanValue = typeof value === 'string' ? value.replace(/,/g, '') : value;
+    const cleanValue = typeof value === 'string' ? value.replace(/[^0-9]/g, '') : value;
     const num = parseFloat(cleanValue);
     if (isNaN(num)) return '';
     return num.toLocaleString('vi-VN');
@@ -145,14 +177,11 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
         
         <div className={styles.amountInputWrapper}>
           <HiOutlineCurrencyDollar className={styles.amountIcon} />
-          <input
-            type="text"
-            inputMode="numeric"
+          <CurrencyInput
+            value={so_tien_yeu_cau}
+            onChange={(raw) => handleChange('so_tien_yeu_cau', raw)}
             className={`${styles.amountInput} ${soTienError ? styles.inputError : ''}`}
             placeholder="Nhập số tiền (VD: 1000000)"
-            value={so_tien_yeu_cau}
-            onChange={handleAmountChange}
-            onBlur={() => handleBlur('so_tien_yeu_cau')}
           />
           <span className={styles.amountUnit}>VNĐ</span>
         </div>
@@ -160,16 +189,18 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
         {/* Preview số tiền đã format */}
         {so_tien_yeu_cau && !soTienError && (
           <div className={styles.amountPreview}>
-            {formatCurrency(so_tien_yeu_cau)}đ
+            {formatCurrencyPlain(so_tien_yeu_cau)}đ
           </div>
         )}
 
         {/* Hiển thị range cho phép */}
-        {selectedFund && (soTienMin > 0 || soTienMax > 0) && (
+        {selectedFund && (soTienMin > 0 || hasMaxLimit) && (
           <div className={styles.amountRange}>
             <HiOutlineExclamationCircle className={styles.rangeIcon} />
             <span className={styles.rangeText}>
-              Mức hỗ trợ: {formatCurrency(soTienMin)} - {formatCurrency(soTienMax)} VNĐ
+              {hasMaxLimit
+                ? `Mức hỗ trợ tối đa: ${formatCurrencyPlain(soTienMax)} VNĐ`
+                : `Mức hỗ trợ tối thiểu: ${formatCurrencyPlain(soTienMin)} VNĐ`}
             </span>
           </div>
         )}
@@ -180,12 +211,12 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
         )}
         {soTienTooLow && (
           <div className={styles.errorText}>
-            Số tiền tối thiểu là {formatCurrency(soTienMin)} VNĐ
+            Số tiền tối thiểu là {formatCurrencyPlain(soTienMin)} VNĐ
           </div>
         )}
         {soTienTooHigh && (
           <div className={styles.errorText}>
-            Số tiền tối đa là {formatCurrency(soTienMax)} VNĐ
+            Số tiền tối đa là {formatCurrencyPlain(soTienMax)} VNĐ
           </div>
         )}
         {!soTienError && so_tien_yeu_cau && (
@@ -194,6 +225,138 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
           </div>
         )}
       </div>
+
+      {/* ── LOẠI HÌNH HỖ TRỢ ─────────────────────────────────────────────── */}
+      <div className={styles.fieldGroup}>
+        <div className={styles.fieldLabelRow}>
+          <div className={styles.fieldLabelLeft}>
+            <span className={styles.fieldLabel}>Loại hình hỗ trợ</span>
+            <span className={styles.requiredBadge}>*Bắt buộc</span>
+          </div>
+        </div>
+
+        <div className={styles.loaiHoTroGroup}>
+          {LOAI_HO_TRO_OPTIONS.map((option) => (
+            <div
+              key={option.value}
+              className={`${styles.loaiHoTroCard} ${loai_hotro === option.value ? styles.loaiHoTroSelected : ''}`}
+              onClick={() => handleLoaiHoTroChange(option.value)}
+              role="radio"
+              aria-checked={loai_hotro === option.value}
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') handleLoaiHoTroChange(option.value); }}
+            >
+              <div className={styles.loaiHoTroRadio}>
+                <div className={`${styles.radioDot} ${loai_hotro === option.value ? styles.radioDotActive : ''}`} />
+              </div>
+              <div className={styles.loaiHoTroContent}>
+                <div className={styles.loaiHoTroLabel}>{option.label}</div>
+                <div className={styles.loaiHoTroDesc}>{option.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Panel mô tả động theo loại hình được chọn */}
+        <LoanTypeInfoPanel selectedType={loai_hotro} />
+
+        {/* Link so sánh 3 loại hình */}
+        <button
+          type="button"
+          className={styles.compareLink}
+          onClick={() => setShowCompareModal(true)}
+        >
+          <HiOutlineArrowsRightLeft className={styles.compareLinkIcon} />
+          So sánh 3 loại hình hỗ trợ
+        </button>
+
+        <LoanTypeCompareModal
+          open={showCompareModal}
+          onClose={() => setShowCompareModal(false)}
+        />
+
+        {/* ── CHECKBOX ĐỀ TÀI/DỰ ÁN ─────────────────────────────────────── */}
+        <label className={styles.checkboxRow}>
+          <input
+            type="checkbox"
+            checked={!!values?.la_de_tai}
+            onChange={(e) => handleChange('la_de_tai', e.target.checked)}
+            className={styles.checkboxInput}
+          />
+          <span className={styles.checkboxLabel}>
+            Đơn này là đề tài/dự án nghiên cứu
+          </span>
+          <span className={styles.checkboxHint}>
+            (Cần nghiệm thu sau giải ngân theo Điều 15 Điều lệ)
+          </span>
+        </label>
+      </div>
+
+      {/* ── TỔNG KINH PHÍ DỰ ÁN (chỉ hiện khi "Có thu hồi") ────────────── */}
+      {showTongKinhPhi && (
+        <div className={`${styles.fieldGroup} ${styles.tongKinhPhiWrapper}`}>
+          <div className={styles.fieldLabelRow}>
+            <div className={styles.fieldLabelLeft}>
+              <span className={styles.fieldLabel}>
+                Tổng kinh phí thực hiện dự án/đề tài
+              </span>
+              <span className={styles.requiredBadge}>*Bắt buộc</span>
+            </div>
+            <span
+              className={styles.tooltipIcon}
+              title="Căn cứ tính mức tài trợ tối đa Quỹ có thể hỗ trợ — không quá 30% con số này (Điều 15.1)"
+            >
+              <HiOutlineInformationCircle />
+            </span>
+          </div>
+
+          <div className={styles.amountInputWrapper}>
+            <HiOutlineCurrencyDollar className={styles.amountIcon} />
+            <CurrencyInput
+              value={tong_kinh_phi_du_an}
+              onChange={(raw) => handleChange('tong_kinh_phi_du_an', raw)}
+              className={`${styles.amountInput} ${tongKinhPhiError ? styles.inputError : ''}`}
+              placeholder="Nhập tổng kinh phí dự kiến (bao gồm cả nguồn ngoài Quỹ)"
+            />
+            <span className={styles.amountUnit}>VNĐ</span>
+          </div>
+
+          {tong_kinh_phi_du_an && !tongKinhPhiError && (
+            <div className={styles.amountPreview}>
+              {formatCurrencyPlain(tong_kinh_phi_du_an)}đ
+            </div>
+          )}
+
+          {tongKinhPhiRequired && (
+            <div className={styles.errorText}>Vui lòng nhập tổng kinh phí dự án</div>
+          )}
+          {tongKinhPhiTooLow && (
+            <div className={styles.errorText}>
+              Tổng kinh phí dự án phải lớn hơn hoặc bằng số tiền đề nghị ({formatCurrencyPlain(soTienNum)} VNĐ)
+            </div>
+          )}
+
+          {/* Gợi ý tỷ lệ phần trăm */}
+          {percentRatio && !tongKinhPhiError && (
+            <div className={`${styles.percentHint} ${isOver30 ? styles.percentHintWarning : ''}`}>
+              Số tiền đề nghị chiếm <strong>{percentRatio}%</strong> tổng kinh phí dự án
+              {isOver30 && (
+                <span className={styles.percentWarning}> — Vượt quá 30%, Quỹ sẽ xem xét mức hỗ trợ tối đa</span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ALERT CHO "VAY VỐN" ──────────────────────────────────────────── */}
+      {showChoVayAlert && (
+        <div className={styles.fieldGroup}>
+          <div className={styles.choVayAlert}>
+            <HiOutlineInformationCircle className={styles.choVayAlertIcon} />
+            <span>Sau khi hồ sơ được duyệt, Quỹ sẽ liên hệ để ký hợp đồng vay vốn với lãi suất và kỳ hạn cụ thể theo quy định.</span>
+          </div>
+        </div>
+      )}
 
       <div className={styles.fieldGroup}>
         <div className={styles.fieldLabelRow}>
@@ -274,6 +437,8 @@ RequestContentSection.propTypes = {
     tieu_de: PropTypes.string,
     mo_ta: PropTypes.string,
     so_tien_yeu_cau: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    loai_hotro: PropTypes.string,
+    tong_kinh_phi_du_an: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }),
   selectedFund: PropTypes.object,
   onOpenAI: PropTypes.func,

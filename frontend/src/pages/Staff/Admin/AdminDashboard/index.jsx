@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { HiSignal, HiExclamationCircle } from 'react-icons/hi2';
 import useAuthStore from '@stores/authStore';
 import api from '@services/api';
+import YearFilter from '@components/common/YearFilter';
 import AdminAlertSection from './sections/AdminAlertSection';
 import AdminFinanceSection from './sections/AdminFinanceSection';
 import AdminUserSection from './sections/AdminUserSection';
@@ -116,12 +117,17 @@ const AdminDashboard = () => {
   const [staffData, setStaffData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [selectedYear, setSelectedYear] = useState(null); // null = tất cả
 
   // ─── FETCH ALL DATA ────────────────────────────────────────────────────────
   useEffect(() => {
+    let mounted = true;
+
     const fetchAllData = async () => {
       try {
         setIsLoading(true);
+
+        const yearParams = selectedYear ? { nam: selectedYear } : {};
 
         // Gọi song song các API có sẵn
         const [
@@ -129,22 +135,24 @@ const AdminDashboard = () => {
           userStats,
           donationStats,
           fundHealth,
-          applicationStats, // Thêm API mới
+          applicationStats,
           cashflowData,
           staffUsers,
           userGrowthRes,
-          systemLogs, // Fetch real system logs
+          systemLogs,
         ] = await Promise.all([
-          api.get('/statistics/ketoan/summary'),
+          api.get('/statistics/ketoan/summary', { params: yearParams }),
           api.get('/users/stats'),
           api.get('/donations/stats'),
           api.get('/statistics/ketoan/fund-health'),
-          api.get('/statistics/applications/stats'), // API mới
-          api.get('/statistics/ketoan/cashflow', { params: { months: 6 } }),
-          api.get('/users', { params: { role_id: '1,2,3', limit: 10 } }), // Lấy staff
+          api.get('/statistics/applications/stats', { params: yearParams }),
+          api.get('/statistics/ketoan/cashflow', { params: { months: 6, ...yearParams } }),
+          api.get('/users', { params: { role_id: '1,2,3', limit: 10 } }),
           api.get('/users/growth', { params: { months: 6 } }).catch(() => ({ data: { data: [] } })),
           api.get('/nhat-ky', { params: { page: 1, page_size: 10 } }).catch(() => ({ data: { logs: [] } })),
         ]);
+
+        if (!mounted) return;
 
         // Map data cho alertData
         const keToanData = keToanSummary.data?.data || {};
@@ -235,12 +243,14 @@ const AdminDashboard = () => {
       } catch (error) {
         console.error('Lỗi fetch dashboard data:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
 
     fetchAllData();
-  }, [selectedPeriod]);
+
+    return () => { mounted = false; };
+  }, [selectedPeriod, selectedYear]);
 
   // ─── GET CURRENT DATE ──────────────────────────────────────────────────────
   const getCurrentDate = () => {
@@ -278,6 +288,7 @@ const AdminDashboard = () => {
           <p className={styles.date}>{getCurrentDate()}</p>
         </div>
         <div className={styles.headerRight}>
+          <YearFilter value={selectedYear} onChange={setSelectedYear} />
           <div
             className={`${styles.systemBadge} ${
               hasAlerts ? styles.systemBadgeWarning : styles.systemBadgeSuccess

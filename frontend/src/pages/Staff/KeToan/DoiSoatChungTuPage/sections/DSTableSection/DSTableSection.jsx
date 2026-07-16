@@ -9,6 +9,7 @@ import {
   HiClipboardDocumentCheck,
   HiShieldCheck,
 } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import styles from './DSTableSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -103,14 +104,14 @@ const DSTableSection = ({
     if (chenhLech > 0) {
       return (
         <span className={`${styles.badge} ${styles.badgeWarning}`}>
-          +{chenhLech.toLocaleString('vi-VN')} đ
+          +{formatCurrency(chenhLech)}
         </span>
       );
     }
 
     return (
       <span className={`${styles.badge} ${styles.badgeDanger}`}>
-        {chenhLech.toLocaleString('vi-VN')} đ
+        {formatCurrency(chenhLech)}
       </span>
     );
   };
@@ -229,7 +230,7 @@ const DSTableSection = ({
                     <>
                       <td>{item.ten_quy}</td>
                       <td className={styles.cellSoTien}>
-                        {item.so_tien.toLocaleString('vi-VN')} đ
+                        {formatCurrency(item.so_tien)}
                       </td>
                       <td>
                         {hasMinChung ? (
@@ -286,11 +287,11 @@ const DSTableSection = ({
                     <>
                       <td>{item.ten_quy}</td>
                       <td className={styles.cellSoTien}>
-                        {item.so_tien.toLocaleString('vi-VN')} đ
+                        {formatCurrency(item.so_tien)}
                       </td>
                       <td className={styles.cellSoTien}>
                         {item.so_tien_thuc_te
-                          ? `${item.so_tien_thuc_te.toLocaleString('vi-VN')} đ`
+                          ? formatCurrency(item.so_tien_thuc_te)
                           : '—'}
                       </td>
                       <td>{renderChenhLechBadge(chenhLech)}</td>
@@ -311,7 +312,7 @@ const DSTableSection = ({
                   {activeTab === 'bat_thuong' && (
                     <>
                       <td className={styles.cellSoTien}>
-                        {item.so_tien.toLocaleString('vi-VN')} đ
+                        {formatCurrency(item.so_tien)}
                       </td>
                       <td>
                         <div className={styles.cellLyDo}>

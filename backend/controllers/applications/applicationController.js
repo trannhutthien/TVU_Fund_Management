@@ -1,6 +1,9 @@
 import ApplicationModel from "../../models/applications/ApplicationModel.js";
 import FundModel from "../../models/funds/FundModel.js";
 import PheDuyetModel from "../../models/applications/PheDuyetModel.js";
+import DieuKhoanThuHoiModel from "../../models/applications/DieuKhoanThuHoiModel.js";
+import HopDongVayVonModel from "../../models/applications/HopDongVayVonModel.js";
+import LaiSuatHelper from "../../models/applications/LaiSuatHelper.js";
 import TransactionModel from "../../models/transactions/TransactionModel.js";
 import pool from "../../config/db.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
@@ -30,7 +33,12 @@ export const createApplication = async (req, res) => {
       tieuDe,
       moTa,
       soTienYeuCau,
-      fileDinhKem
+      fileDinhKem,
+      loaiHoTro,
+      tongKinhPhiDuAn,
+      danhNghia,
+      tenDaiDien,
+      laDeTai
     } = req.body;
 
     // Lấy user_id từ token (đã được set bởi protect middleware)
@@ -44,6 +52,40 @@ export const createApplication = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Vui lòng nhập đầy đủ thông tin: quỹ, tiêu đề, mô tả, số tiền yêu cầu, file đính kèm",
+      });
+    }
+
+    // Validate loaiHoTro
+    const validLoaiHoTro = ['Tai tro khong hoan lai', 'Tai tro co thu hoi', 'Cho vay'];
+    if (loaiHoTro && !validLoaiHoTro.includes(loaiHoTro)) {
+      return res.status(400).json({
+        success: false,
+        message: "Loại hình hỗ trợ không hợp lệ. Chỉ chấp nhận: 'Tài trợ không hoàn lại', 'Tài trợ thu hồi' hoặc 'Cho vay'",
+      });
+    }
+
+    // Validate tongkinhphidudan khi loai la 'Tai tro co thu hoi'
+    if (loaiHoTro === 'Tai tro co thu hoi') {
+      if (!tongKinhPhiDuAn || isNaN(tongKinhPhiDuAn) || parseFloat(tongKinhPhiDuAn) <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Đơn tài trợ thu hồi phải có Tổng kinh phí dự án > 0",
+          error_code: "THIEU_TONG_KINH_PHI"
+        });
+      }
+    }
+
+    // Validate danhNghia
+    if (danhNghia && !['Ca nhan', 'Tap the', 'Don vi'].includes(danhNghia)) {
+      return res.status(400).json({
+        success: false,
+        message: "Đại diện không hợp lệ. Chỉ chấp nhận: 'Ca nhan', 'Tap the', 'Don vi'",
+      });
+    }
+    if ((danhNghia === 'Tap the' || danhNghia === 'Don vi') && !tenDaiDien) {
+      return res.status(400).json({
+        success: false,
+        message: "Đơn tập thể/đơn vị phải có tên đại diện",
       });
     }
 
@@ -94,18 +136,11 @@ export const createApplication = async (req, res) => {
       });
     }
 
-    // Validate số tiền (phải > 0 và <= 50 triệu)
+    // Validate số tiền (phải > 0)
     if (isNaN(soTienYeuCau) || soTienYeuCau <= 0) {
       return res.status(400).json({
         success: false,
         message: "Số tiền yêu cầu phải lớn hơn 0",
-      });
-    }
-
-    if (soTienYeuCau > 50000000) {
-      return res.status(400).json({
-        success: false,
-        message: "Số tiền yêu cầu không được vượt quá 50 triệu đồng",
       });
     }
 
@@ -127,6 +162,14 @@ export const createApplication = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Quỹ hiện không nhận đơn xin hỗ trợ",
+      });
+    }
+
+    // Kiểm tra số tiền không vượt quá trần của quỹ (nếu có cấu hình)
+    if (fund.sotienhotrotoida && soTienYeuCau > parseFloat(fund.sotienhotrotoida)) {
+      return res.status(400).json({
+        success: false,
+        message: `Số tiền yêu cầu (${soTienYeuCau.toLocaleString('vi-VN')}đ) vượt quá mức hỗ trợ tối đa của quỹ (${parseFloat(fund.sotienhotrotoida).toLocaleString('vi-VN')}đ)`,
       });
     }
 
@@ -161,7 +204,12 @@ export const createApplication = async (req, res) => {
       dotId,
       lyDo: moTa.trim(),
       soTienDeNghi: parseFloat(soTienYeuCau),
-      taiLieuDinhKem: fileDinhKem.trim() // Bắt buộc, đã validate ở trên
+      taiLieuDinhKem: fileDinhKem.trim(),
+      loaiHoTro: loaiHoTro || 'Tai tro khong hoan lai',
+      tongKinhPhiDuAn: tongKinhPhiDuAn ? parseFloat(tongKinhPhiDuAn) : null,
+      danhNghia: danhNghia || null,
+      tenDaiDien: tenDaiDien || null,
+      laDeTai: laDeTai ? 1 : 0
     };
 
     const result = await ApplicationModel.createApplication(applicationData);
@@ -197,6 +245,8 @@ export const createApplication = async (req, res) => {
           tenQuy: fund.ten_quy,
           loaiQuy: fund.loai_quy
         },
+        loaiHoTro: result.loaiHoTro,
+        canghiemthu: result.canghiemthu,
         trangThai: 'Cho duyet cap 1',
         ngayNop: new Date(),
         thongBao: "Đơn của bạn đã được tạo thành công và đang chờ Giáo vụ xét duyệt. Bạn sẽ nhận được thông báo qua email khi đơn được xử lý."
@@ -357,7 +407,10 @@ export const getApplicationById = async (req, res) => {
         lyDoTuChoi: application.ghichu,
         ghichu: application.ghichu,
         ngayNop: application.ngaynop,
-        ngayCapNhat: application.ngaycapnhat
+        ngayCapNhat: application.ngaycapnhat,
+        loaiHotro: application.loaihotro,
+        canNghiemThu: application.canghiemthu === 1,
+        tongKinhPhiDuAn: application.tongkinhphidudan ? parseFloat(application.tongkinhphidudan) : null
       }
     });
   } catch (error) {
@@ -829,7 +882,8 @@ export const adminApprove = async (req, res) => {
     await connection.beginTransaction();
 
     const { id } = req.params;
-    const { ghiChu } = req.body;
+    const { ketqua, ghiChu, mucthuhoi, laisuat, thoihanhoantra, soQuyetDinh, fileHopdong,
+            sotienvon, laisuatphantram, ngaykyhopdong, kyhandothang, filehopdong } = req.body;
     const nguoiDuyetId = req.user.id;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -841,6 +895,15 @@ export const adminApprove = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "ID đơn không hợp lệ",
+      });
+    }
+
+    // Validate ketqua
+    if (!ketqua || !['Duyet', 'Tu choi'].includes(ketqua)) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng chọn kết quả: 'Duyet' hoặc 'Tu choi'",
       });
     }
 
@@ -862,15 +925,14 @@ export const adminApprove = async (req, res) => {
     // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
     // ─────────────────────────────────────────────────────────────────────────
     const currentStatus = application.trangthai;
-    // Chỉ cho phép duyệt đơn ở trạng thái "Cho duyet cap 2" (hoặc "Dang xu ly" cho tương thích cũ)
     if (currentStatus !== 'Cho duyet cap 2' && currentStatus !== 'Dang xu ly') {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". 
-        Admin chỉ duyệt được đơn ở trạng thái "Chờ duyệt cấp 2".`,
+        message: `Không thể duyệt đơn ở trạng thái "${currentStatus}". Admin chỉ duyệt được đơn ở trạng thái "Chờ duyệt cấp 2".`,
       });
     }
+
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 4: KIỂM TRA CẤP 1 ĐÃ DUYỆT
     // ─────────────────────────────────────────────────────────────────────────
@@ -884,6 +946,7 @@ export const adminApprove = async (req, res) => {
         message: "Cấp 1 chưa duyệt. Admin chỉ duyệt được sau khi Giáo vụ duyệt cấp 1.",
       });
     }
+
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 5: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
     // ─────────────────────────────────────────────────────────────────────────
@@ -895,7 +958,6 @@ export const adminApprove = async (req, res) => {
         message: "Không tìm thấy thông tin phê duyệt hoặc đơn đã được duyệt hết",
       });
     }
-    // Admin chỉ duyệt cấp 2
     if (capHienTai.capduyet !== 2) {
       await connection.rollback();
       return res.status(400).json({
@@ -903,67 +965,377 @@ export const adminApprove = async (req, res) => {
         message: `Đơn này đang ở cấp ${capHienTai.capduyet}. Admin chỉ duyệt được cấp 2.`,
       });
     }
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 6: CẬP NHẬT PHÊ DUYỆT CẤP 2
-    // ─────────────────────────────────────────────────────────────────────────
-    
-    await PheDuyetModel.updatePheDuyet(
-      id,
-      2, // cấp 2
-      nguoiDuyetId,
-      'Da duyet',
-      ghiChu || null,
-      null, // không có lý do từ chối
-      connection
-    );
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 7: CẬP NHẬT TRẠNG THÁI ĐƠN THÀNH "Cho duyet cap 3"
-    // ─────────────────────────────────────────────────────────────────────────
-    
-    await connection.query(
-      `UPDATE yeucauhotro 
-       SET trangthai = 'Cho duyet cap 3', 
-           ngaycapnhat = NOW() 
-       WHERE yeucauhotro_id = ?`,
-      [id]
-    );
+    // ═══════════════════════════════════════════════════════════════════════════
+    // BƯỚC 6: RẼ NHÁNH THEO LOẠI HÌNH HỖ TRỢ
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    // Ghi nhật ký hệ thống
-    await logSystemActivity(req, {
-      hanhdong: "DUYET_YEU_CAU_HO_TRO_CAP_2",
-      loaidoituong: "yeucauhotro",
-      doituong_id: id,
-      mota: `Duyệt đơn xin hỗ trợ ID ${id} ở cấp 2 (Admin). Trạng thái đổi thành 'Chờ duyệt cấp 3'`,
-      dulieucu: { trangthai: 'Cho duyet cap 2' },
-      dulieumoi: { trangthai: 'Cho duyet cap 3' }
-    });
+    // ─── TRƯỜNG HỢP 1: TỪ CHỐI ──────────────────────────────────────────────
+    if (ketqua === 'Tu choi') {
+      await PheDuyetModel.updatePheDuyet(id, 2, nguoiDuyetId, 'Tu choi', ghiChu || null, null, connection);
 
-    await connection.commit();
+      await connection.query(
+        `UPDATE yeucauhotro SET trangthai = 'Tu choi cap 2', ngaycapnhat = NOW() WHERE yeucauhotro_id = ?`,
+        [id]
+      );
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 8: TRẢ VỀ KẾT QUẢ
-    // ─────────────────────────────────────────────────────────────────────────
+      await logSystemActivity(req, {
+        hanhdong: "TU_CHOI_DON_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Từ chối đơn ID ${id} ở cấp 2 (Admin). Lý do: ${ghiChu || 'Không có'}`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: { trangthai: 'Tu choi cap 2' }
+      });
 
-    return res.status(200).json({
-      success: true,
-      message: "Duyệt đơn xin hỗ trợ cấp 2 thành công. Đơn đã chuyển sang trạng thái chờ duyệt cấp 3.",
-      data: {
-        requestId: parseInt(id),
-        tieuDe: application.lydo ? (application.lydo.substring(0, 50) + (application.lydo.length > 50 ? '...' : '')) : '',
-        soTienYeuCau: parseFloat(application.sotiendenghi),
-        capDuyet: 2,
-        trangThaiCu: 'Cho duyet cap 2',
-        trangThaiMoi: 'Cho duyet cap 3',
-        nguoiDuyet: {
-          id: nguoiDuyetId,
-          hoTen: req.user.hoten || req.user.hoTen || "",
-          email: req.user.email || "",
-          vaiTro: 'Admin'
-        },
-        ngayDuyet: new Date(),
-        thongBao: "Đơn đã được Admin duyệt cấp 2. Đơn bây giờ xuất hiện trên màn hình Kế toán để duyệt cấp 3."
+      await connection.commit();
+
+      return res.status(200).json({
+        success: true,
+        message: "Từ chối đơn thành công",
+        data: {
+          requestId: parseInt(id),
+          capDuyet: 2,
+          trangThaiMoi: 'Tu choi cap 2',
+          nguoiDuyet: { id: nguoiDuyetId, hoTen: req.user.hoten || "", vaiTro: 'Admin' },
+          ngayDuyet: new Date()
+        }
+      });
+    }
+
+    // ─── TRƯỜNG HỢP 2: DUYỆT — LOẠI THƯỜNG (không thu hồi) ──────────────────
+    const loaiHotro = application.loaihotro;
+    if (loaiHotro === 'Tai tro khong hoan lai') {
+      // Xử lý y hệt luồng cũ
+      await PheDuyetModel.updatePheDuyet(id, 2, nguoiDuyetId, 'Da duyet', ghiChu || null, null, connection);
+
+      await connection.query(
+        `UPDATE yeucauhotro SET trangthai = 'Cho duyet cap 3', ngaycapnhat = NOW() WHERE yeucauhotro_id = ?`,
+        [id]
+      );
+
+      await logSystemActivity(req, {
+        hanhdong: "DUYET_YEU_CAU_HO_TRO_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Duyệt đơn ID ${id} cấp 2 (Admin). Trạng thái → 'Chờ duyệt cấp 3'`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: { trangthai: 'Cho duyet cap 3' }
+      });
+
+      await connection.commit();
+
+      return res.status(200).json({
+        success: true,
+        message: "Duyệt đơn thành công. Đơn chờ duyệt cấp 3.",
+        data: {
+          requestId: parseInt(id),
+          capDuyet: 2,
+          trangThaiMoi: 'Cho duyet cap 3',
+          nguoiDuyet: { id: nguoiDuyetId, hoTen: req.user.hoten || "", vaiTro: 'Admin' },
+          ngayDuyet: new Date()
+        }
+      });
+    }
+
+    // ─── TRƯỜNG HỢP 2b: DUYỆT — CHO VAY ─────────────────────────────────────
+    if (loaiHotro === 'Cho vay') {
+
+      // 4.1. Validate đủ trường bắt buộc
+      if (!sotienvon || !laisuatphantram || !ngaykyhopdong || !kyhandothang) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Đơn cho vay cần đủ 4 trường: số tiền vay, lãi suất (%/năm), ngày ký hợp đồng, kỳ hạn (tháng)",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
       }
+
+      if (isNaN(sotienvon) || parseFloat(sotienvon) <= 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Số tiền vay phải lớn hơn 0",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
+      }
+
+      if (isNaN(laisuatphantram) || parseFloat(laisuatphantram) < 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Lãi suất phải ≥ 0",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
+      }
+
+      if (isNaN(kyhandothang) || parseInt(kyhandothang) <= 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Kỳ hạn vay phải lớn hơn 0 tháng",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
+      }
+
+      // Validate ngày ký hợp đồng
+      const ngayKyDate = new Date(ngaykyhopdong);
+      if (isNaN(ngayKyDate.getTime())) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Ngày ký hợp đồng không hợp lệ",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
+      }
+
+      // 4.2. Kiểm tra ràng buộc lãi suất 70% (dùng chung với nhánh "Có thu hồi")
+      const checkLS = LaiSuatHelper.kiemTraRangBuocLaiSuat(laisuatphantram);
+      if (!checkLS.hopLe) {
+        if (checkLS.loi === 'CHUA_CAU_HINH') {
+          await connection.rollback();
+          return res.status(400).json({
+            success: false,
+            message: "Cần cấu hình lãi suất ngân hàng tham chiếu trong trang Cài đặt hệ thống trước khi duyệt cho vay.",
+            error_code: "CHUA_CAU_HINH_LAI_SUAT"
+          });
+        }
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Lãi suất đề xuất ${laisuatphantram}%/năm vượt quá 70% lãi suất ngân hàng tham chiếu (${checkLS.laisuatThamChieu}%/năm), tối đa cho phép: ${checkLS.mucToiDa}%/năm`,
+          error_code: "VUOT_LAI_SUAT_THAM_CHIEU",
+          data: {
+            laisuatDeXuat: parseFloat(laisuatphantram),
+            laisuatThamChieu: checkLS.laisuatThamChieu,
+            mucToiDaChoPhep: checkLS.mucToiDa
+          }
+        });
+      }
+
+      // 4.3. Tính ngày đáo hạn = ngày ký + kỳ hạn tháng
+      const ngayDaoHan = new Date(ngayKyDate);
+      ngayDaoHan.setMonth(ngayDaoHan.getMonth() + parseInt(kyhandothang));
+      // Xử lý edge case: ngày 31/1 + 1 tháng = 28/2 hoặc 29/2
+      // setMonth tự xử lý đúng (nếu ngày gốc là 31 mà tháng đích không đủ ngày → lấy ngày cuối tháng)
+      const ngayDaoHanStr = ngayDaoHan.toISOString().split('T')[0];
+
+      // 4.4. TRANSACTION
+      try {
+        // a. Update pheduyet cap 2
+        await PheDuyetModel.updatePheDuyet(id, 2, nguoiDuyetId, 'Da duyet', ghiChu || null, null, connection);
+
+        // b. Insert hopdongvayvon
+        const { hopdongvayvonId } = await HopDongVayVonModel.createHopDong({
+          yeucauhotroId: parseInt(id),
+          sotienvon: parseFloat(sotienvon),
+          laisuatphantram: parseFloat(laisuatphantram),
+          ngaykyhopdong: ngayKyDate.toISOString().split('T')[0],
+          kyhandothang: parseInt(kyhandothang),
+          ngaydaohan: ngayDaoHanStr,
+          filehopdong: filehopdong || null,
+          nguoiduyetId: nguoiDuyetId,
+          ghichu: ghiChu || null
+        }, connection);
+
+        // c. Insert lichtrano — 1 dòng duy nhất
+        const lichTraNoResult = await HopDongVayVonModel.createLichTraNo({
+          hopdongvayvonId,
+          sotienvon: parseFloat(sotienvon),
+          laisuatphantram: parseFloat(laisuatphantram),
+          kyhandothang: parseInt(kyhandothang),
+          ngaydaohan: ngayDaoHanStr
+        }, connection);
+
+        // d. Update trangthai → 'Cho giai ngan'
+        await connection.query(
+          `UPDATE yeucauhotro SET trangthai = 'Cho giai ngan', ngaycapnhat = NOW() WHERE yeucauhotro_id = ?`,
+          [id]
+        );
+
+      } catch (txError) {
+        await connection.rollback();
+        console.error("Lỗi transaction adminApprove (loai Cho vay):", txError);
+        return res.status(500).json({
+          success: false,
+          message: "Lỗi khi lưu dữ liệu hợp đồng vay vốn. Vui lòng thử lại.",
+        });
+      }
+
+      // 4.5. Ghi nhật ký hệ thống
+      await logSystemActivity(req, {
+        hanhdong: "DUYET_DON_CHO_VAY_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Duyệt đơn cho vay ID ${id} cấp 2 (Admin). Tạo hợp đồng vay vốn + lịch trả nợ. Trạng thái → 'Cho giai ngan'`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: {
+          trangthai: 'Cho giai ngan',
+          hopdongvayvon: {
+            sotienvon: parseFloat(sotienvon),
+            laisuatphantram: parseFloat(laisuatphantram),
+            ngaykyhopdong: ngayKyDate.toISOString().split('T')[0],
+            kyhandothang: parseInt(kyhandothang),
+            ngaydaohan: ngayDaoHanStr
+          }
+        }
+      });
+
+      // 4.6. Trả response
+      await connection.commit();
+
+      return res.status(200).json({
+        success: true,
+        message: "Duyệt đơn cho vay thành công. Hợp đồng vay vốn đã được tạo.",
+        yeucauhotro: {
+          yeucauhotro_id: parseInt(id),
+          trangthai: 'Cho giai ngan'
+        },
+        hopdongvayvon: {
+          sotienvon: parseFloat(sotienvon),
+          laisuatphantram: parseFloat(laisuatphantram),
+          ngaykyhopdong: ngayKyDate.toISOString().split('T')[0],
+          kyhandothang: parseInt(kyhandothang),
+          ngaydaohan: ngayDaoHanStr,
+          trangthai: 'Dang thuc hien'
+        },
+        lichtrano: [{
+          kythu: 1,
+          ngaydenhan: ngayDaoHanStr,
+          sotiengocphaitra: parseFloat(sotienvon),
+          sotienlaiphaitra: lichTraNoResult.sotienlaiphaitra,
+          trangthai: 'Chua den han'
+        }]
+      });
+    }
+
+    // ─── TRƯỜNG HỢP 3: DUYỆT — LOẠI CÓ THU HỒI ─────────────────────────────
+    if (loaiHotro === 'Tai tro co thu hoi') {
+
+      // 5.1. Validate đủ 3 trường bắt buộc (KHÔNG yêu cầu laisuat — Điều lệ: tài trợ thu hồi không tính lãi)
+      if (!mucthuhoi || !thoihanhoantra || !soQuyetDinh) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Đơn loại tài trợ thu hồi cần đủ 3 trường: mức thu hồi, thời hạn hoàn trả, số quyết định hợp đồng",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
+      }
+
+      if (isNaN(mucthuhoi) || parseFloat(mucthuhoi) <= 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Mức thu hồi phải lớn hơn 0",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
+      }
+
+      if (isNaN(thoihanhoantra) || parseInt(thoihanhoantra) <= 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Thời hạn hoàn trả phải lớn hơn 0 tháng",
+          error_code: "THIEU_TRUONG_BAT_BUOC"
+        });
+      }
+
+      // 5.2. Validate tongkinhphidudan
+      if (!application.tongkinhphidudan || parseFloat(application.tongkinhphidudan) <= 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Đơn thiếu dữ liệu tổng kinh phí dự án. Cần yêu cầu bên nộp đơn bổ sung.",
+          error_code: "THIEU_TONG_KINH_PHI"
+        });
+      }
+
+      // 5.3. Kiểm tra ràng buộc 30%
+      const check30 = DieuKhoanThuHoiModel.kiemTraRangBuoc30PhanTram(mucthuhoi, application.tongkinhphidudan);
+      if (!check30.hopLe) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Mức thu hồi ${parseFloat(mucthuhoi).toLocaleString('vi-VN')}đ vượt quá 30% tổng kinh phí dự án ${parseFloat(application.tongkinhphidudan).toLocaleString('vi-VN')}đ (tối đa cho phép: ${check30.mucToiDa.toLocaleString('vi-VN')}đ)`,
+          error_code: "VUOT_30_PHAN_TRAM",
+          data: {
+            mucThuHoiDeXuat: parseFloat(mucthuhoi),
+            tongKinhPhiDuAn: parseFloat(application.tongkinhphidudan),
+            mucToiDaChoPhep: check30.mucToiDa
+          }
+        });
+      }
+
+      // 5.4. Qua hết validate → TRANSACTION
+      try {
+        // a. Update pheduyet cap 2
+        await PheDuyetModel.updatePheDuyet(id, 2, nguoiDuyetId, 'Da duyet', ghiChu || null, null, connection);
+
+        // b. Insert dieukhoanthuhoi (laisuat = null — tài trợ thu hồi không tính lãi theo Điều lệ)
+        await DieuKhoanThuHoiModel.createDieuKhoan({
+          yeucauhotroId: parseInt(id),
+          mucthuhoi: parseFloat(mucthuhoi),
+          laisuat: null,
+          thoihanhoantra: parseInt(thoihanhoantra),
+          soQuyetDinh,
+          fileHopdong: fileHopdong || null
+        }, connection);
+
+        // c. Update trangthai
+        await connection.query(
+          `UPDATE yeucauhotro SET trangthai = 'Cho duyet cap 3', ngaycapnhat = NOW() WHERE yeucauhotro_id = ?`,
+          [id]
+        );
+
+      } catch (txError) {
+        await connection.rollback();
+        console.error("Lỗi transaction adminApprove (loai co thu hoi):", txError);
+        return res.status(500).json({
+          success: false,
+          message: "Lỗi khi lưu dữ liệu phê duyệt. Vui lòng thử lại.",
+        });
+      }
+
+      // 5.6. Ghi nhật ký hệ thống
+      await logSystemActivity(req, {
+        hanhdong: "DUYET_DON_CO_THU_HOI_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Duyệt đơn ID ${id} cấp 2 (loại có thu hồi). Mức thu hồi: ${parseFloat(mucthuhoi).toLocaleString('vi-VN')}đ, thời hạn: ${thoihanhoantra} tháng`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: {
+          trangthai: 'Cho duyet cap 3',
+          dieukhoanthuhoi: { mucthuhoi, thoihanhoantra, soQuyetDinh }
+        }
+      });
+
+      await connection.commit();
+
+      // 5.7. Trả response
+      return res.status(200).json({
+        success: true,
+        message: "Duyệt đơn loại có thu hồi thành công. Đơn chờ duyệt cấp 3.",
+        data: {
+          requestId: parseInt(id),
+          capDuyet: 2,
+          trangThaiMoi: 'Cho duyet cap 3',
+          loaiHoTro: loaiHotro,
+          dieukhoanthuhoi: {
+            mucthuhoi: parseFloat(mucthuhoi),
+            thoihanhoantra_thang: parseInt(thoihanhoantra),
+            soQuyetDinh_hopdong: soQuyetDinh
+          },
+          nguoiDuyet: { id: nguoiDuyetId, hoTen: req.user.hoten || "", vaiTro: 'Admin' },
+          ngayDuyet: new Date()
+        }
+      });
+    }
+
+    // Fallback (không nên tới đây)
+    await connection.rollback();
+    return res.status(400).json({
+      success: false,
+      message: "Loại hình hỗ trợ không hợp lệ",
     });
 
   } catch (error) {
@@ -1041,6 +1413,16 @@ export const disburseApplication = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
     const currentStatus = application.trangthai;
+
+    // Chặn giải ngân nếu đơn không đạt nghiệm thu
+    if (currentStatus === 'Nghiem thu khong dat') {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Đơn không đạt nghiệm thu — không thể giải ngân đợt tiếp theo",
+      });
+    }
+
     if (!['Cho duyet cap 3', 'Dang xu ly', 'Cho giai ngan'].includes(currentStatus)) {
       await connection.rollback();
       return res.status(400).json({

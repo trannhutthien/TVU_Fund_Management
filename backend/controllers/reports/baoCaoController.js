@@ -32,6 +32,7 @@ const REPORT_LABELS = {
   bao_cao_quy: "BÁO CÁO TÌNH HÌNH CÁC QUỸ",
   bao_cao_nguoi_dung: "BÁO CÁO TỔNG HỢP NGƯỜI DÙNG",
   bao_cao_de_xuat: "BÁO CÁO ĐỀ XUẤT HỖ TRỢ",
+  bao_cao_nam_tai_chinh: "BÁO CÁO TỔNG HỢP NĂM TÀI CHÍNH",
 };
 
 const ALLOWED_TYPES = Object.keys(REPORT_LABELS);
@@ -494,6 +495,125 @@ const buildBaoCaoQuy = async ({ quy_id, tu_ngay, den_ngay }) => {
   };
 };
 
+// Báo cáo Tổng hợp Năm Tài chính (Điều 17.2, 18)
+const buildBaoCaoNamTaiChinh = async ({ nam_tai_chinh }) => {
+  const nam = parseInt(nam_tai_chinh, 10);
+  if (!nam || nam < 2000 || nam > 2100) {
+    throw new Error("Năm tài chính không hợp lệ. Vui lòng nhập năm từ 2000 đến 2100.");
+  }
+
+  // ── Khối 1: Thu/Chi thực tế ────────────────────────────────────────────────
+  const [[thuRow]] = await pool.query(
+    `SELECT COALESCE(SUM(sotien), 0) AS tong_thu
+     FROM giaodich
+     WHERE loaigiaodich = 'Thu'
+       AND trangthai = 'Thanh cong'
+       AND YEAR(ngaygiaodich) = ?`,
+    [nam]
+  );
+  const tongThu = parseFloat(thuRow.tong_thu || 0);
+
+  const [chiRows] = await pool.query(
+    `SELECT hangmucchi, COALESCE(SUM(sotien), 0) AS total
+     FROM giaodich
+     WHERE loaigiaodich = 'Chi'
+       AND trangthai = 'Thanh cong'
+       AND YEAR(ngaygiaodich) = ?
+     GROUP BY hangmucchi`,
+    [nam]
+  );
+  const chiByCategory = { Tai_tro_cho_vay: 0, Tham_dinh_du_an: 0, Bo_may_hoat_dong: 0, Nhiem_vu_khac: 0 };
+  chiRows.forEach(r => { if (r.hangmucchi in chiByCategory) chiByCategory[r.hangmucchi] = parseFloat(r.total); });
+
+  const chiLoaiHoTroRows = await pool.query(
+    `SELECT yc.loaihotro, COALESCE(SUM(g.sotien), 0) AS total
+     FROM giaodich g
+     INNER JOIN yeucauhotro yc ON g.yeucauhotro_id = yc.yeucauhotro_id
+     WHERE g.loaigiaodich = 'Chi'
+       AND g.hangmucchi = 'Tai_tro_cho_vay'
+       AND g.trangthai = 'Thanh cong'
+       AND YEAR(g.ngaygiaodich) = ?
+     GROUP BY yc.loaihotro`,
+    [nam]
+  );
+  const chiTaiTro = { khongHoanLai: 0, coThuHoi: 0 };
+  chiLoaiHoTroRows[0].forEach(r => {
+    if (r.loaihotro === 'Tai tro khong hoan lai') chiTaiTro.khongHoanLai = parseFloat(r.total);
+    else if (r.loaihotro === 'Tai tro co thu hoi') chiTaiTro.coThuHoi = parseFloat(r.total);
+  });
+
+  const tongChi = chiByCategory.Tai_tro_cho_vay + chiByCategory.Tham_dinh_du_an + chiByCategory.Bo_may_hoat_dong + chiByCategory.Nhiem_vu_khac;
+  const soDuCuoiNam = tongThu - tongChi;
+
+  // ── Khối 2: Công nợ phải thu ──────────────────────────────────────────────
+  const [[congNoRow]] = await pool.query(
+    `SELECT COALESCE(SUM(dkh.mucthuhoi), 0) AS tong
+     FROM dieukhoanthuhoi dkh
+     INNER JOIN yeucauhotro yc ON dkh.yeucauhotro_id = yc.yeucauhotro_id
+     WHERE yc.loaihotro = 'Tai tro co thu hoi'
+       AND yc.trangthai IN ('Da nghiem thu', 'Da giai ngan')`,
+    []
+  );
+  const tongMucThuHoiDangCho = parseFloat(congNoRow.tong || 0);
+
+  // ── Khối 3: Phân bổ ngân sách nội bộ ──────────────────────────────────────
+  const [[phanBoRow]] = await pool.query(
+    `SELECT COALESCE(SUM(sotien), 0) AS tong
+     FROM phanbongansach
+     WHERE trangthai = 'Da duyet'
+       AND namtaichinh = ?`,
+    [nam]
+  );
+  const tongDaPhanBo = parseFloat(phanBoRow.tong || 0);
+
+  // ── Khối 4: Dự toán bộ máy hoạt động ──────────────────────────────────────
+  const [[duToanRow]] = await pool.query(
+    `SELECT COALESCE(sotiendutoan, 0) AS sotiendutoan, trangthai
+     FROM dutoanhangnam
+     WHERE namtaichinh = ?
+     LIMIT 1`,
+    [nam]
+  );
+  const duToanSoTien = parseFloat(duToanRow?.sotiendutoan || 0);
+  const duToanTrangThai = duToanRow?.trangthai || 'Chua co';
+  const daChiBoMay = chiByCategory.Bo_may_hoat_dong;
+  const conLaiBoMay = Math.max(0, duToanSoTien - daChiBoMay);
+
+  return {
+    ten_bao_cao: REPORT_LABELS.bao_cao_nam_tai_chinh,
+    nam_tai_chinh: nam,
+    ngay_xuat: formatDate(new Date()),
+    nguoi_xuat: "Cán bộ Quỹ",
+    ky_bao_cao: `Năm tài chính ${nam}`,
+
+    // Khối 1: Thu chi thực tế
+    tong_thu: formatVND(tongThu),
+    tong_chi_cong: formatVND(tongChi),
+    so_du_cuoi_nam: formatVND(soDuCuoiNam),
+
+    chi_tai_tro_khong_hoan_lai: formatVND(chiTaiTro.khongHoanLai),
+    chi_tai_tro_co_thu_hoi: formatVND(chiTaiTro.coThuHoi),
+    chi_tai_tro_tong: formatVND(chiByCategory.Tai_tro_cho_vay),
+    chi_tham_dinh: formatVND(chiByCategory.Tham_dinh_du_an),
+    chi_bo_may: formatVND(chiByCategory.Bo_may_hoat_dong),
+    chi_nhiem_vu_khac: formatVND(chiByCategory.Nhiem_vu_khac),
+
+    // Khối 2: Công nợ phải thu
+    tong_muc_thu_hoi_dang_cho: formatVND(tongMucThuHoiDangCho),
+    ghi_chu_cong_no: "Chưa thực thu, không tính vào số dư khả dụng",
+
+    // Khối 3: Phân bổ ngân sách nội bộ
+    tong_da_phan_bo: formatVND(tongDaPhanBo),
+    ghi_chu_phan_bo: "Điều chuyển nội bộ giữa Bể tiền lớn và Mục chi, không phải thu/chi thật",
+
+    // Khối 4: Dự toán bộ máy hoạt động
+    du_toan_bo_may: formatVND(duToanSoTien),
+    da_chi_bo_may: formatVND(daChiBoMay),
+    con_lai_bo_may: formatVND(conLaiBoMay),
+    trang_thai_du_toan: duToanTrangThai,
+  };
+};
+
 const DATA_BUILDERS = {
   thu_chi_tong_hop: buildThuChiTongHop,
   danh_sach_nha_tai_tro: buildDanhSachNhaTaiTro,
@@ -501,6 +621,7 @@ const DATA_BUILDERS = {
   bao_cao_quy: buildBaoCaoQuy,
   bao_cao_nguoi_dung: buildBaoCaoNguoiDung,
   bao_cao_de_xuat: buildBaoCaoDeXuat,
+  bao_cao_nam_tai_chinh: buildBaoCaoNamTaiChinh,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -868,13 +989,13 @@ const exportToXlsx = async (loaiBaoCao, data) => {
 
 export const xuatBaoCao = async (req, res) => {
   try {
-    const { loai_bao_cao, quy_id, tu_ngay, den_ngay, dinh_dang } = req.body;
+    const { loai_bao_cao, quy_id, tu_ngay, den_ngay, dinh_dang, nam_tai_chinh, nam } = req.body;
 
     // Validate
-    if (!loai_bao_cao || !tu_ngay || !den_ngay || !dinh_dang) {
+    if (!loai_bao_cao || !dinh_dang) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu thông tin bắt buộc: loai_bao_cao, tu_ngay, den_ngay, dinh_dang",
+        message: "Thiếu thông tin bắt buộc: loai_bao_cao, dinh_dang",
       });
     }
 
@@ -883,6 +1004,14 @@ export const xuatBaoCao = async (req, res) => {
         success: false,
         message: "Định dạng không hỗ trợ. Chỉ chấp nhận 'docx' hoặc 'xlsx'.",
       });
+    }
+
+    // Nam param: auto-convert to date range if tu_ngay/den_ngay not provided
+    let effectiveTuNgay = tu_ngay;
+    let effectiveDenNgay = den_ngay;
+    if (nam && !tu_ngay && !den_ngay) {
+      effectiveTuNgay = `${nam}-01-01`;
+      effectiveDenNgay = `${nam}-12-31`;
     }
 
     // Chuẩn hóa loai_bao_cao thành mảng
@@ -910,11 +1039,40 @@ export const xuatBaoCao = async (req, res) => {
       }
     }
 
+    // Validate theo từng loại báo cáo
+    const hasNamTaiChinh = types.includes("bao_cao_nam_tai_chinh");
+    const hasOtherTypes = types.some(t => t !== "bao_cao_nam_tai_chinh");
+
+    if (hasNamTaiChinh) {
+      const yearNum = parseInt(nam_tai_chinh, 10);
+      if (!nam_tai_chinh || isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
+        return res.status(400).json({
+          success: false,
+          message: "Năm tài chính không hợp lệ. Vui lòng nhập năm từ 2000 đến 2100.",
+        });
+      }
+    }
+
+    if (hasOtherTypes && (!effectiveTuNgay || !effectiveDenNgay)) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin: tu_ngay, den_ngay là bắt buộc cho loại báo cáo này",
+      });
+    }
+
+    // ── Helper: gọi builder với đúng params ──────────────────────────────────
+    const buildData = async (loai) => {
+      const builder = DATA_BUILDERS[loai];
+      if (loai === "bao_cao_nam_tai_chinh") {
+        return await builder({ nam_tai_chinh });
+      }
+      return await builder({ quy_id, tu_ngay: effectiveTuNgay, den_ngay: effectiveDenNgay });
+    };
+
     // Xuất báo cáo
     if (types.length === 1) {
       const loai = types[0];
-      const builder = DATA_BUILDERS[loai];
-      const data = await builder({ quy_id, tu_ngay, den_ngay });
+      const data = await buildData(loai);
 
       let buffer;
       let contentType;
@@ -940,8 +1098,7 @@ export const xuatBaoCao = async (req, res) => {
       const zip = new PizZip();
 
       for (const loai of types) {
-        const builder = DATA_BUILDERS[loai];
-        const data = await builder({ quy_id, tu_ngay, den_ngay });
+        const data = await buildData(loai);
 
         const fileBuffer = (dinh_dang === "docx")
           ? exportToDocx(loai, data)

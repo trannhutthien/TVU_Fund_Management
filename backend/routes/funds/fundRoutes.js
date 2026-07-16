@@ -19,7 +19,7 @@ router.get("/:id", getFundDetail);
 // ─── PROTECTED ROUTES (cần authentication + authorization) ───────────────────
 
 // GET /api/funds — Lấy tất cả quỹ (admin/giáo vụ/kế toán)
-router.get("/", protect, authorizeRoles(1, 2, 3), getFunds);
+router.get("/", protect, authorizeRoles(1, 2, 3, 5), getFunds);
 
 // POST /api/funds — Tạo quỹ mới (admin/giáo vụ)
 router.post("/", protect, authorizeRoles(1, 3), createFund);

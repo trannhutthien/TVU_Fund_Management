@@ -26,5 +26,99 @@
     "PNG",
     "DOC"
   ],
-  "maintenanceMode": false
+  "maintenanceMode": false,
+  "laisuatnganhangthamchieu": null,
+  "hero_badge": "Hỗ trợ sinh viên TVU",
+  "hero_title": "Quỹ phát triển Đại học Trà Vinh",
+  "hero_description": "Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. Kết nối sinh viên với các cơ hội hỗ trợ tài chính, giúp các em yên tâm theo đuổi ước mơ học tập.",
+  "hero_stat_sinhvien": "Sinh viên được hỗ trợ",
+  "hero_stat_sinhvien_sub": "So với năm trước",
+  "hero_stat_giatri": "Tổng giá trị hỗ trợ",
+  "hero_stat_giatri_sub": "Tích lũy từ các quỹ",
+  "hero_stat_nhahaotam": "Nhà hảo tâm",
+  "hero_stat_nhahaotam_sub": "Đối tác đồng hành",
+  "hero_stat_quy": "Quỹ đang hoạt động",
+  "hero_stat_quy_sub": "Đa dạng hình thức",
+  "process_label": "QUY TRÌNH ĐƠN GIẢN",
+  "process_title": "Hai hành trình, một sứ mệnh chung",
+  "process_subtitle": "Dù bạn là sinh viên cần hỗ trợ hay nhà tài trợ muốn đóng góp, chúng tôi đều có quy trình rõ ràng và minh bạch",
+  "process_student_title": "Dành cho Sinh viên",
+  "process_student_desc": "Quy trình nhận hỗ trợ 4 bước",
+  "process_student_steps": [
+    {
+      "title": "Đăng nhập",
+      "duration": "~1 phút",
+      "desc": "Sử dụng tài khoản Email sinh viên TVU để bắt đầu hành trình."
+    },
+    {
+      "title": "Tạo hồ sơ",
+      "duration": "~5 phút",
+      "desc": "Tải lên minh chứng và sử dụng AI để hoàn thiện hồ sơ."
+    },
+    {
+      "title": "Nhận phản hồi",
+      "duration": "3–5 ngày",
+      "desc": "Theo dõi trạng thái xét duyệt và nhận kết quả."
+    },
+    {
+      "title": "Theo dõi",
+      "duration": "Thời gian thực",
+      "desc": "Xem lịch sử hỗ trợ và số tiền đã nhận."
+    }
+  ],
+  "process_donor_title": "Dành cho Nhà tài trợ",
+  "process_donor_desc": "Quy trình tài trợ 4 bước",
+  "process_donor_steps": [
+    {
+      "title": "Đăng ký tài trợ",
+      "duration": "~3 phút",
+      "desc": "Đăng ký thông tin và lựa chọn quỹ muốn đóng góp."
+    },
+    {
+      "title": "Chọn quỹ",
+      "duration": "~2 phút",
+      "desc": "Học bổng, Hỗ trợ khẩn cấp, Nghiên cứu khoa học."
+    },
+    {
+      "title": "Chuyển khoản",
+      "duration": "1–2 ngày",
+      "desc": "Hệ thống tự động xác nhận khi nhận được tiền."
+    },
+    {
+      "title": "Báo cáo",
+      "duration": "Định kỳ",
+      "desc": "Nhận báo cáo minh bạch về việc sử dụng kinh phí."
+    }
+  ],
+  "donor_wall_label": "GHI NHẬN ĐÓNG GÓP",
+  "donor_wall_title": "Bảng Vàng Nhà Tài Trợ",
+  "donor_wall_description": "Tri ân những cá nhân và tổ chức đã đồng hành cùng TVU Fund trong hành trình hỗ trợ sinh viên.",
+  "donor_wall_cta_title": "Trở thành Nhà Tài Trợ",
+  "donor_wall_cta_desc": "Đồng hành cùng chúng tôi trong việc hỗ trợ sinh viên TVU",
+  "ai_label": "CÔNG NGHỆ TIÊN PHONG",
+  "ai_title": "Hỗ trợ thông minh với công nghệ AI",
+  "ai_features": [
+    {
+      "title": "Viết thư ngỏ thông minh",
+      "description": "Hỗ trợ sinh viên viết thư ngỏ, trình bày hoàn cảnh một cách thuyết phục và chuyên nghiệp thông qua gợi ý ngôn ngữ tối ưu."
+    },
+    {
+      "title": "Kiểm tra hồ sơ tự động",
+      "description": "Hệ thống tự động quét và kiểm tra tính hợp lệ của hồ sơ, thông báo ngay lập tức các thiếu sót cần bổ sung để tăng tỷ lệ duyệt."
+    },
+    {
+      "title": "Theo dõi thời gian thực",
+      "description": "Theo dõi tiến độ duyệt hồ sơ minh bạch từng bước. Bạn sẽ luôn biết hồ sơ của mình đang ở giai đoạn nào trong quy trình."
+    }
+  ],
+  "testimonials_title": "SINH VIÊN NÓI GÌ VỀ TVU FUND",
+  "testimonials_subtitle": "Những chia sẻ chân thành từ sinh viên đã nhận được sự đồng hành của TVU Fund",
+  "progress_title": "TIẾN TRÌNH GÂY QUỸ",
+  "progress_subtitle": "Theo dõi thời gian thực dòng tiền đóng góp từ các nhà hảo tâm và tiến độ giải ngân hỗ trợ sinh viên TVU.",
+  "footer_about_title": "VỀ CHÚNG TÔI",
+  "footer_social_title": "KẾT NỐI VỚI CHÚNG TÔI",
+  "footer_social_desc": "Theo dõi chúng tôi để cập nhật thông tin học bổng và hỗ trợ sinh viên mới nhất.",
+  "guidelines_contact_phone": "(0294) 3855 246",
+  "guidelines_contact_email": "phongctsv@tvu.edu.vn",
+  "guidelines_contact_address": "126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh, Trà Vinh"
 }

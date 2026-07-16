@@ -59,15 +59,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
-      const authStorage = localStorage.getItem('auth-storage')
       let refreshToken = null
-      if (authStorage) {
-        try {
-          const parsed = JSON.parse(authStorage)
-          refreshToken = localStorage.getItem('refreshToken')
-        } catch (e) {
-          refreshToken = null
-        }
+      try {
+        refreshToken = localStorage.getItem('refreshToken')
+      } catch (e) {
+        refreshToken = null
       }
 
       if (refreshToken) {

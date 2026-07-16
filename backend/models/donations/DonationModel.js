@@ -335,9 +335,9 @@ const approveDonation = async (khoanTaiTroId, nguoiDuyetId, { ghiChu, chungTu } 
     //        nguoinhan_id = NULL (không có người nhận cụ thể)
     await connection.execute(
       `INSERT INTO giaodich (
-        yeucauhotro_id, quy_id, nguoinhan_id, sotien, hinhthuc, trangthai, 
+        yeucauhotro_id, quy_id, loaigiaodich, hangmucchi, nguoinhan_id, sotien, hinhthuc, trangthai, 
         chungtu, ghichu, nguoithuchien_id, ngaygiaodich
-      ) VALUES (NULL, ?, NULL, ?, 'Chuyen khoan', 'Thanh cong', ?, ?, ?, CURRENT_TIMESTAMP)`,
+      ) VALUES (NULL, ?, 'Thu', NULL, NULL, ?, 'Chuyen khoan', 'Thanh cong', ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
         donation.quy_id,
         donation.sotien,

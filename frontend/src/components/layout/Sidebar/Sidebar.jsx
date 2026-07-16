@@ -124,9 +124,8 @@ const Sidebar = ({ isMobileOpen, onMobileClose }) => {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Get user role (fallback to 'admin' for demo if no user)
-  // Backend trả về VaiTro, không phải role
-  const userRole = user?.VaiTro || user?.role || 'admin';
+  // Get user role — không fallback, nếu chưa đăng nhập thì ẩn hết menu
+  const userRole = user?.VaiTro || user?.role || null;
 
   // Filter menu theo role của user
   const visibleGroups = NAV_CONFIG

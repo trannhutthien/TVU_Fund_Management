@@ -20,6 +20,7 @@ import ApplicationFooter from '@components/sections/AppliPage/AppliSectionLayout
 import NewsSidebar from '@components/sections/AppliPage/AppliSectionLayout/NewsSidebar/NewsSidebar';
 import AppliSectionLayout from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionLayout';
 import useAuthStore from '@stores/authStore';
+import { LOAI_HO_TRO } from '@constants/loaiHoTro';
 import { bankAccountService } from '@services/bankAccountService';
 import { applicationService } from '@services/applicationService';
 import { uploadService } from '@services/uploadService';
@@ -31,6 +32,7 @@ import {
 } from '@services/systemSettingsService';
 import api from '@services/api';
 import Input from '@components/common/Input/Input';
+import { formatCurrency } from '@utils/formatters';
 import { 
   HiOutlineCreditCard, 
   HiOutlineBuildingLibrary, 
@@ -228,7 +230,10 @@ const ApplyPage = () => {
   const [contentValues, setContentValues] = useState({ 
     tieu_de: '', 
     mo_ta: '',
-    so_tien_yeu_cau: ''
+    so_tien_yeu_cau: '',
+    loai_hotro: LOAI_HO_TRO.TAI_TRO_KHONG_HOAN_LAI,
+    tong_kinh_phi_du_an: null,
+    la_de_tai: false,
   });
   const [bankValues, setBankValues] = useState({ selectedBankId: null, soDienThoai: '' });
   const [bankAccounts, setBankAccounts] = useState([]);
@@ -236,6 +241,7 @@ const ApplyPage = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [formTimestamp] = useState(() => new Date().toISOString());
   const hasUploadedProof = uploadedFiles?.length > 0;
   const defaultSponsorBank = toFundBankAccount(publicSettings.tai_khoan_nhan_tai_tro);
   const hasDefaultSponsorBank = !!(
@@ -316,7 +322,19 @@ const ApplyPage = () => {
   }, []);
 
   const handleContentChange = useCallback((valuesOrUpdater) => {
-    setContentValues(valuesOrUpdater);
+    setContentValues((prev) => {
+      const next = typeof valuesOrUpdater === 'function'
+        ? valuesOrUpdater(prev)
+        : valuesOrUpdater;
+
+      // Reset tong_kinh_phi_du_an khi chuyển loại hỗ trợ sang loại không cần
+      if (prev.loai_hotro !== next.loai_hotro &&
+          next.loai_hotro !== LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) {
+        return { ...next, tong_kinh_phi_du_an: null };
+      }
+
+      return next;
+    });
   }, []);
 
   const handleBankChange = useCallback((values) => {
@@ -369,7 +387,7 @@ const ApplyPage = () => {
     if (isDonor) {
       return hasUploadedProof;
     }
-    return !!(
+    const baseValid = !!(
       contentValues.tieu_de?.length >= 10 &&
       contentValues.mo_ta?.length >= 50 &&
       contentValues.so_tien_yeu_cau &&
@@ -378,6 +396,21 @@ const ApplyPage = () => {
           parseFloat(contentValues.so_tien_yeu_cau) <= (selectedFund?.soTienToiDa || Infinity)
         : parseFloat(contentValues.so_tien_yeu_cau) > 0)
     );
+    if (!baseValid) return false;
+
+    // Validate tongkinhphidudan khi chọn "Tai tro co thu hoi"
+    if (contentValues.loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) {
+      const tongKinhPhi = parseFloat(contentValues.tong_kinh_phi_du_an);
+      const soTien = parseFloat(contentValues.so_tien_yeu_cau);
+      return !!(
+        contentValues.tong_kinh_phi_du_an &&
+        !isNaN(tongKinhPhi) &&
+        tongKinhPhi > 0 &&
+        tongKinhPhi >= soTien
+      );
+    }
+
+    return true;
   }, [isDonor, hasUploadedProof, contentValues, isAuthenticated, selectedFund]);
 
   const isStep3Valid = useMemo(() => {
@@ -438,9 +471,7 @@ const ApplyPage = () => {
   };
 
   const handleSaveDraft = () => {
-    setIsSaving(true);
-    // TODO: gọi API lưu nháp
-    setTimeout(() => setIsSaving(false), 1500);
+    toast.info('Tính năng lưu nháp đang được phát triển. Vui lòng hoàn thành đơn trong một lượt.');
   };
 
   const handleSubmit = async () => {
@@ -539,6 +570,11 @@ const ApplyPage = () => {
             moTa: contentValues.mo_ta,
             soTienYeuCau: soTienNum,
             fileDinhKem: fileUrl,
+            loaiHoTro: contentValues.loai_hotro,
+            tongKinhPhiDuAn: contentValues.tong_kinh_phi_du_an
+              ? parseFloat(contentValues.tong_kinh_phi_du_an)
+              : null,
+            laDeTai: contentValues.la_de_tai ? 1 : 0,
           };
           response = await applicationService.create(applicationData);
         }
@@ -555,7 +591,12 @@ const ApplyPage = () => {
             : 'Nộp đơn thành công! Đơn của bạn đang chờ xét duyệt.';
           toast.success(successMessage);
           
-          setContentValues({ tieu_de: '', mo_ta: '', so_tien_yeu_cau: '' });
+          setContentValues({ 
+            tieu_de: '', mo_ta: '', so_tien_yeu_cau: '',
+            loai_hotro: LOAI_HO_TRO.TAI_TRO_KHONG_HOAN_LAI,
+            tong_kinh_phi_du_an: null,
+            la_de_tai: false,
+          });
           setDonationAmount('');
           setUploadedFiles([]);
           setIsOnlinePaymentCompleted(false);
@@ -587,6 +628,7 @@ const ApplyPage = () => {
             maGiaoDich: txnId,
             chungTu: fileUrl,
             ghiChu: currentGuestFields.ghiChu || 'Quyên góp trực tuyến vãng lai',
+            formTimestamp,
             // Thêm thông tin tài khoản ngân hàng được chọn
             taiKhoanNganHangId: selectedBankAccountId,
             thongTinTaiKhoan: selectedBankAccount ? {
@@ -617,7 +659,13 @@ const ApplyPage = () => {
             quyId: selectedFund.quyId,
             lyDo: `[${contentValues.tieu_de}] - ${contentValues.mo_ta}`,
             soTienDeNghi: parseFloat(contentValues.so_tien_yeu_cau),
-            taiLieuDinhKem: fileUrl
+            taiLieuDinhKem: fileUrl,
+            loaiHoTro: contentValues.loai_hotro,
+            tongKinhPhiDuAn: contentValues.tong_kinh_phi_du_an
+              ? parseFloat(contentValues.tong_kinh_phi_du_an)
+              : null,
+            laDeTai: contentValues.la_de_tai ? 1 : 0,
+            formTimestamp,
           };
           response = await guestService.submitApplication(payload);
         }
@@ -690,6 +738,17 @@ const ApplyPage = () => {
 
   const openRegisterModal = useCallback(() => setIsRegisterModalOpen(true), []);
   const closeRegisterModal = useCallback(() => setIsRegisterModalOpen(false), []);
+
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
 
   // Handle ESC key để đóng modal
   useEffect(() => {
@@ -942,14 +1001,14 @@ const ApplyPage = () => {
         {isLoginModalOpen && (
           <div className="login-modal-overlay" onClick={closeLoginModal}>
             <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
-              <LoginForm onSuccess={closeLoginModal} onClose={closeLoginModal} />
+              <LoginForm onSuccess={closeLoginModal} onClose={closeLoginModal} onSwitchToRegister={switchToRegister} />
             </div>
           </div>
         )}
         {isRegisterModalOpen && (
           <div className="register-modal-overlay" onClick={closeRegisterModal}>
             <div className="register-modal-content" onClick={(e) => e.stopPropagation()}>
-              <RegisterForm onSuccess={closeRegisterModal} onClose={closeRegisterModal} />
+              <RegisterForm onSuccess={closeRegisterModal} onClose={closeRegisterModal} onSwitchToLogin={switchToLogin} />
             </div>
           </div>
         )}
@@ -1137,7 +1196,7 @@ const ApplyPage = () => {
                             </div>
                             <div className={styles.onlinePaymentDetails}>
                               <p style={{ color: '#334155', marginBottom: 10 }}>
-                                Số tiền sẽ quyên góp trực tuyến: <strong style={{ color: '#1a2f5e', fontSize: 18 }}>{donationAmount ? parseFloat(donationAmount).toLocaleString('vi-VN') + 'đ' : '0đ'}</strong>
+                                Số tiền sẽ quyên góp trực tuyến: <strong style={{ color: '#1a2f5e', fontSize: 18 }}>{formatCurrency(donationAmount)}</strong>
                               </p>
                               <p style={{ fontSize: 13, color: '#4b5563', lineHeight: '1.6' }}>
                                 Quý nhà tài trợ vui lòng hoàn tất thông tin liên hệ và bấm nút <strong>"Gửi đơn"</strong> ở chân trang để tiến hành đóng góp.
@@ -1405,11 +1464,11 @@ const ApplyPage = () => {
                   {/* Nút bấm Lưu nháp / Gửi đơn / Reset (Chỉ hiển thị khi làm trực tuyến và đạt bước cuối) */}
                   {(!isDonor || paymentMethod === 'Khac') && activeStep >= lastStepIndex && (
                     <ApplicationFooter
-                      onSaveDraft={handleSaveDraft}
+                      onSaveDraft={null}
                       onSubmit={handleSubmit}
                       onReset={handleReset}
                       isSubmitting={isSubmitting}
-                      isSaving={isSaving}
+                      isSaving={false}
                       isFormValid={isFormValid}
                       isDonor={isDonor}
                     />
@@ -1433,6 +1492,7 @@ const ApplyPage = () => {
             <LoginForm
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -1445,6 +1505,7 @@ const ApplyPage = () => {
             <RegisterForm
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

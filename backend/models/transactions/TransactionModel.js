@@ -37,6 +37,8 @@ const createTransaction = async (transactionData, connection = null) => {
   const {
     yeucauhotroId,
     quyId,
+    loaiGiaoDich,
+    hangMucChi,
     nguoiNhanId,
     soTien,
     hinhThuc,
@@ -48,11 +50,15 @@ const createTransaction = async (transactionData, connection = null) => {
   } = transactionData;
 
   const executor = connection || pool;
+  const loai = loaiGiaoDich || 'Chi';
+  const hangMuc = hangMucChi || (yeucauhotroId ? 'Tai_tro_cho_vay' : null);
 
   const [result] = await executor.execute(
     `INSERT INTO giaodich (
       yeucauhotro_id,
       quy_id,
+      loaigiaodich,
+      hangmucchi,
       nguoinhan_id,
       sotien,
       hinhthuc,
@@ -61,10 +67,12 @@ const createTransaction = async (transactionData, connection = null) => {
       trangthai,
       ghichu,
       nguoithuchien_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       yeucauhotroId,
       quyId,
+      loai,
+      hangMuc,
       nguoiNhanId,
       soTien,
       hinhThuc || 'Chuyen khoan',
@@ -89,6 +97,8 @@ const getTransactionById = async (giaoDichId) => {
       gd.giaodich_id,
       gd.yeucauhotro_id,
       gd.quy_id,
+      gd.loaigiaodich,
+      gd.hangmucchi,
       gd.nguoinhan_id,
       gd.sotien,
       gd.hinhthuc,
@@ -131,6 +141,8 @@ const getTransactionByIdDetailed = async (giaoDichId) => {
       gd.giaodich_id,
       gd.yeucauhotro_id,
       gd.quy_id,
+      gd.loaigiaodich,
+      gd.hangmucchi,
       gd.nguoinhan_id,
       gd.sotien,
       gd.hinhthuc,
@@ -166,7 +178,7 @@ const getTransactionByIdDetailed = async (giaoDichId) => {
      LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
      LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
      LEFT JOIN khoantaitro kt ON (
-       gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+       gd.loaigiaodich = 'Thu'
        AND (
          (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
          OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
@@ -190,6 +202,8 @@ const getTransactionsByFund = async (quyId, limit = 50, offset = 0) => {
       gd.giaodich_id,
       gd.yeucauhotro_id,
       gd.quy_id,
+      gd.loaigiaodich,
+      gd.hangmucchi,
       gd.nguoinhan_id,
       gd.sotien,
       gd.hinhthuc,
@@ -198,7 +212,7 @@ const getTransactionsByFund = async (quyId, limit = 50, offset = 0) => {
       gd.ngaygiaodich,
       nd.hoten as nguoinhan_hoten
      FROM giaodich gd
-     INNER JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
+     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
      WHERE gd.quy_id = ?
      ORDER BY gd.ngaygiaodich DESC
      LIMIT ? OFFSET ?`,
@@ -217,6 +231,8 @@ const getTransactionsByApplication = async (yeucauhotroId) => {
       gd.giaodich_id,
       gd.yeucauhotro_id,
       gd.quy_id,
+      gd.loaigiaodich,
+      gd.hangmucchi,
       gd.nguoinhan_id,
       gd.sotien,
       gd.hinhthuc,
@@ -248,13 +264,10 @@ const getAllTransactions = async (filters, limit, offset) => {
   let queryParams = [];
 
   // Filter theo loại giao dịch
-  // Thu: yeucauhotro_id IS NULL AND nguoinhan_id IS NULL
-  // Chi: yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL
   if (filters.loai === 'Thu') {
-    whereConditions.push('gd.yeucauhotro_id IS NULL');
-    whereConditions.push('gd.nguoinhan_id IS NULL');
+    whereConditions.push("gd.loaigiaodich = 'Thu'");
   } else if (filters.loai === 'Chi') {
-    whereConditions.push('(gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)');
+    whereConditions.push("gd.loaigiaodich = 'Chi'");
   }
 
   // Filter theo quỹ
@@ -280,7 +293,7 @@ const getAllTransactions = async (filters, limit, offset) => {
     addInFilter(whereConditions, queryParams, 'gd.doisoattrangthai', filters.doiSoatTrangThai);
   }
 
-  // Filter theo hình thức
+  // Filter theo hình thức chuyển khoản
   if (filters.hinhThuc) {
     whereConditions.push('gd.hinhthuc = ?');
     queryParams.push(filters.hinhThuc);
@@ -291,7 +304,6 @@ const getAllTransactions = async (filters, limit, offset) => {
     whereConditions.push('DATE(gd.ngaygiaodich) >= ?');
     queryParams.push(filters.tuNgay);
   }
-
   if (filters.denNgay) {
     whereConditions.push('DATE(gd.ngaygiaodich) <= ?');
     queryParams.push(filters.denNgay);
@@ -321,7 +333,7 @@ const getAllTransactions = async (filters, limit, offset) => {
     FROM giaodich gd
     LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
     LEFT JOIN khoantaitro kt ON (
-      gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+      gd.loaigiaodich = 'Thu'
       AND (
         (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
         OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
@@ -340,6 +352,8 @@ const getAllTransactions = async (filters, limit, offset) => {
       gd.giaodich_id,
       gd.yeucauhotro_id,
       gd.quy_id,
+      gd.loaigiaodich,
+      gd.hangmucchi,
       gd.nguoinhan_id,
       gd.sotien,
       gd.hinhthuc,
@@ -375,7 +389,7 @@ const getAllTransactions = async (filters, limit, offset) => {
     LEFT JOIN nguoidung nd_thuchien ON gd.nguoithuchien_id = nd_thuchien.nguoidung_id
     LEFT JOIN nguoidung nd_doisoat ON gd.doisoatboiid = nd_doisoat.nguoidung_id
     LEFT JOIN khoantaitro kt ON (
-      gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+      gd.loaigiaodich = 'Thu'
       AND (
         (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
         OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
@@ -408,10 +422,9 @@ const getTransactionsSummary = async (filters) => {
 
   // Filter theo loại giao dịch
   if (filters.loai === 'Thu') {
-    whereConditions.push('gd.yeucauhotro_id IS NULL');
-    whereConditions.push('gd.nguoinhan_id IS NULL');
+    whereConditions.push("gd.loaigiaodich = 'Thu'");
   } else if (filters.loai === 'Chi') {
-    whereConditions.push('(gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)');
+    whereConditions.push("gd.loaigiaodich = 'Chi'");
   }
 
   if (filters.quyId) {
@@ -461,26 +474,15 @@ const getTransactionsSummary = async (filters) => {
   const [rows] = await pool.query(
     `SELECT
        COUNT(*) AS total,
-       -- Tổng thu: yeucauhotro_id IS NULL AND nguoinhan_id IS NULL
-       COALESCE(SUM(CASE 
-         WHEN gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL 
-         THEN gd.sotien 
-         ELSE 0 
-       END), 0) AS tong_thu,
-       -- Tổng chi: yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL
-       COALESCE(SUM(CASE 
-         WHEN gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL 
-         THEN gd.sotien 
-         ELSE 0 
-       END), 0) AS tong_chi,
-       -- Đối soát stats
+       COALESCE(SUM(CASE WHEN gd.loaigiaodich = 'Thu' THEN gd.sotien ELSE 0 END), 0) AS tong_thu,
+       COALESCE(SUM(CASE WHEN gd.loaigiaodich = 'Chi' THEN gd.sotien ELSE 0 END), 0) AS tong_chi,
        COUNT(CASE WHEN gd.doisoattrangthai = 'Chua_doi_soat' THEN 1 END) AS chua_doi_soat,
        COUNT(CASE WHEN gd.doisoattrangthai = 'Da_doi_soat' THEN 1 END) AS da_doi_soat,
        COUNT(CASE WHEN gd.doisoattrangthai = 'Bat_thuong' THEN 1 END) AS bat_thuong
      FROM giaodich gd
      LEFT JOIN nguoidung nd ON gd.nguoinhan_id = nd.nguoidung_id
      LEFT JOIN khoantaitro kt ON (
-       gd.yeucauhotro_id IS NULL AND gd.nguoinhan_id IS NULL
+       gd.loaigiaodich = 'Thu'
        AND (
          (gd.magiaodich IS NOT NULL AND gd.magiaodich = kt.magiaodich)
          OR (gd.ghichu LIKE CONCAT('%Duyệt khoản tài trợ #', kt.khoantaitro_id, '%'))
@@ -529,6 +531,56 @@ const updateDoiSoatStatus = async (giaoDichId, doiSoatTrangThai, soTienThucTe = 
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getYearlyRevenue
+// MỤC ĐÍCH: Tính tổng Thu thực tế của năm tài chính
+// ─────────────────────────────────────────────────────────────────────────────
+const getYearlyRevenue = async (year) => {
+  const [rows] = await pool.query(
+    `SELECT COALESCE(SUM(sotien), 0) AS total
+     FROM giaodich
+     WHERE loaigiaodich = 'Thu'
+       AND trangthai = 'Thanh cong'
+       AND YEAR(ngaygiaodich) = ?`,
+    [year]
+  );
+  return parseFloat(rows[0]?.total || 0);
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getYearlyExpensesByCategory
+// MỤC ĐÍCH: Tổng hợp chi theo hạng mục chi cho một năm tài chính
+// ─────────────────────────────────────────────────────────────────────────────
+const getYearlyExpensesByCategory = async (year) => {
+  const [rows] = await pool.query(
+    `SELECT 
+       hangmucchi,
+       COALESCE(SUM(sotien), 0) AS total
+     FROM giaodich
+     WHERE loaigiaodich = 'Chi'
+       AND trangthai = 'Thanh cong'
+       AND YEAR(ngaygiaodich) = ?
+     GROUP BY hangmucchi`,
+    [year]
+  );
+  
+  // Ánh xạ thành object cho dễ dùng
+  const expenses = {
+    Tai_tro_cho_vay: 0,
+    Tham_dinh_du_an: 0,
+    Bo_may_hoat_dong: 0,
+    Nhiem_vu_khac: 0
+  };
+  
+  rows.forEach(r => {
+    if (r.hangmucchi in expenses) {
+      expenses[r.hangmucchi] = parseFloat(r.total || 0);
+    }
+  });
+  
+  return expenses;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HÀM: updateTransactionStatus
 // MỤC ĐÍCH: Cập nhật trạng thái giao dịch
 // ─────────────────────────────────────────────────────────────────────────────
@@ -554,4 +606,6 @@ export default {
   getTransactionsSummary,
   updateDoiSoatStatus,
   updateTransactionStatus,
+  getYearlyRevenue,
+  getYearlyExpensesByCategory
 };

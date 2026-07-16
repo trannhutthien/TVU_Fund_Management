@@ -286,8 +286,12 @@
 
 .login-form-footer-link {
   color: $color-primary;
+  background: none;
+  border: none;
+  font-size: $text-sm;
   text-decoration: none;
   font-weight: $font-semibold;
+  cursor: pointer;
   transition: color $transition-base;
 
   &:hover {

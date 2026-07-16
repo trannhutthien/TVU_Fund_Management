@@ -5,15 +5,20 @@ import {
   HiOutlineArrowLeft,
   HiOutlineInformationCircle,
   HiOutlineXCircle,
+  HiOutlineClipboardDocumentCheck,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import CurrencyInput from '@components/common/CurrencyInput';
 import { useAuth } from '@context/AuthContext';
 import api from '@services/api';
+import nghiemThuService from '@services/nghiemThuService';
 import StudentInfoCard from './StudentInfoCard/StudentInfoCard';
 import RequestInfoCard from './RequestInfoCard/RequestInfoCard';
 import BankInfoCard from './BankInfoCard/BankInfoCard';
 import ReviewPanel from './ReviewPanel/ReviewPanel';
+import NghiemThuFormModal from './NghiemThuSection/NghiemThuFormModal';
+import NghiemThuTimeline from './NghiemThuSection/NghiemThuTimeline';
 import styles from './XetDuyetDetail.module.scss';
 
 const INITIAL_CHECKLIST = {
@@ -72,6 +77,14 @@ const XetDuyetDetail = () => {
   const [ghiChu, setGhiChu] = useState('');
   const [ghiChuError, setGhiChuError] = useState('');
   const [previewFile, setPreviewFile] = useState(null);
+  const [nghiemThuHistory, setNghiemThuHistory] = useState([]);
+  const [showNghiemThuModal, setShowNghiemThuModal] = useState(false);
+
+  // ── Fields cho "Tài trợ có thu hồi" (Admin duyệt cấp 2) ──
+  const [mucThuHoi, setMucThuHoi] = useState('');
+  const [thoiHanHoanTra, setThoiHanHoanTra] = useState('');
+  const [soQuyetDinh, setSoQuyetDinh] = useState('');
+  const [thuHoiErrors, setThuHoiErrors] = useState({});
 
   // Xác định role và endpoint tương ứng
   const userRole = user?.roleId || user?.role_id || user?.vaiTro || user?.role?.id;
@@ -113,6 +126,23 @@ const XetDuyetDetail = () => {
       document.body.style.overflow = '';
     };
   }, [previewFile]);
+
+  useEffect(() => {
+    if (!data?.canNghiemThu || !request_id) {
+      setNghiemThuHistory([]);
+      return;
+    }
+    let mounted = true;
+    nghiemThuService
+      .getInspectionHistory(request_id)
+      .then((res) => {
+        if (mounted) setNghiemThuHistory(res?.data?.lichSuNghiemThu || []);
+      })
+      .catch(() => {
+        if (mounted) setNghiemThuHistory([]);
+      });
+    return () => { mounted = false; };
+  }, [data?.canNghiemThu, request_id]);
 
   const files = useMemo(
     () => parseFileList(data?.fileDinhKem),
@@ -156,6 +186,13 @@ const XetDuyetDetail = () => {
 
   const isDisabled = isReviewed;
 
+  const canShowNghiemThu = data?.canNghiemThu && 
+    ['Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat'].includes(data?.trangThai);
+  const canCreateNghiemThu = data?.canNghiemThu && 
+    ['Da giai ngan', 'Cho nghiem thu'].includes(data?.trangThai);
+  const isNghiemThuDone = data?.trangThai === 'Da nghiem thu';
+  const isNghiemThuFailed = data?.trangThai === 'Nghiem thu khong dat';
+
   const handleToggleChecklist = (key) => {
     if (isDisabled) return;
     setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -198,24 +235,54 @@ const XetDuyetDetail = () => {
       setGhiChuError('Bắt buộc nhập ghi chú xét duyệt');
       return;
     }
-    
+
+    // Validate thêm cho "Tài trợ có thu hồi" (Admin duyệt cấp 2)
+    if (isAdmin && data?.loaiHotro === 'Tai tro co thu hoi') {
+      const errors = {};
+      if (!mucThuHoi || isNaN(mucThuHoi) || parseFloat(mucThuHoi) <= 0) {
+        errors.mucThuHoi = 'Mức thu hồi phải > 0';
+      }
+      if (!thoiHanHoanTra || isNaN(thoiHanHoanTra) || parseInt(thoiHanHoanTra) <= 0) {
+        errors.thoiHanHoanTra = 'Thời hạn hoàn trả phải > 0 tháng';
+      }
+      if (!soQuyetDinh.trim()) {
+        errors.soQuyetDinh = 'Số quyết định là bắt buộc';
+      }
+      if (Object.keys(errors).length > 0) {
+        setThuHoiErrors(errors);
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       // Xác định endpoint dựa trên role
       let endpoint;
       let successMessage;
       let redirectPath;
-      
+      let payload;
+
       if (isGiaoVu) {
         // Giáo vụ (role 3): Duyệt cấp 1
         endpoint = `/applications/${request_id}/staff-approve`;
         successMessage = 'Đã chuyển hồ sơ lên Admin xét duyệt';
         redirectPath = '/can-bo/xet-duyet';
+        payload = { ghiChu };
       } else if (isAdmin) {
         // Admin (role 1): Duyệt cấp 2
         endpoint = `/applications/${request_id}/admin-approve`;
         successMessage = 'Đã chuyển hồ sơ lên Kế toán giải ngân';
         redirectPath = '/admin/xet-duyet';
+        if (data?.loaiHotro === 'Tai tro co thu hoi') {
+          payload = {
+            ghiChu,
+            mucthuhoi: parseFloat(mucThuHoi),
+            thoihanhoantra: parseInt(thoiHanHoanTra),
+            soQuyetDinh: soQuyetDinh.trim(),
+          };
+        } else {
+          payload = { ghiChu };
+        }
       } else if (isKeToan) {
         // Kế toán (role 2): Duyệt cấp 3 - sẽ xử lý ở trang Giải ngân
         toast.info('Vui lòng sử dụng trang Giải ngân để xử lý đơn này');
@@ -225,8 +292,8 @@ const XetDuyetDetail = () => {
         toast.error('Bạn không có quyền duyệt đơn này');
         return;
       }
-      
-      await api.put(endpoint, { ghiChu });
+
+      await api.put(endpoint, payload);
       toast.success(successMessage);
       navigate(redirectPath);
     } catch (err) {
@@ -322,6 +389,71 @@ const XetDuyetDetail = () => {
           </div>
 
           <aside className={styles.rightCol}>
+            {/* ── Fields bổ sung cho "Tài trợ có thu hồi" (Admin duyệt cấp 2) ── */}
+            {isAdmin && data?.loaiHotro === 'Tai tro co thu hoi' && !isDisabled && (
+              <section className={styles.thuHoiSection}>
+                <div className={styles.thuHoiHeader}>
+                  <h3 className={styles.thuHoiTitle}>Thông tin tài trợ thu hồi</h3>
+                  <span className={styles.thuHoiRequired}>Bắt buộc</span>
+                </div>
+
+                <div className={styles.thuHoiField}>
+                  <label className={styles.thuHoiLabel} htmlFor="mucThuHoi">
+                    Mức thu hồi (VNĐ)
+                  </label>
+                  <CurrencyInput
+                    id="mucThuHoi"
+                    value={mucThuHoi}
+                    onChange={(raw) => {
+                      setMucThuHoi(raw);
+                      if (thuHoiErrors.mucThuHoi) setThuHoiErrors((p) => ({ ...p, mucThuHoi: '' }));
+                    }}
+                    className={`${styles.thuHoiInput} ${thuHoiErrors.mucThuHoi ? styles.thuHoiInputError : ''}`}
+                    placeholder="VD: 10000000"
+                    min={0}
+                  />
+                  {thuHoiErrors.mucThuHoi && <span className={styles.thuHoiError}>{thuHoiErrors.mucThuHoi}</span>}
+                </div>
+
+                <div className={styles.thuHoiField}>
+                  <label className={styles.thuHoiLabel} htmlFor="thoiHanHoanTra">
+                    Thời hạn hoàn trả (tháng)
+                  </label>
+                  <input
+                    id="thoiHanHoanTra"
+                    type="number"
+                    min="1"
+                    className={`${styles.thuHoiInput} ${thuHoiErrors.thoiHanHoanTra ? styles.thuHoiInputError : ''}`}
+                    value={thoiHanHoanTra}
+                    onChange={(e) => {
+                      setThoiHanHoanTra(e.target.value);
+                      if (thuHoiErrors.thoiHanHoanTra) setThuHoiErrors((p) => ({ ...p, thoiHanHoanTra: '' }));
+                    }}
+                    placeholder="VD: 12"
+                  />
+                  {thuHoiErrors.thoiHanHoanTra && <span className={styles.thuHoiError}>{thuHoiErrors.thoiHanHoanTra}</span>}
+                </div>
+
+                <div className={styles.thuHoiField}>
+                  <label className={styles.thuHoiLabel} htmlFor="soQuyetDinh">
+                    Số quyết định hợp đồng
+                  </label>
+                  <input
+                    id="soQuyetDinh"
+                    type="text"
+                    className={`${styles.thuHoiInput} ${thuHoiErrors.soQuyetDinh ? styles.thuHoiInputError : ''}`}
+                    value={soQuyetDinh}
+                    onChange={(e) => {
+                      setSoQuyetDinh(e.target.value);
+                      if (thuHoiErrors.soQuyetDinh) setThuHoiErrors((p) => ({ ...p, soQuyetDinh: '' }));
+                    }}
+                    placeholder="VD: QĐ-2025-001"
+                  />
+                  {thuHoiErrors.soQuyetDinh && <span className={styles.thuHoiError}>{thuHoiErrors.soQuyetDinh}</span>}
+                </div>
+              </section>
+            )}
+
             <ReviewPanel
               checklist={checklist}
               onToggleChecklist={handleToggleChecklist}
@@ -334,6 +466,32 @@ const XetDuyetDetail = () => {
               onApprove={handleApprove}
               onReject={handleReject}
             />
+
+            {canShowNghiemThu && (
+              <section className={styles.nghiemThuSection}>
+                <div className={styles.nghiemThuHeader}>
+                  <HiOutlineClipboardDocumentCheck size={18} className={styles.nghiemThuIcon} />
+                  <h3 className={styles.nghiemThuTitle}>Nghiệm thu</h3>
+                  {isNghiemThuDone && <span className={styles.nghiemThuBadge}>Đạt</span>}
+                  {isNghiemThuFailed && <span className={`${styles.nghiemThuBadge} ${styles.nghiemThuBadgeFailed}`}>Không đạt</span>}
+                </div>
+
+                {nghiemThuHistory.length > 0 && (
+                  <NghiemThuTimeline history={nghiemThuHistory} />
+                )}
+
+                {canCreateNghiemThu && (isAdmin || isGiaoVu) && (
+                  <Button
+                    variant="primary"
+                    leftIcon={<HiOutlineClipboardDocumentCheck />}
+                    onClick={() => setShowNghiemThuModal(true)}
+                    className={styles.nghiemThuBtn}
+                  >
+                    Tạo lượt nghiệm thu
+                  </Button>
+                )}
+              </section>
+            )}
           </aside>
         </div>
 
@@ -357,6 +515,23 @@ const XetDuyetDetail = () => {
               onClick={(e) => e.stopPropagation()}
             />
           </div>
+        )}
+
+        {showNghiemThuModal && (
+          <NghiemThuFormModal
+            yeucauhotroId={parseInt(request_id)}
+            existingHistory={nghiemThuHistory}
+            onClose={() => setShowNghiemThuModal(false)}
+            onSuccess={() => {
+              // Reload data
+              api.get(`/applications/${request_id}`).then((res) => {
+                setData(res.data?.data || null);
+              });
+              nghiemThuService.getInspectionHistory(request_id).then((res) => {
+                setNghiemThuHistory(res?.data?.lichSuNghiemThu || []);
+              });
+            }}
+          />
         )}
       </div>
     </div>

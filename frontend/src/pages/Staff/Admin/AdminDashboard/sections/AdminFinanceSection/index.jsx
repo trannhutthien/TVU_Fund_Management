@@ -8,13 +8,8 @@ import {
   HiAcademicCap,
 } from 'react-icons/hi2';
 import { StatCard } from '@components/common/Card';
+import { formatCurrency } from '@utils/formatters';
 import styles from './AdminFinanceSection.module.scss';
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ─── ADMIN FINANCE SECTION ─────────────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════════
-// CÔNG DỤNG: Hiển thị các stats cards tài chính quan trọng
-// ═══════════════════════════════════════════════════════════════════════════════
 
 const AdminFinanceSection = ({ financeData }) => {
   if (!financeData) return null;
@@ -28,12 +23,6 @@ const AdminFinanceSection = ({ financeData }) => {
     tongGiaiNgan,
   } = financeData;
 
-  // ─── FORMAT CURRENCY ───────────────────────────────────────────────────────
-  const formatCurrency = (value) => {
-    return `${(value || 0).toLocaleString('vi-VN')}đ`;
-  };
-
-  // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
     <div className={styles.section}>
       {/* Section Title */}

@@ -7,6 +7,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { getInitial } from '@utils/formatters';
 import styles from './PheDuyetTable.module.scss';
 
 const PheDuyetTable = ({ data, loading, onViewDetail }) => {
@@ -43,8 +44,6 @@ const PheDuyetTable = ({ data, loading, onViewDetail }) => {
     'Yeu cau bo sung': { status: 'processing', label: 'Yêu cầu bổ sung' },
     'Cho duyet': { status: 'pending', label: 'Chờ duyệt' },
   };
-
-  const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Chưa xử lý';

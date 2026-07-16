@@ -1,6 +1,7 @@
 import TransactionModel from "../../models/transactions/TransactionModel.js";
 import PheDuyetModel from "../../models/applications/PheDuyetModel.js";
 import DonationModel from "../../models/donations/DonationModel.js";
+import DuToanModel from "../../models/reports/DuToanModel.js";
 import ExcelJS from "exceljs";
 
 const VALID_DOI_SOAT_STATUSES = ['Chua_doi_soat', 'Da_doi_soat', 'Bat_thuong'];
@@ -19,7 +20,6 @@ const TRANSACTION_STATUS_LABELS = {
 
 const parseDoiSoatStatuses = (value) => {
   if (!value) return [];
-
   const rawValues = Array.isArray(value) ? value : String(value).split(',');
   return [...new Set(
     rawValues
@@ -39,18 +39,21 @@ const formatDateTime = (value) => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('vi-VN');
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
 // Helper to map DB row to frontend Transaction object structure
+// Sử dụng cột loaigiaodich và hangmucchi (thêm ở C3) để phân biệt Thu/Chi.
+// ─────────────────────────────────────────────────────────────────────────────
 const mapTransactionRow = (tx) => {
   if (!tx) return null;
-  
-  // Xác định loại giao dịch:
-  // - Giao dịch THU: yeucauhotro_id = NULL và nguoinhan_id = NULL (từ tài trợ vào quỹ)
-  // - Giao dịch CHI: yeucauhotro_id != NULL và nguoinhan_id != NULL (từ quỹ ra sinh viên)
-  const loai = (tx.yeucauhotro_id === null && tx.nguoinhan_id === null) ? 'Thu' : 'Chi';
-  
+
+  // Ưu tiên cột loaigiaodich (C3); fallback suy luận cũ
+  const loai = tx.loaigiaodich || ((tx.yeucauhotro_id === null && tx.nguoinhan_id === null) ? 'Thu' : 'Chi');
+  const hangMucChi = tx.hangmucchi || (tx.yeucauhotro_id ? 'Tai_tro_cho_vay' : null);
+
   return {
     transactionId: tx.giaodich_id,
-    loai: loai,
+    loai,
+    hangMucChi,
     soTien: parseFloat(tx.sotien || 0),
     trangThai: tx.trangthai,
     doiSoatTrangThai: tx.doisoattrangthai,
@@ -111,66 +114,42 @@ export const getAllTransactions = async (req, res) => {
       doiSoatTrangThai,
       tuNgay,
       denNgay,
+      nam,
       keyword
     } = req.query;
 
-    // Validate page và limit
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
     if (isNaN(pageNum) || pageNum < 1) {
-      return res.status(400).json({
-        success: false,
-        message: "Trang phải là số nguyên dương",
-      });
+      return res.status(400).json({ success: false, message: "Trang phải là số nguyên dương" });
     }
-
     if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Limit phải từ 1 đến 100",
-      });
+      return res.status(400).json({ success: false, message: "Limit phải từ 1 đến 100" });
     }
-
-    // Validate loai (nếu có)
     if (loai && !['Thu', 'Chi'].includes(loai)) {
-      return res.status(400).json({
-        success: false,
-        message: "Loại giao dịch phải là 'Thu' hoặc 'Chi'",
-      });
+      return res.status(400).json({ success: false, message: "Loại giao dịch phải là 'Thu' hoặc 'Chi'" });
     }
-
-    // Validate trangThai (nếu có)
     const validStatuses = ['Thanh cong', 'That bai', 'Dang xu ly'];
     if (trangThai && !validStatuses.includes(trangThai)) {
-      return res.status(400).json({
-        success: false,
-        message: "Trạng thái không hợp lệ",
-      });
+      return res.status(400).json({ success: false, message: "Trạng thái không hợp lệ" });
     }
-
-    // Validate doiSoatTrangThai (nếu có)
-    const validDoiSoatStatuses = ['Chua_doi_soat', 'Da_doi_soat', 'Bat_thuong'];
-    if (doiSoatTrangThai && !validDoiSoatStatuses.includes(doiSoatTrangThai)) {
-      return res.status(400).json({
-        success: false,
-        message: "Trạng thái đối soát không hợp lệ",
-      });
+    if (doiSoatTrangThai && !VALID_DOI_SOAT_STATUSES.includes(doiSoatTrangThai)) {
+      return res.status(400).json({ success: false, message: "Trạng thái đối soát không hợp lệ" });
     }
-
-    // Validate ngày (nếu có)
     if (tuNgay && isNaN(Date.parse(tuNgay))) {
-      return res.status(400).json({
-        success: false,
-        message: "Từ ngày không đúng định dạng (YYYY-MM-DD)",
-      });
+      return res.status(400).json({ success: false, message: "Từ ngày không đúng định dạng (YYYY-MM-DD)" });
+    }
+    if (denNgay && isNaN(Date.parse(denNgay))) {
+      return res.status(400).json({ success: false, message: "Đến ngày không đúng định dạng (YYYY-MM-DD)" });
     }
 
-    if (denNgay && isNaN(Date.parse(denNgay))) {
-      return res.status(400).json({
-        success: false,
-        message: "Đến ngày không đúng định dạng (YYYY-MM-DD)",
-      });
+    if (nam && isNaN(parseInt(nam))) {
+      return res.status(400).json({ success: false, message: "Tham số năm không hợp lệ" });
+    }
+    if (nam && !tuNgay && !denNgay) {
+      var effectiveTuNgay = `${nam}-01-01`;
+      var effectiveDenNgay = `${nam}-12-31`;
     }
 
     const filters = {
@@ -178,15 +157,14 @@ export const getAllTransactions = async (req, res) => {
       quyId: quyId ? parseInt(quyId) : null,
       trangThai,
       doiSoatTrangThai,
-      tuNgay,
-      denNgay,
+      tuNgay: typeof effectiveTuNgay !== 'undefined' ? effectiveTuNgay : tuNgay,
+      denNgay: typeof effectiveDenNgay !== 'undefined' ? effectiveDenNgay : denNgay,
       keyword: keyword?.trim() || null
     };
 
     const offset = (pageNum - 1) * limitNum;
     const result = await TransactionModel.getAllTransactions(filters, limitNum, offset);
     const totalPages = Math.ceil(result.total / limitNum);
-
     const formatted = result.transactions.map(mapTransactionRow);
 
     return res.status(200).json({
@@ -195,7 +173,7 @@ export const getAllTransactions = async (req, res) => {
       data: formatted,
       pagination: {
         currentPage: pageNum,
-        totalPages: totalPages,
+        totalPages,
         totalRecords: result.total,
         limit: limitNum,
         hasNextPage: pageNum < totalPages,
@@ -212,10 +190,7 @@ export const getAllTransactions = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi getAllTransactions:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi server, vui lòng thử lại sau",
-    });
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
   }
 };
 
@@ -227,24 +202,17 @@ export const getTransactionById = async (req, res) => {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "ID giao dịch không hợp lệ",
-      });
+      return res.status(400).json({ success: false, message: "ID giao dịch không hợp lệ" });
     }
 
     const transaction = await TransactionModel.getTransactionByIdDetailed(id);
 
     if (!transaction) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy giao dịch",
-      });
+      return res.status(404).json({ success: false, message: "Không tìm thấy giao dịch" });
     }
 
     const formatted = mapTransactionRow(transaction);
 
-    // Lấy lịch sử phê duyệt đơn (Chi) hoặc xác nhận tài trợ (Thu)
     let lichSuPheDuyet = [];
     if (formatted.requestId) {
       lichSuPheDuyet = await PheDuyetModel.getPheDuyetByRequestId(formatted.requestId);
@@ -261,10 +229,7 @@ export const getTransactionById = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi getTransactionById:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi server, vui lòng thử lại sau",
-    });
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
   }
 };
 
@@ -302,7 +267,128 @@ export const getTransactionsSummary = async (req, res) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ─── GET /api/transactions/export (XUẤT EXCEL TOÀN BỘ GIAO DỊCH ĐANG FILTER) ─
+// ─── POST /api/transactions/chi-khac (GHI NHẬN CHI KHÁC - C3) ─────────────────
+// Hạng mục:
+//   - Tham_dinh_du_an  → phí thẩm định dự án, không cần dự toán năm
+//   - Bo_may_hoat_dong → chi bộ máy, bắt buộc dự toán năm đã duyệt + kiểm tra hạn mức
+//   - Nhiem_vu_khac    → nhiệm vụ khác, không cần dự toán năm
+// ═══════════════════════════════════════════════════════════════════════════════
+export const createChiKhac = async (req, res) => {
+  try {
+    const {
+      quyId,
+      sotien,
+      hangmucchi,
+      hinhthuc,
+      ghichu,
+      ngaygiaodich,
+      chungtu
+    } = req.body;
+    const nguoiThucHienId = req.user.id;
+
+    // ── Validate bắt buộc
+    if (!quyId || !sotien || !hangmucchi) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin bắt buộc: quyId, sotien, hangmucchi"
+      });
+    }
+
+    const VALID_HANG_MUC = ['Tham_dinh_du_an', 'Bo_may_hoat_dong', 'Nhiem_vu_khac'];
+    if (!VALID_HANG_MUC.includes(hangmucchi)) {
+      return res.status(400).json({
+        success: false,
+        message: `Hạng mục chi không hợp lệ. Chỉ chấp nhận: ${VALID_HANG_MUC.join(', ')}`
+      });
+    }
+
+    const soTienNum = parseFloat(sotien);
+    if (isNaN(soTienNum) || soTienNum <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Số tiền phải lớn hơn 0"
+      });
+    }
+
+    // ── Nếu là Bo_may_hoat_dong: kiểm tra dự toán năm đã được duyệt và không vượt hạn mức
+    if (hangmucchi === 'Bo_may_hoat_dong') {
+      const ngay = ngaygiaodich ? new Date(ngaygiaodich) : new Date();
+      const namTaiChinh = ngay.getFullYear();
+
+      const limitCheck = await DuToanModel.checkLimit(namTaiChinh, soTienNum);
+
+      if (!limitCheck.exists) {
+        return res.status(400).json({
+          success: false,
+          message: `Chưa có dự toán bộ máy hoạt động năm ${namTaiChinh} được phê duyệt. Vui lòng đề xuất và duyệt dự toán trước.`,
+          code: 'NO_APPROVED_BUDGET'
+        });
+      }
+
+      if (!limitCheck.approved) {
+        return res.status(400).json({
+          success: false,
+          message: `Dự toán năm ${namTaiChinh} chưa được duyệt. Vui lòng chờ Admin phê duyệt.`,
+          code: 'BUDGET_NOT_APPROVED'
+        });
+      }
+
+      if (limitCheck.vuotDuToan) {
+        return res.status(400).json({
+          success: false,
+          message: `Chi vượt hạn mức dự toán năm ${namTaiChinh}. Đã chi: ${limitCheck.luyKeDaChi.toLocaleString('vi-VN')}đ / Dự toán: ${limitCheck.soTienDuToan.toLocaleString('vi-VN')}đ. Còn lại: ${limitCheck.conLai.toLocaleString('vi-VN')}đ`,
+          code: 'BUDGET_EXCEEDED',
+          data: {
+            soTienDuToan: limitCheck.soTienDuToan,
+            daChi: limitCheck.luyKeDaChi,
+            conLai: limitCheck.conLai,
+            soTienYeuCau: soTienNum
+          }
+        });
+      }
+    }
+
+    // ── Tạo giao dịch
+    const newTx = await TransactionModel.createTransaction({
+      quyId: parseInt(quyId),
+      yeucauhotroId: null,         // Không phải chi tài trợ sinh viên
+      nguoiNhanId: null,           // Không có người nhận (chi vận hành)
+      soTien: soTienNum,
+      hinhThuc: hinhthuc || 'Chuyen khoan',
+      maGiaoDich: null,
+      chungTu: chungtu || null,
+      ghiChu: ghichu || null,
+      nguoiThucHienId,
+      ngayGiaoDich: ngaygiaodich || null,
+      loaiGiaoDich: 'Chi',
+      hangMucChi: hangmucchi,
+      trangThai: 'Thanh cong'
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `Ghi nhận chi "${hangmucchi.replace(/_/g, ' ')}" thành công`,
+      data: {
+        giaodich_id: newTx.insertId,
+        hangmucchi,
+        sotien: soTienNum,
+        loaigiaodich: 'Chi',
+        trangthai: 'Thanh cong'
+      }
+    });
+
+  } catch (error) {
+    console.error("Lỗi createChiKhac:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+      error: error.message
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/transactions/export (XUẤT EXCEL TOÀN BỘ GIAO DỊCH) ─────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 export const exportTransactions = async (req, res) => {
   try {
@@ -313,6 +399,7 @@ export const exportTransactions = async (req, res) => {
       doiSoatTrangThai,
       tuNgay,
       denNgay,
+      nam,
       keyword,
       reportType,
       includeSummary,
@@ -325,22 +412,22 @@ export const exportTransactions = async (req, res) => {
 
     const parsedTransactionId = transactionId ? parseInt(transactionId, 10) : null;
     if (transactionId && (Number.isNaN(parsedTransactionId) || parsedTransactionId < 1)) {
-      return res.status(400).json({
-        success: false,
-        message: "ID giao dịch không hợp lệ",
-      });
+      return res.status(400).json({ success: false, message: "ID giao dịch không hợp lệ" });
     }
 
     const doiSoatStatuses = parseDoiSoatStatuses(doiSoatTrangThai);
     const invalidDoiSoatStatuses = doiSoatStatuses.filter(
       (status) => !VALID_DOI_SOAT_STATUSES.includes(status)
     );
-
     if (invalidDoiSoatStatuses.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Trạng thái đối soát không hợp lệ",
-      });
+      return res.status(400).json({ success: false, message: "Trạng thái đối soát không hợp lệ" });
+    }
+
+    let effectiveTuNgay = tuNgay;
+    let effectiveDenNgay = denNgay;
+    if (nam && !tuNgay && !denNgay) {
+      effectiveTuNgay = `${nam}-01-01`;
+      effectiveDenNgay = `${nam}-12-31`;
     }
 
     const filters = {
@@ -349,15 +436,14 @@ export const exportTransactions = async (req, res) => {
       trangThai,
       doiSoatTrangThai: formatDoiSoatFilter(doiSoatStatuses),
       transactionId: parsedTransactionId,
-      tuNgay,
-      denNgay,
+      tuNgay: effectiveTuNgay,
+      denNgay: effectiveDenNgay,
       keyword: keyword?.trim() || null
     };
 
     const result = await TransactionModel.getAllTransactions(filters, 100000, 0);
     const transactions = result.transactions.map(mapTransactionRow);
 
-    // Tạo Excel workbook
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TVU Fund Management";
     workbook.created = new Date();
@@ -387,12 +473,9 @@ export const exportTransactions = async (req, res) => {
       sheet.getColumn(index + 1).width = column.width;
     });
 
-    // Tiêu đề báo cáo
     sheet.mergeCells(1, 1, 1, columns.length);
     const titleCell = sheet.getCell("A1");
-    titleCell.value = isDoiSoatExport
-      ? "DANH SÁCH CHỨNG TỪ ĐỐI SOÁT"
-      : "DANH SÁCH GIAO DỊCH";
+    titleCell.value = isDoiSoatExport ? "DANH SÁCH CHỨNG TỪ ĐỐI SOÁT" : "DANH SÁCH GIAO DỊCH";
     titleCell.font = { size: 16, bold: true, color: { argb: "FF1A2F5E" } };
     titleCell.alignment = { horizontal: "center", vertical: "middle" };
     sheet.getRow(1).height = 30;
@@ -441,37 +524,26 @@ export const exportTransactions = async (req, res) => {
       sheet.getCell("B8").alignment = { wrapText: true };
     }
 
-    // Header bảng
     const headerRow = sheet.getRow(tableStartRow);
     headerRow.values = columns.map((column) => column.header);
     headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
     headerRow.height = 24;
     headerRow.eachCell((cell) => {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF1A2F5E" }
-      };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A2F5E" } };
       cell.alignment = { horizontal: "center", vertical: "middle" };
       cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
+        top: { style: "thin" }, left: { style: "thin" },
+        bottom: { style: "thin" }, right: { style: "thin" }
       };
     });
 
-    // Data rows
     transactions.forEach((tx, idx) => {
       const doiTuong = tx.sinhVien
         ? `${tx.sinhVien.hoTen} (${tx.sinhVien.maSoDinhDanh || "—"})`
         : tx.nguoiTao?.hoTen || "—";
       const soTienThucTe = tx.soTienThucTe === null || tx.soTienThucTe === undefined
-        ? null
-        : Number(tx.soTienThucTe || 0);
-      const chenhLech = soTienThucTe === null
-        ? null
-        : soTienThucTe - Number(tx.soTien || 0);
+        ? null : Number(tx.soTienThucTe || 0);
+      const chenhLech = soTienThucTe === null ? null : soTienThucTe - Number(tx.soTien || 0);
 
       const row = sheet.getRow(tableStartRow + 1 + idx);
       row.values = [
@@ -492,30 +564,20 @@ export const exportTransactions = async (req, res) => {
         tx.minhChung || ""
       ];
 
-      // Format số tiền
       row.getCell(5).numFmt = '#,##0" đ"';
       row.getCell(6).numFmt = '#,##0" đ"';
       row.getCell(7).numFmt = '#,##0" đ"';
       row.getCell(5).alignment = { horizontal: "right" };
       row.getCell(6).alignment = { horizontal: "right" };
       row.getCell(7).alignment = { horizontal: "right" };
-
-      // Căn giữa loại và đối soát
       row.getCell(2).alignment = { horizontal: "center" };
       row.getCell(8).alignment = { horizontal: "center" };
       row.getCell(9).alignment = { horizontal: "center" };
-
-      // Tô màu đỏ cột loại Chi
       row.getCell(2).font = { color: { argb: "FFDC2626" }, bold: true };
 
-      // Highlight giao dịch bất thường
       if (tx.trangThai === "That bai" || tx.doiSoatTrangThai === "Bat_thuong") {
         row.eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "FFFEE2E2" }
-          };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEE2E2" } };
         });
       }
 
@@ -538,11 +600,7 @@ export const exportTransactions = async (req, res) => {
 
     if (includeSummary === 'true') {
       const summarySheet = workbook.addWorksheet("Tóm tắt");
-      summarySheet.columns = [
-        { width: 28 },
-        { width: 18 },
-        { width: 20 },
-      ];
+      summarySheet.columns = [{ width: 28 }, { width: 18 }, { width: 20 }];
       summarySheet.mergeCells("A1:C1");
       summarySheet.getCell("A1").value = "TÓM TẮT ĐỐI SOÁT CHỨNG TỪ";
       summarySheet.getCell("A1").font = { size: 15, bold: true, color: { argb: "FF1A2F5E" } };
@@ -569,32 +627,19 @@ export const exportTransactions = async (req, res) => {
         const row = summarySheet.getRow(3 + index);
         row.values = values;
         row.getCell(1).font = { bold: true };
-        if (index >= 1 && index <= 3) {
-          row.getCell(2).numFmt = '#,##0" đ"';
-        }
+        if (index >= 1 && index <= 3) row.getCell(2).numFmt = '#,##0" đ"';
       });
     }
 
     const buffer = await workbook.xlsx.writeBuffer();
     const fileName = `${isDoiSoatExport ? "DoiSoatChungTu" : "LichSuGiaoDich"}_${Date.now()}.xlsx`;
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${fileName}"`
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     res.setHeader("Content-Length", buffer.length);
     return res.send(buffer);
   } catch (error) {
     console.error("Lỗi exportTransactions:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi khi xuất Excel",
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: "Lỗi khi xuất Excel", error: error.message });
   }
 };
 
@@ -607,26 +652,17 @@ export const updateDoiSoatStatus = async (req, res) => {
     const { doiSoatTrangThai, ghiChu, soTienThucTe } = req.body;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "ID giao dịch không hợp lệ",
-      });
+      return res.status(400).json({ success: false, message: "ID giao dịch không hợp lệ" });
     }
 
     const validStatuses = ['Chua_doi_soat', 'Da_doi_soat', 'Bat_thuong'];
     if (!doiSoatTrangThai || !validStatuses.includes(doiSoatTrangThai)) {
-      return res.status(400).json({
-        success: false,
-        message: "Trạng thái đối soát không hợp lệ",
-      });
+      return res.status(400).json({ success: false, message: "Trạng thái đối soát không hợp lệ" });
     }
 
     const transaction = await TransactionModel.getTransactionById(id);
     if (!transaction) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy giao dịch",
-      });
+      return res.status(404).json({ success: false, message: "Không tìm thấy giao dịch" });
     }
 
     let finalSoTienThucTe = soTienThucTe !== undefined ? soTienThucTe : transaction.sotienthucte;
@@ -643,16 +679,10 @@ export const updateDoiSoatStatus = async (req, res) => {
 
     await TransactionModel.updateDoiSoatStatus(id, doiSoatTrangThai, finalSoTienThucTe, finalDoiSoatBoiId, finalGhiChu);
 
-    return res.status(200).json({
-      success: true,
-      message: "Cập nhật trạng thái đối soát thành công",
-    });
+    return res.status(200).json({ success: true, message: "Cập nhật trạng thái đối soát thành công" });
   } catch (error) {
     console.error("Lỗi updateDoiSoatStatus:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi server, vui lòng thử lại sau",
-    });
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
   }
 };
 
@@ -660,6 +690,7 @@ export default {
   getAllTransactions,
   getTransactionById,
   getTransactionsSummary,
+  createChiKhac,
   exportTransactions,
   updateDoiSoatStatus,
 };

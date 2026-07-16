@@ -28,6 +28,17 @@ const AlumniPage = () => {
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
   // States for Alumni articles
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -269,6 +280,7 @@ const AlumniPage = () => {
             <LoginForm 
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -281,6 +293,7 @@ const AlumniPage = () => {
             <RegisterForm 
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

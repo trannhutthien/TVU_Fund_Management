@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { HiOutlineBuildingLibrary, HiOutlineDocumentDuplicate } from 'react-icons/hi2';
 import { toast } from 'react-toastify';
+import { formatCurrency } from '@utils/formatters';
 import styles from './FundBankInfo.module.scss';
 
 /**
@@ -114,7 +115,7 @@ const FundBankInfo = ({ bankAccount, fundName, donationAmount, donationId }) => 
             <label>Số tiền:</label>
             <div className={styles.valueWithCopy}>
               <span className={`${styles.value} ${styles.highlight}`}>
-                {Number(donationAmount).toLocaleString('vi-VN')}₫
+                {formatCurrency(donationAmount)}
               </span>
               <button
                 type="button"

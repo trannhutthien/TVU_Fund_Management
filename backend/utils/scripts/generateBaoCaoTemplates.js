@@ -949,6 +949,121 @@ const buildBaoCaoQuy = () =>
   });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// TEMPLATE: BÁO CÁO TỔNG HỢP NĂM TÀI CHÍNH (Điều 17.2, 18)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const buildBaoCaoNamTaiChinh = () =>
+  new Document({
+    creator: "TVU Fund Management",
+    title: "Template - Báo cáo Tổng hợp Năm Tài chính",
+    sections: [
+      {
+        children: [
+          heading("TRƯỜNG ĐẠI HỌC TRÀ VINH", 26),
+          heading("QUỸ PHÁT TRIỂN GIÁO DỤC TVU", 22, COLOR_GOLD),
+          plainText("", { spacing: { after: 200 } }),
+
+          subTitle("BÁO CÁO TỔNG HỢP NĂM TÀI CHÍNH"),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun({
+                text: "{ky_bao_cao}",
+                italics: true,
+                size: 22,
+              }),
+            ],
+            spacing: { after: 240 },
+          }),
+
+          // ── THÔNG TIN CHUNG ────────────────────────────────────────────────
+          sectionTitle("I. THÔNG TIN CHUNG"),
+          labelLine("Năm tài chính", "{nam_tai_chinh}"),
+          labelLine("Ngày xuất", "{ngay_xuat}"),
+
+          // ── KHỐI 1: THU / CHI THỰC TẾ ─────────────────────────────────────
+          sectionTitle("II. THU CHI THỰC TẾ"),
+          labelLine("Tổng thu", "{tong_thu}"),
+          plainText("", { spacing: { after: 40 } }),
+          plainText("Chi tiết chi:", { bold: true, spacing: { after: 40 } }),
+          labelLine("  + Tài trợ cho vay (tổng)", "{chi_tai_tro_tong}"),
+          labelLine("    · Không hoàn lại", "{chi_tai_tro_khong_hoan_lai}"),
+          labelLine("    · Có thu hồi", "{chi_tai_tro_co_thu_hoi}"),
+          labelLine("  + Thẩm định dự án", "{chi_tham_dinh}"),
+          labelLine("  + Bộ máy hoạt động", "{chi_bo_may}"),
+          labelLine("  + Nhiệm vụ khác", "{chi_nhiem_vu_khac}"),
+          labelLine("Tổng chi", "{tong_chi_cong}"),
+          labelLine("Số dư cuối năm", "{so_du_cuoi_nam}"),
+
+          // ── KHỐI 2: CÔNG NỢ PHẢI THU ─────────────────────────────────────
+          sectionTitle("III. CÔNG NỢ PHẢI THU"),
+          labelLine("Tổng mục thu hồi đang chờ", "{tong_muc_thu_hoi_dang_cho}"),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "({ghi_chu_cong_no})",
+                italics: true,
+                size: 20,
+                color: "666666",
+              }),
+            ],
+            spacing: { after: 120 },
+          }),
+
+          // ── KHỐI 3: PHÂN BỔ NGÂN SÁCH NỘI BỘ ────────────────────────────
+          sectionTitle("IV. PHÂN BỔ NGÂN SÁCH NỘI BỘ"),
+          labelLine("Tổng đã phân bổ", "{tong_da_phan_bo}"),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "({ghi_chu_phan_bo})",
+                italics: true,
+                size: 20,
+                color: "666666",
+              }),
+            ],
+            spacing: { after: 120 },
+          }),
+
+          // ── KHỐI 4: DỰ TOÁN BỘ MÁY HOẠT ĐỘNG ────────────────────────────
+          sectionTitle("V. DỰ TOÁN BỘ MÁY HOẠT ĐỘNG"),
+          labelLine("Số tiền dự toán", "{du_toan_bo_may}"),
+          labelLine("Đã chi", "{da_chi_bo_may}"),
+          labelLine("Còn lại", "{con_lai_bo_may}"),
+          labelLine("Trạng thái dự toán", "{trang_thai_du_toan}"),
+
+          // ── KÝ KẾT ────────────────────────────────────────────────────────
+          plainText("", { spacing: { before: 400 } }),
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [
+              new TextRun({
+                text: "Trà Vinh, ngày {ngay_xuat}",
+                italics: true,
+                size: 22,
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [
+              new TextRun({ text: "NGƯỜI LẬP BÁO CÁO", bold: true, size: 22 }),
+            ],
+            spacing: { after: 800 },
+          }),
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [
+              new TextRun({ text: "{nguoi_xuat}", bold: true, size: 22 }),
+            ],
+          }),
+        ],
+      },
+    ],
+  });
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MAIN: ghi 4 file ra disk
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -959,6 +1074,7 @@ const TEMPLATES = [
   { name: "bao_cao_quy", builder: buildBaoCaoQuy },
   { name: "bao_cao_nguoi_dung", builder: buildBaoCaoNguoiDung },
   { name: "bao_cao_de_xuat", builder: buildBaoCaoDeXuat },
+  { name: "bao_cao_nam_tai_chinh", builder: buildBaoCaoNamTaiChinh },
 ];
 
 const run = async () => {

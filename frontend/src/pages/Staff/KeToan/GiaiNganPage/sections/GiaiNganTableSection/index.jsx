@@ -8,8 +8,10 @@ import {
   HiOutlineCheckBadge,
   HiOutlineInboxArrowDown,
 } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { getInitial } from '@utils/formatters';
 import styles from './GiaiNganTableSection.module.scss';
 
 const STATUS_TO_BADGE = {
@@ -19,17 +21,11 @@ const STATUS_TO_BADGE = {
   'Dang xu ly': 'processing',
 };
 
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 const formatDate = (v) => {
   if (!v) return '—';
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('vi-VN');
-};
-
-const getInitial = (name) => {
-  if (!name) return '?';
-  return name.charAt(0).toUpperCase();
 };
 
 const GiaiNganTableSection = ({

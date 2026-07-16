@@ -174,7 +174,9 @@ export const getAllPheDuyet = async (req, res) => {
       'admin': 'Quan tri vien',
       'ketoan': 'Ke toan',
       'canboquy': 'Giao vu',
-      'sinhvien': 'Sinh vien'
+      'sinhvien': 'Sinh vien',
+      'canbo': 'Can bo',
+      'nhakhoahoc': 'Nha khoa hoc'
     };
 
     const mappedRows = rows.map(row => ({
@@ -284,7 +286,9 @@ export const getApprovalTimeline = async (req, res) => {
       'admin': 'Quản trị viên',
       'ketoan': 'Kế toán',
       'canboquy': 'Giáo vụ',
-      'sinhvien': 'Sinh viên'
+      'sinhvien': 'Sinh viên',
+      'canbo': 'Cán bộ',
+      'nhakhoahoc': 'Nhà khoa học'
     };
 
     const mappedRows = rows.map(row => ({

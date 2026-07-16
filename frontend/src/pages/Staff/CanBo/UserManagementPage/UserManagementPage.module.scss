@@ -47,6 +47,47 @@
   color: #64748b;
 }
 
+.mainTabBar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: #fff;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(26, 47, 94, 0.06);
+  width: fit-content;
+}
+
+.mainTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+}
+
+.mainTabActive {
+  background: #1a237e;
+  color: #fff;
+
+  &:hover {
+    background: #0d1642;
+    color: #fff;
+  }
+}
+
 .tabBar {
   display: flex;
   gap: 8px;

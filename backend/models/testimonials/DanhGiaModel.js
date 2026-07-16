@@ -13,43 +13,33 @@ const normalizePage = (value) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 };
 
-const getUserProfile = async (nguoiDungId) => {
-  const [rows] = await pool.query(
-    `SELECT
-       n.nguoidung_id,
-       n.hoten,
-       n.avatar,
-       dv.tenkhoa AS khoa
-     FROM nguoidung n
-     LEFT JOIN donvihoc dv ON n.donvihoc_id = dv.donvihoc_id
-     WHERE n.nguoidung_id = ?
-     LIMIT 1`,
-    [nguoiDungId],
-  );
-  return rows[0] || null;
-};
+const SELECT_WITH_PROFILE = `
+  dg.danhgia_id,
+  dg.nguoidung_id,
+  n.hoten,
+  dv.tenkhoa AS khoa,
+  n.avatar,
+  dg.noidung,
+  dg.trangthai,
+  dg.lydotuchoi,
+  dg.nguoiduyet_id,
+  dg.ngayduyet,
+  dg.noibat,
+  dg.thutu,
+  dg.ngaytao,
+  dg.ngaycapnhat,
+  nd.hoten AS nguoiduyet_hoten`;
+
+const FROM_WITH_PROFILE = `
+  danhgia dg
+  LEFT JOIN nguoidung n ON dg.nguoidung_id = n.nguoidung_id
+  LEFT JOIN donvihoc dv ON n.donvihoc_id = dv.donvihoc_id
+  LEFT JOIN nguoidung nd ON dg.nguoiduyet_id = nd.nguoidung_id`;
 
 const getById = async (danhGiaId) => {
   const [rows] = await pool.query(
-    `SELECT
-       dg.danhgia_id,
-       dg.nguoidung_id,
-       dg.hoten,
-       dg.khoa,
-       dg.nienkhoa,
-       dg.avatar,
-       dg.noidung,
-       dg.trangthai,
-       dg.lydotuchoi,
-       dg.nguoiduyet_id,
-       dg.ngayduyet,
-       dg.noibat,
-       dg.thutu,
-       dg.ngaytao,
-       dg.ngaycapnhat,
-       nd.hoten AS nguoiduyet_hoten
-     FROM danhgia dg
-     LEFT JOIN nguoidung nd ON dg.nguoiduyet_id = nd.nguoidung_id
+    `SELECT ${SELECT_WITH_PROFILE}
+     FROM ${FROM_WITH_PROFILE}
      WHERE dg.danhgia_id = ?
      LIMIT 1`,
     [danhGiaId],
@@ -60,22 +50,10 @@ const getById = async (danhGiaId) => {
 const getLanding = async (limit = 6) => {
   const safeLimit = normalizeLimit(limit, 6, 6);
   const [rows] = await pool.query(
-    `SELECT
-       danhgia_id,
-       nguoidung_id,
-       hoten,
-       khoa,
-       nienkhoa,
-       avatar,
-       noidung,
-       trangthai,
-       noibat,
-       thutu,
-       ngaytao,
-       ngaycapnhat
-     FROM danhgia
-     WHERE trangthai = ?
-     ORDER BY noibat DESC, thutu ASC, ngaytao DESC
+    `SELECT ${SELECT_WITH_PROFILE}
+     FROM ${FROM_WITH_PROFILE}
+     WHERE dg.trangthai = ?
+     ORDER BY dg.noibat DESC, dg.thutu ASC, dg.ngaytao DESC
      LIMIT ${safeLimit}`,
     [APPROVED_STATUS],
   );
@@ -87,16 +65,16 @@ const getPublicList = async ({ page = 1, pageSize = 12, khoa = "", keyword = "" 
   const safePageSize = normalizeLimit(pageSize, 12, 50);
   const offset = (safePage - 1) * safePageSize;
 
-  const conditions = ["trangthai = ?"];
+  const conditions = ["dg.trangthai = ?"];
   const params = [APPROVED_STATUS];
 
   if (khoa) {
-    conditions.push("khoa = ?");
+    conditions.push("dv.tenkhoa = ?");
     params.push(khoa);
   }
 
   if (keyword) {
-    conditions.push("(hoten LIKE ? OR noidung LIKE ?)");
+    conditions.push("(n.hoten LIKE ? OR dg.noidung LIKE ?)");
     const likeKeyword = `%${keyword}%`;
     params.push(likeKeyword, likeKeyword);
   }
@@ -104,27 +82,17 @@ const getPublicList = async ({ page = 1, pageSize = 12, khoa = "", keyword = "" 
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const [countRows] = await pool.query(
-    `SELECT COUNT(*) AS total FROM danhgia ${whereClause}`,
+    `SELECT COUNT(*) AS total
+     FROM ${FROM_WITH_PROFILE}
+     ${whereClause}`,
     params,
   );
 
   const [rows] = await pool.query(
-    `SELECT
-       danhgia_id,
-       nguoidung_id,
-       hoten,
-       khoa,
-       nienkhoa,
-       avatar,
-       noidung,
-       trangthai,
-       noibat,
-       thutu,
-       ngaytao,
-       ngaycapnhat
-     FROM danhgia
+    `SELECT ${SELECT_WITH_PROFILE}
+     FROM ${FROM_WITH_PROFILE}
      ${whereClause}
-     ORDER BY noibat DESC, thutu ASC, ngaytao DESC
+     ORDER BY dg.noibat DESC, dg.thutu ASC, dg.ngaytao DESC
      LIMIT ${safePageSize} OFFSET ${offset}`,
     params,
   );
@@ -139,42 +107,22 @@ const getPublicList = async ({ page = 1, pageSize = 12, khoa = "", keyword = "" 
 
 const getKhoaOptions = async () => {
   const [rows] = await pool.query(
-    `SELECT DISTINCT khoa
-     FROM danhgia
-     WHERE trangthai = ? AND khoa IS NOT NULL AND TRIM(khoa) <> ''
-     ORDER BY khoa ASC`,
+    `SELECT DISTINCT dv.tenkhoa
+     FROM danhgia dg
+     LEFT JOIN nguoidung n ON dg.nguoidung_id = n.nguoidung_id
+     LEFT JOIN donvihoc dv ON n.donvihoc_id = dv.donvihoc_id
+     WHERE dg.trangthai = ? AND dv.tenkhoa IS NOT NULL AND TRIM(dv.tenkhoa) <> ''
+     ORDER BY dv.tenkhoa ASC`,
     [APPROVED_STATUS],
   );
-  return rows.map((row) => row.khoa);
+  return rows.map((row) => row.tenkhoa);
 };
 
-const create = async ({
-  nguoiDungId = null,
-  hoTen,
-  khoa = null,
-  nienKhoa = null,
-  avatar = null,
-  noiDung,
-}) => {
+const create = async ({ nguoiDungId, noiDung }) => {
   const [result] = await pool.execute(
-    `INSERT INTO danhgia (
-       nguoidung_id,
-       hoten,
-       khoa,
-       nienkhoa,
-       avatar,
-       noidung
-     ) VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      nguoiDungId,
-      hoTen,
-      khoa,
-      nienKhoa,
-      avatar,
-      noiDung,
-    ],
+    `INSERT INTO danhgia (nguoidung_id, noidung) VALUES (?, ?)`,
+    [nguoiDungId, noiDung],
   );
-
   return result;
 };
 
@@ -194,32 +142,13 @@ const getManagementList = async ({ page = 1, pageSize = 10, trangThai = "" } = {
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const [countRows] = await pool.query(
-    `SELECT COUNT(*) AS total
-     FROM danhgia dg
-     ${whereClause}`,
+    `SELECT COUNT(*) AS total FROM danhgia dg ${whereClause}`,
     params,
   );
 
   const [rows] = await pool.query(
-    `SELECT
-       dg.danhgia_id,
-       dg.nguoidung_id,
-       dg.hoten,
-       dg.khoa,
-       dg.nienkhoa,
-       dg.avatar,
-       dg.noidung,
-       dg.trangthai,
-       dg.lydotuchoi,
-       dg.nguoiduyet_id,
-       dg.ngayduyet,
-       dg.noibat,
-       dg.thutu,
-       dg.ngaytao,
-       dg.ngaycapnhat,
-       nd.hoten AS nguoiduyet_hoten
-     FROM danhgia dg
-     LEFT JOIN nguoidung nd ON dg.nguoiduyet_id = nd.nguoidung_id
+    `SELECT ${SELECT_WITH_PROFILE}
+     FROM ${FROM_WITH_PROFILE}
      ${whereClause}
      ORDER BY
        CASE dg.trangthai
@@ -242,9 +171,7 @@ const getManagementList = async ({ page = 1, pageSize = 10, trangThai = "" } = {
 
 const getStatusCounts = async () => {
   const [rows] = await pool.query(
-    `SELECT trangthai, COUNT(*) AS count
-     FROM danhgia
-     GROUP BY trangthai`,
+    `SELECT trangthai, COUNT(*) AS count FROM danhgia GROUP BY trangthai`,
   );
 
   return rows.reduce(
@@ -252,19 +179,11 @@ const getStatusCounts = async () => {
       ...acc,
       [row.trangthai]: Number(row.count || 0),
     }),
-    {
-      "Cho duyet": 0,
-      "Da duyet": 0,
-      "Tu choi": 0,
-    },
+    { "Cho duyet": 0, "Da duyet": 0, "Tu choi": 0 },
   );
 };
 
-const updateStatus = async (danhGiaId, {
-  trangThai,
-  lyDoTuChoi = null,
-  nguoiDuyetId = null,
-}) => {
+const updateStatus = async (danhGiaId, { trangThai, lyDoTuChoi = null, nguoiDuyetId = null }) => {
   const isPending = trangThai === "Cho duyet";
   const isRejected = trangThai === "Tu choi";
 
@@ -277,13 +196,7 @@ const updateStatus = async (danhGiaId, {
          noibat = CASE WHEN ? = 'Tu choi' THEN 0 ELSE noibat END,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE danhgia_id = ?`,
-    [
-      trangThai,
-      isRejected ? lyDoTuChoi : null,
-      isPending ? null : nguoiDuyetId,
-      trangThai,
-      danhGiaId,
-    ],
+    [trangThai, isRejected ? lyDoTuChoi : null, isPending ? null : nguoiDuyetId, trangThai, danhGiaId],
   );
 
   return result;
@@ -296,18 +209,13 @@ const updateNoiBat = async (danhGiaId, { noiBat, thuTu = 0 }) => {
          thutu = ?,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE danhgia_id = ?`,
-    [
-      noiBat ? 1 : 0,
-      Number.parseInt(thuTu, 10) || 0,
-      danhGiaId,
-    ],
+    [noiBat ? 1 : 0, Number.parseInt(thuTu, 10) || 0, danhGiaId],
   );
 
   return result;
 };
 
 export default {
-  getUserProfile,
   getById,
   getLanding,
   getPublicList,

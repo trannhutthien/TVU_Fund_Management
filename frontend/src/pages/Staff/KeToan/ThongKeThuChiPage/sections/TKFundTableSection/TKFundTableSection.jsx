@@ -1,5 +1,6 @@
 import { HiCircleStack } from 'react-icons/hi2';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from '@utils/formatters';
 import styles from './TKFundTableSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -135,7 +136,7 @@ const TKFundTableSection = ({ fundTableData, period }) => {
                   <td>
                     {fund.thu > 0 ? (
                       <span className={styles.amountThu}>
-                        {fund.thu.toLocaleString('vi-VN')} đ
+                        {formatCurrency(fund.thu)}
                       </span>
                     ) : (
                       <span className={styles.emptyValue}>—</span>
@@ -146,7 +147,7 @@ const TKFundTableSection = ({ fundTableData, period }) => {
                   <td>
                     {fund.chi > 0 ? (
                       <span className={styles.amountChi}>
-                        {fund.chi.toLocaleString('vi-VN')} đ
+                        {formatCurrency(fund.chi)}
                       </span>
                     ) : (
                       <span className={styles.emptyValue}>—</span>
@@ -160,7 +161,7 @@ const TKFundTableSection = ({ fundTableData, period }) => {
                         className={styles.balanceAmount}
                         style={{ color: balanceColor }}
                       >
-                        {fund.soDu.toLocaleString('vi-VN')} đ
+                        {formatCurrency(fund.soDu)}
                       </span>
                       <div className={styles.progressTrack}>
                         <div
@@ -194,17 +195,17 @@ const TKFundTableSection = ({ fundTableData, period }) => {
               <td className={styles.footerLabel}>Tổng cộng</td>
               <td>
                 <span className={styles.amountThu}>
-                  {totals.thu.toLocaleString('vi-VN')} đ
+                  {formatCurrency(totals.thu)}
                 </span>
               </td>
               <td>
                 <span className={styles.amountChi}>
-                  {totals.chi.toLocaleString('vi-VN')} đ
+                  {formatCurrency(totals.chi)}
                 </span>
               </td>
               <td>
                 <span className={styles.balanceAmount}>
-                  {totals.soDu.toLocaleString('vi-VN')} đ
+                  {formatCurrency(totals.soDu)}
                 </span>
               </td>
               <td className={styles.centerCell}>{totals.soGiaoDich}</td>

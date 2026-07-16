@@ -31,13 +31,13 @@ router.get("/my-donations", protect, authorizeRoles(4), getMyDonations);
 
 
 // GET /api/donations/stats — Stats cho Kế toán (Admin/Kế toán)
-router.get("/stats", protect, authorizeRoles(1, 2), getDonationStats);
+router.get("/stats", protect, authorizeRoles(1, 2, 5), getDonationStats);
 
 // GET /api/donations — List khoản tài trợ (Admin/Kế toán/Cán bộ)
-router.get("/", protect, authorizeRoles(1, 2, 3), listDonations);
+router.get("/", protect, authorizeRoles(1, 2, 3, 5), listDonations);
 
 // GET /api/donations/:id — Chi tiết + lịch sử phê duyệt
-router.get("/:id", protect, authorizeRoles(1, 2, 3), getDonationDetail);
+router.get("/:id", protect, authorizeRoles(1, 2, 3, 5), getDonationDetail);
 
 // POST /api/donations — Cán bộ Quỹ/Admin ghi nhận khoản tài trợ (CẦN TOKEN)
 router.post("/", protect, authorizeRoles(1, 3), createStaffDonation);

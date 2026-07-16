@@ -219,6 +219,38 @@
   background: #f8fafc;
 }
 
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #333;
+  line-height: 1.5;
+  cursor: pointer;
+
+  span {
+    flex: 1;
+  }
+
+  strong {
+    color: #c62828;
+  }
+}
+
+.checkbox {
+  margin-top: 0.25rem;
+  width: 16px;
+  height: 16px;
+  accent-color: #1a237e;
+  flex-shrink: 0;
+}
+
+.errorText {
+  color: #c62828;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
 @media (max-width: 600px) {
   .modal {
     max-height: 100vh;

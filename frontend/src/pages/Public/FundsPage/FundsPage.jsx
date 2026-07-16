@@ -50,6 +50,17 @@ const FundsPage = () => {
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
   // Fetch funds from API
   useEffect(() => {
     const fetchFunds = async () => {
@@ -226,6 +237,7 @@ const FundsPage = () => {
             <LoginForm 
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -238,6 +250,7 @@ const FundsPage = () => {
             <RegisterForm 
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

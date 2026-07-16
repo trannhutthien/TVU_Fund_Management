@@ -21,6 +21,7 @@ import {
   HiOutlineQuestionMarkCircle,
   HiOutlineArrowRightOnRectangle,
   HiOutlineClipboardDocumentList,
+  HiOutlineUserGroup,
 } from 'react-icons/hi2';
 import useAuthStore from '@stores/authStore';
 import Logo from '@components/common/Logo';
@@ -35,6 +36,7 @@ const ROLE_LABELS = {
   1: 'Quản trị viên',
   2: 'Kế toán',
   3: 'Cán bộ Quỹ',
+  5: 'Ban Kiểm soát',
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -54,6 +56,7 @@ const NAV_CONFIG = [
     roles: [1],
     items: [
       { label: 'Quản lý người dùng', path: '/admin/users', icon: HiOutlineUsers, roles: [1] },
+      { label: 'Nhân sự', path: '/admin/nhan-su', icon: HiOutlineUserGroup, roles: [1] },
       { label: 'Hệ thống & Phân quyền', path: '/admin/roles', icon: HiOutlineShieldCheck, roles: [1] },
       { label: 'Nhật ký hệ thống', path: '/admin/nhat-ky', icon: HiOutlineClipboardDocumentList, roles: [1] },
     ]
@@ -167,9 +170,10 @@ const NAV_CONFIG = [
 const StaffSidebar = ({ isOpen = false, onClose }) => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuthStore();
-  const [pendingCount] = useState(0); // TODO: Fetch from API
+  const [pendingCount, setPendingCount] = useState(0);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState({});
 
   // ─── FETCH USER PROFILE ────────────────────────────────
   useEffect(() => {
@@ -204,15 +208,6 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
     }
   }, [user?.id, updateUser]);
 
-  // ─── LOGIC HIỂN THỊ ────────────────────────────────────
-  // Chỉ hiển thị cho staff (vaiTro 1, 2, 3)
-  // vaiTro = 4 là người dùng thường → return null
-  if (!user || !user.vaiTro || user.vaiTro === 4) {
-    return null;
-  }
-
-  const [permissions, setPermissions] = useState({});
-
   useEffect(() => {
     const fetchPerms = async () => {
       try {
@@ -224,8 +219,38 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
         console.error('Error fetching permissions in StaffSidebar:', err);
       }
     };
-    fetchPerms();
-  }, []);
+    if (user && user.vaiTro && user.vaiTro !== 4) {
+      fetchPerms();
+    }
+  }, [user]);
+
+  // ─── FETCH PENDING COUNT (badge) ──────────────────────────────
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const res = await api.get('/statistics/pending-count');
+        if (res.data?.success) {
+          setPendingCount(res.data.data.pendingCount);
+        }
+      } catch (err) {
+        console.error('Error fetching pending count:', err);
+      }
+    };
+
+    if (user && user.vaiTro && user.vaiTro !== 4) {
+      fetchPendingCount();
+
+      const interval = setInterval(fetchPendingCount, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  // ─── LOGIC HIỂN THỊ ────────────────────────────────────
+  // Chỉ hiển thị cho staff (vaiTro 1, 2, 3)
+  // vaiTro = 4 là người dùng thường → return null
+  if (!user || !user.vaiTro || user.vaiTro === 4) {
+    return null;
+  }
 
   const checkPageAccess = (path) => {
     if (!permissions || Object.keys(permissions).length === 0) return true;

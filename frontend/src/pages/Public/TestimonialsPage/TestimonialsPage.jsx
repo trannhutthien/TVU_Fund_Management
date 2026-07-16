@@ -46,6 +46,17 @@ const TestimonialsPage = () => {
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
 
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -255,6 +266,7 @@ const TestimonialsPage = () => {
             <LoginForm 
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -267,6 +279,7 @@ const TestimonialsPage = () => {
             <RegisterForm 
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

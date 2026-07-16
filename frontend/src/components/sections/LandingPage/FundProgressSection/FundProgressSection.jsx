@@ -10,6 +10,7 @@ import {
 } from 'react-icons/hi2';
 import { getPublicFunds, getPublicDisbursementRounds } from '@services/fundService';
 import Button from '@components/common/Button';
+import { formatCurrency } from '@utils/formatters';
 import styles from './FundProgressSection.module.scss';
 
 // Static milestone labels for donation progress bar
@@ -187,11 +188,6 @@ const FundProgressSection = () => {
   }, [selectedFundId]);
 
   const selectedFund = funds.find(f => f.id === selectedFundId);
-
-  const formatCurrency = (amount) => {
-    const num = Math.round(Number(amount) || 0);
-    return num.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' đ';
-  };
 
   const formatCompactCurrency = (amount) => {
     const num = Number(amount) || 0;

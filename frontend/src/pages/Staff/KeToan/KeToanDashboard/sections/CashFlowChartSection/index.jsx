@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { formatCurrency } from '@utils/formatters';
 import styles from './CashFlowChartSection.module.scss';
 
 const formatYAxis = (n) => {
@@ -18,7 +19,7 @@ const formatYAxis = (n) => {
   return n;
 };
 
-const formatTooltipMoney = (value) => Number(value || 0).toLocaleString('vi-VN') + ' đ';
+const formatTooltipMoney = (value) => formatCurrency(value);
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;

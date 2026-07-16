@@ -7,6 +7,7 @@ import {
 } from 'react-icons/hi2';
 import StatCard from '@components/common/Card/StatCard';
 import statisticsService from '@services/statisticsService';
+import { formatCurrencyShort } from '@utils/formatters';
 import styles from './StatsSection.module.scss';
 
 /**
@@ -53,20 +54,6 @@ const StatsSection = () => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
-  // Format currency (VNĐ)
-  const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return '0'; // Handle undefined/null
-    
-    if (amount >= 1000000000) {
-      // Tỷ
-      return `${(amount / 1000000000).toFixed(1)} tỷ`;
-    } else if (amount >= 1000000) {
-      // Triệu
-      return `${(amount / 1000000).toFixed(1)} triệu`;
-    }
-    return formatNumber(amount);
-  };
-
   return (
     <section className={styles.statsSection}>
       <div className={styles.container}>
@@ -86,8 +73,6 @@ const StatsSection = () => {
             value={formatNumber(stats.supportedRequests)}
             icon={<HiOutlineCheckCircle />}
             iconBgColor="green"
-            trend="up"
-            trendValue="+12.5%"
             subtitle="So với năm trước"
             loading={loading}
           />
@@ -95,11 +80,9 @@ const StatsSection = () => {
           {/* Card 2: Tổng số tiền */}
           <StatCard
             title="Tổng giá trị hỗ trợ"
-            value={`${formatCurrency(stats.totalFundAmount)} đ`}
+            value={`${formatCurrencyShort(stats.totalFundAmount)} đ`}
             icon={<HiOutlineBanknotes />}
             iconBgColor="blue"
-            trend="up"
-            trendValue="+8.3%"
             subtitle="Tích lũy từ các quỹ"
             loading={loading}
           />
@@ -110,8 +93,6 @@ const StatsSection = () => {
             value={formatNumber(stats.totalDonors)}
             icon={<HiOutlineHeart />}
             iconBgColor="red"
-            trend="up"
-            trendValue="+5"
             subtitle="Đối tác đồng hành"
             loading={loading}
           />

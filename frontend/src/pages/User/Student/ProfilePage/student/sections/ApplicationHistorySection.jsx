@@ -8,6 +8,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button';
 import ApplicationStatusStepper from '@components/common/ApplicationStatusStepper';
+import { formatCurrency } from '@utils/formatters';
 import { applicationService } from '@services/applicationService';
 import styles from './ApplicationHistorySection.module.scss';
 
@@ -55,11 +56,6 @@ const ApplicationHistorySection = () => {
       }
       return newSet;
     });
-  };
-
-  const formatCurrency = (amount) => {
-    if (!amount) return '0 ₫';
-    return `${amount.toLocaleString('vi-VN')} ₫`;
   };
 
   const formatDate = (dateString) => {

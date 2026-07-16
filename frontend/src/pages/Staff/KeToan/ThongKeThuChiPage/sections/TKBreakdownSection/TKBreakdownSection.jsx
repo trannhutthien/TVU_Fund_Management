@@ -1,5 +1,6 @@
 import { HiArrowTrendingUp, HiArrowTrendingDown } from 'react-icons/hi2';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from '@utils/formatters';
 import styles from './TKBreakdownSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -75,7 +76,7 @@ const TKBreakdownSection = ({ type, data }) => {
           <h3 className={styles.title}>{currentConfig.title}</h3>
         </div>
         <div className={styles.totalAmount} style={{ color: currentConfig.iconColor }}>
-          {total.toLocaleString('vi-VN')} đ
+          {formatCurrency(total)}
         </div>
       </div>
 
@@ -120,7 +121,7 @@ const TKBreakdownSection = ({ type, data }) => {
             <span className={styles.itemName}>{item.name}</span>
             <div className={styles.spacer} />
             <span className={styles.itemValue}>
-              {item.value.toLocaleString('vi-VN')} đ
+              {formatCurrency(item.value)}
             </span>
             <span className={styles.itemBadge}>{item.percentage}%</span>
           </div>

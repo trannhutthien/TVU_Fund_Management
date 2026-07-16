@@ -3,6 +3,7 @@ import {
   HiOutlineCalendarDays,
   HiOutlineChartBar,
 } from 'react-icons/hi2';
+import YearFilter from '@components/common/YearFilter';
 import useBaoCaoData from './useBaoCaoData';
 import { labelForRange } from './utils';
 import BaoCaoKPIBar from './BaoCaoKPIBar/BaoCaoKPIBar';
@@ -26,6 +27,16 @@ const BaoCaoPage = () => {
   const [period, setPeriod] = useState('thang_nay');
   const [customRange, setCustomRange] = useState({ tu: '', den: '' });
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(null);
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+    if (year) {
+      // Switch to custom range with full year
+      setPeriod('tuy_chon');
+      setCustomRange({ tu: `${year}-01-01`, den: `${year}-12-31` });
+    }
+  };
 
   const { loading, range, kpi, funds, charts, thuHuongList } = useBaoCaoData(
     period,
@@ -57,6 +68,7 @@ const BaoCaoPage = () => {
           </div>
 
           <div className={styles.periodPicker}>
+            <YearFilter value={selectedYear} onChange={handleYearChange} />
             <HiOutlineCalendarDays className={styles.periodIcon} />
             {PERIOD_OPTIONS.map((opt) => {
               const isActive = period === opt.id;

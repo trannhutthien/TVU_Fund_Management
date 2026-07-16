@@ -20,6 +20,7 @@ import Button from '@components/common/Button';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
 import newsService from '@services/newsService';
+import chucVuService from '@services/chucVuService';
 import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './AboutFundPage.module.scss';
 
@@ -33,6 +34,26 @@ const TABS = {
 const AboutFundPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(TABS.THONG_TIN);
+  const [chucVuData, setChucVuData] = useState({});
+  const [chucVuLoading, setChucVuLoading] = useState(true);
+
+  // Fetch chuc vu data
+  useEffect(() => {
+    const fetchChucVu = async () => {
+      try {
+        setChucVuLoading(true);
+        const response = await chucVuService.getPublicChucVu();
+        if (response.success) {
+          setChucVuData(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching chuc vu:', error);
+      } finally {
+        setChucVuLoading(false);
+      }
+    };
+    fetchChucVu();
+  }, []);
 
   // Modals state
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -42,6 +63,17 @@ const AboutFundPage = () => {
   const closeLoginModal = () => setIsLoginModalOpen(false);
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
+
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -262,42 +294,49 @@ const AboutFundPage = () => {
           {activeTab === TABS.NHAN_SU && (
             <div className={styles.tabContent}>
               <div className={styles.sectionHeader}>
-                <h3>Ban Quản Lý & Điều Hành Quỹ</h3>
+                <h3>Tổ chức nhân sự Quỹ Phát triển Đại học Trà Vinh</h3>
                 <p>Những con người cống hiến hết mình vì sự phát triển của thế hệ trẻ</p>
               </div>
-              <div className={styles.tableWrapper}>
-                <table className={styles.staffTable}>
-                  <thead>
-                    <tr>
-                      <th>Họ tên</th>
-                      <th>Chức vụ (Trường)</th>
-                      <th>Chức danh / Chức vụ trong Hội đồng</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className={styles.staffName}>PGS.TS. Nguyễn Minh Hòa</td>
-                      <td>Hiệu trưởng Trường Đại học Trà Vinh</td>
-                      <td className={styles.staffRoleCell}>Chủ tịch Hội đồng Quỹ</td>
-                    </tr>
-                    <tr>
-                      <td className={styles.staffName}>TS. Thạch Thị Dân</td>
-                      <td>Phó Hiệu trưởng Trường Đại học Trà Vinh</td>
-                      <td className={styles.staffRoleCell}>Phó Chủ tịch Hội đồng Quỹ</td>
-                    </tr>
-                    <tr>
-                      <td className={styles.staffName}>ThS. Nguyễn Duy</td>
-                      <td>Trưởng phòng Công tác HSSV</td>
-                      <td className={styles.staffRoleCell}>Ủy viên kiêm Giám đốc Điều hành Quỹ</td>
-                    </tr>
-                    <tr>
-                      <td className={styles.staffName}>Bà Trần Nhựt Thiên</td>
-                      <td>Kế toán viên</td>
-                      <td className={styles.staffRoleCell}>Kế toán trưởng Quỹ</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              {chucVuLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>Đang tải...</div>
+              ) : Object.keys(chucVuData).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>Chưa có thông tin nhân sự</div>
+              ) : (
+                Object.entries(chucVuData).map(([nhom, members]) => (
+                  <div key={nhom} style={{ marginBottom: '2rem' }}>
+                    <h4 style={{ color: '#1a237e', marginBottom: '1rem', borderBottom: '2px solid #e8eaf6', paddingBottom: '0.5rem' }}>
+                      {nhom === 'Hoi dong quy' ? 'Hội đồng Quỹ' :
+                       nhom === 'Ban dieu hanh' ? 'Ban Điều hành' :
+                       nhom === 'Ban kiem soat' ? 'Ban Kiểm soát' :
+                       'Văn phòng Thường trực'}
+                    </h4>
+                    <div className={styles.tableWrapper}>
+                      <table className={styles.staffTable}>
+                        <thead>
+                          <tr>
+                            <th>Họ tên</th>
+                            <th>Chức danh</th>
+                            <th>Nhiệm kỳ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {members.map((member) => (
+                            <tr key={member.id}>
+                              <td className={styles.staffName}>{member.hoTen}</td>
+                              <td className={styles.staffRoleCell}>{member.chucDanh}</td>
+                              <td>
+                                {member.ngayBatDauNhiemKy
+                                  ? `${new Date(member.ngayBatDauNhiemKy).getFullYear()}${member.ngayKetThucNhiemKy ? ` - ${new Date(member.ngayKetThucNhiemKy).getFullYear()}` : ' - nay'}`
+                                  : '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
 
@@ -571,6 +610,7 @@ const AboutFundPage = () => {
             <LoginForm 
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -583,6 +623,7 @@ const AboutFundPage = () => {
             <RegisterForm 
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

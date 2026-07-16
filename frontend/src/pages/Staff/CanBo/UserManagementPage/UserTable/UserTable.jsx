@@ -12,6 +12,7 @@ import {
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import useAuthStore from '@stores/authStore';
+import { formatCurrency, getInitial } from '@utils/formatters';
 import styles from './UserTable.module.scss';
 
 const ROLE_BADGES = {
@@ -28,15 +29,6 @@ const formatDate = (value) => {
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('vi-VN');
 };
-
-const formatCurrency = (n) => {
-  const v = Number(n) || 0;
-  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)} tỷ`;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)} triệu`;
-  return v.toLocaleString('vi-VN') + 'đ';
-};
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const getRoleBadge = (user) => {
   if (Number(user.role_id) === 4) {

@@ -8,6 +8,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import CloseButton from '@components/common/CloseButton';
+import { formatCurrency } from '@utils/formatters';
 import styles from './DSImportModal.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -280,8 +281,8 @@ const DSImportModal = ({ onClose, onImport }) => {
               {matched.map((row, index) => (
                 <tr key={`matched-${index}`} className={styles.rowMatched}>
                   <td>{new Date(row.ngay_giao_dich).toLocaleDateString('vi-VN')}</td>
-                  <td>{row.so_tien_sao_ke?.toLocaleString('vi-VN')} đ</td>
-                  <td>{row.so_tien?.toLocaleString('vi-VN')} đ</td>
+                  <td>{formatCurrency(row.so_tien_sao_ke)}</td>
+                  <td>{formatCurrency(row.so_tien)}</td>
                   <td>
                     <span className={`${styles.badge} ${styles.badgeSuccess}`}>
                       Khớp
@@ -295,7 +296,7 @@ const DSImportModal = ({ onClose, onImport }) => {
               {unmatched_in_file.map((row, index) => (
                 <tr key={`file-${index}`} className={styles.rowWarning}>
                   <td>{new Date(row.ngay_giao_dich).toLocaleDateString('vi-VN')}</td>
-                  <td>{row.so_tien?.toLocaleString('vi-VN')} đ</td>
+                  <td>{formatCurrency(row.so_tien)}</td>
                   <td>—</td>
                   <td>
                     <span className={`${styles.badge} ${styles.badgeWarning}`}>
@@ -311,7 +312,7 @@ const DSImportModal = ({ onClose, onImport }) => {
                 <tr key={`db-${index}`} className={styles.rowDanger}>
                   <td>{new Date(row.ngay_giao_dich).toLocaleDateString('vi-VN')}</td>
                   <td>—</td>
-                  <td>{row.so_tien?.toLocaleString('vi-VN')} đ</td>
+                  <td>{formatCurrency(row.so_tien)}</td>
                   <td>
                     <span className={`${styles.badge} ${styles.badgeDanger}`}>
                       Chỉ trong hệ thống

@@ -9,6 +9,7 @@ import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
 import BackgroundImage from '@components/common/BackgroundImage';
 import ApplicationStatusStepper from '@components/common/ApplicationStatusStepper/ApplicationStatusStepper';
 import { guestService } from '@services/guestService';
+import { formatCurrency } from '@utils/formatters';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
 import styles from './TrackPage.module.scss';
@@ -38,6 +39,17 @@ const TrackPage = () => {
   
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
+
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
 
   // Normalize status for support application
   const normalizeAppStatus = (status) => {
@@ -292,7 +304,7 @@ const TrackPage = () => {
                         <Space direction="vertical">
                           <Text><strong>Họ và tên:</strong> {data.name}</Text>
                           <Text><strong>Email:</strong> {data.email}</Text>
-                          <Text><strong>Số tiền đăng ký:</strong> <span className={styles.amountText}>{data.amount.toLocaleString('vi-VN')} VNĐ</span></Text>
+                          <Text><strong>Số tiền đăng ký:</strong> <span className={styles.amountText}>{formatCurrency(data.amount)}</span></Text>
                         </Space>
                       </Paragraph>
                     </div>
@@ -318,7 +330,7 @@ const TrackPage = () => {
                                 maxLength={6}
                                 placeholder="Mã OTP 6 số"
                                 value={otpCode}
-                                onChange={(e) => setOtpCode(e.target.value)}
+                                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                                 style={{ textAlign: 'center', letterSpacing: '2px' }}
                               />
                             </div>
@@ -394,6 +406,7 @@ const TrackPage = () => {
             <LoginForm 
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -406,6 +419,7 @@ const TrackPage = () => {
             <RegisterForm 
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

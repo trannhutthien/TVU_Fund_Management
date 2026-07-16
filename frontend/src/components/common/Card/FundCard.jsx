@@ -10,6 +10,7 @@ import Button from '@components/common/Button';
 import StatusBadge from '@components/common/StatusBadge';
 import Logo from '@components/common/Logo';
 import DisbursementTimeline from '@components/common/DisbursementTimeline';
+import { formatCurrency } from '@utils/formatters';
 import styles from './FundCard.module.scss';
 
 /**
@@ -20,12 +21,6 @@ import styles from './FundCard.module.scss';
  */
 const FundCard = ({ fund }) => {
   const navigate = useNavigate();
-
-  const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return null;
-    const num = Math.round(Number(amount) || 0);
-    return num.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' đ';
-  };
 
   const formatDate = (date) => {
     if (!date) return null;

@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { HiHeart } from 'react-icons/hi2';
-import { message } from 'antd';
+import { toast } from 'react-toastify';
 import Button from '@components/common/Button';
 import Logo from '@components/common/Logo';
 import useAuthStore from '@stores/authStore';
 import { useSystemSettings } from '@hooks/useSystemSettings';
 import donorService from '@services/donorService';
+import { formatCurrency } from '@utils/formatters';
 import styles from './DonorWallSection.module.scss';
 
 /**
@@ -64,7 +65,7 @@ const DonorCard = ({ donor, onClick }) => {
         <h3 className={styles.donorName}>{donor.name || donor.ten || 'Nhà tài trợ'}</h3>
         {donor.desc && <p className={styles.donorDesc}>{donor.desc}</p>}
         <div className={styles.donorAmount}>
-          {donor.totalAmount?.toLocaleString('vi-VN') || '0'} VNĐ
+          {formatCurrency(donor.totalAmount)}
         </div>
       </div>
     </div>
@@ -140,7 +141,7 @@ const DonorWallSection = ({ onRegisterClick }) => {
       if (onRegisterClick) {
         onRegisterClick();
       } else {
-        message.info('Vui lòng đăng ký tài khoản để trở thành nhà tài trợ');
+        toast.info('Vui lòng đăng ký tài khoản để trở thành nhà tài trợ');
       }
       return;
     }
@@ -151,19 +152,15 @@ const DonorWallSection = ({ onRegisterClick }) => {
       const accountType = user?.loaiTaiKhoan || user?.loai_tai_khoan;
       
       if (accountType === 'NHA_TAI_TRO') {
-        // Đúng là nhà tài trợ → Navigate đến trang tạo đơn tài trợ
-        // TODO: Cần tạo trang này (ví dụ: /donor/create-donation)
-        message.success('Chuyển đến trang tạo khoản tài trợ');
-        navigate('/donor/create-donation');
+        toast.info('Tính năng tạo khoản tài trợ đang được phát triển. Vui lòng liên hệ quản trị viên để được hỗ trợ.');
       } else {
-        // Không phải nhà tài trợ → Thông báo
-        message.warning('Tài khoản của bạn không phải là tài khoản nhà tài trợ. Vui lòng liên hệ quản trị viên để được hỗ trợ.');
+        toast.warning('Tài khoản của bạn không phải là tài khoản nhà tài trợ. Vui lòng liên hệ quản trị viên để được hỗ trợ.');
       }
       return;
     }
 
     // Case 3: Đã đăng nhập với role khác (Staff: 1, 2, 3)
-    message.info('Tính năng này dành cho nhà tài trợ. Vui lòng đăng nhập bằng tài khoản nhà tài trợ.');
+    toast.info('Tính năng này dành cho nhà tài trợ. Vui lòng đăng nhập bằng tài khoản nhà tài trợ.');
   };
 
   // Loading state

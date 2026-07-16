@@ -15,6 +15,8 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
+import CurrencyInput from '@components/common/CurrencyInput';
+import { formatCurrencyPlain } from '@utils/formatters';
 import useAuthStore from '@stores/authStore';
 import { createFund, getFundById, updateFund, getAllLoaiQuy } from '@services/fundService';
 import { uploadService } from '@services/uploadService';
@@ -33,22 +35,21 @@ const TRANG_THAI_OPTIONS = [
   { value: 'Da dong', label: 'Đã đóng' },
 ];
 
-const INITIAL_FORM = {
-  ten_quy: '',
-  loai_quy: '',
-  mo_ta: '',
-  hinh_anh: '',
-  so_tien_muc_tieu: '', // Số tiền mục tiêu (target amount)
-  so_tien_ho_tro_toi_da: '', // Số tiền hỗ trợ tối đa/sinh viên
-  so_luong_chi_tieu: '',
-  han_nop_don: '',
-  dieu_kien_tom_tat: '',
-  so_du: '0',
-  trang_thai: 'Dang hoat dong',
-  loai_dieuhanh: 'Tap trung - Be chung',
-  quy_cha_id: '',
-  so_dot_giai_ngan: '', // Số đợt giải ngân (1-4)
-};
+  const INITIAL_FORM = {
+    ten_quy: '',
+    loai_quy: '',
+    mo_ta: '',
+    hinh_anh: '',
+    so_tien_muc_tieu: '',
+    so_tien_ho_tro_toi_da: '',
+    han_nop_don: '',
+    dieu_kien_tom_tat: '',
+    so_du: '0',
+    trang_thai: 'Dang hoat dong',
+    loai_dieuhanh: 'Tap trung - Be chung',
+    quy_cha_id: '',
+    so_dot_giai_ngan: '',
+  };
 
 const buildImageUrl = (path) => {
   if (!path) return '';
@@ -69,7 +70,26 @@ const TaoQuyPage = () => {
   const [uploading, setUploading] = useState(false);
   const [loaiQuyList, setLoaiQuyList] = useState([]);
   const [beChungList, setBeChungList] = useState([]);
-  const [dotGiaiNgan, setDotGiaiNgan] = useState([]); // Chi tiết các đợt giải ngân
+  const [dotGiaiNgan, setDotGiaiNgan] = useState([]);
+
+  // Auto-calculate so_luong_chi_tieu
+  const soLuongChiTieuCalculated = (() => {
+    const mucTieu = parseFloat(form.so_tien_muc_tieu) || 0;
+    const hoTro = parseFloat(form.so_tien_ho_tro_toi_da) || 0;
+    if (mucTieu > 0 && hoTro > 0) {
+      const result = mucTieu / hoTro;
+      if (Number.isInteger(result) && result > 0) return result;
+    }
+    return null;
+  })();
+
+  // Currency input handlers — CurrencyInput handles formatting internally
+  const handleCurrencyChange = (key) => (raw) => {
+    setForm((prev) => ({ ...prev, [key]: raw }));
+    if (errors[key]) {
+      setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
+    }
+  };
 
   // Load loai quy tu API
   useEffect(() => {
@@ -117,7 +137,6 @@ const TaoQuyPage = () => {
             hinh_anh: fund.hinhAnh ? fund.hinhAnh.replace(`${API_BASE}/`, '').replace(/^\//, '') : '',
             so_tien_muc_tieu: fund.soTienMucTieu !== null ? String(fund.soTienMucTieu) : '',
             so_tien_ho_tro_toi_da: fund.soTienHoTroToiDa !== null ? String(fund.soTienHoTroToiDa) : '',
-            so_luong_chi_tieu: fund.soLuongChiTieu !== null ? String(fund.soLuongChiTieu) : '',
             han_nop_don: fund.hanNopDon ? fund.hanNopDon.split('T')[0] : '',
             dieu_kien_tom_tat: fund.dieuKienTomTat || '',
             so_du: String(fund.soDu || 0),
@@ -244,8 +263,8 @@ const TaoQuyPage = () => {
       next.quy_cha_id = 'Vui lòng chọn Quỹ phát triển chung (Bể lớn)';
     }
 
-    if (form.mo_ta && form.mo_ta.length > 255) {
-      next.mo_ta = 'Mô tả tối đa 255 ký tự';
+    if (form.mo_ta && form.mo_ta.length > 1000) {
+      next.mo_ta = 'Mô tả tối đa 1000 ký tự';
     }
 
     if (form.dieu_kien_tom_tat && form.dieu_kien_tom_tat.length > 100000) {
@@ -258,13 +277,12 @@ const TaoQuyPage = () => {
     } else if (!isEditMode && form.loai_dieuhanh === 'Tap trung - Muc chi' && form.quy_cha_id) {
       const parentFund = beChungList.find((b) => String(b.quyId) === String(form.quy_cha_id));
       if (parentFund && soDu > parseFloat(parentFund.soDu || 0)) {
-        next.so_du = `Số dư khởi tạo không được vượt quá số dư hiện tại của Quỹ mẹ (${parseFloat(parentFund.soDu || 0).toLocaleString('vi-VN')}đ)`;
+        next.so_du = `Số dư khởi tạo không được vượt quá số dư hiện tại của Quỹ mẹ (${formatCurrencyPlain(parentFund.soDu || 0)}đ)`;
       }
     }
 
     const mucTieu = form.so_tien_muc_tieu === '' ? null : Number(form.so_tien_muc_tieu);
     const hoTroToiDa = form.so_tien_ho_tro_toi_da === '' ? null : Number(form.so_tien_ho_tro_toi_da);
-    const soLuongChiTieu = form.so_luong_chi_tieu === '' ? null : Number(form.so_luong_chi_tieu);
     
     if (mucTieu !== null && (Number.isNaN(mucTieu) || mucTieu < 0)) {
       next.so_tien_muc_tieu = 'Số tiền mục tiêu phải ≥ 0';
@@ -273,27 +291,10 @@ const TaoQuyPage = () => {
       next.so_tien_ho_tro_toi_da = 'Số tiền hỗ trợ tối đa phải ≥ 0';
     }
 
-    if (soLuongChiTieu !== null) {
-      if (Number.isNaN(soLuongChiTieu) || soLuongChiTieu <= 0 || !Number.isInteger(soLuongChiTieu)) {
-        next.so_luong_chi_tieu = 'Số suất phải là số nguyên > 0';
-      }
-    }
-
-    if (
-      mucTieu !== null &&
-      mucTieu > 0 &&
-      hoTroToiDa !== null &&
-      hoTroToiDa > 0 &&
-      !next.so_tien_muc_tieu &&
-      !next.so_tien_ho_tro_toi_da
-    ) {
+    if (mucTieu !== null && mucTieu > 0 && hoTroToiDa !== null && hoTroToiDa > 0) {
       const expectedSeats = mucTieu / hoTroToiDa;
       if (!Number.isInteger(expectedSeats)) {
-        next.so_luong_chi_tieu = 'Số tiền mục tiêu phải chia hết cho số tiền hỗ trợ mỗi suất';
-      } else if (soLuongChiTieu === null) {
-        next.so_luong_chi_tieu = `Vui lòng nhập số suất bằng ${expectedSeats}`;
-      } else if (!next.so_luong_chi_tieu && soLuongChiTieu !== expectedSeats) {
-        next.so_luong_chi_tieu = `Số suất phải bằng Số tiền mục tiêu / Số tiền hỗ trợ mỗi suất: ${expectedSeats} suất`;
+        next.so_tien_muc_tieu = 'Số tiền mục tiêu phải chia hết cho số tiền hỗ trợ mỗi suất';
       }
     }
 
@@ -303,6 +304,9 @@ const TaoQuyPage = () => {
   const handleReset = () => {
     setForm(INITIAL_FORM);
     setErrors({});
+    if (soDuRef.current) soDuRef.current.value = '';
+    if (mucTieuRef.current) mucTieuRef.current.value = '';
+    if (hoTroRef.current) hoTroRef.current.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -323,8 +327,7 @@ const TaoQuyPage = () => {
         form.so_tien_muc_tieu === '' ? null : Number(form.so_tien_muc_tieu),
       soTienHoTroToiDa:
         form.so_tien_ho_tro_toi_da === '' ? null : Number(form.so_tien_ho_tro_toi_da),
-      soLuongChiTieu:
-        form.so_luong_chi_tieu === '' ? null : Number(form.so_luong_chi_tieu),
+      soLuongChiTieu: soLuongChiTieuCalculated,
       hanNopDon: form.han_nop_don || null,
       dieuKienTomTat: form.dieu_kien_tom_tat?.trim() || null,
       soDu: form.so_du === '' ? 0 : Number(form.so_du),
@@ -491,7 +494,7 @@ const TaoQuyPage = () => {
                     <option value="">-- Chọn Bể tiền lớn --</option>
                     {beChungList.map((item) => (
                       <option key={item.quyId} value={item.quyId}>
-                        {item.tenQuy} (Số dư: {parseFloat(item.soDu || 0).toLocaleString('vi-VN')}đ)
+                        {item.tenQuy} (Số dư: {formatCurrencyPlain(item.soDu || 0)}đ)
                       </option>
                     ))}
                   </select>
@@ -507,18 +510,18 @@ const TaoQuyPage = () => {
                   className={`${styles.textarea} ${
                     errors.mo_ta ? styles.textareaError : ''
                   }`}
-                  placeholder="Mô tả ngắn gọn về quỹ (tối đa 255 ký tự)"
+                  placeholder="Mô tả ngắn gọn về quỹ (tối đa 1000 ký tự)"
                   value={form.mo_ta}
                   onChange={handleChange('mo_ta')}
-                  rows={3}
-                  maxLength={255}
+                  rows={10}
+                  maxLength={1000}
                 />
                 <div className={styles.fieldFoot}>
                   {errors.mo_ta && (
                     <span className={styles.errorMsg}>{errors.mo_ta}</span>
                   )}
                   <span className={styles.counter}>
-                    {form.mo_ta.length}/255
+                    {form.mo_ta.length}/1000
                   </span>
                 </div>
               </div>
@@ -602,16 +605,14 @@ const TaoQuyPage = () => {
             <div className={styles.grid}>
               <div className={styles.col}>
                 <label className={styles.label}>Số dư khởi tạo (đ)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="0"
+                <CurrencyInput
                   value={form.so_du}
-                  onChange={handleChange('so_du')}
-                  error={!!errors.so_du}
-                  errorMessage={errors.so_du}
+                  onChange={handleCurrencyChange('so_du')}
+                  placeholder="0"
                   disabled={isEditMode}
+                  className={`${styles.currencyInput} ${errors.so_du ? styles.currencyInputError : ''}`}
                 />
+                {errors.so_du && <span className={styles.errorMsg}>{errors.so_du}</span>}
               </div>
 
               <div className={styles.col}>
@@ -621,15 +622,13 @@ const TaoQuyPage = () => {
                     (Tổng số tiền cần quyên góp)
                   </span>
                 </label>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="Để trống nếu không quy định"
+                <CurrencyInput
                   value={form.so_tien_muc_tieu}
-                  onChange={handleChange('so_tien_muc_tieu')}
-                  error={!!errors.so_tien_muc_tieu}
-                  errorMessage={errors.so_tien_muc_tieu}
+                  onChange={handleCurrencyChange('so_tien_muc_tieu')}
+                  placeholder="Để trống nếu không quy định"
+                  className={`${styles.currencyInput} ${errors.so_tien_muc_tieu ? styles.currencyInputError : ''}`}
                 />
+                {errors.so_tien_muc_tieu && <span className={styles.errorMsg}>{errors.so_tien_muc_tieu}</span>}
               </div>
 
               <div className={styles.col}>
@@ -639,15 +638,13 @@ const TaoQuyPage = () => {
                     (Mức hỗ trợ tối đa cho mỗi SV)
                   </span>
                 </label>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="Để trống nếu không quy định"
+                <CurrencyInput
                   value={form.so_tien_ho_tro_toi_da}
-                  onChange={handleChange('so_tien_ho_tro_toi_da')}
-                  error={!!errors.so_tien_ho_tro_toi_da}
-                  errorMessage={errors.so_tien_ho_tro_toi_da}
+                  onChange={handleCurrencyChange('so_tien_ho_tro_toi_da')}
+                  placeholder="Để trống nếu không quy định"
+                  className={`${styles.currencyInput} ${errors.so_tien_ho_tro_toi_da ? styles.currencyInputError : ''}`}
                 />
+                {errors.so_tien_ho_tro_toi_da && <span className={styles.errorMsg}>{errors.so_tien_ho_tro_toi_da}</span>}
               </div>
             </div>
           </section>
@@ -667,16 +664,20 @@ const TaoQuyPage = () => {
             <div className={styles.grid}>
               <div className={styles.col}>
                 <label className={styles.label}>Số lượng chỉ tiêu</label>
-                <Input
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="Để trống nếu không giới hạn"
-                  value={form.so_luong_chi_tieu}
-                  onChange={handleChange('so_luong_chi_tieu')}
-                  error={!!errors.so_luong_chi_tieu}
-                  errorMessage={errors.so_luong_chi_tieu}
-                />
+                <div className={styles.readOnlyField}>
+                  {soLuongChiTieuCalculated !== null ? (
+                    <span className={styles.readOnlyValue}>
+                      {formatCurrencyPlain(soLuongChiTieuCalculated)} suất
+                    </span>
+                  ) : (
+                    <span className={styles.readOnlyPlaceholder}>
+                      Nhập mục tiêu & suất hỗ trợ để tự tính
+                    </span>
+                  )}
+                </div>
+                {errors.so_tien_muc_tieu && (
+                  <span className={styles.errorMsg}>{errors.so_tien_muc_tieu}</span>
+                )}
               </div>
 
               <div className={styles.col}>
@@ -727,12 +728,11 @@ const TaoQuyPage = () => {
                           </div>
                           <div className={styles.dotField}>
                             <label className={styles.dotLabel}>Số tiền dự kiến (VNĐ)</label>
-                            <input
-                              type="number"
-                              className={styles.dotInput}
+                            <CurrencyInput
                               value={dot.sotiendukien}
-                              onChange={handleDotChange(index, 'sotiendukien')}
-                              min="0"
+                              onChange={(raw) => handleDotChange(index, 'sotiendukien')({ target: { value: raw } })}
+                              className={styles.dotInput}
+                              min={0}
                             />
                           </div>
                           <div className={styles.dotField}>

@@ -31,8 +31,10 @@ const MainLayout = () => {
       },
     ]
 
-    // Student
-    if (user?.TenVaiTro === ROLES.STUDENT) {
+    const roleId = user?.VaiTro || user?.vaiTro;
+
+    // Student (role_id = 4)
+    if (roleId === ROLES.SINH_VIEN) {
       items.push({
         key: '/my-applications',
         icon: <FileTextOutlined />,
@@ -40,8 +42,8 @@ const MainLayout = () => {
       })
     }
 
-    // GV Chu Nhiem, Giao Vu, Admin, Ke Toan
-    if ([ROLES.GV_CHU_NHIEM, ROLES.GIAO_VU, ROLES.ADMIN, ROLES.KE_TOAN].includes(user?.TenVaiTro)) {
+    // Staff roles (role_id = 1, 2, 3)
+    if ([ROLES.ADMIN, ROLES.KE_TOAN, ROLES.CAN_BO_QUY].includes(roleId)) {
       items.push({
         key: '/applications',
         icon: <FileTextOutlined />,
@@ -49,8 +51,8 @@ const MainLayout = () => {
       })
     }
 
-    // Admin, Ke Toan
-    if ([ROLES.ADMIN, ROLES.KE_TOAN].includes(user?.TenVaiTro)) {
+    // Admin, Can bo Quy
+    if ([ROLES.ADMIN, ROLES.CAN_BO_QUY].includes(roleId)) {
       items.push({
         key: '/funds',
         icon: <DollarOutlined />,
@@ -59,7 +61,7 @@ const MainLayout = () => {
     }
 
     // Admin only
-    if (user?.TenVaiTro === ROLES.ADMIN) {
+    if (roleId === ROLES.ADMIN) {
       items.push({
         key: '/users',
         icon: <TeamOutlined />,

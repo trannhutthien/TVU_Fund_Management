@@ -19,6 +19,7 @@ import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import Dropdown from '@components/common/Dropdown/Dropdown';
 import { applicationService } from '@services/applicationService';
 import api from '@services/api';
+import { formatCurrency } from '@utils/formatters';
 import styles from './XetDuyetPage.module.scss';
 
 const PAGE_SIZE = 10;
@@ -53,11 +54,6 @@ const INITIAL_FILTERS = {
   tu_ngay: '',
   den_ngay: '',
   keyword: '',
-};
-
-const formatCurrency = (value) => {
-  const n = Number(value || 0);
-  return `${n.toLocaleString('vi-VN')}đ`;
 };
 
 const formatDate = (value) => {

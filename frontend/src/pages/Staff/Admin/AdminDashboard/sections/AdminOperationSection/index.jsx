@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { HiDocumentText, HiCircleStack } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import { formatCurrency, formatCurrencyPlain } from '@utils/formatters';
 import styles from './AdminOperationSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -115,7 +116,7 @@ const AdminOperationSection = ({ operationData }) => {
                 />
                 <span className={styles.funnelLabel}>{item.label}</span>
                 <span className={styles.funnelValue}>
-                  {item.value.toLocaleString('vi-VN')}
+                  {formatCurrencyPlain(item.value)}
                 </span>
                 <div className={styles.funnelBar}>
                   <div
@@ -156,7 +157,7 @@ const AdminOperationSection = ({ operationData }) => {
             <div className={styles.fundTotalStats}>
               <span className={styles.fundTotalLabel}>Tổng số dư tất cả quỹ:</span>
               <span className={styles.fundTotalValue}>
-                {funds.reduce((sum, f) => sum + (f.so_du || 0), 0).toLocaleString('vi-VN')}đ
+                {formatCurrency(funds.reduce((sum, f) => sum + (f.so_du || 0), 0))}
               </span>
             </div>
           )}
@@ -213,11 +214,11 @@ const AdminOperationSection = ({ operationData }) => {
                   </div>
                   <div className={styles.fundRow3}>
                     <span className={styles.fundAmount}>
-                      {(fund.so_du || 0).toLocaleString('vi-VN')}đ
+                      {formatCurrency(fund.so_du)}
                     </span>
                     <span className={styles.fundSeparator}>/</span>
                     <span className={styles.fundTarget}>
-                      {(fund.so_tien_toi_da || 0).toLocaleString('vi-VN')}đ
+                      {formatCurrency(fund.so_tien_toi_da)}
                     </span>
                   </div>
                 </div>

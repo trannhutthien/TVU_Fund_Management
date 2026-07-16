@@ -60,11 +60,13 @@ export const register = async (req, res) => {
       tenToChuc,
       loaiNhaTaiTro,
       soDienThoai,
-      loaiTaiKhoan // 'sinhvien' hoặc 'nhataitro'
+      loaiTaiKhoan, // 'sinhvien', 'nhataitro', 'canbo'
+      tinhTrangCongTac, // 'Dang cong tac' | 'Da nghi huu' (chỉ cho canbo)
+      donViCongTac, // đơn vị công tác (chỉ cho canbo)
     } = req.body;
 
     // 1. Validate loại tài khoản
-    if (!loaiTaiKhoan || !['sinhvien', 'nhataitro'].includes(loaiTaiKhoan)) {
+    if (!loaiTaiKhoan || !['sinhvien', 'nhataitro', 'canbo'].includes(loaiTaiKhoan)) {
       return res.status(400).json({
         success: false,
         message: "Loại tài khoản không hợp lệ",
@@ -77,6 +79,13 @@ export const register = async (req, res) => {
         return res.status(400).json({
           success: false,
           message: "Vui lòng nhập đầy đủ thông tin: họ tên, MSSV, lớp/khoa, email, mật khẩu",
+        });
+      }
+    } else if (loaiTaiKhoan === 'canbo') {
+      if (!hoTen || !email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập đầy đủ thông tin: họ tên, email, mật khẩu",
         });
       }
     } else {
@@ -120,13 +129,15 @@ export const register = async (req, res) => {
 
     // 7. Chuẩn bị dữ liệu user
     const userData = {
-      hoTen: loaiTaiKhoan === 'sinhvien' ? hoTen.trim() : tenToChuc.trim(),
-      maSoDinhDanh: loaiTaiKhoan === 'sinhvien' ? mssv.trim() : `NTT${Date.now()}`, // Tạo mã tự động cho nhà tài trợ
+      hoTen: loaiTaiKhoan === 'sinhvien' ? hoTen.trim() : (loaiTaiKhoan === 'canbo' ? hoTen.trim() : tenToChuc.trim()),
+      maSoDinhDanh: loaiTaiKhoan === 'sinhvien' ? mssv.trim() : (loaiTaiKhoan === 'canbo' ? `CB${Date.now()}` : `NTT${Date.now()}`),
       email: email.trim().toLowerCase(),
       matKhau: hashedPassword,
       roleId: 4, // Vai trò "Người dùng"
-      loaiTaiKhoan: loaiTaiKhoan === 'sinhvien' ? 'SINH_VIEN' : 'NHA_TAI_TRO',
-      khoaPhong: loaiTaiKhoan === 'sinhvien' ? lopKhoa.trim() : loaiNhaTaiTro || null,
+      loaiTaiKhoan: loaiTaiKhoan === 'sinhvien' ? 'SINH_VIEN' : (loaiTaiKhoan === 'canbo' ? 'CAN_BO' : 'NHA_TAI_TRO'),
+      tinhTrangCongTac: loaiTaiKhoan === 'canbo' ? (tinhTrangCongTac || 'Dang cong tac') : null,
+      donViCongTac: loaiTaiKhoan === 'canbo' ? (donViCongTac || null) : null,
+      khoaPhong: loaiTaiKhoan === 'sinhvien' ? lopKhoa.trim() : (loaiTaiKhoan === 'nhataitro' ? loaiNhaTaiTro || null : null),
       soDienThoai: soDienThoai || null,
       trangThai: 'HOAT_DONG',
       avatar: null,

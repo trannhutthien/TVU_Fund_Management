@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { 
   HiOutlineCalendarDays, 
   HiOutlineUser, 
@@ -9,7 +10,7 @@ import {
   HiOutlineBookmark,
   HiOutlineArrowUpRight
 } from 'react-icons/hi2';
-import { message } from 'antd';
+import { toast } from 'react-toastify';
 import PublicHeader from '@components/layout/PublicHeader/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
 import LoginForm from '@components/forms/LoginForm';
@@ -37,6 +38,17 @@ const NewsDetailPage = () => {
   const closeLoginModal = () => setIsLoginModalOpen(false);
   const openRegisterModal = () => setIsRegisterModalOpen(true);
   const closeRegisterModal = () => setIsRegisterModalOpen(false);
+
+  // Switch between modals
+  const switchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
 
   // Scroll to top on id change
   useEffect(() => {
@@ -138,7 +150,7 @@ const NewsDetailPage = () => {
   // Copy link handler
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    message.success('Đã sao chép liên kết vào bộ nhớ tạm!');
+    toast.success('Đã sao chép liên kết vào bộ nhớ tạm!');
   };
 
   // Share Facebook handler
@@ -297,7 +309,7 @@ const NewsDetailPage = () => {
                       {/* Content Body */}
                       <div 
                         className={styles.articleBody}
-                        dangerouslySetInnerHTML={{ __html: news.content }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(news.content, { ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'span', 'div', 'pre', 'code'], ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'style', 'target', 'rel'] }) }}
                       />
 
                       {/* Footer Actions */}
@@ -453,6 +465,7 @@ const NewsDetailPage = () => {
             <LoginForm 
               onSuccess={closeLoginModal}
               onClose={closeLoginModal}
+              onSwitchToRegister={switchToRegister}
             />
           </div>
         </div>
@@ -465,6 +478,7 @@ const NewsDetailPage = () => {
             <RegisterForm 
               onSuccess={closeRegisterModal}
               onClose={closeRegisterModal}
+              onSwitchToLogin={switchToLogin}
             />
           </div>
         </div>

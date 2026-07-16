@@ -223,5 +223,14 @@
     "ketoan": false,
     "sinhvien": false,
     "nhataitro": false
+  },
+  "nhan_su": {
+    "label": "Quản lý nhân sự",
+    "path": "/nhan-su",
+    "admin": true,
+    "canbo": false,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false
   }
 }

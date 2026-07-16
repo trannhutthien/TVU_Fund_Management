@@ -8,6 +8,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { formatCurrency } from '@utils/formatters';
 import styles from './RecentTransactionSection.module.scss';
 
 const STATUS_TO_BADGE = {
@@ -26,8 +27,6 @@ const STATUS_TO_BADGE = {
   'Cho xu ly': 'pending',
   'Hoan tien': 'cancelled',
 };
-
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 const formatDate = (v) => {
   if (!v) return '—';
   const d = new Date(v);

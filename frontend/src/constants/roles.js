@@ -1,10 +1,19 @@
-// Vai trò người dùng
+// Vai trò người dùng (numeric IDs matching backend vaitro table)
 export const ROLES = {
-  STUDENT: 'Student',
-  GV_CHU_NHIEM: 'GV Chu Nhiem',
-  GIAO_VU: 'Giao Vu',
-  ADMIN: 'Admin',
-  KE_TOAN: 'Ke Toan',
+  ADMIN: 1,
+  KE_TOAN: 2,
+  CAN_BO_QUY: 3,
+  SINH_VIEN: 4,
+  BAN_KIEM_SOAT: 5,
+}
+
+// Aliases for backward compatibility
+export const ROLE_LABELS = {
+  1: 'Quản trị viên',
+  2: 'Kế toán',
+  3: 'Cán bộ Quỹ',
+  4: 'Sinh viên/Nhà tài trợ',
+  5: 'Ban Kiểm soát',
 }
 
 // Mảng tất cả vai trò

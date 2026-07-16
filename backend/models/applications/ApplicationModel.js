@@ -1,6 +1,18 @@
 import pool from "../../config/db.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ─── HELPER: Xác định cần nghiệm thu theo Điều 15 Điều lệ ───────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+const determineCangNghiemThu = (loaiHoTro, laDeTai) => {
+  // Mục b,c Điều 15: Đề tài/dự án nghiên cứu → luôn cần nghiệm thu
+  if (laDeTai === 1) return 1;
+  // Mục d,e Điều 15: Cho vay → luôn cần nghiệm thu
+  if (loaiHoTro === 'Cho vay') return 1;
+  // Mục a: Hỗ trợ thường (học bổng, CSVC, sự kiện) → không cần nghiệm thu
+  return 0;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ─── APPLICATION MODEL (YÊU CẦU HỖ TRỢ) ───────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -15,7 +27,12 @@ const createApplication = async (applicationData) => {
     lyDo,
     soTienDeNghi,
     taiLieuDinhKem,
-    dotId
+    dotId,
+    loaiHoTro,
+    tongKinhPhiDuAn,
+    danhNghia,
+    tenDaiDien,
+    laDeTai
   } = applicationData;
 
   const [result] = await pool.execute(
@@ -26,8 +43,14 @@ const createApplication = async (applicationData) => {
       lydo,
       sotiendenghi,
       tailieudinhkem,
-      trangthai
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      trangthai,
+      loaihotro,
+      canghiemthu,
+      laidetac,
+      tongkinhphidudan,
+      danhnghia,
+      tendaidien
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       nguoiDungId,
       quyId,
@@ -35,7 +58,13 @@ const createApplication = async (applicationData) => {
       lyDo,
       soTienDeNghi,
       taiLieuDinhKem || null,
-      'Cho duyet cap 1' // Trạng thái mặc định: Chờ duyệt cấp 1
+      'Cho duyet cap 1',
+      loaiHoTro || 'Tai tro khong hoan lai',
+      determineCangNghiemThu(loaiHoTro, laDeTai),
+      laDeTai || 0,
+      tongKinhPhiDuAn || null,
+      danhNghia || null,
+      tenDaiDien || null
     ]
   );
 
@@ -45,6 +74,12 @@ const createApplication = async (applicationData) => {
     quyId,
     dotId: dotId || null,
     soTienDeNghi,
+    loaiHoTro: loaiHoTro || 'Tai tro khong hoan lai',
+    canghiemthu: determineCangNghiemThu(loaiHoTro, laDeTai),
+    laDeTai: laDeTai || 0,
+    tongKinhPhiDuAn: tongKinhPhiDuAn || null,
+    danhNghia: danhNghia || null,
+    tenDaiDien: tenDaiDien || null,
     trangThai: 'Cho duyet cap 1'
   };
 };
@@ -63,6 +98,11 @@ const getApplicationById = async (yeucauhotroId) => {
       yc.sotiendenghi,
       yc.tailieudinhkem,
       yc.trangthai,
+      yc.loaihotro,
+      yc.canghiemthu,
+      yc.tongkinhphidudan,
+      yc.danhnghia,
+      yc.tendaidien,
       yc.ghichu,
       yc.ngaynop,
       yc.ngaycapnhat,
@@ -71,16 +111,44 @@ const getApplicationById = async (yeucauhotroId) => {
       nd.masodinhdanh,
       q.tenquy,
       q.loaiquy_id,
-      q.sodu as quy_so_du
+      q.sodu as quy_so_du,
+      dkh.dieukhoanthuhoi_id,
+      dkh.mucthuhoi as dkh_mucthuhoi,
+      dkh.laisuat as dkh_laisuat,
+      dkh.thoihanhoantra_thang as dkh_thoihanhoantra_thang,
+      dkh.soquyetdinh_hopdong as dkh_soquyetdinh_hopdong,
+      dkh.filehopdong as dkh_filehopdong
      FROM yeucauhotro yc
      INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
      INNER JOIN quy q ON yc.quy_id = q.quy_id
+     LEFT JOIN dieukhoanthuhoi dkh ON yc.yeucauhotro_id = dkh.yeucauhotro_id
      WHERE yc.yeucauhotro_id = ?
      LIMIT 1`,
     [yeucauhotroId]
   );
 
-  return rows[0] || null;
+  if (!rows[0]) return null;
+
+  const row = rows[0];
+  // Gộp dieukhoanthuhoi thành object con (null nếu không có)
+  row.dieukhoanthuhoi = row.dieukhoanthuhoi_id ? {
+    dieukhoanthuhoi_id: row.dieukhoanthuhoi_id,
+    mucthuhoi: row.dkh_mucthuhoi,
+    laisuat: row.dkh_laisuat,
+    thoihanhoantra_thang: row.dkh_thoihanhoantra_thang,
+    soquyetdinh_hopdong: row.dkh_soquyetdinh_hopdong,
+    filehopdong: row.dkh_filehopdong
+  } : null;
+
+  // Xóa các field dkh_ prefix thừa
+  delete row.dieukhoanthuhoi_id;
+  delete row.dkh_mucthuhoi;
+  delete row.dkh_laisuat;
+  delete row.dkh_thoihanhoantra_thang;
+  delete row.dkh_soquyetdinh_hopdong;
+  delete row.dkh_filehopdong;
+
+  return row;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,6 +241,8 @@ const getAllApplications = async (filters, limit, offset) => {
       yc.lydo,
       yc.sotiendenghi,
       yc.trangthai,
+      yc.loaihotro,
+      yc.canghiemthu,
       yc.ngaynop,
       yc.ngaycapnhat,
       nd.hoten as nguoi_nop_ho_ten,
@@ -288,5 +358,6 @@ export default {
   countApplicationsByUser,
   getAllApplications,
   updateApplicationStatus,
-  updateTuChoi
+  updateTuChoi,
+  determineCangNghiemThu
 };

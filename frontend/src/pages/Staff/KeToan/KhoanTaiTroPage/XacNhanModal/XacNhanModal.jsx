@@ -10,12 +10,8 @@ import {
 import Button from '@components/common/Button/Button';
 import { uploadService } from '@services/uploadService';
 import { approveDonation, confirmDonation } from '@services/donationService';
+import { formatCurrency } from '@utils/formatters';
 import styles from './XacNhanModal.module.scss';
-
-const formatCurrency = (amount) => {
-  const n = Number(amount) || 0;
-  return n.toLocaleString('vi-VN') + 'đ';
-};
 
 const formatDateTime = (value) => {
   if (!value) return '—';

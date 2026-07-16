@@ -59,6 +59,7 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
   
   const [selectedRole, setSelectedRole] = useState(4);
   const [loaiTaiKhoan, setLoaiTaiKhoan] = useState('SINH_VIEN');
+  const [xacNhanDocLap, setXacNhanDocLap] = useState(false);
   const [form, setForm] = useState(initialForm(user));
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -101,6 +102,10 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
     if (selectedRole === 4 && loaiTaiKhoan === 'NHA_TAI_TRO' && !form.ten_nha_tai_tro.trim()) {
       errs.ten_nha_tai_tro = 'Bắt buộc nhập tên tổ chức / nhà tài trợ';
     }
+    // Validate xacNhanDocLap cho role 5
+    if (selectedRole === 5 && !xacNhanDocLap) {
+      errs.xacNhanDocLap = 'Cần xác nhận không có quan hệ thân nhân theo Điều 8 Điều lệ';
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -138,6 +143,11 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
           payload.khoaphong = loaiTaiKhoan === 'SINH_VIEN' ? form.khoa_phong || null : null;
           payload.tenNhaTaiTro = loaiTaiKhoan === 'NHA_TAI_TRO' ? form.ten_nha_tai_tro.trim() : null;
           payload.loaiNhaTaiTro = loaiTaiKhoan === 'NHA_TAI_TRO' ? form.loai_ntt : null;
+        }
+
+        // Thêm xacNhanDocLap cho role 5 (Ban Kiem Soat)
+        if (selectedRole === 5) {
+          payload.xacNhanDocLap = xacNhanDocLap;
         }
 
         await userService.create(payload);
@@ -197,7 +207,23 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
                 <option value={4}>Người dùng (Sinh viên / Nhà tài trợ)</option>
                 <option value={2}>Kế toán</option>
                 <option value={3}>Cán bộ Quỹ</option>
+                <option value={5}>Ban Kiểm soát</option>
               </select>
+            </div>
+          )}
+
+          {/* Checkbox xacNhanDocLap — chỉ khi role = 5 (Ban Kiem Soat) */}
+          {!isEdit && selectedRole === 5 && (
+            <div className={styles.field}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={xacNhanDocLap}
+                  onChange={(e) => setXacNhanDocLap(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span>Tôi xác nhận người này <strong>không có quan hệ</strong> vợ/chồng, cha/mẹ, con, anh chị em ruột với thành viên Hội đồng Quỹ, Giám đốc, Phó Giám đốc, Kế toán trưởng (Điều 8 Điều lệ)</span>
+              </label>
             </div>
           )}
 

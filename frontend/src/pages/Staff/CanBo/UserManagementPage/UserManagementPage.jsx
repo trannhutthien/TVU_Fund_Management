@@ -6,6 +6,7 @@ import {
   HiOutlineAcademicCap,
   HiOutlineHandRaised,
   HiOutlineShieldCheck,
+  HiOutlineBriefcase,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
 } from 'react-icons/hi2';
@@ -16,9 +17,15 @@ import UserFilter from './UserFilter/UserFilter';
 import UserTable from './UserTable/UserTable';
 import UserDetailDrawer from './UserDetailDrawer/UserDetailDrawer';
 import CreateEditUserModal from './CreateEditUserModal/CreateEditUserModal';
+import NhanSuSection from './NhanSuSection/NhanSuSection';
 import styles from './UserManagementPage.module.scss';
 
 const PAGE_SIZE = 15;
+
+const MAIN_TABS = [
+  { id: 'nguoi_dung', label: 'Quản lý người dùng', icon: HiOutlineUsers },
+  { id: 'chuc_vu', label: 'Chức vụ tổ chức', icon: HiOutlineBriefcase },
+];
 
 const TABS = [
   { id: 'tat_ca', label: 'Tất cả', icon: HiOutlineUsers },
@@ -34,7 +41,8 @@ const INITIAL_FILTERS = {
   loai_ntt: '',
 };
 
-const UserManagementPage = ({ isAdmin = false }) => {
+const UserManagementPage = ({ isAdmin = false, initialTab }) => {
+  const [mainTab, setMainTab] = useState(initialTab || 'nguoi_dung');
   const [activeTab, setActiveTab] = useState('tat_ca');
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -226,12 +234,16 @@ const UserManagementPage = ({ isAdmin = false }) => {
 
         <header className={styles.header}>
           <div>
-            <h1 className={styles.title}>Quản lý Người dùng</h1>
+            <h1 className={styles.title}>
+              {mainTab === 'chuc_vu' ? 'Chức vụ tổ chức' : 'Quản lý Người dùng'}
+            </h1>
             <p className={styles.subtitle}>
-              Quản lý tài khoản sinh viên và nhà tài trợ
+              {mainTab === 'chuc_vu'
+                ? 'Quản lý chức danh và nhân sự trong Quỹ'
+                : 'Quản lý tài khoản sinh viên và nhà tài trợ'}
             </p>
           </div>
-          {(activeTab !== 'nhan_vien' || isAdmin) && (
+          {mainTab === 'nguoi_dung' && (activeTab !== 'nhan_vien' || isAdmin) && (
             <Button
               variant="primary"
               leftIcon={<HiOutlineUserPlus />}
@@ -242,23 +254,16 @@ const UserManagementPage = ({ isAdmin = false }) => {
           )}
         </header>
 
-        <UserStatsBar
-          stats={stats}
-          loading={statsLoading}
-          activeKey={activeStatsCard}
-          onCardClick={handleStatsCardClick}
-        />
-
-        <div className={styles.tabBar}>
-          {TABS.map((tab) => {
+        <div className={styles.mainTabBar}>
+          {MAIN_TABS.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+            const isActive = mainTab === tab.id;
             return (
               <button
                 key={tab.id}
                 type="button"
-                className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(tab.id)}
+                className={`${styles.mainTab} ${isActive ? styles.mainTabActive : ''}`}
+                onClick={() => setMainTab(tab.id)}
               >
                 <Icon className={styles.tabIcon} />
                 <span>{tab.label}</span>
@@ -267,21 +272,50 @@ const UserManagementPage = ({ isAdmin = false }) => {
           })}
         </div>
 
-        <UserFilter
-          activeTab={activeTab}
-          filters={filters}
-          onChange={setFilters}
-        />
+        {mainTab === 'chuc_vu' ? (
+          <NhanSuSection />
+        ) : (
+          <>
+            <UserStatsBar
+              stats={stats}
+              loading={statsLoading}
+              activeKey={activeStatsCard}
+              onCardClick={handleStatsCardClick}
+            />
 
-        <UserTable
-          data={data}
-          loading={loading}
-          activeTab={activeTab}
-          onViewDetail={setSelectedUser}
-          onEdit={handleOpenEdit}
-          onToggleStatus={handleToggleStatus}
-          isAdmin={isAdmin}
-          onDelete={handleDeleteUser}
+            <div className={styles.tabBar}>
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    <Icon className={styles.tabIcon} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <UserFilter
+              activeTab={activeTab}
+              filters={filters}
+              onChange={setFilters}
+            />
+
+            <UserTable
+              data={data}
+              loading={loading}
+              activeTab={activeTab}
+              onViewDetail={setSelectedUser}
+              onEdit={handleOpenEdit}
+              onToggleStatus={handleToggleStatus}
+              isAdmin={isAdmin}
+              onDelete={handleDeleteUser}
         />
 
         {totalPages > 1 && (
@@ -307,6 +341,8 @@ const UserManagementPage = ({ isAdmin = false }) => {
               <HiOutlineChevronRight />
             </button>
           </div>
+        )}
+          </>
         )}
       </div>
 

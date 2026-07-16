@@ -15,15 +15,12 @@ const router = express.Router();
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // GET /api/pheduyet/stats — Thống kê tổng quan
-router.get('/stats', protect, authorizeRoles(1), getPheDuyetStats);
+router.get('/stats', protect, authorizeRoles(1, 5), getPheDuyetStats);
 
-// GET /api/pheduyet/approvers — Danh sách người có quyền duyệt
-router.get('/approvers', protect, authorizeRoles(1), getApprovers);
+router.get('/approvers', protect, authorizeRoles(1, 5), getApprovers);
 
-// GET /api/pheduyet/timeline/:type/:id — Chuỗi phê duyệt của 1 đơn/khoản
-router.get('/timeline/:type/:id', protect, authorizeRoles(1), getApprovalTimeline);
+router.get('/timeline/:type/:id', protect, authorizeRoles(1, 5), getApprovalTimeline);
 
-// GET /api/pheduyet — Danh sách tất cả phê duyệt với filters
-router.get('/', protect, authorizeRoles(1), getAllPheDuyet);
+router.get('/', protect, authorizeRoles(1, 5), getAllPheDuyet);
 
 export default router;

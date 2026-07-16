@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
 import { HiCircleStack } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import styles from './FundHealthSection.module.scss';
-
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 
 const getHealth = (percent) => {
   if (percent >= 50) {

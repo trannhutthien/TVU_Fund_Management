@@ -5,6 +5,7 @@ import {
   HiOutlineHandRaised,
   HiOutlineTrophy,
 } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import styles from './DonorOverviewSection.module.scss';
 
 /**
@@ -38,11 +39,6 @@ const DonorOverviewSection = ({
       type: 'badge',
     },
   ];
-
-  const formatCurrency = (amount) => {
-    if (!amount) return '0 ₫';
-    return `${amount.toLocaleString('vi-VN')} ₫`;
-  };
 
   return (
     <div className={styles.section}>

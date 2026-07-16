@@ -25,31 +25,26 @@ const usePermission = () => {
   const permissions = useMemo(() => {
     if (!user) return {};
 
-    const userRole = user.VaiTro;
+    const userRole = user.VaiTro || user.vaiTro;
 
     return {
       // Application permissions
-      canCreateApplication: userRole === ROLES.STUDENT,
-      canViewApplication: true, // All roles can view
-      canApproveLevel1: userRole === ROLES.TEACHER,
-      canApproveLevel2: [ROLES.ACADEMIC_STAFF, ROLES.ADMIN].includes(userRole),
-      canApproveLevel3: userRole === ROLES.ACCOUNTANT,
-      canRejectApplication: [
-        ROLES.TEACHER, 
-        ROLES.ACADEMIC_STAFF, 
-        ROLES.ADMIN, 
-        ROLES.ACCOUNTANT
-      ].includes(userRole),
+      canCreateApplication: userRole === ROLES.SINH_VIEN,
+      canViewApplication: true,
+      canApproveLevel1: userRole === ROLES.CAN_BO_QUY,
+      canApproveLevel2: userRole === ROLES.ADMIN,
+      canApproveLevel3: userRole === ROLES.KE_TOAN,
+      canRejectApplication: [ROLES.CAN_BO_QUY, ROLES.ADMIN, ROLES.KE_TOAN].includes(userRole),
 
       // Fund permissions
-      canCreateFund: [ROLES.ADMIN, ROLES.ACCOUNTANT].includes(userRole),
-      canEditFund: [ROLES.ADMIN, ROLES.ACCOUNTANT].includes(userRole),
+      canCreateFund: [ROLES.ADMIN, ROLES.CAN_BO_QUY].includes(userRole),
+      canEditFund: [ROLES.ADMIN, ROLES.CAN_BO_QUY].includes(userRole),
       canDeleteFund: userRole === ROLES.ADMIN,
-      canViewFund: true, // All roles can view
+      canViewFund: true,
 
       // Donation permissions
-      canCreateDonation: [ROLES.ADMIN, ROLES.ACCOUNTANT].includes(userRole),
-      canEditDonation: [ROLES.ADMIN, ROLES.ACCOUNTANT].includes(userRole),
+      canCreateDonation: [ROLES.ADMIN, ROLES.CAN_BO_QUY].includes(userRole),
+      canEditDonation: [ROLES.ADMIN, ROLES.KE_TOAN].includes(userRole),
       canDeleteDonation: userRole === ROLES.ADMIN,
       canViewDonation: true,
 
@@ -57,23 +52,22 @@ const usePermission = () => {
       canCreateUser: userRole === ROLES.ADMIN,
       canEditUser: userRole === ROLES.ADMIN,
       canDeleteUser: userRole === ROLES.ADMIN,
-      canViewUsers: [ROLES.ADMIN, ROLES.ACADEMIC_STAFF].includes(userRole),
+      canViewUsers: [ROLES.ADMIN, ROLES.CAN_BO_QUY, ROLES.BAN_KIEM_SOAT].includes(userRole),
       canAssignRole: userRole === ROLES.ADMIN,
 
       // Transaction permissions
-      canViewAllTransactions: [ROLES.ADMIN, ROLES.ACCOUNTANT].includes(userRole),
+      canViewAllTransactions: [ROLES.ADMIN, ROLES.KE_TOAN, ROLES.BAN_KIEM_SOAT].includes(userRole),
       canViewOwnTransactions: true,
 
       // Dashboard permissions
       canViewAdminDashboard: userRole === ROLES.ADMIN,
-      canViewAccountantDashboard: userRole === ROLES.ACCOUNTANT,
-      canViewTeacherDashboard: userRole === ROLES.TEACHER,
-      canViewAcademicDashboard: userRole === ROLES.ACADEMIC_STAFF,
-      canViewStudentDashboard: userRole === ROLES.STUDENT,
+      canViewAccountantDashboard: userRole === ROLES.KE_TOAN,
+      canViewStaffDashboard: userRole === ROLES.CAN_BO_QUY,
+      canViewStudentDashboard: userRole === ROLES.SINH_VIEN,
 
       // Report permissions
-      canViewReports: [ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.ACADEMIC_STAFF].includes(userRole),
-      canExportReports: [ROLES.ADMIN, ROLES.ACCOUNTANT].includes(userRole),
+      canViewReports: [ROLES.ADMIN, ROLES.KE_TOAN, ROLES.CAN_BO_QUY, ROLES.BAN_KIEM_SOAT].includes(userRole),
+      canExportReports: [ROLES.ADMIN, ROLES.KE_TOAN].includes(userRole),
     };
   }, [user]);
 

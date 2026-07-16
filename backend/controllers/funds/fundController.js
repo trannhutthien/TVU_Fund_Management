@@ -205,10 +205,10 @@ export const createFund = async (req, res) => {
     }
 
     // 6. Validate độ dài mô tả (nếu có)
-    if (moTa && moTa.trim().length > 255) {
+    if (moTa && moTa.trim().length > 1000) {
       return res.status(400).json({
         success: false,
-        message: "Mô tả không được vượt quá 255 ký tự",
+        message: "Mô tả không được vượt quá 1000 ký tự",
       });
     }
 

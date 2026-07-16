@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import studentShowcaseService from '@services/studentShowcaseService';
+import { formatCurrency } from '@utils/formatters';
 import styles from './StudentShowcase.module.scss';
 
 /**
@@ -47,7 +48,7 @@ const StudentShowcase = ({
             achievement: student.thanhTich,
             year: student.namHoc,
             soLanHoTro: student.soLanHoTro || 1,
-            tongTienHoTro: student.tongTienHoTro || 5000000
+            tongTienHoTro: student.tongTienHoTro || 0
           }));
           setStudents(mappedStudents);
         }
@@ -195,7 +196,7 @@ const StudentShowcase = ({
             <div className={styles.cardContent}>
               <div className={styles.cardTitle}>Tổng tiền nhận</div>
               <div className={styles.cardValue}>
-                {Number(currentStudent.tongTienHoTro || 5000000).toLocaleString('vi-VN')} đ
+                {formatCurrency(currentStudent.tongTienHoTro)}
               </div>
             </div>
           </div>

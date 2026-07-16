@@ -7,26 +7,9 @@ import {
   HiOutlineInboxArrowDown,
 } from 'react-icons/hi2';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { formatCurrency } from '@utils/formatters';
 import styles from './LichSuTableSection.module.scss';
 
-const STATUS_TO_BADGE = {
-  // Khoản tài trợ (Thu)
-  'Cho duyet': 'pending',
-  'Da duyet': 'approved',
-  'Da nhan': 'completed',
-  'Tu choi': 'rejected',
-
-  // Giao dịch (Chi)
-  'Dang xu ly': 'processing',
-  'Thanh cong': 'completed',
-  'That bai': 'rejected',
-
-  // Fallback cũ
-  'Cho xu ly': 'pending',
-  'Hoan tien': 'cancelled',
-};
-
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 const formatDate = (v) => {
   if (!v) return '—';
   const d = new Date(v);

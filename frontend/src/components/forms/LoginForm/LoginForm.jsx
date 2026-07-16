@@ -17,7 +17,7 @@ import './LoginForm.scss';
  * Có logo, checkbox ghi nhớ, link quên mật khẩu, đăng nhập Google
  * Quên mật khẩu: modal overlay tự quản lý bên trong
  */
-const LoginForm = ({ onGoogleLogin, onSuccess, onClose }) => {
+const LoginForm = ({ onGoogleLogin, onSuccess, onClose, onSwitchToRegister }) => {
   const { login: loginStore } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
@@ -242,9 +242,19 @@ const LoginForm = ({ onGoogleLogin, onSuccess, onClose }) => {
 
         <div className="login-form-footer">
           <span className="login-form-footer-text">Chưa có tài khoản?</span>
-          <a href="/register" className="login-form-footer-link">
-            Đăng ký ngay
-          </a>
+          {onSwitchToRegister ? (
+            <button
+              type="button"
+              className="login-form-footer-link"
+              onClick={onSwitchToRegister}
+            >
+              Đăng ký ngay
+            </button>
+          ) : (
+            <a href="/register" className="login-form-footer-link">
+              Đăng ký ngay
+            </a>
+          )}
         </div>
       </div>
 
@@ -338,6 +348,7 @@ LoginForm.propTypes = {
   onGoogleLogin: PropTypes.func,
   onSuccess: PropTypes.func,
   onClose: PropTypes.func,
+  onSwitchToRegister: PropTypes.func,
 };
 
 export default LoginForm;

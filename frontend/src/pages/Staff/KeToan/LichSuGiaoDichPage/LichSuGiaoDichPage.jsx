@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { HiOutlineArrowDownTray } from 'react-icons/hi2';
 import api from '@services/api';
+import YearFilter from '@components/common/YearFilter';
 import LichSuStatsSection from './sections/LichSuStatsSection';
 import LichSuFilterSection from './sections/LichSuFilterSection';
 import LichSuTableSection from './sections/LichSuTableSection';
@@ -54,6 +55,7 @@ const LichSuGiaoDichPage = () => {
   const [quickDateFilter, setQuickDateFilter] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
+  const [selectedYear, setSelectedYear] = useState(null);
 
   const [quyOptions, setQuyOptions] = useState([]);
   const [selectedGiaoDich, setSelectedGiaoDich] = useState(null);
@@ -99,24 +101,31 @@ const LichSuGiaoDichPage = () => {
   }, []);
 
   // ─── Filter params chung ─────────────────────────────────────────────────
-  const filterParams = useMemo(
-    () => ({
+  const filterParams = useMemo(() => {
+    // When year is selected and no custom date range, auto-set date range
+    let effectiveTuNgay = filterDateRange.from || undefined;
+    let effectiveDenNgay = filterDateRange.to || undefined;
+    if (selectedYear && !filterDateRange.from && !filterDateRange.to) {
+      effectiveTuNgay = `${selectedYear}-01-01`;
+      effectiveDenNgay = `${selectedYear}-12-31`;
+    }
+    return {
       loai: filterLoai || undefined,
       trangThai: filterTrangThai || undefined,
       quyId: filterQuy || undefined,
-      tuNgay: filterDateRange.from || undefined,
-      denNgay: filterDateRange.to || undefined,
+      tuNgay: effectiveTuNgay,
+      denNgay: effectiveDenNgay,
       keyword: debouncedKeyword || undefined,
-    }),
-    [
-      filterLoai,
-      filterTrangThai,
-      filterQuy,
-      filterDateRange.from,
-      filterDateRange.to,
-      debouncedKeyword,
-    ],
-  );
+    };
+  }, [
+    filterLoai,
+    filterTrangThai,
+    filterQuy,
+    filterDateRange.from,
+    filterDateRange.to,
+    debouncedKeyword,
+    selectedYear,
+  ]);
 
   // ─── Fetch list + stats song song ────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -222,7 +231,9 @@ const LichSuGiaoDichPage = () => {
             Toàn bộ dòng tiền Thu - Chi của hệ thống
           </p>
         </div>
-        <button
+        <div className={styles.headerActions}>
+          <YearFilter value={selectedYear} onChange={setSelectedYear} />
+          <button
           type="button"
           className={styles.exportBtn}
           onClick={handleExportExcel}
@@ -240,6 +251,7 @@ const LichSuGiaoDichPage = () => {
             </>
           )}
         </button>
+        </div>
       </div>
 
       <LichSuStatsSection data={statsData} isLoading={isLoadingStats} />

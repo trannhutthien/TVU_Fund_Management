@@ -22,6 +22,7 @@ import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import { StatCard } from '@components/common/Card';
 import api from '@services/api';
 import { getAllLoaiQuy, createLoaiQuy, getDisbursementRounds } from '@services/fundService';
+import { formatCurrency } from '@utils/formatters';
 import QuyDetailDrawer from './QuyDetailDrawer/QuyDetailDrawer';
 import styles from './QuyListPage.module.scss';
 
@@ -52,11 +53,6 @@ const INITIAL_FILTERS = {
   loai_quy: '',
   trang_thai: '',
   sort_by: 'ngay_tao',
-};
-
-const formatCurrency = (value) => {
-  const n = Number(value || 0);
-  return `${n.toLocaleString('vi-VN')}đ`;
 };
 
 const formatCompactCurrency = (value) => {

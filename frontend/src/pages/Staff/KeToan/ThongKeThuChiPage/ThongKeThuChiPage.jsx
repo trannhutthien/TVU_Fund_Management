@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import statisticsService from '@services/statisticsService';
+import YearFilter from '@components/common/YearFilter';
 import TKFilterSection from './sections/TKFilterSection';
 import TKSummarySection from './sections/TKSummarySection';
 import TKCashFlowSection from './sections/TKCashFlowSection';
@@ -35,6 +36,7 @@ const ThongKeThuChiPage = () => {
   const [fundTableData, setFundTableData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(null);
 
   // ─── FETCH DATA ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -47,6 +49,7 @@ const ThongKeThuChiPage = () => {
           month: period.month,
           quarter: period.quarter,
           compareMode: compareMode,
+          nam: selectedYear,
         });
 
         if (res) {
@@ -67,7 +70,7 @@ const ThongKeThuChiPage = () => {
     };
 
     fetchData();
-  }, [period, compareMode]);
+  }, [period, compareMode, selectedYear]);
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -87,6 +90,7 @@ const ThongKeThuChiPage = () => {
             Phân tích dòng tiền và lập báo cáo tài chính
           </p>
         </div>
+        <YearFilter value={selectedYear} onChange={setSelectedYear} />
       </div>
 
       {/* Filter Section */}

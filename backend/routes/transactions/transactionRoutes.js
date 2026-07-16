@@ -3,6 +3,7 @@ import {
   getAllTransactions,
   getTransactionById,
   getTransactionsSummary,
+  createChiKhac,
   exportTransactions,
   updateDoiSoatStatus,
 } from "../../controllers/transactions/transactionController.js";
@@ -20,18 +21,22 @@ router.get("/public/:id", getTransactionById);
 // ─── PROTECTED TRANSACTION ROUTES (Yêu cầu đăng nhập + phân quyền) ───────────
 
 // GET /api/transactions — Danh sách giao dịch với filter + phân trang
-router.get("/", protect, authorizeRoles(1, 2), getAllTransactions);
+router.get("/", protect, authorizeRoles(1, 2, 5), getAllTransactions);
 
 // GET /api/transactions/summary — Tổng hợp thu/chi/ròng/bất thường
-router.get("/summary", protect, authorizeRoles(1, 2), getTransactionsSummary);
+router.get("/summary", protect, authorizeRoles(1, 2, 5), getTransactionsSummary);
 
 // GET /api/transactions/export — Xuất Excel toàn bộ giao dịch đang filter
-router.get("/export", protect, authorizeRoles(1, 2), exportTransactions);
+router.get("/export", protect, authorizeRoles(1, 2, 5), exportTransactions);
+
+// POST /api/transactions/chi-khac — Ghi nhận chi khác: thẩm định, bộ máy, nhiệm vụ khác (C3)
+router.post("/chi-khac", protect, authorizeRoles(1, 2), createChiKhac);
 
 // GET /api/transactions/:id — Chi tiết 1 giao dịch
-router.get("/:id", protect, authorizeRoles(1, 2), getTransactionById);
+router.get("/:id", protect, authorizeRoles(1, 2, 5), getTransactionById);
 
 // PATCH /api/transactions/:id/doi-soat — Cập nhật trạng thái đối soát
 router.patch("/:id/doi-soat", protect, authorizeRoles(1, 2), updateDoiSoatStatus);
 
 export default router;
+

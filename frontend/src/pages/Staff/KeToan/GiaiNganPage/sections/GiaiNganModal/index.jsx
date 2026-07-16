@@ -10,12 +10,11 @@ import {
   HiOutlineDocument,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import { formatCurrency } from '@utils/formatters';
 import styles from './GiaiNganModal.module.scss';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MIN_REJECT_LENGTH = 20;
-
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 
 const GiaiNganModal = ({
   type,

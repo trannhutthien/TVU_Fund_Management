@@ -87,15 +87,17 @@ const ApplicationFooter = ({
         >
           Làm mới
         </Button>
-        <Button
-          variant="secondary"
-          onClick={onSaveDraft}
-          loading={isSaving}
-          leftIcon={!isSaving ? <HiOutlineArchiveBox /> : null}
-          className={styles.draftBtn}
-        >
-          {isSaving ? 'Đang lưu...' : 'Lưu nháp'}
-        </Button>
+        {onSaveDraft && (
+          <Button
+            variant="secondary"
+            onClick={onSaveDraft}
+            loading={isSaving}
+            leftIcon={!isSaving ? <HiOutlineArchiveBox /> : null}
+            className={styles.draftBtn}
+          >
+            {isSaving ? 'Đang lưu...' : 'Lưu nháp'}
+          </Button>
+        )}
         <Button
           variant="primary"
           onClick={onSubmit}

@@ -13,6 +13,7 @@ import useAuthStore from '@stores/authStore';
 import api from '@services/api';
 import allocationService from '@services/allocationService';
 import { uploadService } from '@services/uploadService';
+import { formatCurrency, formatCurrencyPlain } from '@utils/formatters';
 import styles from './PhanBoPage.module.scss';
 
 const API_BASE = (
@@ -250,7 +251,7 @@ const PhanBoPage = () => {
       width: 140,
       render: (amount) => (
         <span className={styles.amountText}>
-          {parseFloat(amount || 0).toLocaleString('vi-VN')}đ
+          {formatCurrency(amount)}
         </span>
       )
     },
@@ -527,7 +528,7 @@ const PhanBoPage = () => {
               onChange={handleSourceFundChange}
               options={beChungList.map(f => ({
                 value: f.quyId,
-                label: `${f.tenQuy} (Số dư: ${parseFloat(f.soDu || 0).toLocaleString('vi-VN')}đ)`
+                label: `${f.tenQuy} (Số dư: ${formatCurrencyPlain(f.soDu)}đ)`
               }))}
             />
           </Form.Item>
@@ -542,7 +543,7 @@ const PhanBoPage = () => {
               disabled={mucChiList.length === 0}
               options={mucChiList.map(f => ({
                 value: f.quyId,
-                label: `${f.tenQuy} (Số dư: ${parseFloat(f.soDu || 0).toLocaleString('vi-VN')}đ)`
+                label: `${f.tenQuy} (Số dư: ${formatCurrencyPlain(f.soDu)}đ)`
               }))}
             />
           </Form.Item>

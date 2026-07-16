@@ -130,8 +130,23 @@ export const submitGuestApplication = async (req, res) => {
       quyId,
       lyDo,
       soTienDeNghi,
-      taiLieuDinhKem
+      taiLieuDinhKem,
+      loaiHoTro,
+      tongKinhPhiDuAn,
+      laDeTai,
+      formTimestamp,
     } = req.body;
+
+    // Anti-bot: Kiểm tra thời gian tối thiểu từ khi mở form (>= 3 giây)
+    if (formTimestamp) {
+      const elapsed = Date.now() - new Date(formTimestamp).getTime();
+      if (elapsed < 3000) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng đợi ít nhất 3 giây trước khi gửi form."
+        });
+      }
+    }
 
     const requiredApplicationFields = [
       guestHoTen,
@@ -194,11 +209,34 @@ export const submitGuestApplication = async (req, res) => {
       });
     }
 
-    if (amount > 50000000) {
+
+
+    // Validate loaiHoTro
+    const validLoaiHoTro = ['Tai tro khong hoan lai', 'Tai tro co thu hoi', 'Cho vay'];
+    const resolvedLoaiHoTro = loaiHoTro || 'Tai tro khong hoan lai';
+    if (!validLoaiHoTro.includes(resolvedLoaiHoTro)) {
       return res.status(400).json({
         success: false,
-        message: "Số tiền yêu cầu hỗ trợ tối đa là 50,000,000 VNĐ"
+        message: "Loai hinh ho tro khong hop le"
       });
+    }
+
+    // Validate tongKinhPhiDuAn khi chọn "Tai tro co thu hoi"
+    let resolvedTongKinhPhiDuAn = tongKinhPhiDuAn ? parseFloat(tongKinhPhiDuAn) : null;
+    if (resolvedLoaiHoTro === 'Tai tro co thu hoi') {
+      if (!resolvedTongKinhPhiDuAn || isNaN(resolvedTongKinhPhiDuAn) || resolvedTongKinhPhiDuAn <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Don tai tro thu hoi phai co Tong kinh phi du an > 0",
+          error_code: "THIEU_TONG_KINH_PHI"
+        });
+      }
+      if (resolvedTongKinhPhiDuAn < amount) {
+        return res.status(400).json({
+          success: false,
+          message: "Tong kinh phi du an phai lon hon hoac bang so tien de nghi"
+        });
+      }
     }
 
     // 2. Kiểm tra quỹ tồn tại và đang hoạt động
@@ -214,6 +252,14 @@ export const submitGuestApplication = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Quỹ hiện đang tạm đóng nhận đơn xin hỗ trợ"
+      });
+    }
+
+    // Kiểm tra số tiền không vượt quá trần của quỹ (nếu có cấu hình)
+    if (fund.sotienhotrotoida && amount > parseFloat(fund.sotienhotrotoida)) {
+      return res.status(400).json({
+        success: false,
+        message: `So tien yeu cau (${amount.toLocaleString('vi-VN')}d) vuot qua muc ho tro toi da cua quy (${parseFloat(fund.sotienhotrotoida).toLocaleString('vi-VN')}d)`
       });
     }
 
@@ -243,6 +289,9 @@ export const submitGuestApplication = async (req, res) => {
       lyDo: lyDo.trim(),
       soTienDeNghi: amount,
       taiLieuDinhKem: taiLieuDinhKem.trim(),
+      loaiHoTro: resolvedLoaiHoTro,
+      tongKinhPhiDuAn: resolvedTongKinhPhiDuAn,
+      laDeTai: laDeTai ? 1 : 0,
       trackingUuid
     };
     const otpToken = signGuestOtpPayload({
@@ -301,8 +350,20 @@ export const submitGuestDonation = async (req, res) => {
       hinhThuc,
       maGiaoDich,
       chungTu,
-      ghiChu
+      ghiChu,
+      formTimestamp,
     } = req.body;
+
+    // Anti-bot: Kiểm tra thời gian tối thiểu từ khi mở form (>= 3 giây)
+    if (formTimestamp) {
+      const elapsed = Date.now() - new Date(formTimestamp).getTime();
+      if (elapsed < 3000) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui long doi it nhat 3 giay truoc khi gui form."
+        });
+      }
+    }
 
     if (!guestHoTen || !guestEmail || !quyId || !soTien) {
       return res.status(400).json({

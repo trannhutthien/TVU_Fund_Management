@@ -13,6 +13,7 @@ import {
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
+import { formatCurrency } from '@utils/formatters';
 import styles from './PheDuyetDetailModal.module.scss';
 
 const PheDuyetDetailModal = ({ record, onClose }) => {
@@ -29,7 +30,6 @@ const PheDuyetDetailModal = ({ record, onClose }) => {
   if (!record) return null;
 
   const isYeuCau = !!record.request_id;
-  const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';

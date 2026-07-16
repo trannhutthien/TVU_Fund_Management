@@ -18,6 +18,7 @@ import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import { StatCard } from '@components/common/Card';
 import { getStaffDonors, getDonorStats } from '@services/donorService';
+import { formatCurrency, getInitial } from '@utils/formatters';
 import NhaTaiTroDetailDrawer from './NhaTaiTroDetailDrawer/NhaTaiTroDetailDrawer';
 import KhoanTaiTroModal from './KhoanTaiTroModal/KhoanTaiTroModal';
 import styles from './NhaTaiTroPage.module.scss';
@@ -44,22 +45,12 @@ const LOAI_LABEL = {
   'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
 };
 
-const formatCurrency = (amount) => {
-  if (!amount && amount !== 0) return '0đ';
-  const n = Number(amount);
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} tỷ`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)} triệu`;
-  return n.toLocaleString('vi-VN') + 'đ';
-};
-
 const formatDate = (value) => {
   if (!value) return '—';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('vi-VN');
 };
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const NhaTaiTroPage = () => {
   const [sponsors, setSponsors] = useState([]);

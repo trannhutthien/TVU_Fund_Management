@@ -1,0 +1,118 @@
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  display: flex;
+  gap: 12px;
+  position: relative;
+}
+
+.itemLast .line { display: none; }
+
+// ── Dot + Line ──────────────────────────
+.dotCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.dotFinal {
+  width: 32px;
+  height: 32px;
+  box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.15);
+}
+
+.dotIcon {
+  color: #fff;
+}
+
+.line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+// ── Content ─────────────────────────────
+.content {
+  flex: 1;
+  padding-bottom: 16px;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.lanLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.loaiTag {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+
+  &[data-final] {
+    color: #1e40af;
+    background: rgba(59, 111, 245, 0.08);
+  }
+}
+
+.ketquaTag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.nhanxet {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  background: #f8fafc;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  font-size: 12px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

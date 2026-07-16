@@ -37,7 +37,7 @@ const createUser = async (userData) => {
   const donvihoc_id = await getOrCreateDonViHocId(khoaphong);
   
   const dbStatus = trangThai === 'HOAT_DONG' ? 'Hoat dong' : (trangThai === 'KHOA' ? 'Khoa' : (trangThai === 'CHO_DUYET' ? 'Cho duyet' : (trangThai || 'Hoat dong')));
-  const dbLoaiTaiKhoan = loaiTaiKhoan === 'SINH_VIEN' ? 'Sinh vien' : (loaiTaiKhoan === 'NHA_TAI_TRO' ? 'Nha tai tro' : loaiTaiKhoan);
+  const dbLoaiTaiKhoan = toDbAccountType(loaiTaiKhoan);
 
   const [result] = await pool.query(
     `INSERT INTO nguoidung (
@@ -75,7 +75,7 @@ const getUserById = async (userId) => {
   );
   if (rows[0]) {
     rows[0].trangthai = rows[0].trangthai === 'Hoat dong' ? 'HOAT_DONG' : (rows[0].trangthai === 'Khoa' ? 'KHOA' : (rows[0].trangthai === 'Cho duyet' ? 'CHO_DUYET' : rows[0].trangthai));
-    rows[0].loaitaikhoan = rows[0].loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (rows[0].loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : rows[0].loaitaikhoan);
+    rows[0].loaitaikhoan = fromDbAccountType(rows[0].loaitaikhoan);
   }
   return rows[0] || null;
 };
@@ -107,7 +107,7 @@ const getUserByIdWithRole = async (userId) => {
   );
   if (rows[0]) {
     rows[0].trangthai = rows[0].trangthai === 'Hoat dong' ? 'HOAT_DONG' : (rows[0].trangthai === 'Khoa' ? 'KHOA' : (rows[0].trangthai === 'Cho duyet' ? 'CHO_DUYET' : rows[0].trangthai));
-    rows[0].loaitaikhoan = rows[0].loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (rows[0].loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : rows[0].loaitaikhoan);
+    rows[0].loaitaikhoan = fromDbAccountType(rows[0].loaitaikhoan);
   }
   return rows[0] || null;
 };
@@ -137,12 +137,12 @@ const getAllUsers = async () => {
   return rows.map(r => ({
     ...r,
     trangthai: r.trangthai === 'Hoat dong' ? 'HOAT_DONG' : (r.trangthai === 'Khoa' ? 'KHOA' : (r.trangthai === 'Cho duyet' ? 'CHO_DUYET' : r.trangthai)),
-    loaitaikhoan: r.loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (r.loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : r.loaitaikhoan)
+    loaitaikhoan: fromDbAccountType(r.loaitaikhoan)
   }));
 };
 
 // Danh sách có filter + phân trang
-//   tab: 'tat_ca' | 'sinh_vien' | 'nha_tai_tro' | 'nhan_vien'
+//   tab: 'tat_ca' | 'sinh_vien' | 'nha_tai_tro' | 'can_bo' | 'nha_khoa_hoc' | 'nhan_vien'
 const toDbUserStatus = (status) => {
   if (status === 'HOAT_DONG') return 'Hoat dong';
   if (status === 'KHOA') return 'Khoa';
@@ -153,7 +153,17 @@ const toDbUserStatus = (status) => {
 const toDbAccountType = (type) => {
   if (type === 'SINH_VIEN') return 'Sinh vien';
   if (type === 'NHA_TAI_TRO') return 'Nha tai tro';
+  if (type === 'CAN_BO') return 'Can bo';
+  if (type === 'NHA_KHOA_HOC') return 'Nha khoa hoc';
   return type;
+};
+
+const fromDbAccountType = (dbType) => {
+  if (dbType === 'Sinh vien') return 'SINH_VIEN';
+  if (dbType === 'Nha tai tro') return 'NHA_TAI_TRO';
+  if (dbType === 'Can bo') return 'CAN_BO';
+  if (dbType === 'Nha khoa hoc') return 'NHA_KHOA_HOC';
+  return dbType;
 };
 
 const getUserList = async ({
@@ -173,6 +183,10 @@ const getUserList = async ({
     conds.push(`n.vaitro_id = 4 AND n.loaitaikhoan = 'Sinh vien'`);
   } else if (tab === 'nha_tai_tro') {
     conds.push(`n.vaitro_id = 4 AND n.loaitaikhoan = 'Nha tai tro'`);
+  } else if (tab === 'can_bo') {
+    conds.push(`n.vaitro_id = 4 AND n.loaitaikhoan = 'Can bo'`);
+  } else if (tab === 'nha_khoa_hoc') {
+    conds.push(`n.vaitro_id = 4 AND n.loaitaikhoan = 'Nha khoa hoc'`);
   } else if (tab === 'nhan_vien') {
     conds.push(`n.vaitro_id IN (1, 2, 3)`);
   }
@@ -233,7 +247,7 @@ const getUserList = async ({
   const mapped = rows.map(r => ({
     ...r,
     trangthai: r.trangthai === 'Hoat dong' ? 'HOAT_DONG' : (r.trangthai === 'Khoa' ? 'KHOA' : (r.trangthai === 'Cho duyet' ? 'CHO_DUYET' : r.trangthai)),
-    loaitaikhoan: r.loaitaikhoan === 'Sinh vien' ? 'SINH_VIEN' : (r.loaitaikhoan === 'Nha tai tro' ? 'NHA_TAI_TRO' : r.loaitaikhoan)
+    loaitaikhoan: fromDbAccountType(r.loaitaikhoan)
   }));
   return { rows: mapped, total: Number(total) || 0 };
 };
@@ -262,6 +276,22 @@ const getStats = async () => {
     `SELECT COUNT(*) AS nhaTaiTroHoatDong FROM nguoidung
      WHERE vaitro_id = 4 AND loaitaikhoan = 'Nha tai tro' AND trangthai = 'Hoat dong'`
   );
+  const [[{ canBo }]] = await pool.query(
+    `SELECT COUNT(*) AS canBo FROM nguoidung
+     WHERE vaitro_id = 4 AND loaitaikhoan = 'Can bo'`
+  );
+  const [[{ canBoHoatDong }]] = await pool.query(
+    `SELECT COUNT(*) AS canBoHoatDong FROM nguoidung
+     WHERE vaitro_id = 4 AND loaitaikhoan = 'Can bo' AND trangthai = 'Hoat dong'`
+  );
+  const [[{ nhaKhoaHoc }]] = await pool.query(
+    `SELECT COUNT(*) AS nhaKhoaHoc FROM nguoidung
+     WHERE vaitro_id = 4 AND loaitaikhoan = 'Nha khoa hoc'`
+  );
+  const [[{ nhaKhoaHocHoatDong }]] = await pool.query(
+    `SELECT COUNT(*) AS nhaKhoaHocHoatDong FROM nguoidung
+     WHERE vaitro_id = 4 AND loaitaikhoan = 'Nha khoa hoc' AND trangthai = 'Hoat dong'`
+  );
   const [[{ taiKhoanBiKhoa }]] = await pool.query(
     `SELECT COUNT(*) AS taiKhoanBiKhoa FROM nguoidung WHERE trangthai = 'Khoa'`
   );
@@ -279,8 +309,8 @@ const getStats = async () => {
   const [[{ keToan }]] = await pool.query(
     `SELECT COUNT(*) AS keToan FROM nguoidung WHERE vaitro_id = 2`
   );
-  const [[{ canBo }]] = await pool.query(
-    `SELECT COUNT(*) AS canBo FROM nguoidung WHERE vaitro_id = 3`
+  const [[{ canBoQuy }]] = await pool.query(
+    `SELECT COUNT(*) AS canBoQuy FROM nguoidung WHERE vaitro_id = 3`
   );
   
   // Thêm: Số người dùng mới trong 3 ngày gần đây
@@ -296,12 +326,16 @@ const getStats = async () => {
     sinhVienHoatDong: Number(sinhVienHoatDong) || 0,
     nhaTaiTro: Number(nhaTaiTro) || 0,
     nhaTaiTroHoatDong: Number(nhaTaiTroHoatDong) || 0,
+    canBo: Number(canBo) || 0,
+    canBoHoatDong: Number(canBoHoatDong) || 0,
+    nhaKhoaHoc: Number(nhaKhoaHoc) || 0,
+    nhaKhoaHocHoatDong: Number(nhaKhoaHocHoatDong) || 0,
     taiKhoanBiKhoa: Number(taiKhoanBiKhoa) || 0,
-    nhanVien: Number(nhanVien) || 0, // Tổng nhân viên (role 1,2,3)
+    nhanVien: Number(nhanVien) || 0,
     nhanVienHoatDong: Number(nhanVienHoatDong) || 0,
     admin: Number(admin) || 0,
     keToan: Number(keToan) || 0,
-    canBo: Number(canBo) || 0,
+    canBoQuy: Number(canBoQuy) || 0,
     newThisMonth: Number(newThisMonth) || 0, // Người dùng mới trong 3 ngày
   };
 };

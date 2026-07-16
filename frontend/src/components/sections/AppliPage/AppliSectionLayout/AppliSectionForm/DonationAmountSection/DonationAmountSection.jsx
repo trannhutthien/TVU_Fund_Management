@@ -4,6 +4,8 @@ import {
   HiOutlineBanknotes,
   HiOutlineBuildingLibrary,
 } from 'react-icons/hi2';
+import CurrencyInput from '@components/common/CurrencyInput';
+import { formatCurrency } from '@utils/formatters';
 import styles from './DonationAmountSection.module.scss';
 
 /**
@@ -58,7 +60,7 @@ const DonationAmountSection = ({
 
   const formatVND = (amount) => {
     if (!amount) return '';
-    return parseFloat(amount).toLocaleString('vi-VN') + 'đ';
+    return formatCurrency(amount);
   };
 
   const selectedAccount = schoolBankAccounts?.find(
@@ -138,16 +140,28 @@ const DonationAmountSection = ({
           Nhập số tiền (VNĐ)
         </div>
         <div className={styles.amountInputWrapper}>
-          <input
-            type="text"
+          <CurrencyInput
             value={donationAmount}
-            onChange={handleAmountChange}
+            onChange={(raw) => {
+              onAmountChange(raw);
+              if (!raw) {
+                setAmountError('Vui lòng nhập số tiền quyên góp');
+              } else if (Number(raw) < 10000) {
+                setAmountError('Số tiền tối thiểu là 10.000đ');
+              } else if (Number(raw) > 1000000000) {
+                setAmountError('Số tiền tối đa là 1.000.000.000đ');
+              } else {
+                setAmountError('');
+              }
+            }}
             placeholder="VD: 1000000"
             className={`${styles.amountInput} ${amountError ? styles.inputError : ''}`}
+            min={10000}
+            max={1000000000}
           />
           {donationAmount && !amountError && (
             <div className={styles.amountPreview}>
-              {formatVND(donationAmount)}
+              {formatCurrency(donationAmount)}
             </div>
           )}
         </div>

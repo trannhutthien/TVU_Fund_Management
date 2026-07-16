@@ -12,6 +12,7 @@ import Dropdown from '@components/common/Dropdown';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import Table from '@components/common/Table';
 import danhGiaService from '@services/danhGiaService';
+import { getInitial } from '@utils/formatters';
 import styles from './DanhGiaPage.module.scss';
 
 const STATUS_OPTIONS = [
@@ -42,8 +43,6 @@ const truncate = (value, max = 50) => {
   if (!value) return '';
   return value.length > max ? `${value.slice(0, max)}...` : value;
 };
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const DanhGiaPage = () => {
   const [items, setItems] = useState([]);

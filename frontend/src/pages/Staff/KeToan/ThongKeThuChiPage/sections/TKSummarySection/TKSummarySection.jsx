@@ -6,6 +6,7 @@ import {
   HiArrowSmallUp,
   HiArrowSmallDown,
 } from 'react-icons/hi2';
+import { formatCurrency, formatCurrencyPlain } from '@utils/formatters';
 import styles from './TKSummarySection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -150,7 +151,7 @@ const TKSummarySection = ({
         </div>
         <div className={styles.content}>
           <div className={`${styles.value} ${styles.valueGold}`}>
-            {summaryData.tongThu.toLocaleString('vi-VN')} đ
+            {formatCurrency(summaryData.tongThu)}
           </div>
           {renderDelta(summaryData.tongThu, compareSummaryData?.tongThu)}
           <div className={styles.label}>Tổng thu</div>
@@ -165,7 +166,7 @@ const TKSummarySection = ({
         </div>
         <div className={styles.content}>
           <div className={`${styles.value} ${styles.valueRed}`}>
-            {summaryData.tongChi.toLocaleString('vi-VN')} đ
+            {formatCurrency(summaryData.tongChi)}
           </div>
           {renderDelta(summaryData.tongChi, compareSummaryData?.tongChi)}
           <div className={styles.label}>Tổng chi</div>
@@ -180,7 +181,7 @@ const TKSummarySection = ({
         </div>
         <div className={styles.content}>
           <div className={`${styles.value} ${isNetPositive ? styles.valueGreen : styles.valueRed}`}>
-            {netBalance.toLocaleString('vi-VN')} đ
+            {formatCurrency(netBalance)}
           </div>
           {renderDelta(netBalance, prevNetBalance)}
           <div className={styles.label}>Số dư ròng</div>
@@ -195,7 +196,7 @@ const TKSummarySection = ({
         </div>
         <div className={styles.content}>
           <div className={`${styles.value} ${styles.valueNavy}`}>
-            {summaryData.soGiaoDich.toLocaleString('vi-VN')}
+            {formatCurrencyPlain(summaryData.soGiaoDich)}
           </div>
           {renderDelta(summaryData.soGiaoDich, compareSummaryData?.soGiaoDich)}
           <div className={styles.label}>Giao dịch phát sinh</div>

@@ -6,6 +6,7 @@ import { useAuth } from './hooks/useAuth'
 import { SystemSettingsProvider } from './hooks/useSystemSettings'
 import ScrollToTop from './components/common/ScrollToTop'
 import AuthGuard from './components/auth/AuthGuard'
+import RoleBasedRoute from './routes/RoleBasedRoute'
 import '@styles/main.scss'
 
 // Layouts
@@ -122,52 +123,59 @@ function App() {
             <Route path="/can-bo" element={<Navigate to="/can-bo/dashboard" replace />} />
 
             {/* Admin Routes (role_id = 1) */}
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<CanBoUserManagementPage isAdmin={true} />} />
-            <Route path="/admin/roles" element={<HiThongPhanQuyenPage />} />
-            <Route path="/admin/nhat-ky" element={<NhatKyPage />} />
-            <Route path="/admin/xet-duyet" element={<XetDuyetPage isAdmin={true} />} />
-            <Route path="/admin/phe-duyet" element={<PheDuyetPage />} />
-            <Route path="/admin/quy" element={<CanBoQuyListPage isAdmin={true} />} />
-            <Route path="/admin/quy/tao" element={<CanBoTaoQuyPage />} />
-            <Route path="/admin/quy/sua/:id" element={<CanBoTaoQuyPage />} />
-            <Route path="/admin/phan-bo" element={<PhanBoPage />} />
-            <Route path="/admin/nha-tai-tro" element={<CanBoNhaTaiTroPage isAdmin={true} />} />
-            <Route path="/admin/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
-            <Route path="/admin/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
-            <Route path="/admin/chung-tu" element={<DoiSoatChungTuPage />} />
-            <Route path="/admin/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
-            <Route path="/admin/danhgia" element={<DanhGiaPage />} />
-            <Route path="/admin/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
-            <Route path="/admin/tintuc/tao" element={<TaoTinTucPage />} />
-            <Route path="/admin/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
-            <Route path="/admin/bao-cao" element={<AdminBaoCaoPage />} />
+            <Route element={<RoleBasedRoute allowedRoles={[1]} redirectTo="/" />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<CanBoUserManagementPage isAdmin={true} />} />
+              <Route path="/admin/nhan-su" element={<CanBoUserManagementPage isAdmin={true} initialTab="chuc_vu" />} />
+              <Route path="/admin/roles" element={<HiThongPhanQuyenPage />} />
+              <Route path="/admin/nhat-ky" element={<NhatKyPage />} />
+              <Route path="/admin/xet-duyet" element={<XetDuyetPage isAdmin={true} />} />
+              <Route path="/admin/phe-duyet" element={<PheDuyetPage />} />
+              <Route path="/admin/quy" element={<CanBoQuyListPage isAdmin={true} />} />
+              <Route path="/admin/quy/tao" element={<CanBoTaoQuyPage />} />
+              <Route path="/admin/quy/sua/:id" element={<CanBoTaoQuyPage />} />
+              <Route path="/admin/phan-bo" element={<PhanBoPage />} />
+              <Route path="/admin/nha-tai-tro" element={<CanBoNhaTaiTroPage isAdmin={true} />} />
+              <Route path="/admin/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
+              <Route path="/admin/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
+              <Route path="/admin/chung-tu" element={<DoiSoatChungTuPage />} />
+              <Route path="/admin/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
+              <Route path="/admin/danhgia" element={<DanhGiaPage />} />
+              <Route path="/admin/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
+              <Route path="/admin/tintuc/tao" element={<TaoTinTucPage />} />
+              <Route path="/admin/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
+              <Route path="/admin/bao-cao" element={<AdminBaoCaoPage />} />
+            </Route>
 
             {/* Kế toán Routes (role_id = 2) */}
-            <Route path="/ke-toan/dashboard" element={<KeToanDashboard />} />
-            <Route path="/ke-toan/giai-ngan" element={<KeToanGiaiNganPage />} />
-            <Route path="/ke-toan/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
-            <Route path="/ke-toan/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
-            <Route path="/ke-toan/bao-cao" element={<ThongKeThuChiPage />} />
-            <Route path="/ke-toan/chung-tu" element={<DoiSoatChungTuPage />} />
-            <Route path="/ke-toan/phan-bo" element={<PhanBoPage />} />
+            <Route element={<RoleBasedRoute allowedRoles={[1, 2]} redirectTo="/" />}>
+              <Route path="/ke-toan/dashboard" element={<KeToanDashboard />} />
+              <Route path="/ke-toan/giai-ngan" element={<KeToanGiaiNganPage />} />
+              <Route path="/ke-toan/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
+              <Route path="/ke-toan/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
+              <Route path="/ke-toan/bao-cao" element={<ThongKeThuChiPage />} />
+              <Route path="/ke-toan/chung-tu" element={<DoiSoatChungTuPage />} />
+              <Route path="/ke-toan/phan-bo" element={<PhanBoPage />} />
+            </Route>
 
             {/* Cán bộ Quỹ Routes (role_id = 3) */}
-            <Route path="/can-bo/dashboard" element={<CanBoDashboard />} />
-            <Route path="/can-bo/xet-duyet" element={<XetDuyetPage />} />
-            <Route path="/xet-duyet/:request_id" element={<XetDuyetDetail />} />
-            <Route path="/can-bo/quy" element={<CanBoQuyListPage />} />
-            <Route path="/can-bo/quy/tao" element={<CanBoTaoQuyPage />} />
-            <Route path="/can-bo/quy/sua/:id" element={<CanBoTaoQuyPage />} />
-            <Route path="/can-bo/phan-bo" element={<PhanBoPage />} />
-            <Route path="/can-bo/nha-tai-tro" element={<CanBoNhaTaiTroPage />} />
-            <Route path="/can-bo/users" element={<CanBoUserManagementPage />} />
-            <Route path="/can-bo/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
-            <Route path="/can-bo/danhgia" element={<DanhGiaPage />} />
-            <Route path="/can-bo/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
-            <Route path="/can-bo/tintuc/tao" element={<TaoTinTucPage />} />
-            <Route path="/can-bo/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
-            <Route path="/can-bo/bao-cao" element={<CanBoBaoCaoPage />} />
+            <Route element={<RoleBasedRoute allowedRoles={[1, 3]} redirectTo="/" />}>
+              <Route path="/can-bo/dashboard" element={<CanBoDashboard />} />
+              <Route path="/can-bo/xet-duyet" element={<XetDuyetPage />} />
+              <Route path="/xet-duyet/:request_id" element={<XetDuyetDetail />} />
+              <Route path="/can-bo/quy" element={<CanBoQuyListPage />} />
+              <Route path="/can-bo/quy/tao" element={<CanBoTaoQuyPage />} />
+              <Route path="/can-bo/quy/sua/:id" element={<CanBoTaoQuyPage />} />
+              <Route path="/can-bo/phan-bo" element={<PhanBoPage />} />
+              <Route path="/can-bo/nha-tai-tro" element={<CanBoNhaTaiTroPage />} />
+              <Route path="/can-bo/users" element={<CanBoUserManagementPage />} />
+              <Route path="/can-bo/sinh-vien-noi-bat" element={<StudentShowcasePage />} />
+              <Route path="/can-bo/danhgia" element={<DanhGiaPage />} />
+              <Route path="/can-bo/tin-tuc" element={<div><h1>Tin tức & Sự kiện</h1></div>} />
+              <Route path="/can-bo/tintuc/tao" element={<TaoTinTucPage />} />
+              <Route path="/can-bo/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
+              <Route path="/can-bo/bao-cao" element={<CanBoBaoCaoPage />} />
+            </Route>
           </Route>
 
           {/* Wildcard Fallback Route */}

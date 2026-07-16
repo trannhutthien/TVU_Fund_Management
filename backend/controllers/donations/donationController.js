@@ -20,6 +20,7 @@ export const listDonations = async (req, res) => {
       trang_thai = '',
       tu_ngay = '',
       den_ngay = '',
+      nam = '',
       page = 1,
       page_size = 15,
     } = req.query;
@@ -27,13 +28,21 @@ export const listDonations = async (req, res) => {
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(page_size, 10) || 15));
 
+    // Nam param: auto-convert to date range
+    let effectiveTuNgay = String(tu_ngay).trim();
+    let effectiveDenNgay = String(den_ngay).trim();
+    if (nam && !effectiveTuNgay && !effectiveDenNgay) {
+      effectiveTuNgay = `${nam}-01-01`;
+      effectiveDenNgay = `${nam}-12-31`;
+    }
+
     const { rows, total } = await DonationModel.listDonations({
       keyword: String(keyword).trim(),
       quy_id: String(quy_id).trim(),
       loai_ntt: String(loai_ntt).trim(),
       trang_thai: String(trang_thai).trim(),
-      tu_ngay: String(tu_ngay).trim(),
-      den_ngay: String(den_ngay).trim(),
+      tu_ngay: effectiveTuNgay,
+      den_ngay: effectiveDenNgay,
       page: pageNum,
       page_size: pageSize,
     });
@@ -249,7 +258,6 @@ export const createStaffDonation = async (req, res) => {
         if (existingDonors.length > 0) {
           // User đã có donor record → Sử dụng luôn
           resolvedNhaTaiTroId = existingDonors[0].nhataitro_id;
-          console.log(`✓ Sử dụng nhà tài trợ hiện có ID: ${resolvedNhaTaiTroId}`);
         }
         // Nếu chưa có donor record → Sẽ tạo ở BƯỚC 3
       } else {
@@ -263,7 +271,6 @@ export const createStaffDonation = async (req, res) => {
         if (orphanDonors.length > 0) {
           // Có donor cũ chưa có user → Sẽ tạo user và link
           resolvedNhaTaiTroId = orphanDonors[0].nhataitro_id;
-          console.log(`⚠️ Phát hiện orphan donor ID: ${resolvedNhaTaiTroId}, sẽ tạo user và link`);
         }
       }
 
@@ -287,25 +294,7 @@ export const createStaffDonation = async (req, res) => {
         nguoiDungId = userInsert.insertId;
         isNewUser = true;
 
-        console.log(`✓ Tạo tài khoản người dùng mới ID: ${nguoiDungId}`);
-        console.log(`  Email: ${email}`);
-        console.log(`  Mật khẩu tạm thời: ${tempPassword}`);
-        console.log(`  ⚠️ Lưu ý: Gửi email thông báo cho nhà tài trợ!`);
-
         // TODO: Gửi email thông báo tài khoản
-        // Uncomment khi emailService đã sẵn sàng:
-        // try {
-        //   await emailService.sendDonorWelcomeEmail({
-        //     email,
-        //     name: tenNhaTaiTro,
-        //     tempPassword,
-        //     loginUrl: process.env.FRONTEND_URL + '/login'
-        //   });
-        //   console.log(`✓ Đã gửi email thông báo đến ${email}`);
-        // } catch (emailError) {
-        //   console.error(`✗ Lỗi gửi email:`, emailError);
-        //   // Không fail transaction vì email
-        // }
       }
 
       // BƯỚC 3: Tạo hoặc update nhataitro
@@ -319,14 +308,12 @@ export const createStaffDonation = async (req, res) => {
           [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, soDienThoai, diaChi]
         );
         resolvedNhaTaiTroId = donorInsert.insertId;
-        console.log(`✓ Tạo nhà tài trợ mới ID: ${resolvedNhaTaiTroId}, linked với user ${nguoiDungId}`);
       } else {
         // Update orphan donor với nguoi_dung_id
         await connection.query(
           `UPDATE nhataitro SET nguoidung_id = ? WHERE nhataitro_id = ?`,
           [nguoiDungId, resolvedNhaTaiTroId]
         );
-        console.log(`✓ Cập nhật orphan donor ID: ${resolvedNhaTaiTroId} với user ${nguoiDungId}`);
       }
     } else {
       if (!resolvedNhaTaiTroId || isNaN(resolvedNhaTaiTroId)) {

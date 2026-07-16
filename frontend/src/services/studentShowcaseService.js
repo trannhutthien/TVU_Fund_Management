@@ -1,7 +1,4 @@
-import axios from 'axios';
 import api from './api';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 /**
  * Student Showcase Service
@@ -14,7 +11,7 @@ const studentShowcaseService = {
    */
   getPublicStudentShowcase: async () => {
     try {
-      const response = await axios.get(`${API_URL}/student-showcase/public`);
+      const response = await api.get('/student-showcase/public');
       return response.data;
     } catch (error) {
       console.error('Error fetching public student showcase:', error);

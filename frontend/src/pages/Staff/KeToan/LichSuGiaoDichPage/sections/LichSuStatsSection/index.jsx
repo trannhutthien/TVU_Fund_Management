@@ -5,9 +5,8 @@ import {
   HiScale,
   HiExclamationTriangle,
 } from 'react-icons/hi2';
+import { formatCurrency } from '@utils/formatters';
 import styles from './LichSuStatsSection.module.scss';
-
-const formatCurrency = (n) => Number(n || 0).toLocaleString('vi-VN') + ' đ';
 
 const getRongMeta = (val) => {
   if (val > 0) {

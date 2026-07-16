@@ -1,8 +1,32 @@
 import pool from "../../config/db.js";
+import TransactionModel from "../../models/transactions/TransactionModel.js";
+import DuToanModel from "../../models/reports/DuToanModel.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── STATISTICS CONTROLLER (THỐNG KÊ) ─────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/statistics/available-years
+// CÔNG DỤNG: Lấy danh sách các năm có dữ liệu (dùng cho dropdown YearFilter)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getAvailableYears = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT DISTINCT YEAR(ngaygiaodich) AS nam FROM giaodich WHERE ngaygiaodich IS NOT NULL
+       UNION
+       SELECT DISTINCT namtaichinh AS nam FROM phanbongansach WHERE namtaichinh IS NOT NULL
+       ORDER BY nam DESC`
+    );
+    return res.status(200).json({
+      success: true,
+      data: rows.map(r => r.nam),
+    });
+  } catch (error) {
+    console.error("Lỗi getAvailableYears:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/statistics/public
@@ -230,27 +254,26 @@ export const getImpactStats = async (req, res) => {
 export const getKeToanSummary = async (req, res) => {
   try {
     const now = new Date();
-    const year = now.getFullYear();
+    const year = req.query.nam ? parseInt(req.query.nam) : now.getFullYear();
     const month = now.getMonth() + 1;
 
-    // Tổng THU: Lấy từ bảng giaodich (giao dịch THU từ tài trợ)
+    // Tổng THU: Lấy từ bảng giaodich (C3: dùng cột loaigiaodich)
     const [[thuRow]] = await pool.query(
       `SELECT COALESCE(SUM(sotien), 0) AS total
        FROM giaodich
        WHERE trangthai = 'Thanh cong'
-         AND yeucauhotro_id IS NULL
-         AND nguoinhan_id IS NULL
+         AND loaigiaodich = 'Thu'
          AND YEAR(ngaygiaodich) = ?
          AND MONTH(ngaygiaodich) = ?`,
       [year, month]
     );
 
-    // Tổng CHI: Lấy từ bảng giaodich (giao dịch CHI cho sinh viên)
+    // Tổng CHI: Lấy từ bảng giaodich (C3: dùng cột loaigiaodich — bao gồm tất cả 4 hạng mục)
     const [[chiRow]] = await pool.query(
       `SELECT COALESCE(SUM(sotien), 0) AS total
        FROM giaodich
        WHERE trangthai = 'Thanh cong'
-         AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+         AND loaigiaodich = 'Chi'
          AND YEAR(ngaygiaodich) = ?
          AND MONTH(ngaygiaodich) = ?`,
       [year, month]
@@ -315,47 +338,81 @@ export const getKeToanSummary = async (req, res) => {
 export const getKeToanCashflow = async (req, res) => {
   try {
     const months = Math.min(Math.max(parseInt(req.query.months) || 6, 1), 12);
+    const nam = req.query.nam ? parseInt(req.query.nam) : null;
 
-    const [rows] = await pool.query(
-      `SELECT
+    let sql, params;
+    if (nam) {
+      sql = `SELECT
          DATE_FORMAT(ngay_date, '%Y-%m') AS thang_key,
          MONTH(ngay_date) AS thang,
          YEAR(ngay_date) AS nam,
          SUM(thu) AS thu,
          SUM(chi) AS chi
        FROM (
-         -- Giao dịch THU: từ tài trợ vào quỹ
          SELECT ngaygiaodich AS ngay_date, sotien AS thu, 0 AS chi
          FROM giaodich
-         WHERE trangthai = 'Thanh cong'
-           AND yeucauhotro_id IS NULL
-           AND nguoinhan_id IS NULL
+         WHERE trangthai = 'Thanh cong' AND loaigiaodich = 'Thu' AND YEAR(ngaygiaodich) = ?
          UNION ALL
-         -- Giao dịch CHI: từ quỹ ra sinh viên
          SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
          FROM giaodich
-         WHERE trangthai = 'Thanh cong'
-           AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+         WHERE trangthai = 'Thanh cong' AND loaigiaodich = 'Chi' AND YEAR(ngaygiaodich) = ?
+       ) AS combined
+       GROUP BY thang_key, thang, nam
+       ORDER BY thang_key ASC`;
+      params = [nam, nam];
+    } else {
+      sql = `SELECT
+         DATE_FORMAT(ngay_date, '%Y-%m') AS thang_key,
+         MONTH(ngay_date) AS thang,
+         YEAR(ngay_date) AS nam,
+         SUM(thu) AS thu,
+         SUM(chi) AS chi
+       FROM (
+         SELECT ngaygiaodich AS ngay_date, sotien AS thu, 0 AS chi
+         FROM giaodich
+         WHERE trangthai = 'Thanh cong' AND loaigiaodich = 'Thu'
+         UNION ALL
+         SELECT ngaygiaodich AS ngay_date, 0 AS thu, sotien AS chi
+         FROM giaodich
+         WHERE trangthai = 'Thanh cong' AND loaigiaodich = 'Chi'
        ) AS combined
        WHERE ngay_date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
        GROUP BY thang_key, thang, nam
-       ORDER BY thang_key ASC`,
-      [months]
-    );
+       ORDER BY thang_key ASC`;
+      params = [months];
+    }
+
+    const [rows] = await pool.query(sql, params);
 
     const map = new Map(rows.map((r) => [r.thang_key, r]));
     const result = [];
     const now = new Date();
-    for (let i = months - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const r = map.get(key);
-      result.push({
-        thang: `T${d.getMonth() + 1}`,
-        thangKey: key,
-        thu: r ? parseFloat(r.thu) : 0,
-        chi: r ? parseFloat(r.chi) : 0,
-      });
+
+    if (nam) {
+      // Khi chọn năm cụ thể: hiển thị đủ 12 tháng của năm đó
+      for (let m = 1; m <= 12; m++) {
+        const key = `${nam}-${String(m).padStart(2, '0')}`;
+        const r = map.get(key);
+        result.push({
+          thang: `T${m}`,
+          thangKey: key,
+          thu: r ? parseFloat(r.thu) : 0,
+          chi: r ? parseFloat(r.chi) : 0,
+        });
+      }
+    } else {
+      // Mặc định: last N months
+      for (let i = months - 1; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const r = map.get(key);
+        result.push({
+          thang: `T${d.getMonth() + 1}`,
+          thangKey: key,
+          thu: r ? parseFloat(r.thu) : 0,
+          chi: r ? parseFloat(r.chi) : 0,
+        });
+      }
     }
 
     return res.status(200).json({
@@ -597,34 +654,38 @@ export const getKeToanPendingDonations = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 export const getApplicationStats = async (req, res) => {
   try {
+    const nam = req.query.nam ? parseInt(req.query.nam) : null;
+    const yearFilter = nam ? 'AND YEAR(yc.ngaynop) = ?' : '';
+    const yearParams = nam ? [nam] : [];
+
     // Đếm tổng số đơn
     const [[{ tongDon }]] = await pool.query(
-      `SELECT COUNT(*) AS tongDon FROM yeucauhotro`
+      `SELECT COUNT(*) AS tongDon FROM yeucauhotro yc WHERE 1=1 ${yearFilter}`, yearParams
     );
 
     // Đếm đơn chờ duyệt (Cho duyet cap 1)
     const [[{ choDuyet }]] = await pool.query(
-      `SELECT COUNT(*) AS choDuyet FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 1'`
+      `SELECT COUNT(*) AS choDuyet FROM yeucauhotro yc WHERE trangthai = 'Cho duyet cap 1' ${yearFilter}`, yearParams
     );
 
-    // Đếm đơn đang xử lý (Dang xu ly)
+    // Đếm đơn đang xử lý
     const [[{ dangXuLy }]] = await pool.query(
-      `SELECT COUNT(*) AS dangXuLy FROM yeucauhotro WHERE trangthai IN ('Da duyet cap 1', 'Cho duyet cap 2', 'Da duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 3')`
+      `SELECT COUNT(*) AS dangXuLy FROM yeucauhotro yc WHERE trangthai IN ('Da duyet cap 1', 'Cho duyet cap 2', 'Da duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 3') ${yearFilter}`, yearParams
     );
 
-    // Đếm đơn chờ giải ngân (Cho giai ngan)
+    // Đếm đơn chờ giải ngân
     const [[{ choGiaiNgan }]] = await pool.query(
-      `SELECT COUNT(*) AS choGiaiNgan FROM yeucauhotro WHERE trangthai = 'Cho giai ngan'`
+      `SELECT COUNT(*) AS choGiaiNgan FROM yeucauhotro yc WHERE trangthai = 'Cho giai ngan' ${yearFilter}`, yearParams
     );
 
-    // Đếm đơn đã hoàn thành (Da giai ngan)
+    // Đếm đơn đã hoàn thành
     const [[{ daHoanThanh }]] = await pool.query(
-      `SELECT COUNT(*) AS daHoanThanh FROM yeucauhotro WHERE trangthai = 'Da giai ngan'`
+      `SELECT COUNT(*) AS daHoanThanh FROM yeucauhotro yc WHERE trangthai = 'Da giai ngan' ${yearFilter}`, yearParams
     );
 
-    // Đếm đơn từ chối (Tu choi)
+    // Đếm đơn từ chối
     const [[{ tuChoi }]] = await pool.query(
-      `SELECT COUNT(*) AS tuChoi FROM yeucauhotro WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3')`
+      `SELECT COUNT(*) AS tuChoi FROM yeucauhotro yc WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3') ${yearFilter}`, yearParams
     );
 
     return res.status(200).json({
@@ -841,7 +902,7 @@ export const getKeToanReportStats = async (req, res) => {
           `SELECT COALESCE(SUM(sotien), 0) AS total
            FROM giaodich
            WHERE trangthai = 'Thanh cong'
-             AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+             AND loaigiaodich = 'Chi'
              AND ngaygiaodich >= ?
              AND ngaygiaodich < ?`,
           [range.start, range.end]
@@ -858,7 +919,7 @@ export const getKeToanReportStats = async (req, res) => {
              SELECT quy_id
              FROM giaodich
              WHERE trangthai = 'Thanh cong'
-               AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+               AND loaigiaodich = 'Chi'
                AND ngaygiaodich >= ?
                AND ngaygiaodich < ?
            ) AS combined`,
@@ -896,7 +957,7 @@ export const getKeToanReportStats = async (req, res) => {
              sotien AS chi
            FROM giaodich
            WHERE trangthai = 'Thanh cong'
-             AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+             AND loaigiaodich = 'Chi'
              AND ngaygiaodich >= ?
              AND ngaygiaodich < ?
          ) AS combined
@@ -947,7 +1008,7 @@ export const getKeToanReportStats = async (req, res) => {
           `SELECT quy_id, COALESCE(SUM(sotien), 0) AS total
            FROM giaodich
            WHERE trangthai = 'Thanh cong'
-             AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+             AND loaigiaodich = 'Chi'
              AND ngaygiaodich >= ?
              AND ngaygiaodich < ?
            GROUP BY quy_id`,
@@ -965,7 +1026,7 @@ export const getKeToanReportStats = async (req, res) => {
              SELECT quy_id
              FROM giaodich
              WHERE trangthai = 'Thanh cong'
-               AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+               AND loaigiaodich = 'Chi'
                AND ngaygiaodich >= ?
                AND ngaygiaodich < ?
            ) AS combined
@@ -984,7 +1045,7 @@ export const getKeToanReportStats = async (req, res) => {
                ) AS rn
              FROM giaodich
              WHERE trangthai = 'Thanh cong'
-               AND (yeucauhotro_id IS NOT NULL OR nguoinhan_id IS NOT NULL)
+               AND loaigiaodich = 'Chi'
            ) AS ranked
            WHERE rn <= 6
            ORDER BY quy_id ASC, rn DESC`
@@ -1141,15 +1202,20 @@ export const getKeToanReportStats = async (req, res) => {
 
 export const getAdminAdvancedStats = async (req, res) => {
   try {
+    const nam = req.query.nam ? parseInt(req.query.nam) : null;
+    const yearFilterYc = nam ? 'AND YEAR(yc.ngaynop) = ?' : '';
+    const yearFilterGd = nam ? 'AND YEAR(g.ngaygiaodich) = ?' : '';
+    const yearFilterKt = nam ? 'AND YEAR(kt.ngaytaitro) = ?' : '';
+    const yp = nam ? [nam] : [];
+
     // 1. Tỷ lệ duyệt hồ sơ thành công & Thời gian xử lý trung bình
-    // Chỉ tính cho các đơn đã ở trạng thái cuối (Da giai ngan hoặc Tu choi)
     const [[hieuSuatRow]] = await pool.query(
       `SELECT
          COUNT(*) AS tong_don_da_xu_ly,
          SUM(CASE WHEN trangthai = 'Da giai ngan' THEN 1 ELSE 0 END) AS so_don_thanh_cong,
          COALESCE(AVG(TIMESTAMPDIFF(DAY, ngaynop, ngaycapnhat)), 0) AS thoi_gian_xu_ly_trung_binh
        FROM yeucauhotro
-       WHERE trangthai IN ('Da giai ngan', 'Tu choi')`
+       WHERE trangthai IN ('Da giai ngan', 'Tu choi') ${yearFilterYc}`, yp
     );
 
     const tongDaXuLy = Number(hieuSuatRow.tong_don_da_xu_ly) || 0;
@@ -1166,9 +1232,9 @@ export const getAdminAdvancedStats = async (req, res) => {
        FROM yeucauhotro yc
        INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
        LEFT JOIN donvihoc dv ON nd.donvihoc_id = dv.donvihoc_id
-       WHERE yc.trangthai = 'Da giai ngan'
+       WHERE yc.trangthai = 'Da giai ngan' ${yearFilterYc}
        GROUP BY dv.tenkhoa
-       ORDER BY tong_tien_giai_ngan DESC`
+       ORDER BY tong_tien_giai_ngan DESC`, yp
     );
 
     const khoaStats = khoaRows.map(r => ({
@@ -1190,10 +1256,10 @@ export const getAdminAdvancedStats = async (req, res) => {
          COUNT(kt.khoantaitro_id) AS so_lan_tai_tro
        FROM nhataitro ntt
        LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
-       LEFT JOIN khoantaitro kt ON ntt.nhataitro_id = kt.nhataitro_id AND kt.trangthai = 'Da nhan'
+       LEFT JOIN khoantaitro kt ON ntt.nhataitro_id = kt.nhataitro_id AND kt.trangthai = 'Da nhan' ${yearFilterKt}
        GROUP BY ntt.nhataitro_id, ten_nha_tai_tro, ntt.loainhataitro
        ORDER BY tong_tai_tro DESC
-       LIMIT 10`
+       LIMIT 10`, yp
     );
 
     const topDonors = donorRows.map(r => ({
@@ -1245,28 +1311,27 @@ export const getAdminAdvancedStats = async (req, res) => {
 
     // 4.5. Đếm số đơn theo các trạng thái thực tế phục vụ biểu đồ tiến độ phê duyệt
     const [[{ choDuyet }]] = await pool.query(
-      `SELECT COUNT(*) AS choDuyet FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 1'`
+      `SELECT COUNT(*) AS choDuyet FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 1' ${yearFilterYc}`, yp
     );
     const [[{ dangXuLy }]] = await pool.query(
-      `SELECT COUNT(*) AS dangXuLy FROM yeucauhotro WHERE trangthai IN ('Da duyet cap 1', 'Cho duyet cap 2', 'Da duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 3')`
+      `SELECT COUNT(*) AS dangXuLy FROM yeucauhotro WHERE trangthai IN ('Da duyet cap 1', 'Cho duyet cap 2', 'Da duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 3') ${yearFilterYc}`, yp
     );
     const [[{ choGiaiNgan }]] = await pool.query(
-      `SELECT COUNT(*) AS choGiaiNgan FROM yeucauhotro WHERE trangthai = 'Cho giai ngan'`
+      `SELECT COUNT(*) AS choGiaiNgan FROM yeucauhotro WHERE trangthai = 'Cho giai ngan' ${yearFilterYc}`, yp
     );
     const [[{ daGiaiNgan }]] = await pool.query(
-      `SELECT COUNT(*) AS daGiaiNgan FROM yeucauhotro WHERE trangthai = 'Da giai ngan'`
+      `SELECT COUNT(*) AS daGiaiNgan FROM yeucauhotro WHERE trangthai = 'Da giai ngan' ${yearFilterYc}`, yp
     );
     const [[{ tuChoi }]] = await pool.query(
-      `SELECT COUNT(*) AS tuChoi FROM yeucauhotro WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3')`
+      `SELECT COUNT(*) AS tuChoi FROM yeucauhotro WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3') ${yearFilterYc}`, yp
     );
 
     // 5. Dự báo tài chính & đề xuất chính sách (Báo cáo chiến lược)
-    // Tính toán số tiền trung bình giải ngân mỗi tháng trong 3 tháng gần nhất
     const [[monthlySpendRow]] = await pool.query(
       `SELECT COALESCE(SUM(sotiendenghi) / 3, 0) AS avg_monthly_spend
        FROM yeucauhotro
        WHERE trangthai = 'Da giai ngan'
-         AND ngaycapnhat >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)`
+         AND ngaycapnhat >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH) ${yearFilterYc}`, yp
     );
 
     // Tổng số dư các quỹ hiện tại - tách theo loaidieuhanh
@@ -1338,7 +1403,156 @@ export const getAdminAdvancedStats = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/statistics/yearly-report?nam=YYYY ──────────────────────────────
+// CÔNG DỤNG: Báo cáo tổng hợp năm tài chính — 4 khối tách bạch (Điều 17.2, 18)
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getYearlyReport = async (req, res) => {
+  try {
+    const nam = parseInt(req.query.nam) || new Date().getFullYear();
+
+    // ── Khối 1: Thu/Chi thực tế ──────────────────────────────────────────────
+    const tongThu = await TransactionModel.getYearlyRevenue(nam);
+    const chiByCategory = await TransactionModel.getYearlyExpensesByCategory(nam);
+
+    // Tách chi Tài trợ cho vay theo loại (không hoàn lại / có thu hồi)
+    const [chiLoaiHoTro] = await pool.query(
+      `SELECT 
+         yc.loaihotro,
+         COALESCE(SUM(g.sotien), 0) AS total
+       FROM giaodich g
+       INNER JOIN yeucauhotro yc ON g.yeucauhotro_id = yc.yeucauhotro_id
+       WHERE g.loaigiaodich = 'Chi'
+         AND g.hangmucchi = 'Tai_tro_cho_vay'
+         AND g.trangthai = 'Thanh cong'
+         AND YEAR(g.ngaygiaodich) = ?
+       GROUP BY yc.loaihotro`,
+      [nam]
+    );
+
+    const chiTaiTro = { khongHoanLai: 0, coThuHoi: 0 };
+    chiLoaiHoTro.forEach(r => {
+      if (r.loaihotro === 'Tai tro khong hoan lai') chiTaiTro.khongHoanLai = parseFloat(r.total);
+      else if (r.loaihotro === 'Tai tro co thu hoi') chiTaiTro.coThuHoi = parseFloat(r.total);
+    });
+
+    const tongChi = chiByCategory.Tai_tro_cho_vay + chiByCategory.Tham_dinh_du_an
+      + chiByCategory.Bo_may_hoat_dong + chiByCategory.Nhiem_vu_khac;
+    const soDuCuoiNam = tongThu - tongChi;
+
+    // ── Khối 2: Công nợ phải thu (từ dieukhoanthuhoi) ───────────────────────
+    const [congNoRows] = await pool.query(
+      `SELECT COALESCE(SUM(dkh.mucthuhoi), 0) AS tong
+       FROM dieukhoanthuhoi dkh
+       INNER JOIN yeucauhotro yc ON dkh.yeucauhotro_id = yc.yeucauhotro_id
+       WHERE yc.loaihotro = 'Tai tro co thu hoi'
+         AND yc.trangthai IN ('Da nghiem thu', 'Da giai ngan')`,
+      []
+    );
+    const tongMucThuHoiDangCho = parseFloat(congNoRows[0]?.tong || 0);
+
+    // ── Khối 3: Phân bổ ngân sách nội bộ ────────────────────────────────────
+    const [phanBoRows] = await pool.query(
+      `SELECT COALESCE(SUM(sotien), 0) AS tong
+       FROM phanbongansach
+       WHERE trangthai = 'Da duyet'
+         AND namtaichinh = ?`,
+      [nam]
+    );
+    const tongDaPhanBo = parseFloat(phanBoRows[0]?.tong || 0);
+
+    // ── Khối 4: Dự toán bộ máy hoạt động ────────────────────────────────────
+    const duToan = await DuToanModel.getByYear(nam);
+    const daChiBoMay = chiByCategory.Bo_may_hoat_dong;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        namTaiChinh: nam,
+        thuChiThat: {
+          tongThu,
+          tongChi: {
+            taiTroChoVay: {
+              khongHoanLai: chiTaiTro.khongHoanLai,
+              coThuHoi: chiTaiTro.coThuHoi,
+              tongCong: chiByCategory.Tai_tro_cho_vay
+            },
+            thamDinhDuAn: chiByCategory.Tham_dinh_du_an,
+            boMayHoatDong: chiByCategory.Bo_may_hoat_dong,
+            nhiemVuKhac: chiByCategory.Nhiem_vu_khac,
+            tongCong: tongChi
+          },
+          soDuCuoiNam
+        },
+        congNoPhaiThu: {
+          tongMucThuHoiDangCho,
+          ghiChu: "Chưa thực thu, không tính vào số dư khả dụng"
+        },
+        phanBoNganSachNoiBo: {
+          tongDaPhanBo,
+          ghiChu: "Điều chuyển nội bộ giữa Bể tiền lớn và Mục chi, không phải thu/chi thật"
+        },
+        duToanBoMay: {
+          sotiendutoan: duToan ? parseFloat(duToan.sotiendutoan) : 0,
+          daChi: daChiBoMay,
+          conLai: duToan ? Math.max(0, parseFloat(duToan.sotiendutoan) - daChiBoMay) : 0,
+          trangthai: duToan?.trangthai || 'Chua co'
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getYearlyReport:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy báo cáo năm",
+      error: error.message
+    });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/statistics/pending-count
+// Lấy số lượng hồ sơ chờ xử lý cho sidebar badge
+// - Role 1 (Admin):      COUNT WHERE trangthai = 'Cho duyet cap 2'
+// - Role 2 (Ke Toan):    COUNT WHERE trangthai IN ('Cho duyet cap 3', 'Cho giai ngan')
+// - Role 3 (Can Bo Quy): COUNT WHERE trangthai = 'Cho duyet cap 1'
+// ─────────────────────────────────────────────────────────────────────────────
+export const getPendingCount = async (req, res) => {
+  try {
+    const role = req.user.vai_tro;
+    let sql = '';
+    let params = [];
+
+    if (role === 1) {
+      sql = `SELECT COUNT(*) AS count FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 2'`;
+    } else if (role === 2) {
+      sql = `SELECT COUNT(*) AS count FROM yeucauhotro WHERE trangthai IN ('Cho duyet cap 3', 'Cho giai ngan')`;
+    } else if (role === 3) {
+      sql = `SELECT COUNT(*) AS count FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 1'`;
+    } else {
+      return res.status(200).json({
+        success: true,
+        data: { pendingCount: 0 },
+      });
+    }
+
+    const [[{ count }]] = await pool.query(sql, params);
+
+    return res.status(200).json({
+      success: true,
+      data: { pendingCount: Number(count) || 0 },
+    });
+  } catch (error) {
+    console.error("Lỗi getPendingCount:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi lấy số lượng chờ xử lý",
+    });
+  }
+};
+
 export default {
+  getAvailableYears,
   getPublicStats,
   getFundBreakdown,
   getImpactStats,
@@ -1351,4 +1565,6 @@ export default {
   getApplicationStats,
   getKeToanReportStats,
   getAdminAdvancedStats,
+  getYearlyReport,
+  getPendingCount,
 };

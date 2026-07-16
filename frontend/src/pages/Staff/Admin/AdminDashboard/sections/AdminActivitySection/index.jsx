@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
   HiRss,
   HiIdentification,
@@ -132,7 +133,7 @@ const AdminActivitySection = ({ activityData = [], staffData = [] }) => {
     return (
       <div
         className={styles.activityMessage}
-        dangerouslySetInnerHTML={{ __html: styledMessage }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(styledMessage, { ALLOWED_TAGS: ['span'], ALLOWED_ATTR: ['style'] }) }}
       />
     );
   };

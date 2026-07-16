@@ -6,6 +6,7 @@ import {
 import StatusBadge from '@components/common/StatusBadge';
 import Logo from '@components/common/Logo';
 import NhaTaiTroDetailDrawer from '@pages/Staff/CanBo/NhaTaiTroPage/NhaTaiTroDetailDrawer/NhaTaiTroDetailDrawer';
+import { formatCurrency } from '@utils/formatters';
 import styles from './DonorWallSection.module.scss';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -52,7 +53,7 @@ const DonorCard = ({ donor, onClick }) => {
           <div className={styles.statItem}>
             <div className={styles.statLabel}>Tổng đóng góp</div>
             <div className={styles.statValue}>
-              {donor.totalAmount?.toLocaleString('vi-VN')} VNĐ
+              {formatCurrency(donor.totalAmount)}
             </div>
           </div>
           <div className={styles.statItem}>

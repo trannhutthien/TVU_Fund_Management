@@ -8,6 +8,7 @@ import {
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import { useAuth } from '@context/AuthContext';
+import { formatCurrency, getInitial } from '@utils/formatters';
 import styles from './KhoanTaiTroTable.module.scss';
 
 const LOAI_LABEL = {
@@ -24,11 +25,6 @@ const STATUS_CONFIG = {
   'Tu choi': { status: 'rejected', label: 'Từ chối' },
 };
 
-const formatCurrency = (amount) => {
-  const n = Number(amount) || 0;
-  return n.toLocaleString('vi-VN') + 'đ';
-};
-
 const formatDate = (value) => {
   if (!value) return '—';
   const d = new Date(value);
@@ -42,8 +38,6 @@ const formatTime = (value) => {
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 };
-
-const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
 const apiOrigin = () => {
   const base = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5001/api';

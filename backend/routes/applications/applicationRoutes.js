@@ -17,14 +17,14 @@ const router = express.Router();
 
 // ─── AI ASSISTANT ROUTES
 // POST /api/applications/ai-suggest — Trợ lý AI gợi ý/tối ưu viết đơn
-// Middleware: protect, authorizeRoles(4) - Chỉ cho phép Sinh viên sử dụng
-router.post("/ai-suggest", getAiSuggestion);
+// Middleware: protect - Yêu cầu đăng nhập
+router.post("/ai-suggest", protect, getAiSuggestion);
 
 // ─── APPLICATION ROUTES (ĐƠN XIN HỖ TRỢ) 
 // POST /api/applications — Sinh viên nộp đơn xin hỗ trợ
 // Middleware:
 // - protect: Kiểm tra token hợp lệ
-// - authorizeRoles(2, 3, 4): Chỉ cho phép Admin (role_id = 2), Giáo vụ (role_id = 3), hoặc Sinh viên (role_id = 4)
+// - authorizeRoles(3, 4): Chỉ cho phép Cán bộ Quỹ (role_id = 3) hoặc Sinh viên (role_id = 4)
 // Luồng:
 // 1. Validate dữ liệu đầu vào
 // 2. Kiểm tra quỹ tồn tại và đang hoạt động
@@ -32,7 +32,7 @@ router.post("/ai-suggest", getAiSuggestion);
 // 4. Tạo đơn với trạng thái "Chờ duyệt"
 // 5. Trả về thông tin đơn vừa tạo
 //
-router.post("/", protect, authorizeRoles(2, 3, 4), createApplication);
+router.post("/", protect, authorizeRoles(3, 4), createApplication);
 
 
 // GET /api/applications/my-applications — Người dùng xem đơn của mình
@@ -55,7 +55,7 @@ router.get("/my-applications", protect, authorizeRoles(4), getMyApplications);
 // - trangThai: Lọc theo trạng thái
 // - quyId: Lọc theo quỹ
 // - userId: Lọc theo sinh viên
-router.get("/", protect, authorizeRoles(1, 2, 3), getAllApplications);
+router.get("/", protect, authorizeRoles(1, 2, 3, 5), getAllApplications);
 
 // GET /api/applications/:id — Xem chi tiết 1 đơn
 // Middleware:
@@ -65,7 +65,7 @@ router.get("/", protect, authorizeRoles(1, 2, 3), getAllApplications);
 // - Sinh viên: Chỉ xem được đơn của mình
 // - Admin/Giáo vụ: Xem được tất cả
 //
-router.get("/:id", protect, authorizeRoles(1, 2, 3, 4), getApplicationById);
+router.get("/:id", protect, authorizeRoles(1, 2, 3, 4, 5), getApplicationById);
 
 // PUT /api/applications/:id/reject — Từ chối đơn (bất kỳ cấp nào)
 // Middleware:

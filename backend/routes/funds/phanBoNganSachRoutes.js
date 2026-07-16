@@ -4,7 +4,8 @@ import {
   approveAllocation,
   rejectAllocation,
   rollbackAllocation,
-  getAllocationRequests
+  getAllocationRequests,
+  getAllocationStats
 } from "../../controllers/funds/phanBoNganSachController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
@@ -13,8 +14,10 @@ const router = express.Router();
 
 // ─── PROTECTED ROUTES (Yêu cầu Authentication) ───────────────────────────────
 
-// GET /api/funds/allocate — Lấy danh sách yêu cầu trích lập ngân sách (Admin, Kế toán, Cán bộ)
-router.get("/", protect, authorizeRoles(1, 2, 3), getAllocationRequests);
+// GET /api/funds/allocate/stats — Thống kê phân bổ theo năm tài chính (Admin, Kế toán)
+router.get("/stats", protect, authorizeRoles(1, 2, 5), getAllocationStats);
+
+router.get("/", protect, authorizeRoles(1, 2, 3, 5), getAllocationRequests);
 
 // POST /api/funds/allocate/request — Gửi đề xuất trích lập ngân sách mới (Cán bộ, Admin)
 router.post("/request", protect, authorizeRoles(1, 3), requestAllocation);

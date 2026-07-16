@@ -103,7 +103,7 @@ export const completeRound = async (req, res) => {
     // Kiểm tra nếu tất cả đợt đã hoàn tất → chuyển quỹ sang "Da dong"
     const allDone = await DisbursementRoundModel.allRoundsCompleted(round.quyId);
     if (allDone) {
-      const { default: FundModel } = await import("./FundModel.js");
+      const { default: FundModel } = await import("../../models/funds/FundModel.js");
       await FundModel.updateFundStatus(round.quyId, 'Da dong');
     }
 
