@@ -104,9 +104,9 @@ const TaoQuyPage = () => {
       });
   }, []);
 
-  // Fetch danh sách bể tiền chung nguồn
+  // Fetch danh sách bể tiền chung nguồn (public endpoint - không cần auth)
   useEffect(() => {
-    api.get('/funds')
+    api.get('/funds/public')
       .then((res) => {
         if (res?.data?.funds && Array.isArray(res.data.funds)) {
           const filtered = res.data.funds.filter(
@@ -117,6 +117,7 @@ const TaoQuyPage = () => {
       })
       .catch((err) => {
         console.error('Error fetching parent funds:', err);
+        toast.error('Không thể tải danh sách quỹ phát triển chung');
       });
   }, [id]);
 

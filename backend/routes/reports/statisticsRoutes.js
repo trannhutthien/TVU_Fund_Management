@@ -50,6 +50,6 @@ router.get('/applications/stats', protect, authorizeRoles(1, 5), getApplicationS
 router.get('/admin/advanced', protect, authorizeRoles(1, 5), getAdminAdvancedStats);
 
 // ─── PENDING COUNT (sidebar badge) ─────────────────────────────────────────────
-router.get('/pending-count', protect, authorizeRoles(1, 2, 3), getPendingCount);
+router.get('/pending-count', protect, authorizeRoles(1, 2, 3, 5), getPendingCount);
 
 export default router;

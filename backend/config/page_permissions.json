@@ -6,7 +6,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "funds": {
     "label": "Danh mục quỹ",
@@ -15,7 +16,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "guidelines": {
     "label": "Hướng dẫn & Quy định",
@@ -24,7 +26,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "donors": {
     "label": "Vinh danh",
@@ -33,7 +36,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "profile": {
     "label": "Cá nhân",
@@ -42,7 +46,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "apply": {
     "label": "Tạo đơn",
@@ -51,7 +56,8 @@
     "canbo": false,
     "ketoan": false,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": false
   },
   "track": {
     "label": "Tra cứu",
@@ -60,7 +66,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "dashboard": {
     "label": "Trang tổng quan",
@@ -69,7 +76,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": true
   },
   "users": {
     "label": "Quản lý người dùng",
@@ -78,7 +86,8 @@
     "canbo": true,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "xet_duyet": {
     "label": "Xét duyệt hồ sơ",
@@ -87,7 +96,8 @@
     "canbo": true,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "quy": {
     "label": "Danh sách Quỹ",
@@ -96,7 +106,8 @@
     "canbo": true,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": true
   },
   "nha_tai_tro": {
     "label": "Nhà tài trợ",
@@ -105,7 +116,8 @@
     "canbo": true,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "sinh_vien_noi_bat": {
     "label": "Sinh viên nổi bật",
@@ -114,7 +126,8 @@
     "canbo": true,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "tin_tuc": {
     "label": "Tin tức & Sự kiện",
@@ -123,7 +136,8 @@
     "canbo": true,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "bao_cao": {
     "label": "Thống kê & Báo cáo",
@@ -132,7 +146,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": true
   },
   "khoan_tai_tro": {
     "label": "Khoản tài trợ",
@@ -141,7 +156,8 @@
     "canbo": false,
     "ketoan": true,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": true
   },
   "lich_su_giao_dich": {
     "label": "Lịch sử giao dịch công khai",
@@ -150,7 +166,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "ve_quy_phat_trien": {
     "label": "Về Quỹ Phát Triển ĐHTV",
@@ -159,7 +176,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "cuu_sinh_vien": {
     "label": "Cựu sinh viên",
@@ -168,7 +186,8 @@
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
-    "nhataitro": true
+    "nhataitro": true,
+    "bankiemsoat": true
   },
   "giao_dich": {
     "label": "Lịch sử giao dịch",
@@ -177,7 +196,8 @@
     "canbo": false,
     "ketoan": true,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": true
   },
   "giai_ngan": {
     "label": "Giải ngân hồ sơ",
@@ -186,7 +206,8 @@
     "canbo": false,
     "ketoan": true,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "chung_tu": {
     "label": "Đối soát chứng từ",
@@ -195,7 +216,8 @@
     "canbo": false,
     "ketoan": true,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "phe_duyet": {
     "label": "Lịch sử phê duyệt",
@@ -204,7 +226,8 @@
     "canbo": false,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": true
   },
   "roles": {
     "label": "Hệ thống & Phân quyền",
@@ -213,7 +236,8 @@
     "canbo": false,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "nhat_ky": {
     "label": "Nhật ký hệ thống",
@@ -222,7 +246,8 @@
     "canbo": false,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   },
   "nhan_su": {
     "label": "Quản lý nhân sự",
@@ -231,6 +256,7 @@
     "canbo": false,
     "ketoan": false,
     "sinhvien": false,
-    "nhataitro": false
+    "nhataitro": false,
+    "bankiemsoat": false
   }
 }

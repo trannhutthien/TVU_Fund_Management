@@ -121,6 +121,7 @@ function App() {
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/ke-toan" element={<Navigate to="/ke-toan/dashboard" replace />} />
             <Route path="/can-bo" element={<Navigate to="/can-bo/dashboard" replace />} />
+            <Route path="/kiem-soat" element={<Navigate to="/kiem-soat/dashboard" replace />} />
 
             {/* Admin Routes (role_id = 1) */}
             <Route element={<RoleBasedRoute allowedRoles={[1]} redirectTo="/" />}>
@@ -175,6 +176,16 @@ function App() {
               <Route path="/can-bo/tintuc/tao" element={<TaoTinTucPage />} />
               <Route path="/can-bo/tintuc/chinh-sua/:id" element={<TaoTinTucPage />} />
               <Route path="/can-bo/bao-cao" element={<CanBoBaoCaoPage />} />
+            </Route>
+
+            {/* Ban Kiem Soat Routes (role_id = 5) - read-only */}
+            <Route element={<RoleBasedRoute allowedRoles={[1, 5]} redirectTo="/" />}>
+              <Route path="/kiem-soat/dashboard" element={<AdminDashboard />} />
+              <Route path="/kiem-soat/quy" element={<CanBoQuyListPage />} />
+              <Route path="/kiem-soat/phe-duyet" element={<PheDuyetPage />} />
+              <Route path="/kiem-soat/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
+              <Route path="/kiem-soat/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
+              <Route path="/kiem-soat/bao-cao" element={<AdminBaoCaoPage />} />
             </Route>
           </Route>
 

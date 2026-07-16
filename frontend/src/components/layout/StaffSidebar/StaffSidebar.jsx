@@ -162,6 +162,32 @@ const NAV_CONFIG = [
       { label: 'Thống kê & Báo cáo', path: '/can-bo/bao-cao', icon: HiOutlineChartPie, roles: [3] },
     ]
   },
+
+  // ─── BAN KIỂM SOÁT (role_id = 5) ─────────────────
+  {
+    group: null,
+    roles: [5],
+    items: [
+      { label: 'Tổng quan', path: '/kiem-soat/dashboard', icon: HiOutlineChartBarSquare, roles: [5] },
+    ]
+  },
+  {
+    group: 'GIÁM SÁT',
+    roles: [5],
+    items: [
+      { label: 'Danh sách Quỹ', path: '/kiem-soat/quy', icon: HiOutlineBuildingLibrary, roles: [5] },
+      { label: 'Phê duyệt', path: '/kiem-soat/phe-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [5] },
+      { label: 'Khoản tài trợ', path: '/kiem-soat/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [5] },
+      { label: 'Giao dịch', path: '/kiem-soat/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [5] },
+    ]
+  },
+  {
+    group: 'BÁO CÁO',
+    roles: [5],
+    items: [
+      { label: 'Thống kê & Báo cáo', path: '/kiem-soat/bao-cao', icon: HiOutlineChartPie, roles: [5] },
+    ]
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -281,6 +307,7 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
     else if (user.vaiTro === 4) {
       roleKey = user.loaiTaiKhoan === 'NHA_TAI_TRO' ? 'nhataitro' : 'sinhvien';
     }
+    else if (user.vaiTro === 5) roleKey = 'bankiemsoat';
 
     return !!perm[roleKey];
   };

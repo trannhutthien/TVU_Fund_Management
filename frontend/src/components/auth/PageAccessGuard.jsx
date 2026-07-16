@@ -102,6 +102,7 @@ const PageAccessGuard = ({ children }) => {
         else if (user.vaiTro === 4) {
           roleKey = user.loaiTaiKhoan === 'NHA_TAI_TRO' ? 'nhataitro' : 'sinhvien';
         }
+        else if (user.vaiTro === 5) roleKey = 'bankiemsoat';
       } else {
         setHasAccess(!!perm.sinhvien || !!perm.nhataitro);
         return;
@@ -128,6 +129,7 @@ const PageAccessGuard = ({ children }) => {
       if (user.vaiTro === 1) homePath = '/admin/dashboard';
       else if (user.vaiTro === 2) homePath = '/ke-toan/dashboard';
       else if (user.vaiTro === 3) homePath = '/can-bo/dashboard';
+      else if (user.vaiTro === 5) homePath = '/kiem-soat/dashboard';
     }
 
     return (
