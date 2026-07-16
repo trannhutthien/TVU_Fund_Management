@@ -57,10 +57,10 @@ const useAuthStore = create(
       getUser: () => get().user,
       getToken: () => get().token,
       isAuth: () => get().isAuthenticated,
-      getUserRole: () => get().user?.VaiTro || null,
+      getUserRole: () => get().user?.vaiTro || null,
 
       hasRole: (role) => {
-        const userRole = get().user?.VaiTro;
+        const userRole = get().user?.vaiTro;
         if (Array.isArray(role)) {
           return role.includes(userRole);
         }

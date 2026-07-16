@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import { HiOutlineEnvelope } from 'react-icons/hi2';
@@ -19,6 +20,7 @@ import './LoginForm.scss';
  */
 const LoginForm = ({ onGoogleLogin, onSuccess, onClose, onSwitchToRegister }) => {
   const { login: loginStore } = useAuthStore();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -71,7 +73,7 @@ const LoginForm = ({ onGoogleLogin, onSuccess, onClose, onSwitchToRegister }) =>
         localStorage.setItem('refreshToken', response.refreshToken);
         toast.success('Đăng nhập thành công!');
         onSuccess?.();
-        window.location.href = '/';
+        navigate('/');
       } else {
         toast.error(response.message || 'Đăng nhập thất bại');
       }

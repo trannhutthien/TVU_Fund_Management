@@ -5,9 +5,15 @@
 -- =====================================================
 
 -- -----------------------------------------------------
+-- 0. DROP bảng cũ nếu cần recreate
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `danhgia`;
+DROP TABLE IF EXISTS `chucvuquy`;
+
+-- -----------------------------------------------------
 -- 1. BẢNG MỚI: danhgia (Đánh giá / phản hồi)
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `danhgia` (
+CREATE TABLE `danhgia` (
   `danhgia_id` int(11) NOT NULL AUTO_INCREMENT,
   `nguoidung_id` int(11) NOT NULL,
   `noidung` text NOT NULL,
@@ -26,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `danhgia` (
 -- -----------------------------------------------------
 -- 2. BẢNG MỚI: chucvuquy (Chức vụ tổ chức trong Quỹ)
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `chucvuquy` (
+CREATE TABLE `chucvuquy` (
   `chucvu_id` int(11) NOT NULL AUTO_INCREMENT,
   `nguoidung_id` int(11) DEFAULT NULL,
   `tenchucvu` varchar(100) NOT NULL,
@@ -43,63 +49,60 @@ CREATE TABLE IF NOT EXISTS `chucvuquy` (
 -- -----------------------------------------------------
 -- 3. CỘT MỚI: nguoidung.donvicongtac
 -- -----------------------------------------------------
-ALTER TABLE `nguoidung`
-  ADD COLUMN `donvicongtac` varchar(200) DEFAULT NULL AFTER `tinhtrangcongtac`;
+SET @column_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'defaultdb' AND TABLE_NAME = 'nguoidung' AND COLUMN_NAME = 'donvicongtac');
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE `nguoidung` ADD COLUMN `donvicongtac` varchar(200) DEFAULT NULL AFTER `tinhtrangcongtac`', 'SELECT "donvicongtac already exists" AS status');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- -----------------------------------------------------
 -- 4. CỘT MỚI: yeucauhotro.laidetac
 -- -----------------------------------------------------
-ALTER TABLE `yeucauhotro`
-  ADD COLUMN `laidetac` tinyint(1) DEFAULT 0 AFTER `canghiemthu`;
+SET @column_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'defaultdb' AND TABLE_NAME = 'yeucauhotro' AND COLUMN_NAME = 'laidetac');
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE `yeucauhotro` ADD COLUMN `laidetac` tinyint(1) DEFAULT 0 AFTER `canghiemthu`', 'SELECT "laidetac already exists" AS status');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- -----------------------------------------------------
 -- 5. CỘT MỚI: quy.sotienhotrotoida
 -- -----------------------------------------------------
-ALTER TABLE `quy`
-  ADD COLUMN `sotienhotrotoida` decimal(15,2) DEFAULT NULL AFTER `sodu`;
+SET @column_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'defaultdb' AND TABLE_NAME = 'quy' AND COLUMN_NAME = 'sotienhotrotoida');
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE `quy` ADD COLUMN `sotienhotrotoida` decimal(15,2) DEFAULT NULL AFTER `sodu`', 'SELECT "sotienhotrotoida already exists" AS status');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- -----------------------------------------------------
 -- 6. CỘT MỚI: quy.quy_cha_id (parent fund hierarchy)
 -- -----------------------------------------------------
-ALTER TABLE `quy`
-  ADD COLUMN `quy_cha_id` int(11) DEFAULT NULL AFTER `quy_id`,
-  ADD KEY `idx_quy_cha` (`quy_cha_id`);
+SET @column_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'defaultdb' AND TABLE_NAME = 'quy' AND COLUMN_NAME = 'quy_cha_id');
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE `quy` ADD COLUMN `quy_cha_id` int(11) DEFAULT NULL AFTER `quy_id`', 'SELECT "quy_cha_id already exists" AS status');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- -----------------------------------------------------
 -- 7. DỮ LIỆU: loaiquy (9 loại quỹ)
 -- -----------------------------------------------------
 INSERT IGNORE INTO `loaiquy` (`loaiquy_id`, `maloai`, `tenloai`) VALUES
-(1, 'PHAT_TRIEN', 'Phát triển'),
-(2, 'HOC_BONG', 'Học bổng'),
-(3, 'NGHIEN_CUU', 'Nghiên cứu khoa học'),
-(4, 'VAY_VON', 'Vay vốn sinh viên'),
-(5, 'KHOI_NGHIEP', 'Khởi nghiệp'),
-(6, 'HOAT_DONG_PHONG_TRAO', 'Hoạt động phong trào'),
-(7, 'XA_HOI', 'Xã hội - Từ thiện'),
-(8, 'CO_SO_VAT_CHAT', 'Cơ sở vật chất'),
-(9, 'DAO_TAO', 'Đào tạo & Đổi mới');
+(1, 'PHAT_TRIEN', 'Phat trien'),
+(2, 'HOC_BONG', 'Hoc bong'),
+(3, 'NGHIEN_CUU', 'Nghien cuu khoa hoc'),
+(4, 'VAY_VON', 'Vay von sinh vien'),
+(5, 'KHOI_NGHIEP', 'Khoi nghiep'),
+(6, 'HOAT_DONG_PHONG_TRAO', 'Hoat dong phong trao'),
+(7, 'XA_HOI', 'Xa hoi - Tu thien'),
+(8, 'CO_SO_VAT_CHAT', 'Co so vat chat'),
+(9, 'DAO_TAO', 'Dao tao & Doi moi');
 
 -- -----------------------------------------------------
--- 8. DỮ LIỆU: Quỹ mẹ
+-- 8. DỮ LIỆU: Quỹ mẹ (insert nếu chưa có quy_id=1)
 -- -----------------------------------------------------
 INSERT IGNORE INTO `quy` (`quy_id`, `tenquy`, `loaiquy_id`, `mota`, `sotienmuctieu`, `sodu`, `trangthai`, `ngaybatdau`, `loaidieuhanh`) VALUES
-(1, 'Quỹ phát triển Đại học Trà Vinh', 1, 'Quỹ mẹ phát triển chung của trường Đại học Trà Vinh', 2000000000.00, 2000000000.00, 'Dang hoat dong', '2026-07-15', 'Tap trung - Be chung');
-
--- -----------------------------------------------------
--- 9. INDEXES thêm (nếu cần)
--- -----------------------------------------------------
--- Thêm indexes cho các bảng thường query
-ALTER TABLE `yeucauhotro`
-  ADD INDEX IF NOT EXISTS `idx_trangthai` (`trangthai`),
-  ADD INDEX IF NOT EXISTS `idx_loaihotro` (`loaihotro`);
-
-ALTER TABLE `khoantaitro`
-  ADD INDEX IF NOT EXISTS `idx_trangthai` (`trangthai`);
-
-ALTER TABLE `giaodich`
-  ADD INDEX IF NOT EXISTS `idx_ngaygiaodich` (`ngaygiaodich`);
+(1, 'Quy phat trien Dai hoc Tra Vinh', 1, 'Quy me phat trien chung cua truong Dai hoc Tra Vinh', 2000000000.00, 2000000000.00, 'Dang hoat dong', '2026-07-15', 'Tap trung - Be chung');
 
 -- -----------------------------------------------------
 -- HOÀN TẤT
 -- -----------------------------------------------------
-SELECT 'Migration hoàn tất!' AS status;
+SELECT 'Migration hoan tat!' AS status;

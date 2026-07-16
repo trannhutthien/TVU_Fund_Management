@@ -44,8 +44,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       logoutStore();
       localStorage.removeItem('refreshToken');
       toast.success('Đăng xuất thành công!');
-      // Redirect về LandingPage
-      window.location.href = '/';
+      navigate('/');
     }
   };
 

@@ -44,6 +44,7 @@ const DoiSoatChungTuPage = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quyOptions, setQuyOptions] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // ─── FETCH QUY OPTIONS ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -94,7 +95,7 @@ const DoiSoatChungTuPage = () => {
     };
 
     fetchStats();
-  }, [filterLoai, filterQuy, filterDateRange, searchKeyword]);
+  }, [filterLoai, filterQuy, filterDateRange, searchKeyword, refreshKey]);
 
   // ─── FETCH LIST ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -159,7 +160,7 @@ const DoiSoatChungTuPage = () => {
     };
 
     fetchList();
-  }, [activeTab, filterLoai, filterDateRange, filterQuy, searchKeyword, currentPage, pageSize]);
+  }, [activeTab, filterLoai, filterDateRange, filterQuy, searchKeyword, currentPage, pageSize, refreshKey]);
 
   // ─── HANDLERS ──────────────────────────────────────────────────────────────
   const handleViewDetail = (giaoDich) => {
@@ -177,8 +178,7 @@ const DoiSoatChungTuPage = () => {
         ghiChu: item.ghi_chu || item.ghiChu || '',
       });
       alert('Đã đối soát thành công');
-      // Refresh list + stats
-      window.location.reload();
+      setRefreshKey(k => k + 1);
     } catch (error) {
       console.error('Lỗi đối soát:', error);
       alert('Có lỗi xảy ra khi đối soát');
@@ -196,8 +196,7 @@ const DoiSoatChungTuPage = () => {
         ghiChu: item.ghi_chu || item.ghiChu || '',
       });
       alert('Đã gắn cờ bất thường');
-      // Refresh list + stats
-      window.location.reload();
+      setRefreshKey(k => k + 1);
     } catch (error) {
       console.error('Lỗi gắn cờ:', error);
       alert('Có lỗi xảy ra khi gắn cờ');
@@ -215,8 +214,7 @@ const DoiSoatChungTuPage = () => {
         ghiChu: item.ghi_chu || item.ghiChu || 'Đã xử lý bất thường',
       });
       alert('Đã xử lý, chuyển sang Đã đối soát');
-      // Refresh list + stats
-      window.location.reload();
+      setRefreshKey(k => k + 1);
     } catch (error) {
       console.error('Lỗi resolve:', error);
       alert('Có lỗi xảy ra khi xử lý');
@@ -234,8 +232,7 @@ const DoiSoatChungTuPage = () => {
         ghiChu: '',
       });
       alert('Đã xóa flag bất thường');
-      // Refresh list + stats
-      window.location.reload();
+      setRefreshKey(k => k + 1);
     } catch (error) {
       console.error('Lỗi xóa flag:', error);
       alert('Có lỗi xảy ra khi xóa flag');

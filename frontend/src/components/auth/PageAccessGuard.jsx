@@ -69,48 +69,48 @@ const PageAccessGuard = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(true);
 
+  // Fetch permissions once on mount
   useEffect(() => {
     const fetchPerms = async () => {
       try {
-        setLoading(true);
         const res = await api.get('/system/settings/permissions');
         if (res.data?.success) {
-          const perms = res.data.permissions;
-          setPermissions(perms);
-          
-          const key = getPageKey(location.pathname);
-          const perm = perms[key];
-          
-          if (perm) {
-            let roleKey = 'sinhvien';
-            if (isAuthenticated && user) {
-              if (user.vaiTro === 1) roleKey = 'admin';
-              else if (user.vaiTro === 2) roleKey = 'ketoan';
-              else if (user.vaiTro === 3) roleKey = 'canbo';
-              else if (user.vaiTro === 4) {
-                roleKey = user.loaiTaiKhoan === 'NHA_TAI_TRO' ? 'nhataitro' : 'sinhvien';
-              }
-            } else {
-              // Khách vãng lai chưa đăng nhập
-              setHasAccess(!!perm.sinhvien || !!perm.nhataitro);
-              setLoading(false);
-              return;
-            }
-            setHasAccess(!!perm[roleKey]);
-          } else {
-            setHasAccess(true);
-          }
+          setPermissions(res.data.permissions);
         }
       } catch (err) {
-        console.error('Error validation page permission:', err);
-        setHasAccess(true);
+        console.error('Error fetching permissions:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPerms();
-  }, [location.pathname, isAuthenticated, user?.vaiTro, user?.loaiTaiKhoan]);
+  }, []);
+
+  // Check access when pathname or permissions change (no API call)
+  useEffect(() => {
+    if (loading || Object.keys(permissions).length === 0) return;
+
+    const key = getPageKey(location.pathname);
+    const perm = permissions[key];
+
+    if (perm) {
+      let roleKey = 'sinhvien';
+      if (isAuthenticated && user) {
+        if (user.vaiTro === 1) roleKey = 'admin';
+        else if (user.vaiTro === 2) roleKey = 'ketoan';
+        else if (user.vaiTro === 3) roleKey = 'canbo';
+        else if (user.vaiTro === 4) {
+          roleKey = user.loaiTaiKhoan === 'NHA_TAI_TRO' ? 'nhataitro' : 'sinhvien';
+        }
+      } else {
+        setHasAccess(!!perm.sinhvien || !!perm.nhataitro);
+        return;
+      }
+      setHasAccess(!!perm[roleKey]);
+    } else {
+      setHasAccess(true);
+    }
+  }, [location.pathname, isAuthenticated, user?.vaiTro, user?.loaiTaiKhoan, permissions, loading]);
 
   if (loading) {
     return (
