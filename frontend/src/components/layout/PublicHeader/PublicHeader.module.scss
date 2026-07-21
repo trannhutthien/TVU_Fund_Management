@@ -7,11 +7,10 @@
   --color-gold: #f0a500;
   --color-gold-dark: #d4af37;
   --color-white: #ffffff;
-  --header-height: 72px;
 }
 
 // ============================================
-// PUBLIC HEADER
+// PUBLIC HEADER - CSS Grid 2x2
 // ============================================
 .header {
   position: sticky;
@@ -19,96 +18,206 @@
   left: 0;
   right: 0;
   width: 100%;
-  height: var(--header-height);
   z-index: 1000;
-  
-  // Gradient background
-  background: linear-gradient(
-    135deg,
-    var(--color-navy-blue) 0%,
-    var(--color-navy-blue-dark) 100%
-  );
-  
-  // Glassmorphism effect
+  background: linear-gradient(135deg, var(--color-navy-blue) 0%, var(--color-navy-blue-dark) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  
-  // Gold border bottom
   border-bottom: 2px solid rgba(240, 165, 0, 0.3);
-  
-  // Shadow
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  
-  // Smooth transition
   transition: all 0.3s ease;
 }
 
-// Scrolled state (thêm shadow đậm hơn)
 .headerScrolled {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
   border-bottom-color: rgba(240, 165, 0, 0.5);
 }
 
 // ============================================
-// HEADER CONTAINER
+// GRID CONTAINER - 2 rows x 2 cols
 // ============================================
-.container {
+.gridContainer {
   max-width: 1440px;
-  height: 100%;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
 }
 
 // ============================================
-// LOGO SECTION (Left)
+// COL 1 - Logo + Name (spans 2 rows)
 // ============================================
 .logoSection {
+  grid-column: 1;
+  grid-row: 1 / 3;
   display: flex;
   align-items: center;
-  flex-shrink: 0;
-  
-  > div {
-    transition: opacity 0.3s ease;
-    
-    &:hover {
-      opacity: 0.9;
-    }
+  gap: 14px;
+  padding-right: 28px;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+
+  &:hover {
+    opacity: 0.9;
   }
 }
 
 .logoText {
   color: var(--color-white);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   white-space: nowrap;
-  
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+
+  @media (max-width: 1024px) { font-size: 18px; }
+  @media (max-width: 768px) { display: none; }
+}
+
+// ============================================
+// COL 2 ROW 1 - Search bar (right-aligned)
+// ============================================
+.searchRow {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 48px 0;
+}
+
+.searchSection {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 28px;
+  padding: 8px 18px;
+  transition: all 0.3s ease;
+  min-width: 340px;
+
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.12);
+    min-width: 420px;
   }
-  
-  @media (max-width: 768px) {
-    display: none; // Ẩn text trên mobile, chỉ giữ logo
+}
+
+.searchIcon {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-white);
+  font-size: 14px;
+  font-weight: 400;
+  width: 280px;
+  transition: width 0.3s ease;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  &:focus {
+    width: 360px;
+  }
+}
+
+.searchClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--color-gold);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  svg { font-size: 15px; }
+}
+
+.searchDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 280px;
+  background: linear-gradient(135deg, var(--color-navy-blue) 0%, var(--color-navy-blue-dark) 100%);
+  border: 1.5px solid rgba(240, 165, 0, 0.4);
+  border-radius: 12px;
+  padding: 6px 0;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  z-index: 1200;
+  backdrop-filter: blur(15px);
+  animation: searchSlideDown 0.2s ease;
+}
+
+.searchResultItem {
+  display: block;
+  width: 100%;
+  padding: 11px 18px;
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(240, 165, 0, 0.15);
+    color: var(--color-gold);
   }
 }
 
 // ============================================
-// NAVIGATION MENU (Center)
+// COL 2 ROW 2 - Nav + Actions
+// ============================================
+.navRow {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  padding: 4px 0 10px;
+}
+
+.navInner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+// ============================================
+// NAVIGATION MENU
 // ============================================
 .nav {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 36px;
   flex: 1;
   justify-content: center;
-  
-  @media (max-width: 768px) {
-    display: none; // Ẩn trên mobile
-  }
+
+  @media (max-width: 768px) { display: none; }
 }
 
 .navLink {
@@ -119,43 +228,34 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
-  padding: 8px 4px;
+  padding: 10px 4px;
   transition: color 0.3s ease;
   white-space: nowrap;
-  
-  // Underline animation
+
   &::after {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: 4px;
     left: 0;
     width: 0;
     height: 2px;
     background: var(--color-gold);
     transition: width 0.3s ease;
   }
-  
-  // Hover state
+
   &:hover {
     color: var(--color-gold);
-    
-    &::after {
-      width: 100%;
-    }
+    &::after { width: 100%; }
   }
-  
-  // Active state
+
   &.active {
     color: var(--color-gold);
-    
-    &::after {
-      width: 100%;
-    }
+    &::after { width: 100%; }
   }
 }
 
 // ============================================
-// NAV LINK HIGHLIGHT - TẠO ĐƠN (special style)
+// NAV LINK HIGHLIGHT - TAO DON
 // ============================================
 .navLinkHighlight {
   position: relative;
@@ -169,48 +269,32 @@
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
-  padding: 7px 16px;
+  padding: 8px 18px;
   border-radius: 20px;
-
-  // Gold gradient background
   background: linear-gradient(135deg, var(--color-gold) 0%, #ffcc44 50%, var(--color-gold) 100%);
   background-size: 200% 200%;
-
-  // Glowing border
   border: 2px solid transparent;
-  box-shadow:
-    0 0 0 2px rgba(240, 165, 0, 0.4),
-    0 4px 14px rgba(240, 165, 0, 0.35);
-
-  // Smooth transitions
+  box-shadow: 0 0 0 2px rgba(240, 165, 0, 0.4), 0 4px 14px rgba(240, 165, 0, 0.35);
   transition: all 0.3s ease;
   animation: gradientShift 3s ease infinite, subtlePulse 2.5s ease-in-out infinite;
 
-  // No underline pseudo (override navLink::after)
-  &::after {
-    display: none;
-  }
+  &::after { display: none; }
 
   &:hover {
     color: var(--color-navy-blue);
     transform: translateY(-2px);
-    box-shadow:
-      0 0 0 2px rgba(240, 165, 0, 0.7),
-      0 6px 20px rgba(240, 165, 0, 0.5);
+    box-shadow: 0 0 0 2px rgba(240, 165, 0, 0.7), 0 6px 20px rgba(240, 165, 0, 0.5);
     background-position: right center;
   }
 
-  // Active state
   &.activeHighlight {
-    box-shadow:
-      0 0 0 3px rgba(240, 165, 0, 0.8),
-      0 6px 20px rgba(240, 165, 0, 0.55);
+    box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.8), 0 6px 20px rgba(240, 165, 0, 0.55);
     transform: translateY(-1px);
   }
 
   @media (max-width: 1024px) {
     font-size: 12px;
-    padding: 6px 13px;
+    padding: 7px 14px;
   }
 }
 
@@ -220,14 +304,196 @@
   animation: spin 4s linear infinite;
 }
 
-// Desktop active highlight (alias — used by className string)
 .activeHighlight {
-  box-shadow:
-    0 0 0 3px rgba(240, 165, 0, 0.8),
-    0 6px 20px rgba(240, 165, 0, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.8), 0 6px 20px rgba(240, 165, 0, 0.55) !important;
 }
 
-// Mobile variant
+// ============================================
+// ACTION BUTTONS
+// ============================================
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) { gap: 8px; }
+}
+
+.btnRegister {
+  background: transparent !important;
+  color: var(--color-gold) !important;
+  border: 1.5px solid var(--color-gold) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 20px !important;
+  border-radius: 6px !important;
+
+  &:hover {
+    background: var(--color-gold) !important;
+    color: var(--color-navy-blue) !important;
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.3) !important;
+  }
+
+  @media (max-width: 768px) { display: none !important; }
+}
+
+.btnLogin {
+  background: var(--color-gold) !important;
+  color: var(--color-navy-blue) !important;
+  border: 1.5px solid var(--color-gold) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 8px 20px !important;
+  border-radius: 6px !important;
+
+  &:hover {
+    background: var(--color-gold-dark) !important;
+    border-color: var(--color-gold-dark) !important;
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  @media (max-width: 768px) { display: none !important; }
+}
+
+.actions :global(.header-actions) {
+  @media (max-width: 768px) { display: none; }
+}
+
+.sidebarToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid rgba(240, 165, 0, 0.75);
+  border-radius: 999px;
+  background: rgba(240, 165, 0, 0.16);
+  color: var(--color-gold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  svg { width: 20px; height: 20px; }
+
+  &:hover {
+    background: var(--color-gold);
+    color: var(--color-navy-blue);
+    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.35);
+  }
+
+  @media (max-width: 768px) { display: inline-flex; }
+}
+
+// ============================================
+// STATUS LABEL
+// ============================================
+.statusLabel {
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 4px;
+
+  @media (max-width: 1024px) { font-size: 12px; }
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    padding: 12px 16px;
+    justify-content: center;
+  }
+}
+
+// ============================================
+// HAMBURGER MENU (Mobile)
+// ============================================
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10;
+
+  @media (max-width: 768px) { display: flex; }
+  &:focus { outline: none; }
+}
+
+.hamburgerLine {
+  width: 28px;
+  height: 3px;
+  background: var(--color-white);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburgerOpen {
+  .hamburgerLine:nth-child(1) { transform: rotate(45deg) translateY(9px); }
+  .hamburgerLine:nth-child(2) { opacity: 0; transform: translateX(-20px); }
+  .hamburgerLine:nth-child(3) { transform: rotate(-45deg) translateY(-9px); }
+}
+
+// ============================================
+// MOBILE MENU
+// ============================================
+.mobileMenu {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, var(--color-navy-blue) 0%, var(--color-navy-blue-dark) 100%);
+  border-bottom: 2px solid rgba(240, 165, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1100;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+
+  &.mobileMenuOpen {
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    opacity: 1;
+  }
+}
+
+.mobileNavLink {
+  color: var(--color-white);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-align: center;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-gold);
+  }
+
+  &.active {
+    background: rgba(240, 165, 0, 0.2);
+    color: var(--color-gold);
+    border: 1px solid var(--color-gold);
+  }
+}
+
 .mobileNavLinkHighlight {
   display: flex;
   align-items: center;
@@ -252,230 +518,7 @@
     box-shadow: 0 6px 20px rgba(240, 165, 0, 0.55);
   }
 
-  &.activeHighlight {
-    outline: 2px solid var(--color-gold-dark);
-  }
-}
-
-// ============================================
-// STATUS LABEL (Khi đã đăng nhập)
-// ============================================
-.statusLabel {
-  color: var(--color-white);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 4px;
-
-  @media (max-width: 1024px) {
-    font-size: 12px;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 14px;
-    padding: 12px 16px;
-    justify-content: center;
-  }
-}
-
-// ============================================
-// ACTION BUTTONS (Right)
-// ============================================
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-  
-  @media (max-width: 768px) {
-    gap: 8px;
-  }
-}
-
-// Custom styles cho Button component
-.btnRegister {
-  background: transparent !important;
-  color: var(--color-gold) !important;
-  border: 2px solid var(--color-gold) !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  padding: 10px 24px !important;
-  
-  &:hover {
-    background: var(--color-gold) !important;
-    color: var(--color-navy-blue) !important;
-    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.3) !important;
-  }
-  
-  @media (max-width: 768px) {
-    display: none !important; // Ẩn trên mobile, hiện trong mobile menu
-  }
-}
-
-.btnLogin {
-  background: var(--color-gold) !important;
-  color: var(--color-navy-blue) !important;
-  border: 2px solid var(--color-gold) !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  padding: 10px 24px !important;
-  
-  &:hover {
-    background: var(--color-gold-dark) !important;
-    border-color: var(--color-gold-dark) !important;
-    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.4) !important;
-    transform: translateY(-2px) !important;
-  }
-  
-  @media (max-width: 768px) {
-    display: none !important; // Ẩn trên mobile, hiện trong mobile menu
-  }
-}
-
-.actions :global(.header-actions) {
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
-
-.sidebarToggle {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 1.5px solid rgba(240, 165, 0, 0.75);
-  border-radius: 999px;
-  background: rgba(240, 165, 0, 0.16);
-  color: var(--color-gold);
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  &:hover {
-    background: var(--color-gold);
-    color: var(--color-navy-blue);
-    box-shadow: 0 4px 12px rgba(240, 165, 0, 0.35);
-  }
-
-  @media (max-width: 768px) {
-    display: inline-flex;
-  }
-}
-
-// ============================================
-// HAMBURGER MENU (Mobile)
-// ============================================
-.hamburger {
-  display: none;
-  flex-direction: column;
-  justify-content: space-around;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  z-index: 10;
-  
-  @media (max-width: 768px) {
-    display: flex;
-  }
-  
-  &:focus {
-    outline: none;
-  }
-}
-
-.hamburgerLine {
-  width: 28px;
-  height: 3px;
-  background: var(--color-white);
-  border-radius: 2px;
-  transition: all 0.3s ease;
-  transform-origin: center;
-}
-
-// Hamburger open state
-.hamburgerOpen {
-  .hamburgerLine:nth-child(1) {
-    transform: rotate(45deg) translateY(9px);
-  }
-  
-  .hamburgerLine:nth-child(2) {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  
-  .hamburgerLine:nth-child(3) {
-    transform: rotate(-45deg) translateY(-9px);
-  }
-}
-
-// ============================================
-// MOBILE MENU (Dropdown)
-// ============================================
-.mobileMenu {
-  position: fixed;
-  top: var(--header-height);
-  left: 0;
-  right: 0;
-  background: linear-gradient(
-    180deg,
-    var(--color-navy-blue) 0%,
-    var(--color-navy-blue-dark) 100%
-  );
-  border-bottom: 2px solid rgba(240, 165, 0, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  z-index: 1100; // Cao hơn tất cả để nổi lên trên
-  
-  // Animation
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: all 0.3s ease;
-  
-  &.mobileMenuOpen {
-    max-height: calc(100vh - var(--header-height));
-    overflow-y: auto;
-    opacity: 1;
-  }
-}
-
-.mobileNavLink {
-  color: var(--color-white);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 12px 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  text-align: center;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--color-gold);
-  }
-  
-  &.active {
-    background: rgba(240, 165, 0, 0.2);
-    color: var(--color-gold);
-    border: 1px solid var(--color-gold);
-  }
+  &.activeHighlight { outline: 2px solid var(--color-gold-dark); }
 }
 
 .mobileDivider {
@@ -489,12 +532,8 @@
   flex-direction: column;
   gap: 12px;
   margin-top: 8px;
-  
-  // Button trong mobile menu full width
-  button {
-    display: flex !important;
-    width: 100%;
-  }
+
+  button { display: flex !important; width: 100%; }
 
   :global(.header-actions) {
     display: flex !important;
@@ -504,104 +543,78 @@
 }
 
 // ============================================
-// ANIMATIONS
+// MOBILE SEARCH
 // ============================================
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+.mobileSearchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.mobileSearchIcon {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.mobileSearchInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-white);
+  font-size: 14px;
+  width: 100%;
+
+  &::placeholder { color: rgba(255, 255, 255, 0.45); }
+}
+
+.mobileSearchResults {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.mobileSearchResultItem {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(240, 165, 0, 0.15);
+    color: var(--color-gold);
   }
 }
 
-.header {
-  animation: slideDown 0.4s ease-out;
+.mobileSubNavLink {
+  padding-left: 32px !important;
+  font-size: 13px !important;
+  opacity: 0.9;
+  text-align: left !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.03);
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
-// ============================================
-// RESPONSIVE
-// ============================================
-@media (max-width: 1024px) {
-  .nav {
-    gap: 24px;
-  }
-  
-  .navLink {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 0 12px;
-    gap: 10px;
-  }
-  
-  :root {
-    --header-height: 64px;
-  }
-  
-  .header {
-    height: 64px;
-  }
-
-  .actions {
-    gap: 8px;
-  }
-
-  .mobileMenu {
-    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
-  }
-}
-
-@media (max-width: 380px) {
-  .container {
-    padding: 0 10px;
-  }
-
-  .actions {
-    gap: 6px;
-  }
-
-  .sidebarToggle,
-  .hamburger {
-    width: 32px;
-    height: 32px;
-  }
-
-  .hamburgerLine {
-    width: 24px;
-  }
-}
-
-// ============================================
-// KEYFRAMES - Highlight Animations
-// ============================================
-@keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes subtlePulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 2px rgba(240, 165, 0, 0.4),
-      0 4px 14px rgba(240, 165, 0, 0.35);
-  }
-  50% {
-    box-shadow:
-      0 0 0 3px rgba(240, 165, 0, 0.65),
-      0 6px 22px rgba(240, 165, 0, 0.55);
-  }
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+.subLinkPrefix {
+  color: var(--color-gold);
+  margin-right: 8px;
+  font-weight: bold;
+  font-size: 14px;
 }
 
 // ============================================
@@ -614,10 +627,7 @@
   &.dropdownOpen {
     .dropdownToggle {
       color: var(--color-gold);
-
-      .arrowIcon {
-        transform: rotate(180deg);
-      }
+      .arrowIcon { transform: rotate(180deg); }
     }
 
     .dropdownMenu {
@@ -644,7 +654,7 @@
   gap: 6px;
   transition: color 0.3s ease;
   white-space: nowrap;
-  
+
   .arrowIcon {
     font-size: 14px;
     transition: transform 0.3s ease;
@@ -656,11 +666,7 @@
   top: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(10px);
-  background: linear-gradient(
-    135deg,
-    var(--color-navy-blue) 0%,
-    var(--color-navy-blue-dark) 100%
-  );
+  background: linear-gradient(135deg, var(--color-navy-blue) 0%, var(--color-navy-blue-dark) 100%);
   border: 1.5px solid rgba(240, 165, 0, 0.4);
   border-radius: 8px;
   padding: 8px 0;
@@ -672,8 +678,7 @@
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1100;
   backdrop-filter: blur(15px);
-  
-  // Arrow pointing up from the dropdown box
+
   &::before {
     content: '';
     position: absolute;
@@ -697,13 +702,13 @@
   text-decoration: none;
   transition: all 0.2s ease;
   text-align: left;
-  
+
   &:hover {
     background: rgba(240, 165, 0, 0.15);
     color: var(--color-gold);
     padding-left: 24px;
   }
-  
+
   &.dropdownItemActive {
     background: rgba(240, 165, 0, 0.2);
     color: var(--color-gold);
@@ -712,22 +717,82 @@
 }
 
 // ============================================
-// MOBILE SUB-NAVIGATION
+// ANIMATIONS
 // ============================================
-.mobileSubNavLink {
-  padding-left: 32px !important;
-  font-size: 13px !important;
-  opacity: 0.9;
-  text-align: left !important;
-  border-radius: 6px !important;
-  background: rgba(255, 255, 255, 0.03);
-  margin-left: 8px;
-  margin-right: 8px;
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
 
-.subLinkPrefix {
-  color: var(--color-gold);
-  margin-right: 8px;
-  font-weight: bold;
-  font-size: 14px;
+@keyframes searchSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes subtlePulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(240, 165, 0, 0.4), 0 4px 14px rgba(240, 165, 0, 0.35); }
+  50%      { box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.65), 0 6px 22px rgba(240, 165, 0, 0.55); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.header {
+  animation: slideDown 0.4s ease-out;
+}
+
+// ============================================
+// RESPONSIVE - Tablet
+// ============================================
+@media (max-width: 1024px) {
+  .nav { gap: 24px; }
+  .navLink { font-size: 12px; }
+}
+
+// ============================================
+// RESPONSIVE - Mobile
+// ============================================
+@media (max-width: 768px) {
+  .gridContainer {
+    padding: 0 16px;
+  }
+
+  .logoSection {
+    padding-right: 0;
+  }
+
+  .searchRow {
+    display: none;
+  }
+
+  .navRow {
+    padding: 0;
+  }
+
+  .navInner {
+    justify-content: space-between;
+  }
+
+  .actions { gap: 8px; }
+
+  .mobileMenu {
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 380px) {
+  .gridContainer { padding: 0 12px; }
+  .actions { gap: 6px; }
+
+  .sidebarToggle,
+  .hamburger { width: 32px; height: 32px; }
+  .hamburgerLine { width: 24px; }
 }

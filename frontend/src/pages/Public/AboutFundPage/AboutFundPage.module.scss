@@ -850,3 +850,309 @@
   font-weight: 600;
   color: var(--color-gold, #f0a500);
 }
+
+/* ─── Điều lệ Section ─── */
+.dieuLeSection {
+  margin-top: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dieuLeHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 28px 32px;
+  background: linear-gradient(135deg, #1a2f5e 0%, #2d4a8a 60%, #3b5fa0 100%);
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 8px 24px rgba(26, 47, 94, 0.25);
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    opacity: 0.9;
+  }
+
+  h2 {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: white;
+  }
+
+  p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.dieuLeCard {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+
+  &:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+  }
+}
+
+.dieuLeCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dieuLeNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a2f5e 0%, #2d4a8a 100%);
+  color: white;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.dieuLeCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  svg {
+    color: var(--color-navy-blue, #1a2f5e);
+    flex-shrink: 0;
+  }
+
+  h5 {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-navy-blue, #1a2f5e);
+    margin: 0;
+  }
+}
+
+.dieuLeCardBody {
+  padding: 20px 24px 24px;
+
+  > p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: #475569;
+    margin: 0;
+
+    strong {
+      color: var(--color-navy-blue, #1a2f5e);
+      font-weight: 700;
+    }
+  }
+}
+
+/* Danh sách bullet */
+.dieuLeList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  li {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #475569;
+    padding-left: 24px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a2f5e 0%, #3b5fa0 100%);
+    }
+  }
+}
+
+/* Grid nguồn vốn */
+.nguonVangGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nguonVangItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #f1f5f9;
+  }
+
+  strong {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-navy-blue, #1a2f5e);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  p {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.4;
+  }
+}
+
+.nguonVangIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Grid đối tượng */
+.doiTuongGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.doiTuongItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-navy-blue, #1a2f5e);
+    background: white;
+  }
+}
+
+.doiTuongEmoji {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+/* Grid hình thức hỗ trợ */
+.hinhThucGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 968px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hinhThucItem {
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.25s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  h5 {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--color-navy-blue, #1a2f5e);
+    margin: 0;
+  }
+
+  p {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #64748b;
+    margin: 0;
+  }
+}
+
+.hinhThucBadge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.hinhThucKhongHoan {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+
+  .hinhThucBadge {
+    background: rgba(34, 197, 94, 0.15);
+  }
+}
+
+.hinhThucCoThuHoi {
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+
+  .hinhThucBadge {
+    background: rgba(234, 179, 8, 0.15);
+  }
+}
+
+.hinhThucChoVay {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+
+  .hinhThucBadge {
+    background: rgba(59, 130, 246, 0.15);
+  }
+}

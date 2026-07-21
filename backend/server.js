@@ -27,6 +27,8 @@ import newsRoutes from "./routes/news/newsRoutes.js";
 import disbursementRoundRoutes from "./routes/funds/disbursementRoundRoutes.js";
 import nghiemThuRoutes from "./routes/applications/nghiemThuRoutes.js";
 import chucVuRoutes from "./routes/system/chucVuRoutes.js";
+import congNoRoutes from "./routes/finance/congNoRoutes.js";
+import lichTraNoRoutes from "./routes/finance/lichTraNoRoutes.js";
 import { auditLogMiddleware } from "./middleware/auditLogMiddleware.js";
 
 dotenv.config();
@@ -82,6 +84,8 @@ app.use("/api/nguoidung", nguoiDungRouter);
 app.use("/api/nhat-ky", nhatKyRouter);
 app.use("/api/system/settings", settingsRouter);
 app.use("/api/guest", guestRoutes);
+app.use("/api/cong-no", congNoRoutes);
+app.use("/api/lich-tra-no", lichTraNoRoutes);
 
 app.get("/", (req, res) => {
     res.send("API đang chạy...");

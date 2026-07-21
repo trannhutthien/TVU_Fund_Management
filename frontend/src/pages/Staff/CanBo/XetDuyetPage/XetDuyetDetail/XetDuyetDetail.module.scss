@@ -294,6 +294,263 @@
   margin-top: 3px;
 }
 
+// ── Hint gợi ý mức thu hồi ──────────────
+.thuHoiHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.thuHoiHintOk {
+  background: rgba(22, 163, 74, 0.06);
+  border: 1px solid rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.thuHoiHintDanger {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+.thuHoiHintIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.thuHoiHintText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.4;
+
+  strong {
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+
+.thuHoiHintSub {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+// ── Auto-gen số QĐ row ──────────────────
+.genRow {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.genInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.genBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--color-primary, #3b6ff5);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    background: var(--color-primary, #3b6ff5);
+    color: #fff;
+    border-color: var(--color-primary, #3b6ff5);
+  }
+}
+
+// ── Cho vay section (Admin duyệt cấp 2) ──────
+.loanSection {
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.loanHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.loanTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.loanRequired {
+  font-size: 11px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.loanInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59, 111, 245, 0.06);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 14px;
+}
+
+.loanField {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.loanLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.loanInput {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:focus {
+    border-color: var(--color-primary, #3b6ff5);
+  }
+}
+
+.loanInputError {
+  border-color: #ef4444;
+}
+
+.loanError {
+  display: block;
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 3px;
+}
+
+// ── Contract info section (hiển thị data đã lưu) ──────
+.contractSection {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.contractHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.contractIcon {
+  color: var(--color-primary, #3b6ff5);
+}
+
+.contractTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+}
+
+.contractBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.contractBadgeRecovery {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.contractBadgeLoan {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.contractGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contractItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.contractLabel {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.contractValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.contractLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary, #3b6ff5);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 // ── Responsive ──────────────────────────────
 @media (max-width: 1024px) {
   .layout {

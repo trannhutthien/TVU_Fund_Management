@@ -138,7 +138,7 @@ const createMainApplicationRecords = async (connection, app, nguoiDungId) => {
     `INSERT INTO yeucauhotro (
       nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, laidetac, tongkinhphidudan
     ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?, ?)`,
-    [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', app.loai_hotro === 'Cho vay' || app.laDeTai === 1 ? 1 : 0, app.laDeTai || 0, app.tong_kinh_phi_du_an || null]
+    [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', (app.loai_hotro === 'Cho vay' || app.loai_hotro === 'Tai tro co thu hoi' || app.laDeTai === 1) ? 1 : 0, app.laDeTai || 0, app.tong_kinh_phi_du_an || null]
   );
   const yeucauhotroId = appInsert.insertId;
 
@@ -476,9 +476,9 @@ const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword, loa
 
     const [appInsert] = await connection.query(
       `INSERT INTO yeucauhotro (
-        nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, laidetac
-      ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?)`,
-      [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', app.loai_hotro === 'Cho vay' || app.laDeTai === 1 ? 1 : 0, app.laDeTai || 0]
+        nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, laidetac, tongkinhphidudan
+      ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?, ?)`,
+      [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', (app.loai_hotro === 'Cho vay' || app.loai_hotro === 'Tai tro co thu hoi' || app.laDeTai === 1) ? 1 : 0, app.laDeTai || 0, app.tong_kinh_phi_du_an || null]
     );
     const yeucauhotroId = appInsert.insertId;
 

@@ -14,7 +14,6 @@ const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) =
   const [form, setForm] = useState({
     chucDanh: '',
     nhom: defaultNhom || 'Hoi dong quy',
-    hoTen: '',
     moTa: '',
     ngayBatDauNhiemKy: '',
     ngayKetThucNhiemKy: '',
@@ -28,7 +27,6 @@ const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) =
       setForm({
         chucDanh: editingItem.chucDanh || '',
         nhom: editingItem.nhom || 'Hoi dong quy',
-        hoTen: editingItem.hoTen || '',
         moTa: editingItem.moTa || '',
         ngayBatDauNhiemKy: editingItem.ngayBatDauNhiemKy ? editingItem.ngayBatDauNhiemKy.split('T')[0] : '',
         ngayKetThucNhiemKy: editingItem.ngayKetThucNhiemKy ? editingItem.ngayKetThucNhiemKy.split('T')[0] : '',
@@ -38,7 +36,6 @@ const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) =
       setForm({
         chucDanh: '',
         nhom: defaultNhom || 'Hoi dong quy',
-        hoTen: '',
         moTa: '',
         ngayBatDauNhiemKy: '',
         ngayKetThucNhiemKy: '',
@@ -66,7 +63,6 @@ const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) =
       const data = {
         chucDanh: form.chucDanh.trim(),
         nhom: form.nhom,
-        hoTen: form.hoTen.trim() || null,
         moTa: form.moTa.trim() || null,
         ngayBatDauNhiemKy: form.ngayBatDauNhiemKy || null,
         ngayKetThucNhiemKy: form.ngayKetThucNhiemKy || null,
@@ -119,17 +115,6 @@ const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) =
               value={form.chucDanh}
               onChange={handleChange}
               placeholder="VD: Giám đốc Quỹ, Ủy viên..."
-            />
-          </div>
-
-          <div className={styles.field}>
-            <label>Họ tên</label>
-            <input
-              type="text"
-              name="hoTen"
-              value={form.hoTen}
-              onChange={handleChange}
-              placeholder="Nhập thủ công nếu không liên kết tài khoản"
             />
           </div>
 

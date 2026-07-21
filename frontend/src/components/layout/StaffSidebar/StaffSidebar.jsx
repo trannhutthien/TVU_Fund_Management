@@ -92,6 +92,13 @@ const NAV_CONFIG = [
       { label: 'Thống kê & Báo cáo', path: '/admin/bao-cao', icon: HiOutlineChartPie, roles: [1] },
     ]
   },
+  {
+    group: 'GIÁM SÁT',
+    roles: [1],
+    items: [
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [1] },
+    ]
+  },
 
   // ─── KẾ TOÁN (role_id = 2) ─────────────────────────
   {
@@ -117,6 +124,13 @@ const NAV_CONFIG = [
     items: [
       { label: 'Thống kê thu chi', path: '/ke-toan/bao-cao', icon: HiOutlineChartPie, roles: [2] },
       { label: 'Đối soát chứng từ', path: '/ke-toan/chung-tu', icon: HiOutlineDocumentText, roles: [2] },
+    ]
+  },
+  {
+    group: 'GIÁM SÁT',
+    roles: [2],
+    items: [
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [2] },
     ]
   },
 
@@ -162,6 +176,13 @@ const NAV_CONFIG = [
       { label: 'Thống kê & Báo cáo', path: '/can-bo/bao-cao', icon: HiOutlineChartPie, roles: [3] },
     ]
   },
+  {
+    group: 'GIÁM SÁT',
+    roles: [3],
+    items: [
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [3] },
+    ]
+  },
 
   // ─── BAN KIỂM SOÁT (role_id = 5) ─────────────────
   {
@@ -186,6 +207,13 @@ const NAV_CONFIG = [
     roles: [5],
     items: [
       { label: 'Thống kê & Báo cáo', path: '/kiem-soat/bao-cao', icon: HiOutlineChartPie, roles: [5] },
+    ]
+  },
+  {
+    group: 'GIÁM SÁT',
+    roles: [5],
+    items: [
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [5] },
     ]
   },
 ];

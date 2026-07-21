@@ -74,9 +74,15 @@ export const applicationService = {
     return response.data
   },
 
-  // Gọi trợ lý AI gợi ý và tối ưu nội dung
+  // Gọi trợ lý AI gợi ý và tối ưu nội dung (cần đăng nhập)
   getAiSuggestion: async (data) => {
-    const response = await api.post(API_ENDPOINTS.AI_SUGGEST, data, { timeout: 30000 })
+    const response = await api.post(API_ENDPOINTS.AI_SUGGEST, data, { timeout: 60000 })
+    return response.data
+  },
+
+  // Gọi trợ lý AI cho khách vãng lai (KHÔNG CẦN TOKEN, rate limited)
+  getPublicAiSuggestion: async (data) => {
+    const response = await api.post(API_ENDPOINTS.PUBLIC_AI_SUGGEST, data, { timeout: 60000 })
     return response.data
   },
 }

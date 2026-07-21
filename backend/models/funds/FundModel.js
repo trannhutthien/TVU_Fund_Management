@@ -152,7 +152,7 @@ const createFund = async (fundData) => {
             dot.tenDot || `Đợt ${dot.thutu}`,
             dot.mota || null,
             parseFloat(dot.sotiendukien) || 0,
-            dot.ngaydukien || null
+            dot.ngaydukien ? String(dot.ngaydukien).slice(0, 10) : null
           ]
         );
       }
@@ -200,6 +200,7 @@ const getFundById = async (quyId) => {
       lq.loaiquy_id,
       lq.maloai AS loai_quy,
       lq.tenloai AS ten_loai_quy,
+      lq.nhom AS nhom_loai_quy,
       q.mota AS mo_ta,
       q.hinhanh AS hinh_anh,
       q.sotienmuctieu AS so_tien_muc_tieu,
@@ -301,6 +302,7 @@ const getAllFunds = async () => {
       lq.loaiquy_id,
       lq.maloai AS loai_quy,
       lq.tenloai AS ten_loai_quy,
+      lq.nhom AS nhom_loai_quy,
       q.mota AS mo_ta,
       q.hinhanh AS hinh_anh,
       q.sotienmuctieu AS so_tien_muc_tieu,
@@ -329,7 +331,7 @@ const getAllFunds = async () => {
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
      LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
      LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
-     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
+     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, lq.nhom, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
      ORDER BY q.ngaytao DESC`
   );
   return rows;
@@ -345,6 +347,7 @@ const getPublicFunds = async () => {
         lq.loaiquy_id,
         lq.maloai AS loai_quy,
         lq.tenloai AS ten_loai_quy,
+        lq.nhom AS nhom_loai_quy,
         q.mota AS mo_ta,
         q.hinhanh AS hinh_anh,
         q.sotienmuctieu AS so_tien_muc_tieu,
@@ -386,7 +389,7 @@ const getPublicFunds = async () => {
        LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
        LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
        WHERE q.trangthai IN ('Dang hoat dong', 'Tam dung')
-       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
+       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, lq.nhom, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
        ORDER BY q.ngaytao DESC`
     );
     return rows;

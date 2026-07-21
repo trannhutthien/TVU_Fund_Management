@@ -21,7 +21,7 @@
 // ============================================
 .searchRow {
   display: flex;
-  gap: $space-3; // 12px
+  gap: $space-3;
   width: 100%;
   align-items: flex-start;
 
@@ -33,15 +33,14 @@
 
 .searchWrapper {
   flex: 1;
-  min-width: 0; // Allow flex item to shrink below content size
+  min-width: 0;
 
-  // Override Input component styles for this specific use case
   :global(.input-container) {
     margin-bottom: 0;
   }
 
   :global(.input-field) {
-    border-radius: $radius-md; // 8px
+    border-radius: $radius-md;
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.3);
     padding: $space-3 $space-4 $space-3 $space-10;
@@ -73,63 +72,49 @@
 }
 
 .sortDropdown {
-  // Custom styles for dropdown if needed
   :global(.dropdown) {
     width: 100%;
   }
 }
 
 // ============================================
-// Bộ lọc danh mục
+// 3 Dropdown lọc theo nhóm (nhom)
 // ============================================
-.filterRow {
+.nhomRow {
   display: flex;
-  flex-wrap: wrap;
-  gap: $space-3; // 12px
+  gap: 12px;
   justify-content: center;
   width: 100%;
 
   @media (max-width: 640px) {
-    gap: $space-2;
+    flex-direction: column;
+    gap: 8px;
   }
 }
 
-.filterButton {
-  border-radius: $radius-full; // 9999px - pill shape
-  padding: $space-3 $space-6;
-  font-size: $text-base;
-  font-weight: $font-medium;
-  transition: $transition-fast;
-  white-space: nowrap;
+.nhomDropdownWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 
   @media (max-width: 640px) {
-    padding: $space-2 $space-4;
-    font-size: $text-sm;
+    flex-direction: row;
   }
+}
 
-  // Active state
-  &.active {
-    background: var(--color-primary, $color-navy-blue);
-    color: $text-on-primary;
-    border-color: var(--color-primary, $color-navy-blue);
+.nhomIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
 
-    &:hover {
-      background: var(--color-primary-dark, $color-primary-dark);
-      border-color: var(--color-primary-dark, $color-primary-dark);
-    }
-  }
+.nhomDropdown {
+  flex: 1;
+  min-width: 0;
 
-  // Inactive state
-  &.inactive {
-    background: rgba(255, 255, 255, 0.85);
-    color: $text-secondary;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-
-    &:hover {
-      border-color: var(--color-primary, $color-navy-blue);
-      color: var(--color-primary, $color-navy-blue);
-      background: rgba(255, 255, 255, 0.95);
-    }
+  :global(.dropdown) {
+    width: 100%;
   }
 }
 

@@ -1,0 +1,230 @@
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
+}
+
+.cardExpanded {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+// ── Header ──
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #f8fafc;
+  }
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.fundIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1a2f5e 0%, #3b6ff5 100%);
+  color: #fff;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fundName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a2f5e;
+}
+
+.loaiBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.overdueBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.headerSub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #94a3b8;
+  flex-wrap: wrap;
+}
+
+.dot {
+  color: #cbd5e1;
+}
+
+.conLaiText {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.progressWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressText {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3b6ff5;
+  min-width: 36px;
+  text-align: right;
+}
+
+.progressTrack {
+  width: 80px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b6ff5 0%, #10b981 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.expandIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.header:hover .expandIcon {
+  background: #e2e8f0;
+  color: #3b6ff5;
+}
+
+// ── Body ──
+.body {
+  padding: 0 20px 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+// ── Contract info ──
+.contractInfo {
+  padding: 16px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a2f5e;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fieldValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.status_Dang_nhiem,
+.status_Dang_thuc_hien {
+  color: #3b6ff5;
+}
+
+.status_Da_hoan_tat,
+.status_Da_tat_toan {
+  color: #047857;
+}
+
+.status_Qua_han {
+  color: #dc2626;
+}
+
+.conLaiRed {
+  color: #dc2626;
+}

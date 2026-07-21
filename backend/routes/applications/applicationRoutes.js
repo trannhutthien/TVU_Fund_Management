@@ -12,13 +12,17 @@ import {
 import { getAiSuggestion } from "../../controllers/applications/aiController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
+import { rateLimiter } from "../../middleware/rateLimiter.js";
 
 const router = express.Router();
 
 // ─── AI ASSISTANT ROUTES
-// POST /api/applications/ai-suggest — Trợ lý AI gợi ý/tối ưu viết đơn
-// Middleware: protect - Yêu cầu đăng nhập
+// POST /api/applications/ai-suggest — Trợ lý AI gợi ý/tối ưu viết đơn (cần đăng nhập)
 router.post("/ai-suggest", protect, getAiSuggestion);
+
+// POST /api/applications/public/ai-suggest — AI gợi ý cho khách vãng lai (KHÔNG CẦN TOKEN)
+// Rate limit: 20 requests/hour/IP
+router.post("/public/ai-suggest", rateLimiter({ windowMs: 60 * 60 * 1000, max: 20, message: "Bạn đã gọi AI quá nhiều lần" }), getAiSuggestion);
 
 // ─── APPLICATION ROUTES (ĐƠN XIN HỖ TRỢ) 
 // POST /api/applications — Sinh viên nộp đơn xin hỗ trợ

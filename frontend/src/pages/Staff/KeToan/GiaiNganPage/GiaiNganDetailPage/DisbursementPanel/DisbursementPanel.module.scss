@@ -1,0 +1,422 @@
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+// ── Banner ──
+.banner {
+  position: relative;
+  padding: 16px 18px;
+  overflow: hidden;
+}
+
+.bannerActive {
+  background: linear-gradient(135deg, #1a2f5e 0%, #2d4a8c 50%, #3b6ff5 100%);
+}
+
+.bannerDone {
+  background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%);
+}
+
+.bannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.bannerContent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bannerIcon {
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+.bannerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bannerTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.bannerSub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// ── Highlight amount ──
+.highlightAmount {
+  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+  border: 1px solid rgba(59, 111, 245, 0.12);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.highlightLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.highlightValue {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-primary, #3b6ff5);
+  font-family: 'Roboto Mono', monospace;
+}
+
+// ── Fund grid ──
+.fundGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.fundItem {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fundItemWarn {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
+.fundLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.fundValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.textRed {
+  color: #dc2626 !important;
+}
+
+// ── Check banner ──
+.checkBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.checkOk {
+  background: rgba(22, 163, 74, 0.08);
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.checkFail {
+  background: rgba(220, 38, 38, 0.06);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+// ── Result box ──
+.resultBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resultRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.resultLabel {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.resultValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badgeGreen {
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+}
+
+.badgeRed {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+}
+
+.badgeBlue {
+  background: rgba(59, 111, 245, 0.08);
+  color: #1e40af;
+}
+
+.rejectReasonDisplay {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.06);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #fca5a5;
+  line-height: 1.5;
+}
+
+// ── Form fields ──
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.required {
+  color: #dc2626;
+}
+
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 16px;
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: #fafbfc;
+
+  &:hover {
+    border-color: var(--color-primary, #3b6ff5);
+    background: rgba(59, 111, 245, 0.03);
+  }
+}
+
+.uploadIcon {
+  width: 24px;
+  height: 24px;
+  color: #94a3b8;
+}
+
+.uploadText {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.filePreview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.fileIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary, #3b6ff5);
+  flex-shrink: 0;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  font-size: 11px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.fileRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(220, 38, 38, 0.16);
+  }
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #3b6ff5);
+    box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.1);
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+.charCount {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: right;
+}
+
+// ── Actions ──
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.rejectBtn {
+  border-color: #fca5a5 !important;
+  color: #dc2626 !important;
+
+  &:hover:not(:disabled) {
+    background: rgba(220, 38, 38, 0.06) !important;
+  }
+}
+
+.rejectSubmitBtn {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+
+  &:hover:not(:disabled) {
+    background: #b91c1c !important;
+  }
+}
+
+// ── Reject form ──
+.rejectForm {
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rejectHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.rejectIcon {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 640px) {
+  .actions {
+    grid-template-columns: 1fr;
+  }
+
+  .fundGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .highlightValue {
+    font-size: 20px;
+  }
+}

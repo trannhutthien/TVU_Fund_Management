@@ -9,8 +9,23 @@ import useAuthStore from '@stores/authStore';
 import { authService } from '@services/authService';
 import api from '@services/api';
 import { DEFAULT_PUBLIC_SETTINGS, systemSettingsService } from '@services/systemSettingsService';
-import { HiChevronDown, HiChevronRight } from 'react-icons/hi2';
+import { HiChevronDown, HiChevronRight, HiMagnifyingGlass, HiXMark } from 'react-icons/hi2';
 import styles from './PublicHeader.module.scss';
+
+const SEARCHABLE_ITEMS = [
+  { label: 'Trang chủ', path: '/' },
+  { label: 'Tin tức & Sự kiện', path: '/news' },
+  { label: 'Hướng dẫn & Quy định', path: '/guidelines' },
+  { label: 'Cựu sinh viên', path: '/alumni' },
+  { label: 'Sinh viên nói gì', path: '/testimonials' },
+  { label: 'Danh mục quỹ', path: '/funds' },
+  { label: 'Lịch sử giao dịch', path: '/lich-su-giao-dich' },
+  { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
+  { label: 'Tra cứu đơn', path: '/track' },
+  { label: 'Tạo đơn đăng ký', path: '/apply' },
+  { label: 'Về Quỹ phát triển', path: '/ve-quy-phat-trien' },
+  { label: 'Hồ sơ cá nhân', path: '/profile' },
+];
 
 /**
  * PublicHeader Component
@@ -31,7 +46,52 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
   const navRef = useRef(null);
+  const searchRef = useRef(null);
   const isStaffUser = isAuthenticated && [1, 2, 3].includes(Number(user?.vaiTro));
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    if (value.trim().length === 0) {
+      setSearchResults([]);
+      setShowSearch(false);
+      return;
+    }
+    const q = value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const results = SEARCHABLE_ITEMS.filter((item) => {
+      const normalized = item.label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return normalized.includes(q);
+    });
+    setSearchResults(results);
+    setShowSearch(results.length > 0);
+  };
+
+  const handleSearchSelect = (path) => {
+    setShowSearch(false);
+    setSearchQuery('');
+    navigate(path);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setShowSearch(false);
+    } else if (e.key === 'Enter' && searchResults.length > 0) {
+      handleSearchSelect(searchResults[0].path);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSearch(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -141,13 +201,22 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
         { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
       ],
     },
-    { label: 'TRA CỨU', path: '/track' },
+    {
+      label: 'TÀI KHOẢN',
+      isDropdown: true,
+      children: [
+        { label: 'Tra cứu đơn', path: '/track' },
+        ...(isAuthenticated
+          ? [
+              { label: 'Cá nhân', path: '/profile' },
+              ...(Number(user?.vaiTro) === 4
+                ? [{ label: 'Nghĩa vụ hoàn trả', path: '/nghia-vu-hoan-tra' }]
+                : []),
+            ]
+          : []),
+      ],
+    },
     { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
-    ...(isAuthenticated
-      ? [
-          { label: 'CÁ NHÂN', path: '/profile' },
-        ]
-      : []),
   ];
 
   const [permissions, setPermissions] = useState({});
@@ -234,17 +303,6 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     }
   }).filter(Boolean);
 
-  const handleRegisterClick = () => {
-    // Nếu có onRegisterClick callback (từ LandingPage), dùng nó để mở modal
-    if (onRegisterClick) {
-      onRegisterClick();
-    } else {
-      // Nếu không, navigate to /register page
-      navigate('/register');
-    }
-    closeMobileMenu();
-  };
-
   const handleLoginClick = () => {
     // Nếu có onLoginClick callback (từ LandingPage), dùng nó để mở modal
     if (onLoginClick) {
@@ -267,129 +325,98 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   return (
     <>
       <header className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
-        <div className={styles.container}>
-          {/* Logo Section (Left) */}
-          <div className={styles.logoSection}>
-            <div onClick={handleLogoClick} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Logo 
-                size="sm" 
-                variant="icon-only" 
-                theme="dark"
-              />
-              {checkPageAccess('landing_page') && (
-                <span className={styles.logoText}>{publicSettings.ten_he_thong || 'TVU Fund Management'}</span>
+        <div className={styles.gridContainer}>
+          {/* COL 1 — Logo + System Name (spans 2 rows) */}
+          <div className={styles.logoSection} onClick={handleLogoClick}>
+            <Logo size="md" variant="icon-only" theme="dark" />
+            {checkPageAccess('landing_page') && (
+              <span className={styles.logoText}>{publicSettings.ten_he_thong || 'TVU Funds'}</span>
+            )}
+          </div>
+
+          {/* COL 2 ROW 1 — Search bar */}
+          <div className={styles.searchRow}>
+            <div className={styles.searchSection} ref={searchRef}>
+              <div className={styles.searchBox}>
+                <HiMagnifyingGlass className={styles.searchIcon} />
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="Tìm kiếm..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onFocus={() => searchQuery && searchResults.length > 0 && setShowSearch(true)}
+                  onKeyDown={handleSearchKeyDown}
+                />
+                {searchQuery && (
+                  <button type="button" className={styles.searchClear} onClick={() => { setSearchQuery(''); setShowSearch(false); }}>
+                    <HiXMark />
+                  </button>
+                )}
+              </div>
+              {showSearch && searchResults.length > 0 && (
+                <div className={styles.searchDropdown}>
+                  {searchResults.map((item) => (
+                    <button key={item.path} type="button" className={styles.searchResultItem} onClick={() => handleSearchSelect(item.path)}>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
 
-          {/* Navigation Menu (Center) - Desktop only */}
-          <nav className={styles.nav} ref={navRef}>
-            {filteredNavItems.map((item) => {
-              if (item.isDropdown) {
-                const isOpen = openDropdown === item.label;
-
-                return (
-                  <div
-                    className={`${styles.dropdown} ${isOpen ? styles.dropdownOpen : ''}`}
-                    key={item.label}
-                  >
-                    <button
-                      type="button"
-                      className={styles.dropdownToggle}
-                      onClick={() => toggleDropdown(item.label)}
-                      aria-expanded={isOpen}
-                      aria-haspopup="menu"
-                    >
-                      {item.label} <HiChevronDown className={styles.arrowIcon} />
-                    </button>
-                    <div className={styles.dropdownMenu}>
-                      {item.children.map((child) => (
-                        <NavLink
-                          key={child.path}
-                          to={child.path}
-                          className={({ isActive }) =>
-                            `${styles.dropdownItem} ${isActive ? styles.dropdownItemActive : ''}`
-                          }
-                          onClick={() => setOpenDropdown(null)}
-                        >
-                          {child.label}
-                        </NavLink>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    item.highlight
-                      ? `${styles.navLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
-                      : `${styles.navLink} ${isActive ? styles.active : ''}`
+          {/* COL 2 ROW 2 — Nav menu + Actions */}
+          <div className={styles.navRow}>
+            <div className={styles.navInner}>
+              <nav className={styles.nav} ref={navRef}>
+                {filteredNavItems.map((item) => {
+                  if (item.isDropdown) {
+                    const isOpen = openDropdown === item.label;
+                    return (
+                      <div className={`${styles.dropdown} ${isOpen ? styles.dropdownOpen : ''}`} key={item.label}>
+                        <button type="button" className={styles.dropdownToggle} onClick={() => toggleDropdown(item.label)} aria-expanded={isOpen} aria-haspopup="menu">
+                          {item.label} <HiChevronDown className={styles.arrowIcon} />
+                        </button>
+                        <div className={styles.dropdownMenu}>
+                          {item.children.map((child) => (
+                            <NavLink key={child.path} to={child.path} className={({ isActive }) => `${styles.dropdownItem} ${isActive ? styles.dropdownItemActive : ''}`} onClick={() => setOpenDropdown(null)}>
+                              {child.label}
+                            </NavLink>
+                          ))}
+                        </div>
+                      </div>
+                    );
                   }
-                >
-                  {item.highlight && <span className={styles.highlightIcon}>✦</span>}
-                  {item.label}
-                </NavLink>
-              );
-            })}
-          </nav>
+                  return (
+                    <NavLink key={item.path} to={item.path} className={({ isActive }) => item.highlight ? `${styles.navLinkHighlight} ${isActive ? styles.activeHighlight : ''}` : `${styles.navLink} ${isActive ? styles.active : ''}`}>
+                      {item.highlight && <span className={styles.highlightIcon}>✦</span>}
+                      {item.label}
+                    </NavLink>
+                  );
+                })}
+              </nav>
 
-          {/* Action Buttons (Right) */}
-          <div className={styles.actions}>
-            {isStaffUser && (
-              <button
-                type="button"
-                className={styles.sidebarToggle}
-                onClick={toggleStaffSidebar}
-                aria-label="Mở sidebar quản trị"
-                title="Mở sidebar quản trị"
-              >
-                <HiChevronRight />
-              </button>
-            )}
+              <div className={styles.actions}>
+                {isStaffUser && (
+                  <button type="button" className={styles.sidebarToggle} onClick={toggleStaffSidebar} aria-label="Mở sidebar quản trị" title="Mở sidebar quản trị">
+                    <HiChevronRight />
+                  </button>
+                )}
 
-            {isAuthenticated ? (
-              <>
-                <HeaderActions
-                  user={user}
-                  onLogout={handleLogout}
-                  size="sm"
-                  showNotifications={true}
-                />
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={handleRegisterClick}
-                  className={styles.btnRegister}
-                >
-                  Đăng ký
-                </Button>
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={handleLoginClick}
-                  className={styles.btnLogin}
-                >
-                  Đăng nhập
-                </Button>
-              </>
-            )}
+                {isAuthenticated ? (
+                  <HeaderActions user={user} onLogout={handleLogout} size="sm" showNotifications={true} />
+                ) : (
+                  <Button variant="primary" size="md" onClick={handleLoginClick} className={styles.btnLogin}>Đăng nhập</Button>
+                )}
 
-            {/* Hamburger Menu (Mobile only) */}
-            <button
-              className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerOpen : ''}`}
-              onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
-            >
-              <span className={styles.hamburgerLine}></span>
-              <span className={styles.hamburgerLine}></span>
-              <span className={styles.hamburgerLine}></span>
-            </button>
+                <button className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerOpen : ''}`} onClick={toggleMobileMenu} aria-label="Toggle menu">
+                  <span className={styles.hamburgerLine}></span>
+                  <span className={styles.hamburgerLine}></span>
+                  <span className={styles.hamburgerLine}></span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -397,7 +424,32 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ''}`}>
-          {/* Navigation Links */}
+          <div className={styles.mobileSearchBox}>
+            <HiMagnifyingGlass className={styles.mobileSearchIcon} />
+            <input
+              type="text"
+              className={styles.mobileSearchInput}
+              placeholder="Tìm kiếm..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchResults.length > 0) {
+                  handleSearchSelect(searchResults[0].path);
+                  closeMobileMenu();
+                }
+              }}
+            />
+          </div>
+          {showSearch && searchResults.length > 0 && (
+            <div className={styles.mobileSearchResults}>
+              {searchResults.map((item) => (
+                <button key={item.path} type="button" className={styles.mobileSearchResultItem} onClick={() => { handleSearchSelect(item.path); closeMobileMenu(); }}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {filteredNavItems.map((item) => {
             if (item.isDropdown) {
               return (
@@ -406,14 +458,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
                     {item.label}
                   </span>
                   {item.children.map((child) => (
-                    <NavLink
-                      key={child.path}
-                      to={child.path}
-                      className={({ isActive }) =>
-                        `${styles.mobileNavLink} ${styles.mobileSubNavLink} ${isActive ? styles.active : ''}`
-                      }
-                      onClick={closeMobileMenu}
-                    >
+                    <NavLink key={child.path} to={child.path} className={({ isActive }) => `${styles.mobileNavLink} ${styles.mobileSubNavLink} ${isActive ? styles.active : ''}`} onClick={closeMobileMenu}>
                       <span className={styles.subLinkPrefix}>↳</span> {child.label}
                     </NavLink>
                   ))}
@@ -421,55 +466,20 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
               );
             }
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  item.highlight
-                    ? `${styles.mobileNavLinkHighlight} ${isActive ? styles.activeHighlight : ''}`
-                    : `${styles.mobileNavLink} ${isActive ? styles.active : ''}`
-                }
-                onClick={closeMobileMenu}
-              >
+              <NavLink key={item.path} to={item.path} className={({ isActive }) => item.highlight ? `${styles.mobileNavLinkHighlight} ${isActive ? styles.activeHighlight : ''}` : `${styles.mobileNavLink} ${isActive ? styles.active : ''}`} onClick={closeMobileMenu}>
                 {item.highlight && <span className={styles.highlightIcon}>✦</span>}
                 {item.label}
               </NavLink>
             );
           })}
 
-          {/* Divider */}
           <div className={styles.mobileDivider}></div>
 
-          {/* Mobile Action Buttons */}
           <div className={styles.mobileActions}>
             {isAuthenticated ? (
-              <>
-                <HeaderActions
-                  user={user}
-                  onLogout={handleLogout}
-                  size="sm"
-                  showNotifications={true}
-                />
-              </>
+              <HeaderActions user={user} onLogout={handleLogout} size="sm" showNotifications={true} />
             ) : (
-              <>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={handleRegisterClick}
-                  className={styles.btnRegister}
-                >
-                  Đăng ký
-                </Button>
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={handleLoginClick}
-                  className={styles.btnLogin}
-                >
-                  Đăng nhập
-                </Button>
-              </>
+              <Button variant="primary" size="md" onClick={handleLoginClick} className={styles.btnLogin}>Đăng nhập</Button>
             )}
           </div>
         </div>

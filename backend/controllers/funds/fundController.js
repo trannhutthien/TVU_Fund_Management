@@ -134,6 +134,12 @@ export const createFund = async (req, res) => {
     } = req.body;
     const normalizedFundData = normalizeFundOperationData(req.body);
 
+    // Convert ISO datetime → YYYY-MM-DD for DATE columns
+    const toDateOnly = (val) => {
+      if (!val) return null;
+      return String(val).slice(0, 10);
+    };
+
     // 1. Validate dữ liệu đầu vào
     if (!tenQuy || !loaiQuy) {
       return res.status(400).json({
@@ -232,14 +238,15 @@ export const createFund = async (req, res) => {
       soLuongChiTieu: normalizedFundData.soLuongChiTieu,
       hanNopDon: hanNopDon || null,
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
+      hanNopDon: toDateOnly(hanNopDon),
       soDu: normalizedFundData.soDu,
       trangThai: trangThai || 'Dang hoat dong',
       nguoiTao: nguoiTao || req.user?.id || null,
-      ngayBatDau: new Date().toISOString().split('T')[0], // Tự động set ngày hôm nay (YYYY-MM-DD)
+      ngayBatDau: new Date().toISOString().split('T')[0],
       loaiDieuHanh: normalizedFundData.loaiDieuHanh,
       quyChaId: normalizedFundData.quyChaId,
       soDotGiaiNgan: soDotGiaiNgan ? parseInt(soDotGiaiNgan) : 0,
-      dotGiaiNgan: dotGiaiNgan || [] // Chi tiết các đợt giải ngân
+      dotGiaiNgan: dotGiaiNgan || []
     };
 
     const result = await FundModel.createFund(fundData);
@@ -283,7 +290,7 @@ export const createFund = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Lỗi createFund:", error);
+    console.error("Lỗi createFund:", error?.message, error?.code, error?.sqlMessage);
     if (error.message === 'PARENT_FUND_NOT_FOUND') {
       return res.status(404).json({
         success: false,
@@ -316,7 +323,7 @@ export const createFund = async (req, res) => {
     }
     return res.status(500).json({
       success: false,
-      message: "Lỗi server, vui lòng thử lại sau",
+      message: error?.sqlMessage || error?.message || "Lỗi server, vui lòng thử lại sau",
     });
   }
 };
@@ -341,6 +348,7 @@ export const getFunds = async (req, res) => {
           loaiQuyId: fund.loaiquy_id,
           maLoai: fund.loai_quy,
           tenLoai: fund.ten_loai_quy || fund.loai_quy,
+          nhom: fund.nhom_loai_quy,
         },
         moTa: fund.mo_ta,
         hinhAnh: buildFundImageUrl(fund.hinh_anh), // Build full URL
@@ -394,6 +402,7 @@ export const getPublicFunds = async (req, res) => {
           loaiQuyId: fund.loaiquy_id,
           maLoai: fund.loai_quy,
           tenLoai: fund.ten_loai_quy || fund.loai_quy,
+          nhom: fund.nhom_loai_quy,
         },
         moTa: fund.mo_ta,
         hinhAnh: buildFundImageUrl(fund.hinh_anh), // Build full URL
@@ -542,6 +551,7 @@ export const getFundDetail = async (req, res) => {
           loaiQuyId: fund.loaiquy_id,
           maLoai: fund.loai_quy,
           tenLoai: fund.ten_loai_quy || fund.loai_quy,
+          nhom: fund.nhom_loai_quy,
         },
         moTa: fund.mo_ta,
         hinhAnh: buildFundImageUrl(fund.hinh_anh),
@@ -636,6 +646,12 @@ export const updateFund = async (req, res) => {
     }
     const normalizedFundData = normalizeFundOperationData(req.body, fund);
 
+    // Convert ISO datetime → YYYY-MM-DD for DATE columns
+    const toDateOnly = (val) => {
+      if (!val) return null;
+      return String(val).slice(0, 10);
+    };
+
     // 3. Validate tên và loại
     if (!tenQuy || !loaiQuy) {
       return res.status(400).json({
@@ -705,7 +721,7 @@ export const updateFund = async (req, res) => {
       soTienMucTieu: normalizedFundData.soTienMucTieu,
       soTienHoTroToiDa: normalizedFundData.soTienHoTroToiDa,
       soLuongChiTieu: normalizedFundData.soLuongChiTieu,
-      hanNopDon: hanNopDon || null,
+      hanNopDon: toDateOnly(hanNopDon),
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
       soDu: fund.so_du, // Luôn luôn giữ nguyên số dư hiện tại của quỹ khi cập nhật thông tin qua Form
       trangThai: trangThai || fund.trang_thai,

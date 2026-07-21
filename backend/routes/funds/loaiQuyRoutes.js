@@ -1,9 +1,12 @@
 import express from "express";
-import { getLoaiQuy, createLoaiQuy } from "../../controllers/funds/loaiQuyController.js";
+import { getLoaiQuy, getLoaiQuyGroups, createLoaiQuy } from "../../controllers/funds/loaiQuyController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
 
 const router = express.Router();
+
+// GET /api/loai-quy/groups — API công khai: lấy danh sách nhóm quỹ
+router.get("/groups", getLoaiQuyGroups);
 
 // GET /api/loai-quy — API công khai
 router.get("/", getLoaiQuy);

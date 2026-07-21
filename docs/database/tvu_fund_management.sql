@@ -32,7 +32,6 @@ USE `tvu_fund_management`;
 CREATE TABLE `chucvuquy` (
   `chucvu_id` int(11) NOT NULL,
   `nguoidung_id` int(11) DEFAULT NULL,
-  `hoten` varchar(100) DEFAULT NULL,
   `chucdanh` varchar(150) NOT NULL,
   `nhom` enum('Hoi dong quy','Ban dieu hanh','Ban kiem soat','Van phong thuong truc') NOT NULL,
   `ngaybatdaunhiemky` date DEFAULT NULL,

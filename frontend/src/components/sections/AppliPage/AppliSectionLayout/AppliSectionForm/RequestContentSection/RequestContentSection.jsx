@@ -28,7 +28,7 @@ const getQuality = (length) => {
   return { label: 'Tốt', percent: 100, color: '#10b981' };
 };
 
-const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextButton }) => {
+const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextButton, isGuest }) => {
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [touched, setTouched] = useState({ 
@@ -88,8 +88,13 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
 
   const handleLoaiHoTroChange = useCallback((value) => {
     handleChange('loai_hotro', value);
-    if (value !== LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) {
+    if (value === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) {
+      handleChange('la_de_tai', true);
+    } else {
       handleChange('tong_kinh_phi_du_an', null);
+      if (value === LOAI_HO_TRO.CHO_VAY) {
+        handleChange('la_de_tai', false);
+      }
     }
   }, [handleChange]);
 
@@ -276,10 +281,11 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
         />
 
         {/* ── CHECKBOX ĐỀ TÀI/DỰ ÁN ─────────────────────────────────────── */}
-        <label className={styles.checkboxRow}>
+        <label className={`${styles.checkboxRow} ${loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI ? styles.checkboxDisabled : ''}`}>
           <input
             type="checkbox"
-            checked={!!values?.la_de_tai}
+            checked={loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI ? true : !!values?.la_de_tai}
+            disabled={loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI}
             onChange={(e) => handleChange('la_de_tai', e.target.checked)}
             className={styles.checkboxInput}
           />
@@ -287,7 +293,9 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
             Đơn này là đề tài/dự án nghiên cứu
           </span>
           <span className={styles.checkboxHint}>
-            (Cần nghiệm thu sau giải ngân theo Điều 15 Điều lệ)
+            {loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI 
+              ? '(Bắt buộc nghiệm thu đối với tài trợ có thu hồi)' 
+              : '(Cần nghiệm thu sau giải ngân theo Điều 15 Điều lệ)'}
           </span>
         </label>
       </div>
@@ -422,6 +430,7 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
               tieuDe={tieu_de}
               onApplySuggestion={handleApplyAISuggestion}
               selectedFund={selectedFund}
+              isGuest={isGuest}
             />
           </div>
         )}
@@ -443,6 +452,7 @@ RequestContentSection.propTypes = {
   selectedFund: PropTypes.object,
   onOpenAI: PropTypes.func,
   nextButton: PropTypes.node,
+  isGuest: PropTypes.bool,
 };
 
 export default RequestContentSection;

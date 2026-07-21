@@ -5,8 +5,12 @@ import {
   HiOutlineXMark,
   HiOutlineClipboardDocumentCheck,
   HiOutlineExclamationTriangle,
+  HiOutlinePaperClip,
+  HiOutlineDocumentText,
+  HiOutlineTrash,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import { uploadService } from '@services/uploadService';
 import nghiemThuService from '@services/nghiemThuService';
 import styles from './NghiemThuFormModal.module.scss';
 
@@ -26,12 +30,41 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
   const [ketqua, setKetqua] = useState('');
   const [nhanXet, setNhanXet] = useState('');
   const [soQuyetDinh, setSoQuyetDinh] = useState('');
+  const [fileBienBan, setFileBienBan] = useState('');
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   const isNghiemThuCuoiCung = loaiKiemTra === 'Nghiem thu cuoi cung';
   const isKhongDat = ketqua === 'Khong dat';
-  const canSubmit = nhanXet.trim().length > 0 && (!isNghiemThuCuoiCung || ketqua);
+  const canSubmit = nhanXet.trim().length > 0 && (!isNghiemThuCuoiCung || ketqua) && !uploadingFile;
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Dung lượng tệp tối đa là 5MB');
+      return;
+    }
+
+    setUploadingFile(true);
+    try {
+      const res = await uploadService.uploadFile(file);
+      // Backend upload API trả về res.url hoặc res.data.url
+      const url = res?.url || res?.data?.url;
+      if (url) {
+        setFileBienBan(url);
+        toast.success('Tải tài liệu lên thành công');
+      } else {
+        toast.error('Không lấy được URL tài liệu sau tải lên');
+      }
+    } catch (err) {
+      toast.error('Lỗi khi tải tài liệu lên');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
 
   const handleRequestSubmit = () => {
     if (!canSubmit) return;
@@ -49,6 +82,7 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
           ketqua: isNghiemThuCuoiCung ? ketqua : 'Dat',
           nhanXet: nhanXet.trim(),
           soQuyetDinh: soQuyetDinh.trim() || undefined,
+          fileBienBan: fileBienBan || undefined,
         });
       }
 
@@ -86,7 +120,7 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>Loại kiểm tra</legend>
             <div className={styles.radioGroup}>
-              {LOAI_KIEMTRA_OPTIONS.map((opt) => (
+              {LOAI_KIEM_TRA_OPTIONS.map((opt) => (
                 <label
                   key={opt.value}
                   className={`${styles.radioCard} ${loaiKiemTra === opt.value ? styles.radioCardActive : ''}`}
@@ -165,6 +199,35 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
             />
           </fieldset>
 
+          {/* Tài liệu đính kèm / Biên bản nghiệm thu */}
+          <fieldset className={styles.fieldset}>
+            <legend className={styles.legend}>Biên bản nghiệm thu / Tài liệu đính kèm (tuỳ chọn)</legend>
+            <div className={styles.fileUploadRow}>
+              {fileBienBan ? (
+                <div className={styles.fileUploadedBadge}>
+                  <HiOutlineDocumentText size={16} />
+                  <a href={fileBienBan} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
+                    {fileBienBan.split('/').pop() || 'Xem tài liệu'}
+                  </a>
+                  <button type="button" className={styles.removeFileBtn} onClick={() => setFileBienBan('')}>
+                    <HiOutlineTrash size={14} />
+                  </button>
+                </div>
+              ) : (
+                <label className={styles.uploadFileBtn}>
+                  <HiOutlinePaperClip size={16} />
+                  <span>{uploadingFile ? 'Đang tải lên...' : 'Đính kèm tài liệu'}</span>
+                  <input
+                    type="file"
+                    className={styles.fileInputHidden}
+                    disabled={uploadingFile}
+                    onChange={handleFileUpload}
+                  />
+                </label>
+              )}
+            </div>
+          </fieldset>
+
           {/* Cảnh báo "Không đạt" */}
           {isNghiemThuCuoiCung && isKhongDat && confirming && (
             <div className={styles.warningBox}>
@@ -233,3 +296,4 @@ NghiemThuFormModal.propTypes = {
 };
 
 export default NghiemThuFormModal;
+

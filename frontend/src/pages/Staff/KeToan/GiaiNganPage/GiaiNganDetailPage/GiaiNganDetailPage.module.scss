@@ -1,0 +1,413 @@
+.page {
+  min-height: 100vh;
+  background: #f0f4ff;
+  padding: 24px;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// ── Breadcrumb ──
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.crumbLink {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-primary, #3b6ff5);
+  }
+}
+
+.crumbSep {
+  color: #cbd5e1;
+}
+
+// ── Header ──
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-primary, #3b6ff5);
+  line-height: 1.2;
+}
+
+// ── Status banners ──
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.bannerSuccess {
+  background: rgba(22, 163, 74, 0.08);
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.bannerWarning {
+  background: rgba(245, 158, 11, 0.08);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.bannerDanger {
+  background: rgba(239, 68, 68, 0.06);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.bannerInfo {
+  background: rgba(59, 111, 245, 0.08);
+  color: var(--color-primary, #3b6ff5);
+  border: 1px solid rgba(59, 111, 245, 0.2);
+}
+
+.bannerIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+}
+
+.bannerTitle {
+  font-weight: 600;
+}
+
+.bannerReason {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+// ── Loading ──
+.loadingBox {
+  background: #fff;
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+// ── Layout 2 cột ──
+.layout {
+  display: grid;
+  grid-template-columns: 55% 45%;
+  gap: 20px;
+  align-items: start;
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.rightCol {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+// ── Contract section ──
+.contractSection {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.contractBanner {
+  position: relative;
+  padding: 16px 18px;
+  overflow: hidden;
+}
+
+.contractBannerRecovery {
+  background: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #ea580c 100%);
+}
+
+.contractBannerLoan {
+  background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #dc2626 100%);
+}
+
+.contractBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.contractBannerContent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contractBannerIcon {
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+.contractBannerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contractBannerTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.contractBannerSub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.contractBody {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contractHighlight {
+  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+  border: 1px solid rgba(59, 111, 245, 0.12);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.contractHighlightLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.contractHighlightValue {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-primary, #3b6ff5);
+  font-family: 'Roboto Mono', monospace;
+}
+
+.contractGrid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.contractField {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+}
+
+.contractFieldIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.contractFieldLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-bottom: 1px;
+}
+
+.contractFieldValue {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.contractFieldValueLink {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary, #3b6ff5);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── Nghiem thu section ──
+.nghiemThuSection {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.nghiemThuHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.nghiemThuIcon {
+  color: var(--color-primary, #3b6ff5);
+}
+
+.nghiemThuTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  flex: 1;
+}
+
+.nghiemThuBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+}
+
+.nghiemThuBadgeFailed {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+}
+
+.nghiemThuBtn {
+  margin-top: 12px;
+  width: 100%;
+}
+
+// ── Modal preview ảnh ──
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 24px;
+  cursor: zoom-out;
+}
+
+.modalImage {
+  max-width: 80vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  cursor: default;
+}
+
+.modalClose {
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+// ── Responsive ──
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rightCol {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .contractGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .contractGrid3 {
+    grid-template-columns: 1fr;
+  }
+
+  .contractHighlightValue {
+    font-size: 18px;
+  }
+}

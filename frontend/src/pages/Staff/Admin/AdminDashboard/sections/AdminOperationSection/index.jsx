@@ -11,6 +11,18 @@ import styles from './AdminOperationSection.module.scss';
 // CÔNG DỤNG: Hiển thị tình trạng hồ sơ hỗ trợ + tình trạng quỹ
 // ═══════════════════════════════════════════════════════════════════════════════
 
+const FUND_GROUP_LABELS = {
+  'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
+  'Tai tro co thu hoi': 'Tài trợ có thu hồi',
+  'Cho vay': 'Cho vay',
+};
+
+const FUND_GROUP_COLORS = {
+  'Tai tro khong hoan lai': '#16a34a',
+  'Tai tro co thu hoi': '#f59e0b',
+  'Cho vay': '#3b82f6',
+};
+
 const AdminOperationSection = ({ operationData }) => {
   const navigate = useNavigate();
 
@@ -18,11 +30,13 @@ const AdminOperationSection = ({ operationData }) => {
 
   const {
     tongDon,
-    choDuyet, // Thêm field mới
+    choDuyet,
     choGiaiNgan,
     dangXuLy,
     daHoanThanh,
     tuChoi,
+    choNghiemThu,
+    banKiemSoat,
     tongQuy,
     quyHoatDong,
     funds = [],
@@ -31,6 +45,8 @@ const AdminOperationSection = ({ operationData }) => {
   // ─── CALCULATE PERCENTAGES ─────────────────────────────────────────────────
   const choDuyetPercent = tongDon > 0 ? (choDuyet / tongDon) * 100 : 0;
   const dangXuLyPercent = tongDon > 0 ? (dangXuLy / tongDon) * 100 : 0;
+  const choNghiemThuPercent = tongDon > 0 ? (choNghiemThu / tongDon) * 100 : 0;
+  const banKiemSoatPercent = tongDon > 0 ? (banKiemSoat / tongDon) * 100 : 0;
   const choGiaiNganPercent = tongDon > 0 ? (choGiaiNgan / tongDon) * 100 : 0;
   const daHoanThanhPercent = tongDon > 0 ? (daHoanThanh / tongDon) * 100 : 0;
   const tuChoiPercent = tongDon > 0 ? (tuChoi / tongDon) * 100 : 0;
@@ -42,13 +58,25 @@ const AdminOperationSection = ({ operationData }) => {
       label: 'Chờ xử lý',
       value: choDuyet,
       percent: choDuyetPercent,
-      color: '#94a3b8', // Màu xám
+      color: '#94a3b8',
     },
     {
       label: 'Đang xử lý',
       value: dangXuLy,
       percent: dangXuLyPercent,
       color: '#f97316',
+    },
+    {
+      label: 'Chờ nghiệm thu',
+      value: choNghiemThu,
+      percent: choNghiemThuPercent,
+      color: '#a855f7',
+    },
+    {
+      label: 'Ban Kiểm Soát',
+      value: banKiemSoat,
+      percent: banKiemSoatPercent,
+      color: '#14b8a6',
     },
     {
       label: 'Chờ giải ngân',
@@ -167,20 +195,11 @@ const AdminOperationSection = ({ operationData }) => {
             {funds.slice(0, 5).map((fund, index) => {
               const healthPercent = getFundHealthPercent(fund);
               const healthColor = getFundHealthColor(fund);
-              
-              // Icon mapping
-              const fundIcons = {
-                'Quỹ học bổng vược khó 2026': '🎓',
-                'Quỷ sinh viên xuất sắc': '🏆',
-                'quỷ từ thiện sinh viên khuyết tật': '❤️',
-              };
-              const fundIcon = fundIcons[fund.ten_quy] || '💰';
 
               return (
                 <div key={index} className={styles.fundItem}>
                   <div className={styles.fundRow1}>
                     <div className={styles.fundNameWithIcon}>
-                      <span className={styles.fundIcon}>{fundIcon}</span>
                       <span className={styles.fundName}>{fund.ten_quy}</span>
                     </div>
                     <span
@@ -246,11 +265,13 @@ const AdminOperationSection = ({ operationData }) => {
 AdminOperationSection.propTypes = {
   operationData: PropTypes.shape({
     tongDon: PropTypes.number,
-    choDuyet: PropTypes.number, // Thêm field mới
+    choDuyet: PropTypes.number,
     choGiaiNgan: PropTypes.number,
     dangXuLy: PropTypes.number,
     daHoanThanh: PropTypes.number,
     tuChoi: PropTypes.number,
+    choNghiemThu: PropTypes.number,
+    banKiemSoat: PropTypes.number,
     tongQuy: PropTypes.number,
     quyHoatDong: PropTypes.number,
     funds: PropTypes.array,

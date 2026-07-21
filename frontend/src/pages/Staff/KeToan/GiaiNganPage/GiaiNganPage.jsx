@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { HiOutlineClock, HiOutlineListBullet } from 'react-icons/hi2';
 import api from '@services/api';
 import { applicationService } from '@services/applicationService';
-import { uploadService } from '@services/uploadService';
 import GiaiNganFilterSection from './sections/GiaiNganFilterSection';
 import GiaiNganTableSection from './sections/GiaiNganTableSection';
-import GiaiNganDetailDrawer from './sections/GiaiNganDetailDrawer';
-import GiaiNganModal from './sections/GiaiNganModal';
 import styles from './GiaiNganPage.module.scss';
 
 const PAGE_SIZE = 10;
@@ -15,6 +13,7 @@ const PAGE_SIZE = 10;
 const INITIAL_RANGE = { from: '', to: '' };
 
 const GiaiNganPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('cho_giai_ngan');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
@@ -28,15 +27,6 @@ const GiaiNganPage = () => {
 
   const [quyOptions, setQuyOptions] = useState([]);
   const [counts, setCounts] = useState({ choXuLy: 0, daXuLyHomNay: 0 });
-
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [selectedDetail, setSelectedDetail] = useState(null);
-  const [bankAccount, setBankAccount] = useState(null);
-  const [pheDuyetList, setPheDuyetList] = useState([]);
-  const [detailLoading, setDetailLoading] = useState(false);
-
-  const [modalType, setModalType] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ─── Debounce search keyword ──────────────────────────────────────────────
   useEffect(() => {
@@ -156,56 +146,9 @@ const GiaiNganPage = () => {
     fetchCounts();
   }, [fetchCounts]);
 
-  // ─── Mở Drawer + fetch chi tiết đơn ───────────────────────────────────────
-  const handleOpenDetail = async (request) => {
-    setSelectedRequest(request);
-    setSelectedDetail(null);
-    setBankAccount(null);
-    setPheDuyetList([]);
-    setDetailLoading(true);
-
-    try {
-      const detailRes = await applicationService.getById(request.requestId);
-      const detail = detailRes?.data;
-      setSelectedDetail(detail);
-
-      // Lấy bank account của sinh viên
-      if (detail?.nguoiNop?.id) {
-        try {
-          const bankRes = await api.get(
-            `/bank-accounts/user/${detail.nguoiNop.id}`,
-          );
-          
-          const accounts =
-            bankRes.data?.data || bankRes.data?.bankAccounts || [];
-          
-          const def =
-            accounts.find((a) => a.la_mac_dinh || a.laMacDinh) ||
-            accounts[0] ||
-            null;
-          
-          setBankAccount(def);
-        } catch (err) {
-          console.error('Error fetching bank account:', err);
-          setBankAccount(null);
-        }
-      }
-
-      // Lấy timeline pheduyet
-      try {
-        const pdRes = await api.get(
-          `/applications/${request.requestId}/phe-duyet`,
-        );
-        setPheDuyetList(pdRes.data?.data || []);
-      } catch {
-        setPheDuyetList([]);
-      }
-    } catch (err) {
-      console.error('Lỗi tải chi tiết đơn:', err);
-      toast.error('Không tải được chi tiết đơn');
-    } finally {
-      setDetailLoading(false);
-    }
+  // ─── Mở trang chi tiết ───────────────────────────────────────────────
+  const handleOpenDetail = (request) => {
+    navigate(`/ke-toan/giai-ngan/${request.requestId}`);
   };
 
   const handleCloseDrawer = () => {
@@ -363,34 +306,6 @@ const GiaiNganPage = () => {
         onPageChange={setCurrentPage}
         onViewDetail={handleOpenDetail}
       />
-
-      {selectedRequest && (
-        <GiaiNganDetailDrawer
-          request={selectedRequest}
-          detail={selectedDetail}
-          bankAccount={bankAccount}
-          pheDuyetList={pheDuyetList}
-          isLoading={detailLoading}
-          tab={activeTab}
-          onClose={handleCloseDrawer}
-          onGiaiNgan={() => setModalType('giai_ngan')}
-          onTuChoi={() => setModalType('tu_choi')}
-        />
-      )}
-
-      {modalType && selectedRequest && (
-        <GiaiNganModal
-          type={modalType}
-          request={selectedRequest}
-          detail={selectedDetail}
-          bankAccount={bankAccount}
-          onClose={() => setModalType(null)}
-          onSubmit={
-            modalType === 'giai_ngan' ? handleGiaiNgan : handleTuChoi
-          }
-          isSubmitting={isSubmitting}
-        />
-      )}
     </div>
   );
 };

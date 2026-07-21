@@ -583,6 +583,22 @@
   }
 }
 
+.checkboxDisabled {
+  opacity: 0.8;
+  cursor: not-allowed !important;
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+
+  & * {
+    cursor: not-allowed !important;
+  }
+
+  &:hover {
+    background: #f1f5f9 !important;
+  }
+}
+
+
 .checkboxInput {
   width: 18px;
   height: 18px;

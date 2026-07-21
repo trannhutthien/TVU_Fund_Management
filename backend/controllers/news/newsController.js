@@ -37,6 +37,14 @@ const normalizePhanloai = (value) => (
   PHANLOAI_VALUES.includes(value) ? value : 'Tin moi'
 );
 
+// Convert ISO string → MySQL datetime 'YYYY-MM-DD HH:MM:SS'
+const toMySQLDatetime = (val) => {
+  if (!val) return null;
+  if (val instanceof Date) return val.toISOString().slice(0, 19).replace('T', ' ');
+  if (typeof val === 'string') return val.replace('T', ' ').replace(/\.\d{3}Z$/, '').slice(0, 19);
+  return null;
+};
+
 // ═══════════════════════════════════════════════════════════════
 // API MỚI: GET /api/news/landing - Lấy tin tức cho Landing Page
 // ═══════════════════════════════════════════════════════════════
@@ -317,6 +325,7 @@ export const createNews = async (req, res) => {
     if (status === 'Da xuat ban' && !finalPublishDate) {
       finalPublishDate = new Date();
     }
+    finalPublishDate = toMySQLDatetime(finalPublishDate);
 
     // Lấy ID người tạo từ token (req.user)
     const creatorId = req.user.id;
@@ -353,10 +362,10 @@ export const createNews = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Lỗi createNews:", error);
+    console.error("Lỗi createNews:", error?.message, error?.code, error?.sqlMessage);
     return res.status(500).json({
       success: false,
-      message: "Lỗi server, vui lòng thử lại sau"
+      message: error?.sqlMessage || "Lỗi server, vui lòng thử lại sau"
     });
   }
 };
@@ -415,6 +424,7 @@ export const updateNews = async (req, res) => {
     } else if (status === 'Ban nhap') {
       finalPublishDate = null;
     }
+    finalPublishDate = toMySQLDatetime(finalPublishDate);
 
     const editorId = req.user.id;
 
@@ -527,7 +537,7 @@ export const updateNewsStatus = async (req, res) => {
       publishDate = null;
     }
 
-    await NewsModel.updateNewsStatus(id, status, publishDate);
+    await NewsModel.updateNewsStatus(id, status, toMySQLDatetime(publishDate));
 
     return res.status(200).json({
       success: true,

@@ -91,6 +91,9 @@ const getUserByIdWithRole = async (userId) => {
       n.avatar,
       n.sodienthoai,
       n.diachi,
+      n.ngaysinh,
+      n.gioitinh,
+      n.donvicongtac,
       n.vaitro_id,
       n.loaitaikhoan,
       dv.tenkhoa AS khoaphong,
@@ -189,6 +192,8 @@ const getUserList = async ({
     conds.push(`n.vaitro_id = 4 AND n.loaitaikhoan = 'Nha khoa hoc'`);
   } else if (tab === 'nhan_vien') {
     conds.push(`n.vaitro_id IN (1, 2, 3)`);
+  } else if (tab === 'giam_sat_doc_lap') {
+    conds.push(`n.vaitro_id = 5`);
   }
 
   if (keyword) {
@@ -313,6 +318,14 @@ const getStats = async () => {
     `SELECT COUNT(*) AS canBoQuy FROM nguoidung WHERE vaitro_id = 3`
   );
   
+  // Thêm: Đếm Ban kiểm soát (role 5 - Giám sát độc lập)
+  const [[{ banKiemSoat }]] = await pool.query(
+    `SELECT COUNT(*) AS banKiemSoat FROM nguoidung WHERE vaitro_id = 5`
+  );
+  const [[{ banKiemSoatHoatDong }]] = await pool.query(
+    `SELECT COUNT(*) AS banKiemSoatHoatDong FROM nguoidung WHERE vaitro_id = 5 AND trangthai = 'Hoat dong'`
+  );
+  
   // Thêm: Số người dùng mới trong 3 ngày gần đây
   const [[{ newThisMonth }]] = await pool.query(
     `SELECT COUNT(*) AS newThisMonth FROM nguoidung
@@ -336,6 +349,8 @@ const getStats = async () => {
     admin: Number(admin) || 0,
     keToan: Number(keToan) || 0,
     canBoQuy: Number(canBoQuy) || 0,
+    banKiemSoat: Number(banKiemSoat) || 0,
+    banKiemSoatHoatDong: Number(banKiemSoatHoatDong) || 0,
     newThisMonth: Number(newThisMonth) || 0, // Người dùng mới trong 3 ngày
   };
 };

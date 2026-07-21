@@ -1,0 +1,158 @@
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8edf5 100%);
+  padding: 24px;
+}
+
+.inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+// ── Header ──
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #d1d9e6;
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #3b6ff5;
+    color: #3b6ff5;
+    background: #f0f4ff;
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a2f5e;
+}
+
+// ── Loading / Error ──
+.loadingWrap,
+.errorWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 400px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #3b6ff5;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #2b5be0;
+  }
+}
+
+// ── Empty state ──
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 24px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #1a2f5e;
+  }
+
+  p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 14px;
+  }
+}
+
+.emptyIcon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f1f5f9;
+  font-size: 32px;
+  color: #94a3b8;
+}
+
+// ── Success banner ──
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%);
+  border-radius: 12px;
+  color: #fff;
+
+  strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+}
+
+.successIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+// ── Danh sách ──
+.danhSach {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

@@ -9,6 +9,7 @@ import {
   HiOutlineBriefcase,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
+  HiOutlineEye,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import { userService } from '@services/userService';
@@ -32,6 +33,7 @@ const TABS = [
   { id: 'sinh_vien', label: 'Sinh viên', icon: HiOutlineAcademicCap },
   { id: 'nha_tai_tro', label: 'Nhà tài trợ', icon: HiOutlineHandRaised },
   { id: 'nhan_vien', label: 'Nhân viên hệ thống', icon: HiOutlineShieldCheck },
+  { id: 'giam_sat_doc_lap', label: 'Giám sát ĐL', icon: HiOutlineEye },
 ];
 
 const INITIAL_FILTERS = {
@@ -123,6 +125,7 @@ const UserManagementPage = ({ isAdmin = false, initialTab }) => {
     if (activeTab === 'sinh_vien') return 'students';
     if (activeTab === 'nha_tai_tro') return 'donors';
     if (activeTab === 'nhan_vien') return 'staff';
+    if (activeTab === 'giam_sat_doc_lap') return 'supervisors';
     if (activeTab === 'tat_ca' && !filters.trang_thai && !filters.khoa_phong && !filters.loai_ntt) return 'all';
     return '';
   }, [activeTab, filters.trang_thai, filters.khoa_phong, filters.loai_ntt]);
@@ -154,6 +157,17 @@ const UserManagementPage = ({ isAdmin = false, initialTab }) => {
 
     if (cardKey === 'staff') {
       setActiveTab('nhan_vien');
+      setFilters((current) => ({
+        ...current,
+        trang_thai: '',
+        khoa_phong: '',
+        loai_ntt: '',
+      }));
+      return;
+    }
+
+    if (cardKey === 'supervisors') {
+      setActiveTab('giam_sat_doc_lap');
       setFilters((current) => ({
         ...current,
         trang_thai: '',

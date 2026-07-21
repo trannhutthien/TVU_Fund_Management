@@ -258,5 +258,15 @@
     "sinhvien": false,
     "nhataitro": false,
     "bankiemsoat": false
+  },
+  "giam_sat": {
+    "label": "Giám sát Nghiệm thu & Công nợ",
+    "path": "/giam-sat",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false,
+    "bankiemsoat": true
   }
 }

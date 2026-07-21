@@ -20,6 +20,7 @@ const SEARCH_PLACEHOLDER = {
   sinh_vien: 'Tìm tên, MSSV, email...',
   nha_tai_tro: 'Tìm tên tổ chức, email, SĐT...',
   nhan_vien: 'Tìm tên, email, mã định danh...',
+  giam_sat_doc_lap: 'Tìm tên, email, mã định danh...',
   tat_ca: 'Tìm tên, email, MSSV...',
 };
 

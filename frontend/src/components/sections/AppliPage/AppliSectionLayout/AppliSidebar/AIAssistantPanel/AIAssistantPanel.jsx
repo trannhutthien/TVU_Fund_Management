@@ -8,10 +8,15 @@ import {
 import { applicationService } from '@services/applicationService';
 import styles from './AIAssistantPanel.module.scss';
 
-const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund }) => {
+const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund, isGuest }) => {
   const [activeTab, setActiveTab] = useState('suggest'); // 'suggest' | 'draft'
   const [status, setStatus] = useState('idle');
   const [analysis, setAnalysis] = useState(null);
+
+  // Chọn endpoint đúng: guest → public, logged-in → protected
+  const aiService = isGuest
+    ? applicationService.getPublicAiSuggestion
+    : aiService;
   
   // Trạng thái cho Tối ưu văn phong
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -52,7 +57,7 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund }) => 
   // Hàm gọi API phân tích văn phong đơn
   const analyzeText = async (text) => {
     try {
-      const response = await applicationService.getAiSuggestion({
+      const response = await aiService({
         quyId,
         action: 'analyze',
         moTa: text,
@@ -76,7 +81,7 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund }) => 
     if (!moTa || moTa.trim().length < 10) return;
     setIsOptimizing(true);
     try {
-      const response = await applicationService.getAiSuggestion({
+      const response = await aiService({
         quyId,
         action: 'optimize',
         moTa,
@@ -99,7 +104,7 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund }) => 
     if (!draftInput || draftInput.trim().length < 5) return;
     setIsDrafting(true);
     try {
-      const response = await applicationService.getAiSuggestion({
+      const response = await aiService({
         quyId,
         action: 'draft',
         moTa: draftInput,
@@ -324,6 +329,7 @@ AIAssistantPanel.propTypes = {
   tieuDe: PropTypes.string,
   onApplySuggestion: PropTypes.func,
   selectedFund: PropTypes.object,
+  isGuest: PropTypes.bool,
 };
 
 export default AIAssistantPanel;

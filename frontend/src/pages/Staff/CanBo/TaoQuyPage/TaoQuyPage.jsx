@@ -440,11 +440,35 @@ const TaoQuyPage = () => {
                   onChange={handleChange('loai_quy')}
                 >
                   <option value="">-- Chọn loại quỹ --</option>
-                  {loaiQuyList.map((item) => (
-                    <option key={item.maLoai} value={item.maLoai}>
-                      {item.tenLoai}
-                    </option>
-                  ))}
+                  {(() => {
+                    const grouped = new Map();
+                    const ungrouped = [];
+                    for (const item of loaiQuyList) {
+                      if (item.nhom) {
+                        if (!grouped.has(item.nhom)) grouped.set(item.nhom, []);
+                        grouped.get(item.nhom).push(item);
+                      } else {
+                        ungrouped.push(item);
+                      }
+                    }
+                    const groups = Array.from(grouped.entries());
+                    return [
+                      ...ungrouped.map((item) => (
+                        <option key={item.maLoai} value={item.maLoai}>
+                          {item.tenLoai}
+                        </option>
+                      )),
+                      ...groups.map(([nhom, items]) => (
+                        <optgroup key={nhom} label={nhom}>
+                          {items.map((item) => (
+                            <option key={item.maLoai} value={item.maLoai}>
+                              {item.tenLoai}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )),
+                    ];
+                  })()}
                 </select>
                 {errors.loai_quy && (
                   <span className={styles.errorMsg}>{errors.loai_quy}</span>

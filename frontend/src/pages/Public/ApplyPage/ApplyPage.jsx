@@ -574,7 +574,7 @@ const ApplyPage = () => {
             tongKinhPhiDuAn: contentValues.tong_kinh_phi_du_an
               ? parseFloat(contentValues.tong_kinh_phi_du_an)
               : null,
-            laDeTai: contentValues.la_de_tai ? 1 : 0,
+            laDeTai: (contentValues.loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI || contentValues.la_de_tai) ? 1 : 0,
           };
           response = await applicationService.create(applicationData);
         }
@@ -664,7 +664,7 @@ const ApplyPage = () => {
             tongKinhPhiDuAn: contentValues.tong_kinh_phi_du_an
               ? parseFloat(contentValues.tong_kinh_phi_du_an)
               : null,
-            laDeTai: contentValues.la_de_tai ? 1 : 0,
+            laDeTai: (contentValues.loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI || contentValues.la_de_tai) ? 1 : 0,
             formTimestamp,
           };
           response = await guestService.submitApplication(payload);
@@ -976,8 +976,8 @@ const ApplyPage = () => {
                   className={styles.roleCard}
                   onClick={() => setGuestRole('student')}
                 >
-                  <Title level={4}>Tôi là Sinh viên</Title>
-                  <Paragraph>Cần hỗ trợ học phí, học bổng hoặc sinh hoạt phí từ các quỹ.</Paragraph>
+                  <Title level={4}>Tôi là Người nộp đơn</Title>
+                  <Paragraph>Cần hỗ trợ tài chính, học bổng, vay vốn hoặc các chương trình tài trợ từ quỹ.</Paragraph>
                 </Card>
                 <Card 
                   hoverable 
@@ -985,7 +985,7 @@ const ApplyPage = () => {
                   onClick={() => setGuestRole('donor')}
                 >
                   <Title level={4}>Tôi là Nhà tài trợ</Title>
-                  <Paragraph>Quyên góp tài chính, chuyển khoản ủng hộ các quỹ phát triển sinh viên.</Paragraph>
+                  <Paragraph>Quyên góp, đầu tư tài chính để ủng hộ các quỹ phát triển giáo dục và cộng đồng.</Paragraph>
                 </Card>
               </div>
               <div style={{ marginTop: 30 }}>
@@ -1272,6 +1272,7 @@ const ApplyPage = () => {
                         values={contentValues}
                         selectedFund={selectedFund}
                         onOpenAI={handleOpenAI}
+                        isGuest={!isAuthenticated}
                         nextButton={
                           activeStep === 2 ? (
                             <div className={styles.nextButtonRow}>
@@ -1317,7 +1318,7 @@ const ApplyPage = () => {
                         />
                       ) : (
                         <div className={styles.guestFormCard}>
-                          <h3>Thông tin cá nhân & Ngân hàng Sinh viên vãng lai</h3>
+                          <h3>Thông tin cá nhân & Ngân hàng</h3>
                           <div className={styles.guestFormRowThree}>
                             <div className={styles.inputGroup}>
                               <Input 
@@ -1354,8 +1355,8 @@ const ApplyPage = () => {
                             <div className={styles.inputGroup}>
                               <Input 
                                 type="text" 
-                                label="Mã số sinh viên (MSSV)"
-                                placeholder="Nhập MSSV..."
+                                label="Mã số định danh (MSSV/MSNV)"
+                                placeholder="Nhập MSSV hoặc MSNV..."
                                 value={guestFields.guestMssv}
                                 onChange={(e) => handleInputChange('guestMssv', e.target.value)}
                                 required
@@ -1364,7 +1365,7 @@ const ApplyPage = () => {
                             <div className={styles.inputGroup}>
                               <Input 
                                 type="text" 
-                                label="Khoa / Phòng học"
+                                label="Khoa / Phòng ban"
                                 placeholder="Ví dụ: Công nghệ thông tin..."
                                 value={guestFields.guestKhoa}
                                 onChange={(e) => handleInputChange('guestKhoa', e.target.value)}
@@ -1374,7 +1375,7 @@ const ApplyPage = () => {
                             <div className={styles.inputGroup}>
                               <Input 
                                 type="text" 
-                                label="Lớp học"
+                                label="Lớp / Đơn vị"
                                 placeholder="Ví dụ: DA20TTB..."
                                 value={guestFields.guestLop}
                                 onChange={(e) => handleInputChange('guestLop', e.target.value)}

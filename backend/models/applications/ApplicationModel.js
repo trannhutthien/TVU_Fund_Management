@@ -6,8 +6,8 @@ import pool from "../../config/db.js";
 const determineCangNghiemThu = (loaiHoTro, laDeTai) => {
   // Mục b,c Điều 15: Đề tài/dự án nghiên cứu → luôn cần nghiệm thu
   if (laDeTai === 1) return 1;
-  // Mục d,e Điều 15: Cho vay → luôn cần nghiệm thu
-  if (loaiHoTro === 'Cho vay') return 1;
+  // Mục d,e Điều 15: Cho vay hoặc Tài trợ có thu hồi → luôn cần nghiệm thu
+  if (loaiHoTro === 'Cho vay' || loaiHoTro === 'Tai tro co thu hoi') return 1;
   // Mục a: Hỗ trợ thường (học bổng, CSVC, sự kiện) → không cần nghiệm thu
   return 0;
 };
@@ -103,6 +103,7 @@ const getApplicationById = async (yeucauhotroId) => {
       yc.tongkinhphidudan,
       yc.danhnghia,
       yc.tendaidien,
+      yc.laidetac,
       yc.ghichu,
       yc.ngaynop,
       yc.ngaycapnhat,
@@ -117,11 +118,22 @@ const getApplicationById = async (yeucauhotroId) => {
       dkh.laisuat as dkh_laisuat,
       dkh.thoihanhoantra_thang as dkh_thoihanhoantra_thang,
       dkh.soquyetdinh_hopdong as dkh_soquyetdinh_hopdong,
-      dkh.filehopdong as dkh_filehopdong
+      dkh.filehopdong as dkh_filehopdong,
+      hd.hopdongvayvon_id,
+      hd.sotienvon as hd_sotienvon,
+      hd.laisuatphantram as hd_laisuatphantram,
+      hd.ngaykyhopdong as hd_ngaykyhopdong,
+      hd.kyhandothang as hd_kyhandothang,
+      hd.ngaydaohan as hd_ngaydaohan,
+      hd.trangthai as hd_trangthai,
+      hd.filehopdong as hd_filehopdong,
+      hd.nguoiduyet_id as hd_nguoiduyet_id,
+      hd.ghichu as hd_ghichu
      FROM yeucauhotro yc
      INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
      INNER JOIN quy q ON yc.quy_id = q.quy_id
      LEFT JOIN dieukhoanthuhoi dkh ON yc.yeucauhotro_id = dkh.yeucauhotro_id
+     LEFT JOIN hopdongvayvon hd ON yc.yeucauhotro_id = hd.yeucauhotro_id
      WHERE yc.yeucauhotro_id = ?
      LIMIT 1`,
     [yeucauhotroId]
@@ -140,13 +152,26 @@ const getApplicationById = async (yeucauhotroId) => {
     filehopdong: row.dkh_filehopdong
   } : null;
 
-  // Xóa các field dkh_ prefix thừa
-  delete row.dieukhoanthuhoi_id;
-  delete row.dkh_mucthuhoi;
-  delete row.dkh_laisuat;
-  delete row.dkh_thoihanhoantra_thang;
-  delete row.dkh_soquyetdinh_hopdong;
-  delete row.dkh_filehopdong;
+  // Gộp hopdongvayvon thành object con (null nếu không có)
+  row.hopdongvayvon = row.hopdongvayvon_id ? {
+    hopdongvayvon_id: row.hopdongvayvon_id,
+    sotienvon: row.hd_sotienvon,
+    laisuatphantram: row.hd_laisuatphantram,
+    ngaykyhopdong: row.hd_ngaykyhopdong,
+    kyhandothang: row.hd_kyhandothang,
+    ngaydaohan: row.hd_ngaydaohan,
+    trangthai: row.hd_trangthai,
+    filehopdong: row.hd_filehopdong,
+    nguoiduyet_id: row.hd_nguoiduyet_id,
+    ghichu: row.hd_ghichu
+  } : null;
+
+  // Xóa các field prefix thừa
+  for (const key of Object.keys(row)) {
+    if (key.startsWith('dkh_') || key.startsWith('hd_')) {
+      delete row[key];
+    }
+  }
 
   return row;
 };

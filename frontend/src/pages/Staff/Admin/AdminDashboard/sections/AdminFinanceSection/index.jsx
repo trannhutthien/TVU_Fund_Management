@@ -6,6 +6,8 @@ import {
   HiBanknotes,
   HiGift,
   HiAcademicCap,
+  HiCurrencyDollar,
+  HiDocumentText,
 } from 'react-icons/hi2';
 import { StatCard } from '@components/common/Card';
 import { formatCurrency } from '@utils/formatters';
@@ -21,6 +23,9 @@ const AdminFinanceSection = ({ financeData }) => {
     tongSoDuQuyHoatDong,
     tongKhoanTaiTro,
     tongGiaiNgan,
+    duNoVay,
+    hopDongVayDangThucHien,
+    tongSoDuQuy,
   } = financeData;
 
   return (
@@ -85,6 +90,24 @@ const AdminFinanceSection = ({ financeData }) => {
           icon={<HiAcademicCap size={20} />}
           iconBgColor="blue"
         />
+
+        {/* Card 7 - Dư nợ vay vốn */}
+        <StatCard
+          title="Dư nợ vay vốn"
+          value={formatCurrency(duNoVay)}
+          subtitle="Tổng còn nợ từ cho vay"
+          icon={<HiCurrencyDollar size={20} />}
+          iconBgColor="red"
+        />
+
+        {/* Card 8 - Hợp đồng vay đang thực hiện */}
+        <StatCard
+          title="Hợp đồng vay đang thực hiện"
+          value={hopDongVayDangThucHien}
+          subtitle="Hợp đồng vay chưa tất toán"
+          icon={<HiDocumentText size={20} />}
+          iconBgColor="purple"
+        />
       </div>
     </div>
   );
@@ -98,6 +121,9 @@ AdminFinanceSection.propTypes = {
     tongSoDuQuyHoatDong: PropTypes.number,
     tongKhoanTaiTro: PropTypes.number,
     tongGiaiNgan: PropTypes.number,
+    duNoVay: PropTypes.number,
+    hopDongVayDangThucHien: PropTypes.number,
+    tongSoDuQuy: PropTypes.number,
   }),
 };
 

@@ -410,7 +410,10 @@ export const getApplicationById = async (req, res) => {
         ngayCapNhat: application.ngaycapnhat,
         loaiHotro: application.loaihotro,
         canNghiemThu: application.canghiemthu === 1,
-        tongKinhPhiDuAn: application.tongkinhphidudan ? parseFloat(application.tongkinhphidudan) : null
+        tongKinhPhiDuAn: application.tongkinhphidudan ? parseFloat(application.tongkinhphidudan) : null,
+        laDeTai: application.laidetac === 1,
+        dieukhoanthuhoi: application.dieukhoanthuhoi,
+        hopdongvayvon: application.hopdongvayvon
       }
     });
   } catch (error) {

@@ -421,9 +421,12 @@ export const getUserById = async (req, res) => {
         maSoDinhDanh: user.masodinhdanh,
         hoTen: user.hoten,
         email: user.email,
-        avatar: buildUserAvatarUrl(user.avatar), // ✅ Build full URL
+        avatar: buildUserAvatarUrl(user.avatar),
         soDienThoai: user.sodienthoai,
         diaChi: user.diachi,
+        ngaySinh: user.ngaysinh,
+        gioiTinh: user.gioitinh,
+        donViCongTac: user.donvicongtac,
         vaiTro: {
           id: user.vaitro_id,
           ten: user.tenvaitro,

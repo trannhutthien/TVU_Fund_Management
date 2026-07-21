@@ -11,6 +11,7 @@ import {
   HiXCircle,
   HiUserPlus,
   HiCircleStack,
+  HiCurrencyDollar,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button';
 import styles from './AdminActivitySection.module.scss';
@@ -58,12 +59,19 @@ const ACTIVITY_TYPES = {
     iconColor: '#a855f7',
     category: 'he_thong',
   },
+  cho_vay: {
+    icon: HiCurrencyDollar,
+    bgColor: 'rgba(59,130,246,0.10)',
+    iconColor: '#3b82f6',
+    category: 'cho_vay',
+  },
 };
 
 const ROLE_BADGES = {
   1: { label: 'Admin', bgColor: 'rgba(168,85,247,0.12)', color: '#9333ea' },
   2: { label: 'Kế toán', bgColor: 'rgba(240,165,0,0.12)', color: '#b45309' },
   3: { label: 'Cán bộ', bgColor: 'rgba(26,47,94,0.10)', color: '#1a2f5e' },
+  5: { label: 'Ban Kiểm Soát', bgColor: 'rgba(20,184,166,0.12)', color: '#0d9488' },
 };
 
 const AdminActivitySection = ({ activityData = [], staffData = [] }) => {
@@ -169,6 +177,12 @@ const AdminActivitySection = ({ activityData = [], staffData = [] }) => {
                 onClick={() => setSelectedFilter('nghiep_vu')}
               >
                 Nghiệp vụ
+              </button>
+              <button
+                className={selectedFilter === 'cho_vay' ? styles.chipActive : ''}
+                onClick={() => setSelectedFilter('cho_vay')}
+              >
+                Cho vay
               </button>
               <button
                 className={selectedFilter === 'he_thong' ? styles.chipActive : ''}

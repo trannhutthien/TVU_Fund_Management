@@ -83,6 +83,18 @@ const NghiemThuTimeline = ({ history }) => {
                 {item.soQuyetDinh && (
                   <span className={styles.metaItem}>QĐ: {item.soQuyetDinh}</span>
                 )}
+                {item.fileBienBan && (
+                  <span className={styles.metaItem}>
+                    <a
+                      href={item.fileBienBan}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.fileLink}
+                    >
+                      📎 Tải biên bản
+                    </a>
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -103,8 +115,10 @@ NghiemThuTimeline.propTypes = {
       tenNguoiNghiemThu: PropTypes.string,
       ngayNghiemThu: PropTypes.string,
       soQuyetDinh: PropTypes.string,
+      fileBienBan: PropTypes.string,
     }),
   ),
 };
+
 
 export default NghiemThuTimeline;

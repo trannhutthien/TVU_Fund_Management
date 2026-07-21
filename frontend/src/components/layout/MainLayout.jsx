@@ -10,6 +10,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   TeamOutlined,
+  CreditCardOutlined,
 } from '@ant-design/icons'
 import { useAuth } from '@hooks/useAuth'
 import { ROLES } from '@constants'
@@ -39,6 +40,11 @@ const MainLayout = () => {
         key: '/my-applications',
         icon: <FileTextOutlined />,
         label: 'Đơn của tôi',
+      })
+      items.push({
+        key: '/nghia-vu-hoan-tra',
+        icon: <CreditCardOutlined />,
+        label: 'Nghĩa vụ hoàn trả',
       })
     }
 

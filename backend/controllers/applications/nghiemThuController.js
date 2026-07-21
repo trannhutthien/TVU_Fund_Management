@@ -58,11 +58,11 @@ export const createInspection = async (req, res) => {
       });
     }
 
-    // Nếu là nghiệm thu cuối cùng, chỉ role 1 (Admin) mới được phép
-    if (loaiKiemTra === 'Nghiem thu cuoi cung' && req.user.vai_tro !== 1) {
+    // Nếu là nghiệm thu cuối cùng, chỉ Admin (role 1) hoặc Cán bộ Quỹ (role 3) mới được phép
+    if (loaiKiemTra === 'Nghiem thu cuoi cung' && req.user.vai_tro !== 1 && req.user.vai_tro !== 3) {
       return res.status(403).json({
         success: false,
-        message: "Chỉ Admin mới được phép thực hiện nghiệm thu cuối cùng",
+        message: "Bạn không có quyền thực hiện nghiệm thu cuối cùng",
       });
     }
 
@@ -141,11 +141,11 @@ export const updateResult = async (req, res) => {
       });
     }
 
-    // Role-based: 'Nghiem thu cuoi cung' chỉ Admin (role 1) mới được chốt kết quả
-    if (nt.loaikiemtra === 'Nghiem thu cuoi cung' && req.user.vai_tro !== 1) {
+    // Role-based: 'Nghiem thu cuoi cung' chỉ Admin (role 1) hoặc Cán bộ Quỹ (role 3) mới được chốt kết quả
+    if (nt.loaikiemtra === 'Nghiem thu cuoi cung' && req.user.vai_tro !== 1 && req.user.vai_tro !== 3) {
       return res.status(403).json({
         success: false,
-        message: "Chỉ Admin mới được phép chốt kết quả nghiệm thu cuối cùng",
+        message: "Bạn không có quyền chốt kết quả nghiệm thu cuối cùng",
       });
     }
 

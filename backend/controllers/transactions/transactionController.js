@@ -2,6 +2,7 @@ import TransactionModel from "../../models/transactions/TransactionModel.js";
 import PheDuyetModel from "../../models/applications/PheDuyetModel.js";
 import DonationModel from "../../models/donations/DonationModel.js";
 import DuToanModel from "../../models/reports/DuToanModel.js";
+import pool from "../../config/db.js";
 import ExcelJS from "exceljs";
 
 const VALID_DOI_SOAT_STATUSES = ['Chua_doi_soat', 'Da_doi_soat', 'Bat_thuong'];
@@ -686,6 +687,47 @@ export const updateDoiSoatStatus = async (req, res) => {
   }
 };
 
+// ─── GET /api/transactions/by-application/:yeucauhotroId — Lấy giao dịch theo đơn ───
+export const getTransactionByApplication = async (req, res) => {
+  try {
+    const { yeucauhotroId } = req.params;
+    const [rows] = await pool.query(
+      `SELECT * FROM giaodich WHERE yeucauhotro_id = ? ORDER BY ngaygiaodich DESC LIMIT 1`,
+      [yeucauhotroId]
+    );
+    return res.status(200).json({ success: true, data: rows[0] || null });
+  } catch (error) {
+    console.error("Lỗi getTransactionByApplication:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
+// ─── PATCH /api/transactions/:id/upload-proof — Upload minh chứng chuyển khoản ───
+export const uploadProof = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { minhChung } = req.body;
+
+    if (!minhChung) {
+      return res.status(400).json({ success: false, message: "Vui lòng cung cấp file minh chứng" });
+    }
+
+    const [result] = await pool.execute(
+      `UPDATE giaodich SET chungtu = ?, ngaycapnhat = NOW() WHERE giaodich_id = ?`,
+      [minhChung, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy giao dịch" });
+    }
+
+    return res.status(200).json({ success: true, message: "Cập nhật minh chứng thành công" });
+  } catch (error) {
+    console.error("Lỗi uploadProof:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
+  }
+};
+
 export default {
   getAllTransactions,
   getTransactionById,
@@ -693,4 +735,6 @@ export default {
   createChiKhac,
   exportTransactions,
   updateDoiSoatStatus,
+  getTransactionByApplication,
+  uploadProof,
 };

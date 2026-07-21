@@ -4,6 +4,19 @@ import { HiOutlineUser } from 'react-icons/hi2';
 import { userService } from '@services/userService';
 import styles from './StudentInfoCard.module.scss';
 
+const GIOI_TINH_MAP = { Nam: 'Nam', Nu: 'Nữ', Khac: 'Khác' };
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('vi-VN');
+  } catch {
+    return dateStr;
+  }
+};
+
 const StudentInfoCard = ({ userId, fallback }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -38,18 +51,21 @@ const StudentInfoCard = ({ userId, fallback }) => {
   const khoaPhong = data.khoaPhong || '—';
   const email = data.email || '';
   const sdt = data.soDienThoai || '';
+  const gioiTinh = GIOI_TINH_MAP[data.gioiTinh] || data.gioiTinh || '—';
+  const ngaySinh = formatDate(data.ngaySinh);
+  const donViCongTac = data.donViCongTac || '—';
 
   return (
     <section className={styles.card}>
       <div className={styles.cardHeader}>
         <HiOutlineUser className={styles.headerIcon} />
-        <h2 className={styles.cardTitle}>Thông tin sinh viên</h2>
+        <h2 className={styles.cardTitle}>Thông tin người nộp</h2>
       </div>
 
       {loading ? (
         <div className={styles.placeholder}>Đang tải...</div>
       ) : error && !user ? (
-        <div className={styles.placeholder}>Không tải được thông tin sinh viên</div>
+        <div className={styles.placeholder}>Không tải được thông tin</div>
       ) : (
         <div className={styles.grid}>
           <div className={styles.field}>
@@ -58,7 +74,7 @@ const StudentInfoCard = ({ userId, fallback }) => {
           </div>
 
           <div className={styles.field}>
-            <div className={styles.label}>MSSV</div>
+            <div className={styles.label}>Mã số định danh</div>
             <div className={styles.value}>{mssv}</div>
           </div>
 
@@ -87,6 +103,21 @@ const StudentInfoCard = ({ userId, fallback }) => {
             ) : (
               <div className={styles.value}>—</div>
             )}
+          </div>
+
+          <div className={styles.field}>
+            <div className={styles.label}>Giới tính</div>
+            <div className={styles.value}>{gioiTinh}</div>
+          </div>
+
+          <div className={styles.field}>
+            <div className={styles.label}>Ngày sinh</div>
+            <div className={styles.value}>{ngaySinh}</div>
+          </div>
+
+          <div className={styles.field}>
+            <div className={styles.label}>Đơn vị công tác</div>
+            <div className={styles.value}>{donViCongTac}</div>
           </div>
         </div>
       )}

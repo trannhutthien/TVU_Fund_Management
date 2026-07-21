@@ -7,7 +7,7 @@ import pool from "../../config/db.js";
 const SELECT_WITH_COALESCE = `
   SELECT cv.*,
     COALESCE(cv.anh, nd.avatar) AS anh_hienthi,
-    COALESCE(cv.hoten, nd.hoten) AS ten_hienthi
+    nd.hoten AS ten_hienthi
   FROM chucvuquy cv
   LEFT JOIN nguoidung nd ON cv.nguoidung_id = nd.nguoidung_id
 `;
@@ -55,7 +55,6 @@ const getById = async (chucVuId) => {
 const create = async (data) => {
   const {
     nguoidungId,
-    hoten,
     chucdanh,
     nhom,
     ngayBatDauNhiemKy,
@@ -67,13 +66,12 @@ const create = async (data) => {
 
   const [result] = await pool.execute(
     `INSERT INTO chucvuquy (
-      nguoidung_id, hoten, chucdanh, nhom,
+      nguoidung_id, chucdanh, nhom,
       ngaybatdaunhiemky, ngayketthucnhiemky,
       anh, mota, thutu
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       nguoidungId || null,
-      hoten || null,
       chucdanh,
       nhom,
       ngayBatDauNhiemKy || null,
@@ -92,7 +90,7 @@ const update = async (chucVuId, data) => {
   const values = [];
 
   const allowedFields = [
-    'nguoidung_id', 'hoten', 'chucdanh', 'nhom',
+    'nguoidung_id', 'chucdanh', 'nhom',
     'ngaybatdaunhiemky', 'ngayketthucnhiemky',
     'anh', 'mota', 'thutu', 'trangthai'
   ];

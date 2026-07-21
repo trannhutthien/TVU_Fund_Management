@@ -141,6 +141,15 @@ const FundCard = ({ fund }) => {
               <div className={styles.infoItem}>
                 <HiOutlineUserCircle className={styles.infoIcon} />
                 <span className={styles.infoText}>{fund.dieu_kien_tom_tat}</span>
+                {fund.dieu_kien_tom_tat.length > 60 && (
+                  <a
+                    className={styles.infoMoreLink}
+                    onClick={(e) => { e.preventDefault(); navigate(`/funds/${fund.quy_id}`); }}
+                    href={`/funds/${fund.quy_id}`}
+                  >
+                    Xem thêm →
+                  </a>
+                )}
               </div>
             )}
             {startDate && (

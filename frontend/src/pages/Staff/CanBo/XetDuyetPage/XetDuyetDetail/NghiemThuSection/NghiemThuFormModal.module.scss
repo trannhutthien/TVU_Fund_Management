@@ -262,3 +262,79 @@
   padding: 14px 20px;
   border-top: 1px solid #e5e7eb;
 }
+
+// ── File upload styles ──────────────────
+.fileUploadRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.fileInputHidden {
+  display: none;
+}
+
+.uploadFileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #1e293b;
+  }
+}
+
+.fileUploadedBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #166534;
+  font-weight: 500;
+}
+
+.fileLink {
+  color: #166534;
+  text-decoration: underline;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    color: #15803d;
+  }
+}
+
+.removeFileBtn {
+  border: none;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+
+  &:hover {
+    background: #fee2e2;
+  }
+}
+

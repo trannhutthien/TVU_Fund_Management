@@ -14,13 +14,14 @@ import styles from './AdminDashboard.module.scss';
 // ─── HELPERS FOR ACTIVITY LOG MAPPING ───────────────────────────────────────
 const mapHanhDongToType = (hanhDong, moTa) => {
   const action = hanhDong ? hanhDong.toUpperCase() : '';
+  const desc = moTa ? moTa.toLowerCase() : '';
   
   if (action.includes('GIAI_NGAN')) return 'giai_ngan';
   
   if (action.includes('TU_CHOI')) return 'tu_choi';
   
   if (action.includes('DUYET_YEU_CAU') || action.includes('DUYET_DON') || action.includes('PHE_DUYET')) {
-    if (moTa && moTa.toLowerCase().includes('giải ngân')) {
+    if (desc.includes('giải ngân')) {
       return 'giai_ngan';
     }
     return 'duyet_don';
@@ -29,6 +30,10 @@ const mapHanhDongToType = (hanhDong, moTa) => {
   if (action.includes('TAI_TRO') || action.includes('DONG_GOP')) return 'tai_tro';
   
   if (action.includes('QUY')) return 'tao_quy';
+
+  if (action.includes('CHO_VAY') || action.includes('HOP_DONG') || action.includes('LICH_TRA_NO') || action.includes('TRA_NO') || desc.includes('cho vay') || desc.includes('hợp đồng vay') || desc.includes('trả nợ')) {
+    return 'cho_vay';
+  }
   
   if (action.includes('DANG_NHAP') || action.includes('DANG_XUAT') || action.includes('TAO_NGUOI_DUNG') || action.includes('KHOA_TAI_KHOAN') || action.includes('DANG_KY')) {
     return 'dang_ky';
@@ -160,9 +165,12 @@ const AdminDashboard = () => {
         const pendingDonationsCount = donationStats.data?.data?.canXacNhan || 0;
         
         setAlertData({
-          pendingCap2: appStats.dangXuLy || 0, // Đơn đang xử lý (Dang xu ly)
+          pendingCap2: appStats.dangXuLy || 0,
           pendingDonations: pendingDonationsCount,
-          abnormalTransactions: 0, // TODO: Cần API riêng
+          choNghiemThu: appStats.choNghiemThu || 0,
+          banKiemSoat: appStats.banKiemSoat || 0,
+          lichTraNoChoXacNhan: keToanData.lichTraNoChoXacNhan || 0,
+          hopDongVayQuaHan: keToanData.hopDongVayQuaHan || 0,
           lowBalanceFunds: (fundHealth.data?.data || []).filter(f => {
             const percent = f.so_du / f.so_tien_toi_da * 100;
             return percent < 20;
@@ -176,8 +184,11 @@ const AdminDashboard = () => {
           tongChiHeThong: keToanData.tongChi || 0,
           tongSoDuQuyPhatTrien: keToanData.tongSoDuQuyPhatTrien || 0,
           tongSoDuQuyHoatDong: keToanData.tongSoDuQuyHoatDong || 0,
-          tongKhoanTaiTro: donations.tongKhoanTaiTro || 0, // Số khoản tài trợ đã nhận (Da nhan)
-          tongGiaiNgan: keToanData.tongGiaiNgan || 0, // Số đơn đã giải ngân (Da giai ngan)
+          tongKhoanTaiTro: donations.tongKhoanTaiTro || 0,
+          tongGiaiNgan: keToanData.tongGiaiNgan || 0,
+          duNoVay: keToanData.duNoVay || 0,
+          hopDongVayDangThucHien: keToanData.hopDongVayDangThucHien || 0,
+          tongSoDuQuy: appStats.tongSoDu || 0,
         });
 
         // Map data cho userData
@@ -186,18 +197,22 @@ const AdminDashboard = () => {
           tongNguoiDung: users.tongNguoiDung || 0,
           sinhVien: users.sinhVien || 0,
           nhaTaiTro: users.nhaTaiTro || 0,
-          nhanVien: users.nhanVien || 0, // Backend đã tính tổng role 1,2,3
+          nhanVien: users.nhanVien || 0,
+          banKiemSoat: users.banKiemSoat || 0,
+          hopDongVayVon: appStats.hopDongVayVon || 0,
           newThisMonth: users.newThisMonth || 0,
         });
 
         // Map data cho operationData
         setOperationData({
           tongDon: appStats.tongDon || 0,
-          choDuyet: appStats.choDuyet || 0, // Đơn chờ xử lý (Cho duyet)
+          choDuyet: appStats.choDuyet || 0,
           choGiaiNgan: appStats.choGiaiNgan || 0,
           dangXuLy: appStats.dangXuLy || 0,
           daHoanThanh: appStats.daHoanThanh || 0,
           tuChoi: appStats.tuChoi || 0,
+          choNghiemThu: appStats.choNghiemThu || 0,
+          banKiemSoat: appStats.banKiemSoat || 0,
           tongQuy: (fundHealth.data?.data || []).length,
           quyHoatDong: (fundHealth.data?.data || []).filter(f => f.trang_thai === 'Dang hoat dong').length,
           funds: fundHealth.data?.data || [],
@@ -219,6 +234,15 @@ const AdminDashboard = () => {
             name: fund.ten_quy,
             value: fund.so_du || 0,
           })),
+          fundGroupDistribution: (() => {
+            const groupMap = {};
+            fundHealthArray.forEach(fund => {
+              const nhom = fund.nhom_loai_quy || 'Khac';
+              if (!groupMap[nhom]) groupMap[nhom] = 0;
+              groupMap[nhom] += fund.so_du || 0;
+            });
+            return Object.entries(groupMap).map(([name, value]) => ({ name, value }));
+          })(),
         });
 
         // Process and map real activity logs from database
@@ -265,14 +289,20 @@ const AdminDashboard = () => {
   const hasAlerts = alertData
     ? alertData.pendingCap2 > 0 ||
       alertData.pendingDonations > 0 ||
-      alertData.abnormalTransactions > 0 ||
+      alertData.choNghiemThu > 0 ||
+      alertData.banKiemSoat > 0 ||
+      alertData.lichTraNoChoXacNhan > 0 ||
+      alertData.hopDongVayQuaHan > 0 ||
       alertData.lowBalanceFunds > 0
     : false;
 
   const totalAlerts = alertData
     ? alertData.pendingCap2 +
       alertData.pendingDonations +
-      alertData.abnormalTransactions +
+      alertData.choNghiemThu +
+      alertData.banKiemSoat +
+      alertData.lichTraNoChoXacNhan +
+      alertData.hopDongVayQuaHan +
       alertData.lowBalanceFunds
     : 0;
 

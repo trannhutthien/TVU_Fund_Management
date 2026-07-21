@@ -11,6 +11,7 @@ export const getLoaiQuy = async (req, res) => {
         id: item.id,
         maLoai: item.ma_loai,
         tenLoai: item.ten_loai,
+        nhom: item.nhom,
         ngayTao: item.ngay_tao
       }))
     });
@@ -19,6 +20,23 @@ export const getLoaiQuy = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Lỗi máy chủ khi lấy danh sách loại quỹ"
+    });
+  }
+};
+
+// GET /api/loai-quy/groups
+export const getLoaiQuyGroups = async (req, res) => {
+  try {
+    const groups = await LoaiQuyModel.getLoaiQuyGroups();
+    return res.status(200).json({
+      success: true,
+      data: groups
+    });
+  } catch (error) {
+    console.error("Lỗi getLoaiQuyGroups:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi máy chủ khi lấy danh sách nhóm quỹ"
     });
   }
 };

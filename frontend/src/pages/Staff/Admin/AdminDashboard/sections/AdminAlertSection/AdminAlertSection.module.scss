@@ -166,6 +166,84 @@
   }
 }
 
+.alertCardPurple {
+  background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+  border: 1.5px solid #e9d5ff;
+
+  .alertIconBox {
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+  }
+
+  .alertValue {
+    color: #a855f7;
+  }
+
+  .alertLabel {
+    color: #6b21a8;
+  }
+
+  .alertSub {
+    color: #7c3aed;
+  }
+
+  .alertAction {
+    color: #a855f7;
+  }
+}
+
+.alertCardTeal {
+  background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+  border: 1.5px solid #99f6e4;
+
+  .alertIconBox {
+    background: rgba(20, 184, 166, 0.15);
+    color: #14b8a6;
+  }
+
+  .alertValue {
+    color: #14b8a6;
+  }
+
+  .alertLabel {
+    color: #134e4a;
+  }
+
+  .alertSub {
+    color: #0f766e;
+  }
+
+  .alertAction {
+    color: #14b8a6;
+  }
+}
+
+.alertCardCyan {
+  background: linear-gradient(135deg, #ecfeff, #cffafe);
+  border: 1.5px solid #a5f3fc;
+
+  .alertIconBox {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+  }
+
+  .alertValue {
+    color: #06b6d4;
+  }
+
+  .alertLabel {
+    color: #164e63;
+  }
+
+  .alertSub {
+    color: #0e7490;
+  }
+
+  .alertAction {
+    color: #06b6d4;
+  }
+}
+
 .alertIconBox {
   width: 44px;
   height: 44px;

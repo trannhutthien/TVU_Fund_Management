@@ -39,10 +39,24 @@ const FUND_COLORS = [
   '#6b90d4',
 ];
 
+const FUND_GROUP_COLORS = {
+  'Tai tro khong hoan lai': '#16a34a',
+  'Tai tro co thu hoi': '#f59e0b',
+  'Cho vay': '#3b82f6',
+  'Khac': '#94a3b8',
+};
+
+const FUND_GROUP_LABELS = {
+  'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
+  'Tai tro co thu hoi': 'Tài trợ có thu hồi',
+  'Cho vay': 'Cho vay',
+  'Khac': 'Khác',
+};
+
 const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
   if (!chartData) return null;
 
-  const { cashflow6Months = [], userGrowth6Months = [], fundDistribution = [] } = chartData;
+  const { cashflow6Months = [], userGrowth6Months = [], fundDistribution = [], fundGroupDistribution = [] } = chartData;
 
   // ─── FORMAT CURRENCY SHORT ─────────────────────────────────────────────────
   const formatCurrencyShort = (value) => {
@@ -64,6 +78,20 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
             {entry.name}: {formatCurrency(entry.value)}
           </p>
         ))}
+      </div>
+    );
+  };
+
+  // ─── FUND GROUP TOOLTIP ────────────────────────────────────────────────────
+  const FundGroupTooltip = ({ active, payload }) => {
+    if (!active || !payload || !payload.length) return null;
+    const data = payload[0];
+    return (
+      <div className={styles.tooltip}>
+        <p className={styles.tooltipLabel}>{data.name}</p>
+        <p className={styles.tooltipItem} style={{ color: data.payload?.color || '#333' }}>
+          Số dư: {formatCurrency(data.value)}
+        </p>
       </div>
     );
   };
@@ -94,6 +122,27 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
       </tspan>
     </text>
   );
+
+  // ─── RENDER CENTER LABEL FOR GROUP PIE ─────────────────────────────────────
+  const renderGroupCenterLabel = () => {
+    const totalGroupValue = fundGroupDistribution.reduce((sum, item) => sum + item.value, 0);
+    return (
+      <text
+        x="50%"
+        y="50%"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        className={styles.centerLabel}
+      >
+        <tspan x="50%" dy="-8" className={styles.centerValue}>
+          {fundGroupDistribution.length}
+        </tspan>
+        <tspan x="50%" dy="20" className={styles.centerText}>
+          Nhóm quỹ
+        </tspan>
+      </text>
+    );
+  };
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
@@ -259,13 +308,13 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
           </div>
         </div>
 
-        {/* Chart 3 - Phân bổ quỹ */}
+        {/* Chart 3 - Phân bổ theo nhóm quỹ */}
         <div className={styles.chartCard}>
           {/* Header */}
           <div className={styles.chartHeader}>
             <div className={styles.chartHeaderLeft}>
               <HiChartPie size={18} />
-              <span className={styles.chartTitle}>Phân bổ giải ngân</span>
+              <span className={styles.chartTitle}>Phân bổ theo nhóm quỹ</span>
             </div>
           </div>
 
@@ -273,7 +322,11 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie
-                data={fundDistribution}
+                data={fundGroupDistribution.map(item => ({
+                  ...item,
+                  name: FUND_GROUP_LABELS[item.name] || item.name,
+                  color: FUND_GROUP_COLORS[item.name] || '#94a3b8',
+                }))}
                 cx="50%"
                 cy="50%"
                 innerRadius={45}
@@ -281,32 +334,34 @@ const AdminChartSection = ({ chartData, selectedPeriod, onPeriodChange }) => {
                 paddingAngle={2}
                 dataKey="value"
               >
-                {fundDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={FUND_COLORS[index % FUND_COLORS.length]} />
+                {fundGroupDistribution.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={FUND_GROUP_COLORS[entry.name] || FUND_COLORS[index % FUND_COLORS.length]}
+                  />
                 ))}
               </Pie>
-              {renderCenterLabel()}
+              <Tooltip content={<FundGroupTooltip />} />
+              {renderGroupCenterLabel()}
             </PieChart>
           </ResponsiveContainer>
 
           {/* Legend */}
           <div className={styles.fundLegend}>
-            {top3Funds.map((fund, index) => {
-              const percent = totalValue > 0 ? ((fund.value / totalValue) * 100).toFixed(1) : 0;
+            {fundGroupDistribution.map((item, index) => {
+              const totalGroupValue = fundGroupDistribution.reduce((sum, i) => sum + i.value, 0);
+              const percent = totalGroupValue > 0 ? ((item.value / totalGroupValue) * 100).toFixed(1) : 0;
               return (
                 <div key={index} className={styles.fundLegendItem}>
                   <div
                     className={styles.fundLegendDot}
-                    style={{ background: FUND_COLORS[index] }}
+                    style={{ background: FUND_GROUP_COLORS[item.name] || FUND_COLORS[index] }}
                   />
-                  <span className={styles.fundLegendName}>{fund.name}</span>
+                  <span className={styles.fundLegendName}>{FUND_GROUP_LABELS[item.name] || item.name}</span>
                   <span className={styles.fundLegendPercent}>{percent}%</span>
                 </div>
               );
             })}
-            {remainingCount > 0 && (
-              <div className={styles.fundLegendMore}>+ {remainingCount} quỹ khác</div>
-            )}
           </div>
         </div>
       </div>
@@ -319,6 +374,7 @@ AdminChartSection.propTypes = {
     cashflow6Months: PropTypes.array,
     userGrowth6Months: PropTypes.array,
     fundDistribution: PropTypes.array,
+    fundGroupDistribution: PropTypes.array,
   }),
   selectedPeriod: PropTypes.string,
   onPeriodChange: PropTypes.func,

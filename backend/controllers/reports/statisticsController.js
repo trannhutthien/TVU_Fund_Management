@@ -298,6 +298,39 @@ export const getKeToanSummary = async (req, res) => {
        WHERE trangthai = 'Da giai ngan'`
     );
 
+    // Tổng dư nợ vay vốn (tổng còn nợ từ hopdongvayvon)
+    const [[duNoVayRow]] = await pool.query(
+      `SELECT COALESCE(SUM(hd.sotienvon - COALESCE(paid.da_tra, 0)), 0) AS duNo
+       FROM hopdongvayvon hd
+       LEFT JOIN (
+         SELECT hopdongvayvon_id, SUM(COALESCE(sotienthuctra, 0)) AS da_tra
+         FROM lichtrano
+         GROUP BY hopdongvayvon_id
+       ) paid ON hd.hopdongvayvon_id = paid.hopdongvayvon_id
+       WHERE hd.trangthai = 'Dang thuc hien'`
+    );
+
+    // Số hợp đồng vay đang thực hiện
+    const [[hdVayCountRow]] = await pool.query(
+      `SELECT COUNT(*) AS total
+       FROM hopdongvayvon
+       WHERE trangthai = 'Dang thuc hien'`
+    );
+
+    // Số hợp đồng vay quá hạn
+    const [[hdQuaHanRow]] = await pool.query(
+      `SELECT COUNT(*) AS total
+       FROM hopdongvayvon
+       WHERE trangthai = 'Qua han'`
+    );
+
+    // Số lịch trả nợ chờ xác nhận
+    const [[lichTraNoChoRow]] = await pool.query(
+      `SELECT COUNT(*) AS total
+       FROM lichtrano
+       WHERE trangthaixacnhan = 'Cho xac nhan'`
+    );
+
     const [[fundBalanceRow]] = await pool.query(
       `SELECT
          COALESCE(SUM(CASE WHEN loaidieuhanh = 'Tap trung - Be chung' THEN sodu ELSE 0 END), 0) AS parent_balance,
@@ -316,7 +349,11 @@ export const getKeToanSummary = async (req, res) => {
         tongSoDuQuyHoatDong: parseFloat(fundBalanceRow.child_balance || 0),
         choXacNhanThu: choXacNhanRow.total,
         choGiaiNgan: choGiaiNganRow.total,
-        tongGiaiNgan: tongGiaiNganRow.total, // Thêm field mới
+        tongGiaiNgan: tongGiaiNganRow.total,
+        duNoVay: parseFloat(duNoVayRow.duNo || 0),
+        hopDongVayDangThucHien: Number(hdVayCountRow.total) || 0,
+        hopDongVayQuaHan: Number(hdQuaHanRow.total) || 0,
+        lichTraNoChoXacNhan: Number(lichTraNoChoRow.total) || 0,
         thang: month,
         nam: year,
       }
@@ -559,6 +596,7 @@ export const getKeToanFundHealth = async (req, res) => {
          q.quy_id,
          q.tenquy AS ten_quy,
          lq.tenloai AS loai_quy,
+         lq.nhom AS nhom_loai_quy,
          q.loaidieuhanh AS loai_dieu_hanh,
          q.sodu AS so_du,
          q.sotienmuctieu AS so_tien_toi_da,
@@ -573,6 +611,7 @@ export const getKeToanFundHealth = async (req, res) => {
       quy_id: f.quy_id,
       ten_quy: f.ten_quy,
       loai_quy: f.loai_quy,
+      nhom_loai_quy: f.nhom_loai_quy || null,
       loai_dieu_hanh: f.loai_dieu_hanh,
       so_du: parseFloat(f.so_du || 0),
       so_tien_toi_da: parseFloat(f.so_tien_toi_da || 0),
@@ -581,6 +620,7 @@ export const getKeToanFundHealth = async (req, res) => {
       quyId: f.quy_id,
       tenQuy: f.ten_quy,
       loaiQuy: f.loai_quy,
+      nhomLoaiQuy: f.nhom_loai_quy || null,
       loaiDieuHanh: f.loai_dieu_hanh,
       soDu: parseFloat(f.so_du || 0),
       soTienToiDa: parseFloat(f.so_tien_toi_da || 0),
@@ -688,6 +728,26 @@ export const getApplicationStats = async (req, res) => {
       `SELECT COUNT(*) AS tuChoi FROM yeucauhotro yc WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3') ${yearFilter}`, yearParams
     );
 
+    // Đếm đơn chờ nghiệm thu (Da nghiem thu = completed verification; Cho nghiem thu = pending verification)
+    const [[{ choNghiemThu }]] = await pool.query(
+      `SELECT COUNT(*) AS choNghiemThu FROM yeucauhotro yc WHERE trangthai = 'Da duyet cap 3' ${yearFilter}`, yearParams
+    );
+
+    // Đếm đơn chờ Ban Kiểm Soát xem xét
+    const [[{ banKiemSoat }]] = await pool.query(
+      `SELECT COUNT(*) AS banKiemSoat FROM yeucauhotro yc WHERE trangthai = 'Cho duyet cap 2' ${yearFilter}`, yearParams
+    );
+
+    // Đếm hợp đồng vay vốn đang thực hiện
+    const [[{ hopDongVayVon }]] = await pool.query(
+      `SELECT COUNT(*) AS hopDongVayVon FROM hopdongvayvon WHERE trangthai = 'Dang thuc hien'`
+    );
+
+    // Tổng số dư tất cả quỹ
+    const [[{ tongSoDu }]] = await pool.query(
+      `SELECT COALESCE(SUM(sodu), 0) AS tongSoDu FROM quy WHERE trangthai = 'Dang hoat dong'`
+    );
+
     return res.status(200).json({
       success: true,
       message: "Lấy thống kê đơn xin hỗ trợ thành công",
@@ -698,6 +758,10 @@ export const getApplicationStats = async (req, res) => {
         choGiaiNgan: Number(choGiaiNgan) || 0,
         daHoanThanh: Number(daHoanThanh) || 0,
         tuChoi: Number(tuChoi) || 0,
+        choNghiemThu: Number(choNghiemThu) || 0,
+        banKiemSoat: Number(banKiemSoat) || 0,
+        hopDongVayVon: Number(hopDongVayVon) || 0,
+        tongSoDu: parseFloat(tongSoDu) || 0,
       }
     });
   } catch (error) {

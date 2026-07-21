@@ -5,6 +5,8 @@ import {
   HiAcademicCap,
   HiBuildingOffice2,
   HiIdentification,
+  HiShieldCheck,
+  HiDocumentText,
 } from 'react-icons/hi2';
 import { StatCard } from '@components/common/Card';
 import styles from './AdminUserSection.module.scss';
@@ -19,12 +21,13 @@ const COLORS = {
   sinhVien: '#f0a500',
   nhaTaiTro: '#3b82f6',
   nhanVien: '#a855f7',
+  banKiemSoat: '#14b8a6',
 };
 
 const AdminUserSection = ({ userData }) => {
   if (!userData) return null;
 
-  const { tongNguoiDung, sinhVien, nhaTaiTro, nhanVien, newThisMonth } = userData;
+  const { tongNguoiDung, sinhVien, nhaTaiTro, nhanVien, banKiemSoat, hopDongVayVon, newThisMonth } = userData;
 
   // ─── CALCULATE PERCENTAGES ─────────────────────────────────────────────────
   const sinhVienPercent =
@@ -33,6 +36,8 @@ const AdminUserSection = ({ userData }) => {
     tongNguoiDung > 0 ? ((nhaTaiTro / tongNguoiDung) * 100).toFixed(1) : 0;
   const nhanVienPercent =
     tongNguoiDung > 0 ? ((nhanVien / tongNguoiDung) * 100).toFixed(1) : 0;
+  const banKiemSoatPercent =
+    tongNguoiDung > 0 ? ((banKiemSoat / tongNguoiDung) * 100).toFixed(1) : 0;
 
   // ─── PREPARE CHART DATA ────────────────────────────────────────────────────
   const chartData = [
@@ -40,6 +45,10 @@ const AdminUserSection = ({ userData }) => {
     { name: 'Nhà tài trợ', value: nhaTaiTro, color: COLORS.nhaTaiTro },
     { name: 'Nhân viên', value: nhanVien, color: COLORS.nhanVien },
   ];
+
+  if (banKiemSoat > 0) {
+    chartData.push({ name: 'Ban Kiểm Soát', value: banKiemSoat, color: COLORS.banKiemSoat });
+  }
 
   // ─── RENDER CENTER LABEL ───────────────────────────────────────────────────
   const renderCenterLabel = () => (
@@ -108,6 +117,28 @@ const AdminUserSection = ({ userData }) => {
             icon={<HiIdentification size={20} />}
             iconBgColor="purple"
           />
+
+          {/* Card 5 - Ban Kiểm Soát */}
+          {banKiemSoat > 0 && (
+            <StatCard
+              title="Ban Kiểm Soát"
+              value={banKiemSoat.toLocaleString('vi-VN')}
+              subtitle={`${banKiemSoatPercent}% tổng người dùng`}
+              icon={<HiShieldCheck size={20} />}
+              iconBgColor="teal"
+            />
+          )}
+
+          {/* Card 6 - Hợp đồng vay vốn */}
+          {hopDongVayVon > 0 && (
+            <StatCard
+              title="Hợp đồng vay vốn"
+              value={hopDongVayVon.toLocaleString('vi-VN')}
+              subtitle="Đang thực hiện"
+              icon={<HiDocumentText size={20} />}
+              iconBgColor="red"
+            />
+          )}
         </div>
 
         {/* Right - Donut Chart */}
@@ -170,6 +201,8 @@ AdminUserSection.propTypes = {
     sinhVien: PropTypes.number,
     nhaTaiTro: PropTypes.number,
     nhanVien: PropTypes.number,
+    banKiemSoat: PropTypes.number,
+    hopDongVayVon: PropTypes.number,
     newThisMonth: PropTypes.number,
   }),
 };

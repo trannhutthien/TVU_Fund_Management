@@ -1,0 +1,205 @@
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+// ── Header ──
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #f0f4ff 0%, #eff6ff 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.headerIcon {
+  font-size: 18px;
+  color: #3b6ff5;
+}
+
+.headerTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2f5e;
+}
+
+.headerDone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-bottom: 1px solid #a7f3d0;
+}
+
+.doneIcon {
+  font-size: 18px;
+  color: #059669;
+}
+
+.doneTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #065f46;
+}
+
+// ── Body ──
+.body {
+  padding: 16px 18px;
+}
+
+.hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+// ── Upload area ──
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border: 2px dashed #d1d9e6;
+  border-radius: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+
+  &:hover {
+    border-color: #3b6ff5;
+    background: #f0f4ff;
+  }
+}
+
+.uploadAreaHasFile {
+  padding: 12px 14px;
+  border-style: solid;
+  border-color: #3b6ff5;
+  background: #f0f4ff;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.uploadIcon {
+  font-size: 24px;
+  color: #94a3b8;
+}
+
+.uploadText {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.filePreview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.fileIcon {
+  font-size: 22px;
+  color: #3b6ff5;
+  flex-shrink: 0;
+}
+
+.fileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.fileName {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  display: block;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.fileRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #dc2626;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #fecaca;
+  }
+}
+
+// ── Proof link ──
+.proofLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #3b6ff5;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s;
+  margin-bottom: 12px;
+
+  &:hover {
+    background: #f0f4ff;
+    border-color: #93b4f5;
+  }
+}
+
+// ── Replace section ──
+.replaceWrap {
+  margin-top: 8px;
+}
+
+.replaceText {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.uploadRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fileInput {
+  display: none;
+}
+
+// ── Actions ──
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

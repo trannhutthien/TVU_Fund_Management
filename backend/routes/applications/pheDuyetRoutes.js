@@ -19,7 +19,7 @@ router.get('/stats', protect, authorizeRoles(1, 5), getPheDuyetStats);
 
 router.get('/approvers', protect, authorizeRoles(1, 5), getApprovers);
 
-router.get('/timeline/:type/:id', protect, authorizeRoles(1, 5), getApprovalTimeline);
+router.get('/timeline/:type/:id', protect, authorizeRoles(1, 2, 5), getApprovalTimeline);
 
 router.get('/', protect, authorizeRoles(1, 5), getAllPheDuyet);
 

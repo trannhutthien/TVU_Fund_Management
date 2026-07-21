@@ -21,6 +21,7 @@ const ROLE_BADGES = {
   3: { label: 'Cán bộ Quỹ', color: 'var(--color-navy-blue, #1a2f5e)', bg: 'rgba(26,47,94,0.1)' },
   SINH_VIEN: { label: 'Sinh viên', color: 'var(--color-gold, #b07500)', bg: 'rgba(240,165,0,0.12)' },
   NHA_TAI_TRO: { label: 'Nhà tài trợ', color: '#047857', bg: 'rgba(16,185,129,0.12)' },
+  5: { label: 'Giám sát ĐL', color: '#0d9488', bg: 'rgba(13,148,136,0.12)' },
 };
 
 const formatDate = (value) => {

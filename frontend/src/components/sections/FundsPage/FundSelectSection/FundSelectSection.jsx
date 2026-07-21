@@ -1,28 +1,28 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
-import Button from '@components/common/Button';
 import Input from '@components/common/Input';
 import Dropdown from '@components/common/Dropdown';
 import styles from './FundSelectSection.module.scss';
 
-/**
- * FundSelectSection Component
- * 
- * Section tìm kiếm, sắp xếp và lọc quỹ
- * Bao gồm: Input search, Dropdown sort, Filter buttons
- */
+const NHOM_ICONS = {
+  'Tai tro khong hoan lai': '🎁',
+  'Tai tro co thu hoi': '🔄',
+  'Cho vay': '💰',
+};
+
+const ALL_VALUE = '__all__';
+
 const FundSelectSection = ({
   onSearch,
   onSortChange,
-  onFilterChange,
-  activeFilter = 'Tất cả',
-  filterCategories = ['Tất cả'],
+  loaiQuyData = [],
+  activeMaLoai,
+  onMaLoaiChange,
 }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortValue, setSortValue] = useState('newest');
 
-  // Options cho dropdown sắp xếp
   const sortOptions = [
     { value: 'newest', label: 'Mới nhất' },
     { value: 'oldest', label: 'Cũ nhất' },
@@ -30,23 +30,38 @@ const FundSelectSection = ({
     { value: 'name', label: 'Tên A→Z' },
   ];
 
-  // Handle search input change
   const handleSearchChange = (e) => {
     const keyword = e.target.value;
     setSearchKeyword(keyword);
     onSearch?.(keyword);
   };
 
-  // Handle sort change
   const handleSortChange = (value) => {
     setSortValue(value);
     onSortChange?.(value);
   };
 
-  // Handle filter category click
-  const handleFilterClick = (category) => {
-    onFilterChange?.(category);
+  const handleNhomChange = (nhomKey, value) => {
+    if (value === ALL_VALUE) {
+      onMaLoaiChange?.(null);
+    } else {
+      onMaLoaiChange?.(value);
+    }
   };
+
+  // Group loaiquy by nhom
+  const nhomGroups = useMemo(() => {
+    const map = new Map();
+    for (const item of loaiQuyData) {
+      const nhom = item.nhom;
+      if (!nhom) continue;
+      if (!map.has(nhom)) {
+        map.set(nhom, { nhom, items: [] });
+      }
+      map.get(nhom).items.push(item);
+    }
+    return Array.from(map.values());
+  }, [loaiQuyData]);
 
   return (
     <section className={styles.fundSelectSection}>
@@ -76,26 +91,42 @@ const FundSelectSection = ({
           </div>
         </div>
 
-        {/* Bộ lọc danh mục */}
-        <div className={styles.filterRow}>
-          {filterCategories.map((category) => {
-            const isActive = activeFilter === category;
-            
-            return (
-              <Button
-                key={category}
-                variant={isActive ? 'primary' : 'ghost'}
-                size="md"
-                onClick={() => handleFilterClick(category)}
-                className={`${styles.filterButton} ${
-                  isActive ? styles.active : styles.inactive
-                }`}
-              >
-                {category}
-              </Button>
-            );
-          })}
-        </div>
+        {/* 3 Dropdown lọc theo nhóm */}
+        {nhomGroups.length > 0 && (
+          <div className={styles.nhomRow}>
+            {nhomGroups.map((group) => {
+              const icon = NHOM_ICONS[group.nhom] || '📂';
+              const dropdownOptions = [
+                { value: ALL_VALUE, label: `Tất cả (${group.nhom})` },
+                ...group.items.map((item) => ({
+                  value: item.maLoai,
+                  label: item.tenLoai,
+                })),
+              ];
+
+              // Find current value: if activeMaLoai belongs to this group, show it
+              const currentValue = group.items.some(
+                (item) => item.maLoai === activeMaLoai
+              )
+                ? activeMaLoai
+                : ALL_VALUE;
+
+              return (
+                <div key={group.nhom} className={styles.nhomDropdownWrapper}>
+                  <span className={styles.nhomIcon}>{icon}</span>
+                  <Dropdown
+                    options={dropdownOptions}
+                    value={currentValue}
+                    onChange={(val) => handleNhomChange(group.nhom, val)}
+                    placeholder={group.nhom}
+                    size="medium"
+                    className={styles.nhomDropdown}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -104,9 +135,13 @@ const FundSelectSection = ({
 FundSelectSection.propTypes = {
   onSearch: PropTypes.func,
   onSortChange: PropTypes.func,
-  onFilterChange: PropTypes.func,
-  activeFilter: PropTypes.string,
-  filterCategories: PropTypes.arrayOf(PropTypes.string),
+  loaiQuyData: PropTypes.arrayOf(PropTypes.shape({
+    maLoai: PropTypes.string,
+    tenLoai: PropTypes.string,
+    nhom: PropTypes.string,
+  })),
+  activeMaLoai: PropTypes.string,
+  onMaLoaiChange: PropTypes.func,
 };
 
 export default FundSelectSection;

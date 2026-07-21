@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
@@ -6,16 +6,24 @@ import {
   HiOutlineInformationCircle,
   HiOutlineXCircle,
   HiOutlineClipboardDocumentCheck,
+  HiOutlineBanknotes,
+  HiOutlineClock,
+  HiOutlineDocumentDuplicate,
+  HiOutlineExclamationTriangle,
+  HiOutlineCheckCircle,
+  HiOutlineSparkles,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
 import CurrencyInput from '@components/common/CurrencyInput';
+import { formatCurrency } from '@utils/formatters';
 import { useAuth } from '@context/AuthContext';
 import api from '@services/api';
 import nghiemThuService from '@services/nghiemThuService';
 import StudentInfoCard from './StudentInfoCard/StudentInfoCard';
 import RequestInfoCard from './RequestInfoCard/RequestInfoCard';
 import BankInfoCard from './BankInfoCard/BankInfoCard';
+import FundInfoSection from './FundInfoSection/FundInfoSection';
 import ReviewPanel from './ReviewPanel/ReviewPanel';
 import NghiemThuFormModal from './NghiemThuSection/NghiemThuFormModal';
 import NghiemThuTimeline from './NghiemThuSection/NghiemThuTimeline';
@@ -79,6 +87,7 @@ const XetDuyetDetail = () => {
   const [previewFile, setPreviewFile] = useState(null);
   const [nghiemThuHistory, setNghiemThuHistory] = useState([]);
   const [showNghiemThuModal, setShowNghiemThuModal] = useState(false);
+  const [fundDetail, setFundDetail] = useState(null);
 
   // ── Fields cho "Tài trợ có thu hồi" (Admin duyệt cấp 2) ──
   const [mucThuHoi, setMucThuHoi] = useState('');
@@ -86,11 +95,40 @@ const XetDuyetDetail = () => {
   const [soQuyetDinh, setSoQuyetDinh] = useState('');
   const [thuHoiErrors, setThuHoiErrors] = useState({});
 
+  // ── Fields cho "Cho vay" (Admin duyệt cấp 2) ──
+  const [laiSuat, setLaiSuat] = useState('');
+  const [kyHan, setKyHan] = useState('');
+  const [ngayKyHopDong, setNgayKyHopDong] = useState('');
+  const [vayErrors, setVayErrors] = useState({});
+
+  // ── Tính năng hỗ trợ: Mức thu hồi tối đa 30% ──
+  const tongKinhPhi = data?.tongKinhPhiDuAn || 0;
+  const mucToiDaThuHoi = tongKinhPhi > 0 ? Math.floor(tongKinhPhi * 0.3) : 0;
+  const mucThuHoiNum = parseFloat(mucThuHoi) || 0;
+  const isExceededMucToiDa = mucToiDaThuHoi > 0 && mucThuHoiNum > mucToiDaThuHoi;
+
+  // ── Tính năng hỗ trợ: Tự động sinh số quyết định ──
+  const generateSoQuyetDinh = useCallback(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const seq = String(Math.floor(Math.random() * 900) + 100).padStart(3, '0');
+    return `QĐ-${year}${month}-TTH-${seq}`;
+  }, []);
+
   // Xác định role và endpoint tương ứng
   const userRole = user?.roleId || user?.role_id || user?.vaiTro || user?.role?.id;
   const isAdmin = userRole === 1;
   const isKeToan = userRole === 2;
   const isGiaoVu = userRole === 3;
+
+  // Auto-generate số QĐ khi mở form thu hồi
+  useEffect(() => {
+    if (isAdmin && data?.loaiHotro === 'Tai tro co thu hoi' && !soQuyetDinh) {
+      setSoQuyetDinh(generateSoQuyetDinh());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.loaiHotro]);
 
   useEffect(() => {
     let mounted = true;
@@ -126,6 +164,21 @@ const XetDuyetDetail = () => {
       document.body.style.overflow = '';
     };
   }, [previewFile]);
+
+  // Fetch chi tiết quỹ khi có data đơn
+  useEffect(() => {
+    if (!data?.quy?.id) return undefined;
+    let mounted = true;
+    api
+      .get(`/funds/${data.quy.id}`)
+      .then((res) => {
+        if (mounted) setFundDetail(res.data?.fund || res.data?.data || null);
+      })
+      .catch(() => {
+        if (mounted) setFundDetail(null);
+      });
+    return () => { mounted = false; };
+  }, [data?.quy?.id]);
 
   useEffect(() => {
     if (!data?.canNghiemThu || !request_id) {
@@ -241,6 +294,8 @@ const XetDuyetDetail = () => {
       const errors = {};
       if (!mucThuHoi || isNaN(mucThuHoi) || parseFloat(mucThuHoi) <= 0) {
         errors.mucThuHoi = 'Mức thu hồi phải > 0';
+      } else if (isExceededMucToiDa) {
+        errors.mucThuHoi = `Mức thu hồi vượt quá 30% tổng kinh phí (tối đa: ${formatCurrency(mucToiDaThuHoi)})`;
       }
       if (!thoiHanHoanTra || isNaN(thoiHanHoanTra) || parseInt(thoiHanHoanTra) <= 0) {
         errors.thoiHanHoanTra = 'Thời hạn hoàn trả phải > 0 tháng';
@@ -250,6 +305,24 @@ const XetDuyetDetail = () => {
       }
       if (Object.keys(errors).length > 0) {
         setThuHoiErrors(errors);
+        return;
+      }
+    }
+
+    // Validate thêm cho "Cho vay" (Admin duyệt cấp 2)
+    if (isAdmin && data?.loaiHotro === 'Cho vay') {
+      const errors = {};
+      if (!laiSuat || isNaN(laiSuat) || parseFloat(laiSuat) < 0) {
+        errors.laiSuat = 'Lãi suất phải ≥ 0';
+      }
+      if (!kyHan || isNaN(kyHan) || parseInt(kyHan) <= 0) {
+        errors.kyHan = 'Kỳ hạn phải > 0 tháng';
+      }
+      if (!ngayKyHopDong) {
+        errors.ngayKyHopDong = 'Ngày ký hợp đồng là bắt buộc';
+      }
+      if (Object.keys(errors).length > 0) {
+        setVayErrors(errors);
         return;
       }
     }
@@ -275,13 +348,23 @@ const XetDuyetDetail = () => {
         redirectPath = '/admin/xet-duyet';
         if (data?.loaiHotro === 'Tai tro co thu hoi') {
           payload = {
+            ketqua: 'Duyet',
             ghiChu,
             mucthuhoi: parseFloat(mucThuHoi),
             thoihanhoantra: parseInt(thoiHanHoanTra),
             soQuyetDinh: soQuyetDinh.trim(),
           };
+        } else if (data?.loaiHotro === 'Cho vay') {
+          payload = {
+            ketqua: 'Duyet',
+            ghiChu,
+            sotienvon: data.soTienYeuCau,
+            laisuatphantram: parseFloat(laiSuat),
+            ngaykyhopdong: ngayKyHopDong,
+            kyhandothang: parseInt(kyHan),
+          };
         } else {
-          payload = { ghiChu };
+          payload = { ketqua: 'Duyet', ghiChu };
         }
       } else if (isKeToan) {
         // Kế toán (role 2): Duyệt cấp 3 - sẽ xử lý ở trang Giải ngân
@@ -376,11 +459,14 @@ const XetDuyetDetail = () => {
 
         <div className={styles.layout}>
           <div className={styles.leftCol}>
+            <FundInfoSection fund={fundDetail} />
             <StudentInfoCard userId={data.nguoiNop?.id} fallback={data.nguoiNop} />
             <RequestInfoCard
               tieuDe={data.tieuDe}
               moTa={data.moTa}
               soTienYeuCau={data.soTienYeuCau}
+              loaiHoTro={data.loaiHotro}
+              tongKinhPhiDuAn={data.tongKinhPhiDuAn}
               quy={data.quy}
               files={files}
               onPreviewFile={setPreviewFile}
@@ -389,13 +475,36 @@ const XetDuyetDetail = () => {
           </div>
 
           <aside className={styles.rightCol}>
-            {/* ── Fields bổ sung cho "Tài trợ có thu hồi" (Admin duyệt cấp 2) ── */}
+            {/* ── "Tài trợ có thu hồi" — Form nhập (Admin duyệt cấp 2, chưa duyệt) ── */}
             {isAdmin && data?.loaiHotro === 'Tai tro co thu hoi' && !isDisabled && (
               <section className={styles.thuHoiSection}>
                 <div className={styles.thuHoiHeader}>
                   <h3 className={styles.thuHoiTitle}>Thông tin tài trợ thu hồi</h3>
                   <span className={styles.thuHoiRequired}>Bắt buộc</span>
                 </div>
+
+                {/* Gợi ý mức thu hồi tối đa */}
+                {mucToiDaThuHoi > 0 && (
+                  <div className={`${styles.thuHoiHint} ${isExceededMucToiDa ? styles.thuHoiHintDanger : styles.thuHoiHintOk}`}>
+                    {isExceededMucToiDa ? (
+                      <HiOutlineExclamationTriangle className={styles.thuHoiHintIcon} />
+                    ) : (
+                      <HiOutlineCheckCircle className={styles.thuHoiHintIcon} />
+                    )}
+                    <div className={styles.thuHoiHintText}>
+                      <span>
+                        {isExceededMucToiDa
+                          ? `Vượt quá mức cho phép! Tối đa 30% tổng kinh phí dự án`
+                          : `Mức thu hồi tối đa theo Điều 15.1:`
+                        }
+                      </span>
+                      <strong>{formatCurrency(mucToiDaThuHoi)}</strong>
+                      <span className={styles.thuHoiHintSub}>
+                        (Dựa trên tổng kinh phí dự án: {formatCurrency(tongKinhPhi)})
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className={styles.thuHoiField}>
                   <label className={styles.thuHoiLabel} htmlFor="mucThuHoi">
@@ -408,11 +517,17 @@ const XetDuyetDetail = () => {
                       setMucThuHoi(raw);
                       if (thuHoiErrors.mucThuHoi) setThuHoiErrors((p) => ({ ...p, mucThuHoi: '' }));
                     }}
-                    className={`${styles.thuHoiInput} ${thuHoiErrors.mucThuHoi ? styles.thuHoiInputError : ''}`}
+                    className={`${styles.thuHoiInput} ${thuHoiErrors.mucThuHoi || isExceededMucToiDa ? styles.thuHoiInputError : ''}`}
                     placeholder="VD: 10000000"
                     min={0}
+                    max={mucToiDaThuHoi || undefined}
                   />
                   {thuHoiErrors.mucThuHoi && <span className={styles.thuHoiError}>{thuHoiErrors.mucThuHoi}</span>}
+                  {isExceededMucToiDa && !thuHoiErrors.mucThuHoi && (
+                    <span className={styles.thuHoiError}>
+                      Số tiền ({formatCurrency(mucThuHoiNum)}) vượt quá mức tối đa ({formatCurrency(mucToiDaThuHoi)})
+                    </span>
+                  )}
                 </div>
 
                 <div className={styles.thuHoiField}>
@@ -438,18 +553,187 @@ const XetDuyetDetail = () => {
                   <label className={styles.thuHoiLabel} htmlFor="soQuyetDinh">
                     Số quyết định hợp đồng
                   </label>
-                  <input
-                    id="soQuyetDinh"
-                    type="text"
-                    className={`${styles.thuHoiInput} ${thuHoiErrors.soQuyetDinh ? styles.thuHoiInputError : ''}`}
-                    value={soQuyetDinh}
-                    onChange={(e) => {
-                      setSoQuyetDinh(e.target.value);
-                      if (thuHoiErrors.soQuyetDinh) setThuHoiErrors((p) => ({ ...p, soQuyetDinh: '' }));
-                    }}
-                    placeholder="VD: QĐ-2025-001"
-                  />
+                  <div className={styles.genRow}>
+                    <input
+                      id="soQuyetDinh"
+                      type="text"
+                      className={`${styles.thuHoiInput} ${styles.genInput} ${thuHoiErrors.soQuyetDinh ? styles.thuHoiInputError : ''}`}
+                      value={soQuyetDinh}
+                      onChange={(e) => {
+                        setSoQuyetDinh(e.target.value);
+                        if (thuHoiErrors.soQuyetDinh) setThuHoiErrors((p) => ({ ...p, soQuyetDinh: '' }));
+                      }}
+                      placeholder="QĐ-202601-TTH-001"
+                    />
+                    <button
+                      type="button"
+                      className={styles.genBtn}
+                      onClick={() => setSoQuyetDinh(generateSoQuyetDinh())}
+                      title="Tạo lại mã tự động"
+                    >
+                      <HiOutlineSparkles />
+                    </button>
+                  </div>
                   {thuHoiErrors.soQuyetDinh && <span className={styles.thuHoiError}>{thuHoiErrors.soQuyetDinh}</span>}
+                </div>
+              </section>
+            )}
+
+            {/* ── "Tài trợ có thu hồi" — Hiển thị data đã lưu (đã duyệt) ── */}
+            {data?.loaiHotro === 'Tai tro co thu hoi' && data?.dieukhoanthuhoi && (
+              <section className={styles.contractSection}>
+                <div className={styles.contractHeader}>
+                  <HiOutlineBanknotes size={18} className={styles.contractIcon} />
+                  <h3 className={styles.contractTitle}>Điều khoản thu hồi</h3>
+                  <span className={`${styles.contractBadge} ${styles.contractBadgeRecovery}`}>Đã phê duyệt</span>
+                </div>
+                <div className={styles.contractGrid}>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Mức thu hồi</span>
+                    <span className={styles.contractValue}>{formatCurrency(data.dieukhoanthuhoi.mucthuhoi)}</span>
+                  </div>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Thời hạn hoàn trả</span>
+                    <span className={styles.contractValue}>{data.dieukhoanthuhoi.thoihanhoantra_thang} tháng</span>
+                  </div>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Số quyết định</span>
+                    <span className={styles.contractValue}>{data.dieukhoanthuhoi.soquyetdinh_hopdong || '—'}</span>
+                  </div>
+                  {data.dieukhoanthuhoi.filehopdong && (
+                    <div className={styles.contractItem}>
+                      <span className={styles.contractLabel}>File hợp đồng</span>
+                      <a
+                        href={data.dieukhoanthuhoi.filehopdong}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.contractLink}
+                      >
+                        Xem file
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* ── "Cho vay" — Form nhập (Admin duyệt cấp 2, chưa duyệt) ── */}
+            {isAdmin && data?.loaiHotro === 'Cho vay' && !isDisabled && (
+              <section className={styles.loanSection}>
+                <div className={styles.loanHeader}>
+                  <h3 className={styles.loanTitle}>Thông tin khoản vay</h3>
+                  <span className={styles.loanRequired}>Bắt buộc</span>
+                </div>
+
+                <div className={styles.loanInfo}>
+                  <HiOutlineInformationCircle size={14} />
+                  <span>Số tiền vay = số tiền đề nghị ({formatCurrency(data.soTienYeuCau)})</span>
+                </div>
+
+                <div className={styles.loanField}>
+                  <label className={styles.loanLabel} htmlFor="laiSuat">
+                    Lãi suất (%/năm)
+                  </label>
+                  <input
+                    id="laiSuat"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    className={`${styles.loanInput} ${vayErrors.laiSuat ? styles.loanInputError : ''}`}
+                    value={laiSuat}
+                    onChange={(e) => {
+                      setLaiSuat(e.target.value);
+                      if (vayErrors.laiSuat) setVayErrors((p) => ({ ...p, laiSuat: '' }));
+                    }}
+                    placeholder="VD: 4.5"
+                  />
+                  {vayErrors.laiSuat && <span className={styles.loanError}>{vayErrors.laiSuat}</span>}
+                </div>
+
+                <div className={styles.loanField}>
+                  <label className={styles.loanLabel} htmlFor="kyHan">
+                    Kỳ hạn (tháng)
+                  </label>
+                  <input
+                    id="kyHan"
+                    type="number"
+                    min="1"
+                    className={`${styles.loanInput} ${vayErrors.kyHan ? styles.loanInputError : ''}`}
+                    value={kyHan}
+                    onChange={(e) => {
+                      setKyHan(e.target.value);
+                      if (vayErrors.kyHan) setVayErrors((p) => ({ ...p, kyHan: '' }));
+                    }}
+                    placeholder="VD: 24"
+                  />
+                  {vayErrors.kyHan && <span className={styles.loanError}>{vayErrors.kyHan}</span>}
+                </div>
+
+                <div className={styles.loanField}>
+                  <label className={styles.loanLabel} htmlFor="ngayKyHopDong">
+                    Ngày ký hợp đồng
+                  </label>
+                  <input
+                    id="ngayKyHopDong"
+                    type="date"
+                    className={`${styles.loanInput} ${vayErrors.ngayKyHopDong ? styles.loanInputError : ''}`}
+                    value={ngayKyHopDong}
+                    onChange={(e) => {
+                      setNgayKyHopDong(e.target.value);
+                      if (vayErrors.ngayKyHopDong) setVayErrors((p) => ({ ...p, ngayKyHopDong: '' }));
+                    }}
+                  />
+                  {vayErrors.ngayKyHopDong && <span className={styles.loanError}>{vayErrors.ngayKyHopDong}</span>}
+                </div>
+              </section>
+            )}
+
+            {/* ── "Cho vay" — Hiển thị hợp đồng đã tạo (đã duyệt) ── */}
+            {data?.loaiHotro === 'Cho vay' && data?.hopdongvayvon && (
+              <section className={styles.contractSection}>
+                <div className={styles.contractHeader}>
+                  <HiOutlineDocumentDuplicate size={18} className={styles.contractIcon} />
+                  <h3 className={styles.contractTitle}>Hợp đồng vay vốn</h3>
+                  <span className={`${styles.contractBadge} ${styles.contractBadgeLoan}`}>Đang thực hiện</span>
+                </div>
+                <div className={styles.contractGrid}>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Số tiền vay</span>
+                    <span className={styles.contractValue}>{formatCurrency(data.hopdongvayvon.sotienvon)}</span>
+                  </div>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Lãi suất</span>
+                    <span className={styles.contractValue}>{data.hopdongvayvon.laisuatphantram}%/năm</span>
+                  </div>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Kỳ hạn</span>
+                    <span className={styles.contractValue}>{data.hopdongvayvon.kyhandothang} tháng</span>
+                  </div>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Ngày ký HĐ</span>
+                    <span className={styles.contractValue}>{data.hopdongvayvon.ngaykyhopdong}</span>
+                  </div>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Ngày đáo hạn</span>
+                    <span className={styles.contractValue}>{data.hopdongvayvon.ngaydaohan}</span>
+                  </div>
+                  <div className={styles.contractItem}>
+                    <span className={styles.contractLabel}>Trạng thái HĐ</span>
+                    <span className={styles.contractValue}>{data.hopdongvayvon.trangthai}</span>
+                  </div>
+                  {data.hopdongvayvon.filehopdong && (
+                    <div className={styles.contractItem}>
+                      <span className={styles.contractLabel}>File hợp đồng</span>
+                      <a
+                        href={data.hopdongvayvon.filehopdong}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.contractLink}
+                      >
+                        Xem file
+                      </a>
+                    </div>
+                  )}
                 </div>
               </section>
             )}

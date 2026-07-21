@@ -38,6 +38,7 @@ import GoogleAuthCallbackPage from './pages/Auth/GoogleAuthCallbackPage'
 import ProfilePage from './pages/User/Student/ProfilePage/ProfilePage'
 import ApplyPage from './pages/Public/ApplyPage/ApplyPage'
 import DashboardPage from './pages/User/Student/Dashboard/DashboardPage'
+import NghiaVuHoanTraPage from './pages/User/Student/NghiaVuHoanTra/index.jsx'
 
 // Pages - Staff (Role 1, 2, 3)
 import AdminDashboard from './pages/Staff/Admin/AdminDashboard'
@@ -50,6 +51,7 @@ import NhatKyPage from './pages/Staff/Admin/NhatKyPage/NhatKyPage'
 
 import KeToanDashboard from './pages/Staff/KeToan/KeToanDashboard'
 import KeToanGiaiNganPage from './pages/Staff/KeToan/GiaiNganPage'
+import GiaiNganDetailPage from './pages/Staff/KeToan/GiaiNganPage/GiaiNganDetailPage/GiaiNganDetailPage'
 import KeToanLichSuGiaoDichPage from './pages/Staff/KeToan/LichSuGiaoDichPage'
 import KeToanKhoanTaiTroPage from './pages/Staff/KeToan/KhoanTaiTroPage/KhoanTaiTroPage'
 import ThongKeThuChiPage from './pages/Staff/KeToan/ThongKeThuChiPage'
@@ -65,6 +67,7 @@ import CanBoUserManagementPage from './pages/Staff/CanBo/UserManagementPage/User
 import CanBoBaoCaoPage from './pages/Staff/CanBo/BaoCaoPage'
 import PhanBoPage from './pages/Staff/CanBo/PhanBoPage/PhanBoPage'
 import TaoTinTucPage from './pages/Admin/TinTuc/TaoTinTucPage'
+import GiamSatNghiemThuCongNoPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/index.jsx'
 
 // Protected Route: Bảo vệ routes cần đăng nhập
 const ProtectedRoute = ({ children }) => {
@@ -113,6 +116,7 @@ function App() {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/nghia-vu-hoan-tra" element={<NghiaVuHoanTraPage />} />
           </Route>
 
           {/* Staff Routes - với StaffSidebar */}
@@ -152,6 +156,7 @@ function App() {
             <Route element={<RoleBasedRoute allowedRoles={[1, 2]} redirectTo="/" />}>
               <Route path="/ke-toan/dashboard" element={<KeToanDashboard />} />
               <Route path="/ke-toan/giai-ngan" element={<KeToanGiaiNganPage />} />
+              <Route path="/ke-toan/giai-ngan/:request_id" element={<GiaiNganDetailPage />} />
               <Route path="/ke-toan/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
               <Route path="/ke-toan/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
               <Route path="/ke-toan/bao-cao" element={<ThongKeThuChiPage />} />
@@ -186,6 +191,11 @@ function App() {
               <Route path="/kiem-soat/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
               <Route path="/kiem-soat/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
               <Route path="/kiem-soat/bao-cao" element={<AdminBaoCaoPage />} />
+            </Route>
+
+            {/* Shared Routes - Admin, Ke toan, Can bo, Ban kiem soat */}
+            <Route element={<RoleBasedRoute allowedRoles={[1, 2, 3, 5]} redirectTo="/" />}>
+              <Route path="/giam-sat" element={<GiamSatNghiemThuCongNoPage />} />
             </Route>
           </Route>
 

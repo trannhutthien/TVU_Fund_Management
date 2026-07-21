@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Popconfirm } from 'antd';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import {
   HiOutlineArrowLeft,
   HiOutlineNewspaper,
@@ -87,12 +87,6 @@ const QUILL_MODULES = {
     ],
   },
 };
-
-const QUILL_FORMATS = [
-  'header', 'bold', 'italic', 'underline', 'strike',
-  'color', 'background', 'list', 'bullet', 'indent',
-  'blockquote', 'code-block', 'link', 'image',
-];
 
 const INITIAL_FORM = {
   title: '',
@@ -584,7 +578,6 @@ const TaoTinTucPage = () => {
                             value={form.content}
                             onChange={val => setForm(p => ({ ...p, content: val }))}
                             modules={QUILL_MODULES}
-                            formats={QUILL_FORMATS}
                             placeholder="Nhập nội dung bài viết..."
                           />
                         </div>

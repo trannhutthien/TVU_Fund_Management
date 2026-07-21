@@ -23,8 +23,8 @@ router.get("/stats", protect, authorizeRoles(1, 3), getUserStats);
 // GET /api/users — Admin / Cán bộ
 router.get("/", protect, authorizeRoles(1, 3), getUsers);
 
-// GET /api/users/:id — Admin / Cán bộ
-router.get("/:id", protect, authorizeRoles(1, 3), getUserById);
+// GET /api/users/:id — Admin / Cán bộ / Kế toán
+router.get("/:id", protect, authorizeRoles(1, 2, 3), getUserById);
 
 // POST /api/users — Admin / Cán bộ
 router.post("/", protect, authorizeRoles(1, 3), createUser);

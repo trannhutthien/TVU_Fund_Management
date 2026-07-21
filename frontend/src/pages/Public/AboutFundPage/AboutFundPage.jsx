@@ -12,7 +12,14 @@ import {
   HiOutlineShieldCheck,
   HiOutlineBookOpen,
   HiOutlineFolderOpen,
-  HiOutlineCalendarDays
+  HiOutlineCalendarDays,
+  HiOutlineCheckCircle,
+  HiOutlineCurrencyDollar,
+  HiOutlineBriefcase,
+  HiOutlineDocumentCheck,
+  HiOutlineBuildingLibrary,
+  HiOutlineHeart,
+  HiOutlineExclamationTriangle,
 } from 'react-icons/hi2';
 import PublicHeader from '@components/layout/PublicHeader/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
@@ -259,6 +266,7 @@ const AboutFundPage = () => {
           {/* TAB 1: THÔNG TIN CHUNG */}
           {activeTab === TABS.THONG_TIN && (
             <div className={styles.tabContent}>
+              {/* Giới thiệu tổng quan */}
               <div className={styles.introSection}>
                 <div className={styles.introText}>
                   <h3>Lịch sử & Sứ mệnh của Quỹ</h3>
@@ -284,6 +292,217 @@ const AboutFundPage = () => {
                     <div className={styles.valueIcon}><HiOutlineShieldCheck size={24} /></div>
                     <h4>Giá trị cốt lõi</h4>
                     <p>Minh bạch hàng đầu, hỗ trợ kịp thời, kết nối nhân văn bền vững giữa nhà hảo tâm và học sinh.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── Điều lệ Quỹ ─── */}
+              <div className={styles.dieuLeSection}>
+                <div className={styles.dieuLeHeader}>
+                  <HiOutlineBookOpen size={28} />
+                  <div>
+                    <h2>Điều lệ Quỹ Phát triển Đại học Trà Vinh</h2>
+                    <p>Các quy định chính thức về hoạt động, quản lý và sử dụng nguồn vốn của Quỹ</p>
+                  </div>
+                </div>
+
+                {/* 1. Mục đích */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>01</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineBuildingLibrary size={20} />
+                      <h4>Mục đích của Quỹ</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                    <p>
+                      Quỹ Phát triển Đại học Trà Vinh là quỹ xã hội hoạt động <strong>không vì lợi nhuận</strong>, được thành lập trên cơ sở tuân thủ pháp luật của Nhà nước. Quỹ tự tạo vốn từ các nguồn đóng góp, tài trợ và đầu tư hợp pháp nhằm hỗ trợ các hoạt động giảng dạy, học tập, nghiên cứu khoa học, chuyển giao công nghệ và phát triển bền vững của Đại học Trà Vinh.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Nguyên tắc hoạt động */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>02</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineCheckCircle size={20} />
+                      <h4>Nguyên tắc hoạt động</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                    <ul className={styles.dieuLeList}>
+                      <li>Hoạt động không vì mục đích lợi nhuận.</li>
+                      <li>Tiếp nhận nguồn tài trợ, đóng góp hoàn toàn tự nguyện từ các tổ chức, cá nhân trong và ngoài nước.</li>
+                      <li>Không sử dụng nguồn vốn ngân sách Nhà nước.</li>
+                      <li>Thực hiện công khai, minh bạch, tự chủ tài chính và chịu trách nhiệm trước pháp luật về mọi hoạt động của Quỹ.</li>
+                      <li>Quản lý, sử dụng nguồn vốn đúng mục đích và phát triển bền vững nguồn vốn của Quỹ.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* 3. Nhiệm vụ */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>03</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineBriefcase size={20} />
+                      <h4>Nhiệm vụ của Quỹ</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                    <ul className={styles.dieuLeList}>
+                      <li>Vận động, tiếp nhận và quản lý các nguồn tài trợ hợp pháp.</li>
+                      <li>Quản lý, sử dụng hiệu quả các nguồn vốn.</li>
+                      <li>Triển khai các hoạt động nhằm duy trì và phát triển nguồn vốn.</li>
+                      <li>Tiếp nhận hồ sơ xin tài trợ, vay vốn; tổ chức thẩm định và quyết định hỗ trợ theo quy định.</li>
+                      <li>Kiểm tra, giám sát, nghiệm thu các dự án được tài trợ.</li>
+                      <li>Thu hồi vốn đối với các khoản vay hoặc tài trợ có thu hồi.</li>
+                      <li>Đình chỉ hoặc thu hồi kinh phí khi phát hiện sử dụng vốn sai mục đích hoặc vi phạm quy định.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* 4. Nguồn vốn */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>04</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineCurrencyDollar size={20} />
+                      <h4>Nguồn vốn hoạt động</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                      <div className={styles.nguonVangGrid}>
+                      <div className={styles.nguonVangItem}>
+                        <span className={styles.nguonVangIcon}>🤝</span>
+                        <div>
+                          <strong>Đóng góp ban đầu</strong>
+                          <p>Của các sáng lập viên</p>
+                        </div>
+                      </div>
+                      <div className={styles.nguonVangItem}>
+                        <span className={styles.nguonVangIcon}>🎁</span>
+                        <div>
+                          <strong>Tài trợ, hiến tặng</strong>
+                          <p>Từ tổ chức, doanh nghiệp và cá nhân trong và ngoài nước</p>
+                        </div>
+                      </div>
+                      <div className={styles.nguonVangItem}>
+                        <span className={styles.nguonVangIcon}>🏦</span>
+                        <div>
+                          <strong>Lãi tiền gửi</strong>
+                          <p>Và các hoạt động phát triển vốn hợp pháp</p>
+                        </div>
+                      </div>
+                      <div className={styles.nguonVangItem}>
+                        <span className={styles.nguonVangIcon}>♻️</span>
+                        <div>
+                          <strong>Nguồn thu hồi</strong>
+                          <p>Từ các dự án được hỗ trợ</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Đối tượng hỗ trợ */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>05</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineUserGroup size={20} />
+                      <h4>Đối tượng được hỗ trợ</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                    <div className={styles.doiTuongGrid}>
+                      <div className={styles.doiTuongItem}>
+                        <span className={styles.doiTuongEmoji}>🎓</span>
+                        <span>Học sinh, sinh viên, học viên</span>
+                      </div>
+                      <div className={styles.doiTuongItem}>
+                        <span className={styles.doiTuongEmoji}>👨‍🏫</span>
+                        <span>Cán bộ, giảng viên, viên chức</span>
+                      </div>
+                      <div className={styles.doiTuongItem}>
+                        <span className={styles.doiTuongEmoji}>🏫</span>
+                        <span>Các đơn vị trực thuộc ĐH Trà Vinh</span>
+                      </div>
+                      <div className={styles.doiTuongItem}>
+                        <span className={styles.doiTuongEmoji}>🔬</span>
+                        <span>Nhà khoa học phục vụ chiến lược phát triển</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6. Hình thức hỗ trợ */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>06</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineHeart size={20} />
+                      <h4>Hình thức hỗ trợ</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                    <div className={styles.hinhThucGrid}>
+                      <div className={`${styles.hinhThucItem} ${styles.hinhThucKhongHoan}`}>
+                        <div className={styles.hinhThucBadge}>🎁</div>
+                        <h5>Tài trợ không hoàn lại</h5>
+                        <p>Áp dụng đối với các hoạt động giáo dục, đào tạo, nghiên cứu khoa học, phát triển cơ sở vật chất, tổ chức hội nghị, hội thảo và các nhiệm vụ phục vụ sự phát triển của Đại học Trà Vinh.</p>
+                      </div>
+                      <div className={`${styles.hinhThucItem} ${styles.hinhThucCoThuHoi}`}>
+                        <div className={styles.hinhThucBadge}>🔄</div>
+                        <h5>Tài trợ có thu hồi một phần</h5>
+                        <p>Áp dụng đối với các dự án nghiên cứu, chuyển giao công nghệ, thương mại hóa kết quả nghiên cứu và các dự án có khả năng tạo nguồn thu để hoàn trả một phần kinh phí.</p>
+                      </div>
+                      <div className={`${styles.hinhThucItem} ${styles.hinhThucChoVay}`}>
+                        <div className={styles.hinhThucBadge}>💰</div>
+                        <h5>Cho vay vốn</h5>
+                        <p>Quỹ xem xét cho vay vốn không lãi hoặc với mức lãi suất ưu đãi để hoàn thiện công nghệ, sản phẩm, ứng dụng kết quả nghiên cứu, chuyển giao công nghệ, thương mại hóa sản phẩm khoa học công nghệ.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 7. Điều kiện xét hỗ trợ */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>07</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineDocumentCheck size={20} />
+                      <h4>Điều kiện xét hỗ trợ</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                    <ul className={styles.dieuLeList}>
+                      <li>Có đơn đề nghị theo mẫu.</li>
+                      <li>Cung cấp đầy đủ hồ sơ, tài liệu và minh chứng theo yêu cầu.</li>
+                      <li>Được Hội đồng chuyên môn thẩm định và Hội đồng Quỹ xem xét trước khi quyết định hỗ trợ.</li>
+                      <li>Thực hiện đúng nội dung đã cam kết trong hồ sơ và hợp đồng với Quỹ.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* 8. Trách nhiệm */}
+                <div className={styles.dieuLeCard}>
+                  <div className={styles.dieuLeCardHeader}>
+                    <span className={styles.dieuLeNumber}>08</span>
+                    <div className={styles.dieuLeCardTitle}>
+                      <HiOutlineExclamationTriangle size={20} />
+                      <h4>Trách nhiệm của đơn vị, cá nhân được hỗ trợ</h4>
+                    </div>
+                  </div>
+                  <div className={styles.dieuLeCardBody}>
+                    <ul className={styles.dieuLeList}>
+                      <li>Sử dụng kinh phí đúng mục đích.</li>
+                      <li>Thực hiện đầy đủ nghĩa vụ báo cáo và nghiệm thu theo quy định.</li>
+                      <li>Hoàn trả kinh phí đối với các khoản vay hoặc tài trợ có thu hồi theo đúng hợp đồng đã ký.</li>
+                      <li>Trường hợp vi phạm nghĩa vụ hoàn trả sẽ phải chịu các chế tài theo quy định của pháp luật và Điều lệ Quỹ.</li>
+                    </ul>
                   </div>
                 </div>
               </div>
