@@ -82,7 +82,7 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
     if (onLoginClick) {
       onLoginClick();
     } else {
-      navigate('/login');
+      navigate('/');
     }
   };
 

@@ -85,7 +85,8 @@ const matchesKeyword = (item, kw) => {
   const ten = (item.nguoiNop?.hoTen || '').toLowerCase();
   const mssv = (item.nguoiNop?.maSoDinhDanh || '').toLowerCase();
   const id = String(item.requestId || '').toLowerCase();
-  return ten.includes(k) || mssv.includes(k) || id.includes(k);
+  const tieuDe = (item.tieuDe || item.moTa || '').toLowerCase();
+  return ten.includes(k) || mssv.includes(k) || id.includes(k) || tieuDe.includes(k);
 };
 
 const XetDuyetPage = ({ isAdmin = false }) => {
@@ -413,7 +414,9 @@ const XetDuyetPage = ({ isAdmin = false }) => {
               <div className={`${styles.cell} ${styles.colCode}`}>Mã đơn</div>
               <div className={`${styles.cell} ${styles.colName}`}>Họ tên SV</div>
               <div className={`${styles.cell} ${styles.colMssv}`}>MSSV</div>
+              <div className={`${styles.cell} ${styles.colTopic}`}>Đề tài / Lý do</div>
               <div className={`${styles.cell} ${styles.colFund}`}>Quỹ</div>
+              <div className={`${styles.cell} ${styles.colDotDuyet}`}>Đợt duyệt</div>
               <div className={`${styles.cell} ${styles.colAmount}`}>Số tiền YC</div>
               <div className={`${styles.cell} ${styles.colDate}`}>Ngày nộp</div>
               {showStatusColumn && (
@@ -460,8 +463,14 @@ const XetDuyetPage = ({ isAdmin = false }) => {
                     <div className={`${styles.cell} ${styles.colMssv}`}>
                       {item.nguoiNop?.maSoDinhDanh || '—'}
                     </div>
+                    <div className={`${styles.cell} ${styles.colTopic} ${styles.topic}`} title={item.tieuDe || item.moTa || ''}>
+                      {item.tieuDe || item.moTa || '—'}
+                    </div>
                     <div className={`${styles.cell} ${styles.colFund}`}>
                       {item.quy?.tenQuy || '—'}
+                    </div>
+                    <div className={`${styles.cell} ${styles.colDotDuyet}`}>
+                      {item.dotDuyet || '—'}
                     </div>
                     <div className={`${styles.cell} ${styles.colAmount} ${styles.amount}`}>
                       {formatCurrency(item.soTienYeuCau)}

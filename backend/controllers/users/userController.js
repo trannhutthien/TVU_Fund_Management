@@ -427,6 +427,7 @@ export const getUserById = async (req, res) => {
         ngaySinh: user.ngaysinh,
         gioiTinh: user.gioitinh,
         donViCongTac: user.donvicongtac,
+        tinhTrangCongTac: user.tinhtrangcongtac,
         vaiTro: {
           id: user.vaitro_id,
           ten: user.tenvaitro,
@@ -610,6 +611,29 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ─── GET /api/users/faculties ─────────────────────────────────────────────────
+// Lấy danh sách khoa/phòng ban từ bảng donvihoc (công khai, không cần auth)
+export const getFaculties = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT DISTINCT tenkhoa
+       FROM donvihoc
+       WHERE trangthai = 'Hoat dong' AND tenkhoa IS NOT NULL AND tenkhoa != ''
+       ORDER BY tenkhoa ASC`
+    );
+    return res.status(200).json({
+      success: true,
+      data: rows.map((r) => r.tenkhoa),
+    });
+  } catch (error) {
+    console.error("Lỗi getFaculties:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
     });
   }
 };

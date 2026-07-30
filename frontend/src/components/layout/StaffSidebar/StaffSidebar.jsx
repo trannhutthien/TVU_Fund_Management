@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { HiXMark } from 'react-icons/hi2';
+import { HiXMark, HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
 import PropTypes from 'prop-types';
 import {
   HiOutlineChartBarSquare,
@@ -56,7 +56,6 @@ const NAV_CONFIG = [
     roles: [1],
     items: [
       { label: 'Quản lý người dùng', path: '/admin/users', icon: HiOutlineUsers, roles: [1] },
-      { label: 'Nhân sự', path: '/admin/nhan-su', icon: HiOutlineUserGroup, roles: [1] },
       { label: 'Hệ thống & Phân quyền', path: '/admin/roles', icon: HiOutlineShieldCheck, roles: [1] },
       { label: 'Nhật ký hệ thống', path: '/admin/nhat-ky', icon: HiOutlineClipboardDocumentList, roles: [1] },
     ]
@@ -200,6 +199,7 @@ const NAV_CONFIG = [
       { label: 'Phê duyệt', path: '/kiem-soat/phe-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [5] },
       { label: 'Khoản tài trợ', path: '/kiem-soat/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [5] },
       { label: 'Giao dịch', path: '/kiem-soat/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [5] },
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [5] },
     ]
   },
   {
@@ -209,19 +209,12 @@ const NAV_CONFIG = [
       { label: 'Thống kê & Báo cáo', path: '/kiem-soat/bao-cao', icon: HiOutlineChartPie, roles: [5] },
     ]
   },
-  {
-    group: 'GIÁM SÁT',
-    roles: [5],
-    items: [
-      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [5] },
-    ]
-  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── STAFF SIDEBAR COMPONENT ───────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-const StaffSidebar = ({ isOpen = false, onClose }) => {
+const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollapse }) => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuthStore();
   const [pendingCount, setPendingCount] = useState(0);
@@ -324,6 +317,7 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
     if (key === 'phe-duyet') key = 'phe_duyet';
     if (key === 'nhat-ky') key = 'nhat_ky';
     if (key === 'phan-bo') key = 'phan_bo';
+    if (key === 'giam-sat') key = 'giam_sat';
 
     const perm = permissions[key];
     if (!perm) return true;
@@ -384,7 +378,18 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
   const displayAvatar = displayUser.avatar;
 
   return (
-    <aside className={`${styles.staffSidebar} ${isOpen ? styles.open : ''}`}>
+    <aside className={`${styles.staffSidebar} ${isOpen ? styles.open : ''} ${isCollapsed ? styles.collapsed : ''}`}>
+      {/* Collapse Toggle Button – desktop only */}
+      <button
+        className={styles.collapseToggle}
+        onClick={onToggleCollapse}
+        aria-label={isCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
+        type="button"
+        style={{ left: isCollapsed ? '57px' : '245px', top: '110px' }}
+      >
+        {isCollapsed ? <HiChevronRight size={16} /> : <HiChevronLeft size={16} />}
+      </button>
+
       {/* Mobile Close Button – chỉ hiện trên mobile */}
       <button
         className={styles.closeMobileBtn}
@@ -398,18 +403,19 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
       <div className={styles.logoSection}>
         <Logo
           size="sm"
-          variant="full"
+          variant={isCollapsed ? 'icon-only' : 'full'}
           layout="horizontal"
           theme="primary"
           title="TVU Fund"
           subtitle="Quản lý Quỹ"
-          showSubtitle={true}
+          showSubtitle={!isCollapsed}
           clickable={true}
           onClick={() => navigate('/')}
         />
       </div>
 
       {/* Mini Profile */}
+      {!isCollapsed && (
       <div className={styles.miniProfile}>
         {loading ? (
           <>
@@ -437,13 +443,14 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
           </>
         )}
       </div>
+      )}
 
       {/* Navigation Menu */}
       <nav className={styles.navMenu}>
         {visibleGroups.map((group, groupIndex) => (
           <div key={groupIndex} className={styles.navGroup}>
             {/* Group Label */}
-            {group.group && (
+            {group.group && !isCollapsed && (
               <div className={styles.groupLabel}>{group.group}</div>
             )}
 
@@ -460,9 +467,10 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
                     `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
                   }
                   onClick={handleNavItemClick}
+                  title={isCollapsed ? item.label : undefined}
                 >
                   <Icon className={styles.navIcon} />
-                  <span className={styles.navLabel}>{item.label}</span>
+                  {!isCollapsed && <span className={styles.navLabel}>{item.label}</span>}
                   {showBadge && (
                     <span className={styles.badge}>{pendingCount}</span>
                   )}
@@ -482,8 +490,9 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
           onClick={handleSupport}
           leftIcon={<HiOutlineQuestionMarkCircle size={18} />}
           className={styles.footerButton}
+          title={isCollapsed ? 'Hỗ trợ' : undefined}
         >
-          Hỗ trợ
+          {!isCollapsed && 'Hỗ trợ'}
         </Button>
 
         {/* Logout Button */}
@@ -493,8 +502,9 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
           onClick={handleLogout}
           leftIcon={<HiOutlineArrowRightOnRectangle size={18} />}
           className={styles.logoutButton}
+          title={isCollapsed ? 'Đăng xuất' : undefined}
         >
-          Đăng xuất
+          {!isCollapsed && 'Đăng xuất'}
         </Button>
       </div>
     </aside>
@@ -504,6 +514,8 @@ const StaffSidebar = ({ isOpen = false, onClose }) => {
 StaffSidebar.propTypes = {
   isOpen: PropTypes.bool,
   onClose: PropTypes.func,
+  isCollapsed: PropTypes.bool,
+  onToggleCollapse: PropTypes.func,
 };
 
 export default StaffSidebar;

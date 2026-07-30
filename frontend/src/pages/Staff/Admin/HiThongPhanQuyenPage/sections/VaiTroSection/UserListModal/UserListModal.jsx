@@ -322,7 +322,7 @@ const UserListModal = ({ role, onClose }) => {
                   : `Tổng cộng ${users.length} người dùng`}
               </span>
             )}
-            <Button variant="outline" size="small" onClick={onClose}>
+            <Button variant="secondary" size="sm" onClick={onClose}>
               Đóng
             </Button>
           </div>

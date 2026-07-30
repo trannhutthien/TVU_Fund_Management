@@ -54,13 +54,15 @@ const createRounds = async (quyId, rounds) => {
 
     for (const round of rounds) {
       await connection.execute(
-        `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, sotiendukien, ngaydukien, trangthai)
-         VALUES (?, ?, ?, ?, ?, ?, 'chuatoi')`,
+        `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, ngaybatdau, ngayketthuc, sotiendukien, ngaydukien, trangthai)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'chuatoi')`,
         [
           quyId,
           round.thutu,
           round.tenDot || `Đợt ${round.thutu}`,
           round.moTa || null,
+          round.ngayBatDau || null,
+          round.ngayKetThuc || null,
           round.soTienDuKien,
           round.ngayDuKien || null
         ]
@@ -128,10 +130,11 @@ const assignDotToApplication = async (quyId, ngayNop) => {
   const [rows] = await pool.query(
     `SELECT dot_id FROM dotgiaingan 
      WHERE quy_id = ? 
-       AND ngaydukien <= ?
        AND trangthai IN ('chuatoi', 'dangchodutien')
-     ORDER BY thutu DESC LIMIT 1`,
-    [quyId, ngayNop]
+       AND (ngaybatdau IS NULL OR ngaybatdau <= ?)
+       AND (ngayketthuc IS NULL OR ngayketthuc >= ?)
+     ORDER BY thutu ASC LIMIT 1`,
+    [quyId, ngayNop, ngayNop]
   );
   return rows[0]?.dot_id || null;
 };

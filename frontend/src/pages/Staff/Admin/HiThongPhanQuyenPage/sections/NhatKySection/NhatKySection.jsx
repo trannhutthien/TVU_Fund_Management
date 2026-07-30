@@ -325,7 +325,7 @@ const NhatKySection = () => {
       {/* Results Header */}
       <div className={styles.resultsHeader}>
         <span className={styles.resultCount}>Tìm thấy {total} bản ghi</span>
-        <Button variant="outline" size="small" onClick={handleExportCSV}>
+        <Button variant="secondary" size="sm" onClick={handleExportCSV}>
           <HiOutlineArrowDownTray className={styles.btnIcon} />
           <span>Xuất Excel</span>
         </Button>

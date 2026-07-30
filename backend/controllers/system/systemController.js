@@ -667,6 +667,7 @@ export const getPagePermissions = async (req, res) => {
         ketoan: !!value.ketoan,
         sinhvien: !!value.sinhvien,
         nhataitro: !!value.nhataitro,
+        bankiemsoat: !!value.bankiemsoat,
       };
     }
 

@@ -30,7 +30,8 @@ const getPageKey = (pathname) => {
       'landing_page', 'funds', 'guidelines', 'donors', 'profile', 'apply', 'track',
       'dashboard', 'users', 'xet_duyet', 'quy', 'nha_tai_tro', 'sinh_vien_noi_bat',
       'tin_tuc', 'bao_cao', 'khoan_tai_tro', 'giao_dich', 'lich_su_giao_dich', 'giai_ngan', 'chung_tu',
-      'phe_duyet', 'roles', 'nhat_ky', 've_quy_phat_trien'
+      'phe_duyet', 'roles', 'nhat_ky', 've_quy_phat_trien', 'cuu_sinh_vien',
+      'giam_sat', 'phan_bo', 'danhgia', 'nhan_su'
     ];
     
     if (validKeys.includes(key)) {

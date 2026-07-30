@@ -268,5 +268,25 @@
     "sinhvien": false,
     "nhataitro": false,
     "bankiemsoat": true
+  },
+  "phan_bo": {
+    "label": "Trích lập Ngân sách",
+    "path": "/phan-bo",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false,
+    "bankiemsoat": false
+  },
+  "danhgia": {
+    "label": "Cảm nhận sinh viên",
+    "path": "/danhgia",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false,
+    "bankiemsoat": false
   }
 }

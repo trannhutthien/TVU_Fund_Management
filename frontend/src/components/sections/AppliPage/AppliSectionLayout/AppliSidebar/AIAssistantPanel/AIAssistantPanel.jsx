@@ -14,9 +14,9 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund, isGue
   const [analysis, setAnalysis] = useState(null);
 
   // Chọn endpoint đúng: guest → public, logged-in → protected
-  const aiService = isGuest
+  const getAiSuggestion = isGuest
     ? applicationService.getPublicAiSuggestion
-    : aiService;
+    : applicationService.getAiSuggestion;
   
   // Trạng thái cho Tối ưu văn phong
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -57,7 +57,7 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund, isGue
   // Hàm gọi API phân tích văn phong đơn
   const analyzeText = async (text) => {
     try {
-      const response = await aiService({
+      const response = await getAiSuggestion({
         quyId,
         action: 'analyze',
         moTa: text,
@@ -81,7 +81,7 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund, isGue
     if (!moTa || moTa.trim().length < 10) return;
     setIsOptimizing(true);
     try {
-      const response = await aiService({
+      const response = await getAiSuggestion({
         quyId,
         action: 'optimize',
         moTa,
@@ -104,7 +104,7 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund, isGue
     if (!draftInput || draftInput.trim().length < 5) return;
     setIsDrafting(true);
     try {
-      const response = await aiService({
+      const response = await getAiSuggestion({
         quyId,
         action: 'draft',
         moTa: draftInput,

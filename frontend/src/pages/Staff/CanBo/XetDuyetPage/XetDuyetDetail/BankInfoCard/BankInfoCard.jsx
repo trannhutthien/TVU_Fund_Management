@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { HiOutlineCreditCard } from 'react-icons/hi2';
+import { HiOutlineCreditCard, HiOutlineBuildingLibrary } from 'react-icons/hi2';
 import { bankAccountService } from '@services/bankAccountService';
 import styles from './BankInfoCard.module.scss';
 
@@ -46,7 +46,7 @@ const BankInfoCard = ({ userId }) => {
     <section className={styles.card}>
       <div className={styles.cardHeader}>
         <HiOutlineCreditCard className={styles.headerIcon} />
-        <h2 className={styles.cardTitle}>Thông tin tài khoản giải ngân</h2>
+        <h2 className={styles.cardTitle}>Thông tin tài khoản nhận tiền</h2>
       </div>
 
       {loading ? (
@@ -55,7 +55,7 @@ const BankInfoCard = ({ userId }) => {
         <div className={styles.placeholder}>Không tải được thông tin tài khoản</div>
       ) : !account ? (
         <div className={styles.placeholder}>
-          Sinh viên chưa thêm tài khoản ngân hàng nào
+          Chưa thêm tài khoản ngân hàng
         </div>
       ) : (
         <div className={styles.body}>
@@ -75,6 +75,14 @@ const BankInfoCard = ({ userId }) => {
             <div className={styles.label}>Chủ tài khoản</div>
             <div className={styles.value}>{account.chuTaiKhoan || '—'}</div>
           </div>
+
+          {account.chiNhanh && (
+            <div className={styles.row}>
+              <HiOutlineBuildingLibrary size={14} className={styles.branchIcon} />
+              <div className={styles.label}>Chi nhánh</div>
+              <div className={styles.value}>{account.chiNhanh}</div>
+            </div>
+          )}
 
           {(account.laMacDinh === 1 || account.laMacDinh === true) && (
             <div className={styles.defaultTag}>Tài khoản mặc định</div>

@@ -1,166 +1,162 @@
 import PropTypes from 'prop-types';
 import {
-  HiOutlineClipboardDocumentCheck,
   HiOutlineXCircle,
-  HiOutlineArrowRightCircle,
-  HiCheck,
+  HiOutlineCheckCircle,
+  HiOutlineCurrencyDollar,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import { formatCurrency } from '@utils/formatters';
+import ReviewChecklist from '../ReviewChecklist/ReviewChecklist';
 import styles from './ReviewPanel.module.scss';
-
-const CHECKLIST_ITEMS = [
-  { key: 'dung_doi_tuong', label: 'Đúng đối tượng thụ hưởng của quỹ' },
-  { key: 'giay_to_day_du', label: 'Giấy tờ đầy đủ và hợp lệ' },
-  { key: 'so_tien_hop_ly', label: 'Số tiền yêu cầu trong mức cho phép' },
-  { key: 'khong_trung_don', label: 'Không trùng với đơn đang xử lý khác' },
-];
 
 const MAX_NOTE = 500;
 
 const ReviewPanel = ({
-  checklist,
-  onToggleChecklist,
+  soTienYeuCau,
   ghiChu,
   onGhiChuChange,
   ghiChuError,
   submitting,
   disabled,
-  tickedCount,
   onApprove,
   onReject,
+  khongDuSoDu = false,
 }) => {
-  const progressPercent = (tickedCount / CHECKLIST_ITEMS.length) * 100;
   const hasGhiChu = ghiChu.trim().length > 0;
-  const approveDisabled = disabled || tickedCount < 3 || !hasGhiChu;
+  const approveDisabled = disabled || khongDuSoDu || !hasGhiChu;
   const rejectDisabled = disabled || !hasGhiChu;
+
+  const handleAppendNote = (text) => {
+    if (disabled) return;
+    const current = ghiChu.trim();
+    const separator = current && !current.endsWith('.') && !current.endsWith('\n') ? '. ' : '\n';
+    const newNote = current ? current + separator + text : text;
+    if (newNote.length <= MAX_NOTE) {
+      onGhiChuChange?.(newNote);
+    }
+  };
+
+  const handleRemoveNote = (text) => {
+    if (disabled) return;
+    let updated = ghiChu;
+    if (updated.includes('. ' + text)) {
+      updated = updated.replace('. ' + text, '');
+    } else if (updated.includes('\n' + text)) {
+      updated = updated.replace('\n' + text, '');
+    } else if (updated.startsWith(text + '. ')) {
+      updated = updated.slice(text.length + 2);
+    } else if (updated.startsWith(text + '\n')) {
+      updated = updated.slice(text.length + 1);
+    } else if (updated === text) {
+      updated = '';
+    }
+    onGhiChuChange?.(updated.trim());
+  };
 
   return (
     <section className={styles.panel}>
-      <div className={styles.panelHeader}>
-        <HiOutlineClipboardDocumentCheck className={styles.headerIcon} />
-        <h2 className={styles.panelTitle}>Xét duyệt</h2>
+      {/* Số tiền đang xét duyệt */}
+      <div className={styles.amountSection}>
+        <HiOutlineCurrencyDollar size={20} className={styles.amountIcon} />
+        <div className={styles.amountInfo}>
+          <span className={styles.amountLabel}>Số tiền xét duyệt</span>
+          <span className={styles.amountValue}>{formatCurrency(soTienYeuCau)}</span>
+        </div>
       </div>
 
-      <div className={styles.body}>
-        <div className={styles.checklist}>
-          {CHECKLIST_ITEMS.map((item) => {
-            const checked = !!checklist[item.key];
-            return (
-              <button
-                key={item.key}
-                type="button"
-                className={`${styles.checkItem} ${checked ? styles.checkItemActive : ''}`}
-                onClick={() => onToggleChecklist?.(item.key)}
-                disabled={disabled}
-              >
-                <span
-                  className={`${styles.checkbox} ${checked ? styles.checkboxOn : ''}`}
-                  aria-hidden="true"
-                >
-                  {checked && <HiCheck className={styles.checkIcon} />}
-                </span>
-                <span className={styles.checkLabel}>{item.label}</span>
-              </button>
-            );
-          })}
+      <div className={styles.divider} />
+
+      {/* Checklist nhanh */}
+      <ReviewChecklist onAppendNote={handleAppendNote} onRemoveNote={handleRemoveNote} disabled={disabled} />
+
+      <div className={styles.divider} />
+
+      {/* Ghi chú */}
+      <div className={styles.noteBlock}>
+        <div className={styles.noteHeader}>
+          <span className={styles.noteLabel}>Ghi chú xét duyệt</span>
+          <span className={styles.required}>Bắt buộc</span>
         </div>
 
-        <div className={styles.progressRow}>
-          <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <div className={styles.progressText}>
-            {tickedCount}/{CHECKLIST_ITEMS.length} mục đã xác nhận
-          </div>
+        <textarea
+          className={`${styles.textarea} ${ghiChuError ? styles.textareaError : ''}`}
+          rows={3}
+          value={ghiChu}
+          onChange={(e) => onGhiChuChange?.(e.target.value)}
+          placeholder="Nhập nhận xét, ghi chú về hồ sơ này..."
+          maxLength={MAX_NOTE}
+          disabled={disabled}
+        />
+
+        <div className={styles.noteFoot}>
+          <span className={styles.errorText}>
+            {ghiChuError || '\u00A0'}
+          </span>
+          <span className={styles.counter}>
+            {ghiChu.length}/{MAX_NOTE}
+          </span>
         </div>
+      </div>
 
-        <div className={styles.divider} />
+      <div className={styles.divider} />
 
-        <div className={styles.noteBlock}>
-          <div className={styles.noteHeader}>
-            <span className={styles.noteLabel}>Ghi chú xét duyệt</span>
-            <span className={styles.required}>Bắt buộc</span>
-          </div>
+      {/* Hành động */}
+      <div className={styles.actions}>
+        <Button
+          variant="ghost"
+          className={`${styles.btnReject} ${rejectDisabled ? styles.btnDisabled : ''}`}
+          leftIcon={<HiOutlineXCircle />}
+          disabled={rejectDisabled || submitting}
+          loading={submitting}
+          onClick={onReject}
+        >
+          Từ chối
+        </Button>
 
-          <textarea
-            className={`${styles.textarea} ${ghiChuError ? styles.textareaError : ''}`}
-            rows={4}
-            value={ghiChu}
-            onChange={(e) => onGhiChuChange?.(e.target.value)}
-            placeholder="Nhập nhận xét, ghi chú về hồ sơ này..."
-            maxLength={MAX_NOTE}
-            disabled={disabled}
-          />
-
-          <div className={styles.noteFoot}>
-            <span className={styles.errorText}>
-              {ghiChuError || ' '}
-            </span>
-            <span className={styles.counter}>
-              {ghiChu.length}/{MAX_NOTE}
-            </span>
-          </div>
-        </div>
-
-        <div className={styles.divider} />
-
-        <div className={styles.actions}>
-          <Button
-            variant="ghost"
-            className={`${styles.btnReject} ${rejectDisabled ? styles.btnRejectDisabled : ''}`}
-            leftIcon={<HiOutlineXCircle />}
-            disabled={rejectDisabled || submitting}
-            loading={submitting}
-            onClick={onReject}
-          >
-            Từ chối
-          </Button>
-
-          <Button
-            variant="primary"
-            leftIcon={<HiOutlineArrowRightCircle />}
-            disabled={approveDisabled || submitting}
-            loading={submitting}
-            onClick={onApprove}
-            title={
-              approveDisabled
-                ? 'Cần tick ít nhất 3/4 mục và có ghi chú'
+        <Button
+          variant="primary"
+          className={`${styles.btnApprove} ${approveDisabled ? styles.btnDisabled : ''}`}
+          leftIcon={<HiOutlineCheckCircle />}
+          disabled={approveDisabled || submitting}
+          loading={submitting}
+          onClick={onApprove}
+          title={
+            khongDuSoDu
+              ? 'Không đủ số dư quỹ để duyệt'
+              : approveDisabled
+                ? 'Cần nhập ghi chú để thực hiện thao tác'
                 : undefined
-            }
-          >
-            Chuyển duyệt →
-          </Button>
-        </div>
-
-        {approveDisabled && !disabled && (
-          <div className={styles.hint}>
-            Cần ghi chú và tick ít nhất 3/4 mục để chuyển duyệt
-          </div>
-        )}
+          }
+        >
+          Duyệt
+        </Button>
       </div>
+
+      {khongDuSoDu && !disabled && (
+        <div className={styles.blockedHint}>
+          Không đủ số dư khả dụng để duyệt đơn này
+        </div>
+      )}
+
+      {!khongDuSoDu && approveDisabled && !disabled && (
+        <div className={styles.hint}>
+          Cần nhập ghi chú để thực hiện thao tác
+        </div>
+      )}
     </section>
   );
 };
 
 ReviewPanel.propTypes = {
-  checklist: PropTypes.shape({
-    dung_doi_tuong: PropTypes.bool,
-    giay_to_day_du: PropTypes.bool,
-    so_tien_hop_ly: PropTypes.bool,
-    khong_trung_don: PropTypes.bool,
-  }).isRequired,
-  onToggleChecklist: PropTypes.func.isRequired,
+  soTienYeuCau: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   ghiChu: PropTypes.string.isRequired,
   onGhiChuChange: PropTypes.func.isRequired,
   ghiChuError: PropTypes.string,
   submitting: PropTypes.bool,
   disabled: PropTypes.bool,
-  tickedCount: PropTypes.number.isRequired,
   onApprove: PropTypes.func.isRequired,
   onReject: PropTypes.func.isRequired,
+  khongDuSoDu: PropTypes.bool,
 };
 
 export default ReviewPanel;

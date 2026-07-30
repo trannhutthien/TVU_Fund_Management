@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import { HiOutlineMagnifyingGlass, HiOutlineFunnel, HiOutlineEye } from 'react-icons/hi2';
 import congNoService from '@services/congNoService';
-import nghiemThuService from '@services/nghiemThuService';
-import NghiemThuTimeline from '@pages/Staff/CanBo/XetDuyetPage/XetDuyetDetail/NghiemThuSection/NghiemThuTimeline';
-import NghiemThuFormModal from '@pages/Staff/CanBo/XetDuyetPage/XetDuyetDetail/NghiemThuSection/NghiemThuFormModal';
 import styles from './index.module.scss';
 
 const TRANG_THAI_OPTIONS = [
@@ -37,14 +35,11 @@ const TRANG_THAI_MAP = {
 };
 
 const NghiemThuTab = ({ userRole }) => {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ trangthaiNT: '', loaiKiemTra: '', quyId: '', search: '' });
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0 });
-
-  const [selectedApp, setSelectedApp] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [showModal, setShowModal] = useState(false);
 
   const isKeToan = userRole === 2;
   const isBKS = userRole === 5;
@@ -65,15 +60,8 @@ const NghiemThuTab = ({ userRole }) => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleViewDetail = async (item) => {
-    setSelectedApp(item);
-    try {
-      const res = await nghiemThuService.getInspectionHistory(item.yeucauhotro_id);
-      setHistory(res?.data?.lichSuNghiemThu || []);
-    } catch {
-      setHistory([]);
-    }
-    setShowModal(true);
+  const handleViewDetail = (item) => {
+    navigate(`/giam-sat/nghiem-thu/${item.yeucauhotro_id}`);
   };
 
   return (
@@ -195,20 +183,6 @@ const NghiemThuTab = ({ userRole }) => {
             </button>
           ))}
         </div>
-      )}
-
-      {/* Modal */}
-      {showModal && selectedApp && (
-        <NghiemThuFormModal
-          yeucauhotroId={selectedApp.yeucauhotro_id}
-          existingHistory={history}
-          onClose={() => { setShowModal(false); setSelectedApp(null); }}
-          onSuccess={() => {
-            fetchData(pagination.currentPage);
-            setShowModal(false);
-            setSelectedApp(null);
-          }}
-        />
       )}
     </div>
   );

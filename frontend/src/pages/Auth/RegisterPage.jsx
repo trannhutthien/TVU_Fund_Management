@@ -102,8 +102,8 @@ const RegisterPage = () => {
       const response = await authService.register(payload);
 
       if (response.success) {
-        toast.success('Đăng ký thành công! Đang chuyển đến trang đăng nhập...');
-        setTimeout(() => navigate('/login'), 1500);
+        toast.success('Đăng ký thành công!');
+        setTimeout(() => navigate('/'), 1500);
       } else {
         toast.error(response.message || 'Đăng ký thất bại');
       }
@@ -262,8 +262,8 @@ const RegisterPage = () => {
         {/* Footer */}
         <div className="register-footer">
           <span className="register-footer-text">Đã có tài khoản?</span>
-          <a href="/login" className="register-footer-link">
-            Đăng nhập ngay
+          <a href="/" className="register-footer-link">
+            Về trang chủ
           </a>
         </div>
       </div>

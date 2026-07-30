@@ -1,6 +1,6 @@
 import NghiemThuModel from "../../models/applications/NghiemThuModel.js";
 import ApplicationModel from "../../models/applications/ApplicationModel.js";
-import pool from "../../config/db.js";
+
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -111,7 +111,6 @@ export const createInspection = async (req, res) => {
 //   → capnhat yeucauhotro.trangthai = 'Da nghiem thu'
 //
 export const updateResult = async (req, res) => {
-  const connection = await pool.getConnection();
   try {
     const { id } = req.params;
     const { ketqua, nhanXet, soQuyetDinh, fileBienBan, ngayNghiemThu } = req.body;
@@ -123,16 +122,14 @@ export const updateResult = async (req, res) => {
       });
     }
 
-    // Validate ketqua
     const validKetQua = ['Cho danh gia', 'Dat', 'Dat co dieu chinh', 'Khong dat'];
     if (ketqua && !validKetQua.includes(ketqua)) {
       return res.status(400).json({
         success: false,
-        message: "Kết quả không hợp lệ. Chỉ chấp nhận: 'Cho danh gia', 'Dat', 'Dat co dieu chinh', 'Khong dat'",
+        message: "Kết quả không hợp lệ",
       });
     }
 
-    // Kiểm tra nghiệm thu tồn tại
     const nt = await NghiemThuModel.getById(id);
     if (!nt) {
       return res.status(404).json({
@@ -141,40 +138,33 @@ export const updateResult = async (req, res) => {
       });
     }
 
-    // Role-based: 'Nghiem thu cuoi cung' chỉ Admin (role 1) hoặc Cán bộ Quỹ (role 3) mới được chốt kết quả
-    if (nt.loaikiemtra === 'Nghiem thu cuoi cung' && req.user.vai_tro !== 1 && req.user.vai_tro !== 3) {
+    // Chỉ Admin (role 1) mới được duyệt kết quả nghiệm thu (cả 2 loại)
+    if (req.user.vai_tro !== 1) {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền chốt kết quả nghiệm thu cuối cùng",
+        message: "Chỉ Admin mới được duyệt kết quả nghiệm thu",
       });
     }
 
-    // Transaction: cập nhật kết quả nghiệm thu + cập nhật trạng thái đơn
-    await connection.beginTransaction();
-
     await NghiemThuModel.updateResult(id, {
-      ketqua: ketqua || nt.ketqua,
+      ketqua,
       nhanXet,
       soQuyetDinh,
       fileBienBan,
       ngayNghiemThu
-    }, connection);
+    });
 
-    // Nếu nghiệm thu cuối cùng Đạt hoặc Đạt có điều chỉnh → đơn chuyển sang 'Da nghiem thu'
     if (nt.loaikiemtra === 'Nghiem thu cuoi cung' && (ketqua === 'Dat' || ketqua === 'Dat co dieu chinh')) {
-      await ApplicationModel.updateApplicationStatus(nt.yeucauhotroId, 'Da nghiem thu', connection);
+      await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Da nghiem thu');
     } else if (ketqua === 'Khong dat') {
-      await ApplicationModel.updateApplicationStatus(nt.yeucauhotroId, 'Nghiem thu khong dat', connection);
+      await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Nghiem thu khong dat');
     }
 
-    await connection.commit();
-
-    // Ghi nhật ký
     await logSystemActivity(req, {
       hanhdong: "CAP_NHAT_KET_QUA_NGHIEM_THU",
       loaidoituong: "nghiemthu",
       doituong_id: parseInt(id),
-      mota: `Cập nhật kết quả nghiệm thu lần ${nt.lanthu} → ${ketqua || nt.ketqua} cho đơn #${nt.yeucauhotroId}`,
+      mota: `Cập nhật kết quả nghiệm thu lần ${nt.lanthu} → ${ketqua || nt.ketqua} cho đơn #${nt.yeucauhotro_id}`,
       dulieucu: { ketqua: nt.ketqua },
       dulieumoi: { ketqua: ketqua || nt.ketqua }
     });
@@ -184,15 +174,150 @@ export const updateResult = async (req, res) => {
       message: "Cập nhật kết quả nghiệm thu thành công"
     });
   } catch (error) {
-    await connection.rollback();
     console.error("=== UPDATE INSPECTION RESULT ERROR ===");
     console.error(error);
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",
     });
-  } finally {
-    connection.release();
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PUT /api/nghiem-thu/:id/edit (SỬA THÔNG TIN NGHIỆM THU CHƯA DUYỆT) ─────
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// CÔNG DỤNG: Sửa nhanXet, soQuyetDinh, fileBienBan khi chưa duyệt
+// ĐIỀU KIỆN: ketqua = 'Cho danh gia' (chưa duyệt)
+//
+export const updateInspection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nhanXet, soQuyetDinh, fileBienBan } = req.body;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID nghiệm thu không hợp lệ",
+      });
+    }
+
+    const nt = await NghiemThuModel.getById(id);
+    if (!nt) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy lượt nghiệm thu",
+      });
+    }
+
+    if (nt.ketqua !== 'Cho danh gia') {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể sửa nghiệm thu đã được duyệt",
+      });
+    }
+
+    if (req.user.vai_tro !== 1 && nt.nguoinghiemthu_id !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền sửa nghiệm thu này",
+      });
+    }
+
+    await NghiemThuModel.updateResult(id, {
+      ketqua: nt.ketqua,
+      nhanXet,
+      soQuyetDinh,
+      fileBienBan,
+      ngayNghiemThu: nt.ngaynghiemthu
+    });
+
+    await logSystemActivity(req, {
+      hanhdong: "SUA_THONG_TIN_NGHIEM_THU",
+      loaidoituong: "nghiemthu",
+      doituong_id: parseInt(id),
+      mota: `Sửa thông tin nghiệm thu lần ${nt.lanthu} cho đơn #${nt.yeucauhotro_id}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật thông tin nghiệm thu thành công"
+    });
+  } catch (error) {
+    console.error("=== UPDATE INSPECTION INFO ERROR ===");
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── DELETE /api/nghiem-thu/:id (XÓA NGHIỆM THU CHƯA DUYỆT) ─────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// CÔNG DỤNG: Xóa lượt nghiệm thu khi chưa duyệt
+// ĐIỀU KIỆN: ketqua = 'Cho danh gia' (chưa duyệt)
+//
+export const deleteInspection = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID nghiệm thu không hợp lệ",
+      });
+    }
+
+    const nt = await NghiemThuModel.getById(id);
+    if (!nt) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy lượt nghiệm thu",
+      });
+    }
+
+    if (nt.ketqua !== 'Cho danh gia') {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể xóa nghiệm thu đã được duyệt",
+      });
+    }
+
+    if (req.user.vai_tro !== 1 && nt.nguoinghiemthu_id !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xóa nghiệm thu này",
+      });
+    }
+
+    await NghiemThuModel.deleteById(id);
+
+    const remaining = await NghiemThuModel.getByApplicationId(nt.yeucauhotro_id);
+    if (remaining.length === 0) {
+      await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Da giai ngan');
+    }
+
+    await logSystemActivity(req, {
+      hanhdong: "XOA_NGHIEM_THU",
+      loaidoituong: "nghiemthu",
+      doituong_id: parseInt(id),
+      mota: `Xóa nghiệm thu lần ${nt.lanthu} (chưa duyệt) cho đơn #${nt.yeucauhotro_id}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa nghiệm thu thành công"
+    });
+  } catch (error) {
+    console.error("=== DELETE INSPECTION ERROR ===");
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
   }
 };
 
@@ -248,6 +373,49 @@ export const getInspectionHistory = async (req, res) => {
     });
   } catch (error) {
     console.error("=== GET INSPECTION HISTORY ERROR ===");
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/nghiem-thu/application/:yeucauhotroId/detail ───────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// MỤC ĐÍCH: Lấy đầy đủ thông tin đơn + lịch sử nghiệm thu + tổng quan
+// DÙNG CHO: Trang chi tiết nghiệm thu (NghiemThuDetailPage)
+//
+export const getDetail = async (req, res) => {
+  try {
+    const { yeucauhotroId } = req.params;
+    console.log("=== GET NGHIEM THU DETAIL === yeucauhotroId:", yeucauhotroId);
+
+    if (!yeucauhotroId || isNaN(yeucauhotroId)) {
+      return res.status(400).json({
+        success: false,
+        message: "ID đơn xin hỗ trợ không hợp lệ",
+      });
+    }
+
+    const detail = await NghiemThuModel.getDetailByApplicationId(parseInt(yeucauhotroId));
+    console.log("=== DETAIL RESULT ===", detail ? "FOUND" : "NULL");
+
+    if (!detail) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn xin hỗ trợ",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: detail,
+    });
+  } catch (error) {
+    console.error("=== GET NGHIEM THU DETAIL ERROR ===");
     console.error(error);
     return res.status(500).json({
       success: false,

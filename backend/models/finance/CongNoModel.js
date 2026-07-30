@@ -217,7 +217,7 @@ const CongNoModel = {
     return { hopdong, lichTraNo };
   },
 
-  async getNghiemThuList({ trangthaiNT = '', loaiKiemTra = '', quyId = '', page = 1, limit = 20 }) {
+  async getNghiemThuList({ trangthaiNT = '', loaiKiemTra = '', quyId = '', search = '', fromDate = '', toDate = '', page = 1, limit = 20 }) {
     const conditions = [];
     const params = [];
 
@@ -231,6 +231,19 @@ const CongNoModel = {
     if (quyId) {
       conditions.push('yc.quy_id = ?');
       params.push(parseInt(quyId));
+    }
+    if (search) {
+      conditions.push('(nd.hoten LIKE ? OR yc.lydo LIKE ? OR nd.masodinhdanh LIKE ?)');
+      const like = `%${search}%`;
+      params.push(like, like, like);
+    }
+    if (fromDate) {
+      conditions.push('yc.ngaynop >= ?');
+      params.push(fromDate);
+    }
+    if (toDate) {
+      conditions.push('yc.ngaynop <= ?');
+      params.push(toDate + ' 23:59:59');
     }
 
     const whereClause = 'WHERE ' + conditions.join(' AND ');
@@ -252,9 +265,13 @@ const CongNoModel = {
         yc.lydo AS tieuDe,
         yc.trangthai,
         yc.loaihotro,
+        yc.sotiendenghi,
         yc.ngaynop,
+        yc.tongkinhphidudan,
         nd.hoten AS nguoi_nhan_ten,
         nd.email AS nguoi_nhan_email,
+        nd.masodinhdanh,
+        nd.loaitaikhoan,
         q.tenquy,
         q.quy_id,
         nt.nghiemthu_id AS lan_gan_nhat_id,

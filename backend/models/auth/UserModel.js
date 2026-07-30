@@ -94,6 +94,7 @@ const getUserByIdWithRole = async (userId) => {
       n.ngaysinh,
       n.gioitinh,
       n.donvicongtac,
+      n.tinhtrangcongtac,
       n.vaitro_id,
       n.loaitaikhoan,
       dv.tenkhoa AS khoaphong,

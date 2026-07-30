@@ -11,17 +11,32 @@ import styles from './StaffLayout.module.scss';
  * Layout cho staff (Admin, Cán bộ Quỹ, Kế toán)
  * Bao gồm:
  * - PublicHeader (top) – nhận onToggleSidebar để điều khiển sidebar mobile
- * - StaffSidebar (left) – tự ẩn nếu role_id = 4, slide-in trên mobile
+ * - StaffSidebar (left) – tự ẩn nếu role_id = 4, slide-in trên mobile, collapse trên desktop
  * - Overlay backdrop – đóng sidebar khi click ra ngoài trên mobile
  * - Main content (right)
  */
 const StaffLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('staffSidebarCollapsed')) || false;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('staffSidebarCollapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
-  
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => !prev);
+  };
+
   const closeSidebar = () => {
     setIsSidebarOpen(false);
   };
@@ -60,8 +75,8 @@ const StaffLayout = () => {
           />
         )}
 
-        {/* Sidebar – nhận isOpen + onClose để xử lý mobile toggle */}
-        <StaffSidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+        {/* Sidebar – nhận isOpen + onClose để xử lý mobile toggle, isCollapsed cho desktop */}
+        <StaffSidebar isOpen={isSidebarOpen} onClose={closeSidebar} isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
 
         {/* Main Content */}
         <main className={styles.mainContent}>

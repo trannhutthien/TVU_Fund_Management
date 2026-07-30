@@ -14,7 +14,11 @@ const isDonorInfoComplete = (fields, showTypeSelector = false) => {
     isValidPhone(fields.guestSoDienThoai)
   );
   if (showTypeSelector) {
-    return isBaseComplete && !!fields.loaiNhaTaiTro;
+    if (!isBaseComplete || !fields.loaiNhaTaiTro) return false;
+    // Đối tác/Tổ chức/Doanh nghiệp cần thêm tên tổ chức
+    const isOrg = ['To chuc', 'Doanh nghiep', 'Doi tac'].includes(fields.loaiNhaTaiTro);
+    if (isOrg && !fields.guestToChuc?.trim()) return false;
+    return true;
   }
   return isBaseComplete;
 };
@@ -35,6 +39,10 @@ const DonorInfoSection = memo(({
     guestDiaChi: '',
     ghiChu: '',
     loaiNhaTaiTro: 'Ca nhan',
+    masothue: '',
+    linhVucHopTac: '',
+    nguoiLienHe: '',
+    chucDanh: '',
     ...initialValues
   });
   const [touchedFields, setTouchedFields] = useState({});
@@ -53,6 +61,10 @@ const DonorInfoSection = memo(({
       guestDiaChi: '',
       ghiChu: '',
       loaiNhaTaiTro: 'Ca nhan',
+      masothue: '',
+      linhVucHopTac: '',
+      nguoiLienHe: '',
+      chucDanh: '',
       ...initialValues
     };
     setFields(nextValues);
@@ -145,24 +157,93 @@ const DonorInfoSection = memo(({
           />
         </div>
         <div className={styles.inputGroup}>
-          <Input
-            type="text"
-            label="Tên tổ chức (nếu có)"
-            placeholder="Doanh nghiệp/Tổ chức..."
-            value={fields.guestToChuc}
-            onChange={(e) => handleLocalInputChange('guestToChuc', e.target.value)}
-          />
+          {!showTypeSelector || !['To chuc', 'Doanh nghiep', 'Doi tac'].includes(fields.loaiNhaTaiTro) ? (
+            <Input
+              type="text"
+              label="Tên tổ chức (nếu có)"
+              placeholder="Doanh nghiệp/Tổ chức..."
+              value={fields.guestToChuc}
+              onChange={(e) => handleLocalInputChange('guestToChuc', e.target.value)}
+            />
+          ) : (
+            <Input
+              type="text"
+              label="Địa chỉ"
+              placeholder="Nhập địa chỉ..."
+              value={fields.guestDiaChi}
+              onChange={(e) => handleLocalInputChange('guestDiaChi', e.target.value)}
+            />
+          )}
         </div>
-        <div className={styles.inputGroup}>
-          <Input
-            type="text"
-            label="Địa chỉ"
-            placeholder="Nhập địa chỉ..."
-            value={fields.guestDiaChi}
-            onChange={(e) => handleLocalInputChange('guestDiaChi', e.target.value)}
-          />
-        </div>
+        {!showTypeSelector || !['To chuc', 'Doanh nghiep', 'Doi tac'].includes(fields.loaiNhaTaiTro) ? (
+          <div className={styles.inputGroup}>
+            <Input
+              type="text"
+              label="Địa chỉ"
+              placeholder="Nhập địa chỉ..."
+              value={fields.guestDiaChi}
+              onChange={(e) => handleLocalInputChange('guestDiaChi', e.target.value)}
+            />
+          </div>
+        ) : null}
       </div>
+
+      {/* ── Field bổ sung cho Tổ chức / Doanh nghiệp / Đối tác ── */}
+      {showTypeSelector && ['To chuc', 'Doanh nghiep', 'Doi tac'].includes(fields.loaiNhaTaiTro) && (
+        <>
+          <div className={styles.guestFormRowThree}>
+            <div className={styles.inputGroup}>
+              <Input
+                type="text"
+                label="Tên tổ chức / Doanh nghiệp *"
+                placeholder="VD: Công ty ABC, Viện XYZ..."
+                value={fields.guestToChuc}
+                onChange={(e) => handleLocalInputChange('guestToChuc', e.target.value)}
+                required
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <Input
+                type="text"
+                label="Mã số thuế"
+                placeholder="VD: 0123456789..."
+                value={fields.masothue}
+                onChange={(e) => handleLocalInputChange('masothue', e.target.value)}
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <Input
+                type="text"
+                label="Lĩnh vực hoạt động"
+                placeholder="VD: Công nghệ, Giáo dục..."
+                value={fields.linhVucHopTac}
+                onChange={(e) => handleLocalInputChange('linhVucHopTac', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className={styles.guestFormRowThree}>
+            <div className={styles.inputGroup}>
+              <Input
+                type="text"
+                label="Người liên hệ"
+                placeholder="Tên người liên hệ..."
+                value={fields.nguoiLienHe}
+                onChange={(e) => handleLocalInputChange('nguoiLienHe', e.target.value)}
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <Input
+                type="text"
+                label="Chức danh"
+                placeholder="VD: Giám đốc, Trưởng phòng..."
+                value={fields.chucDanh}
+                onChange={(e) => handleLocalInputChange('chucDanh', e.target.value)}
+              />
+            </div>
+            <div className={styles.inputGroup} />
+          </div>
+        </>
+      )}
 
       {showGhiChu && (
         <div className={styles.inputGroup} style={{ marginTop: '20px' }}>
@@ -191,6 +272,10 @@ DonorInfoSection.propTypes = {
     guestDiaChi: PropTypes.string,
     ghiChu: PropTypes.string,
     loaiNhaTaiTro: PropTypes.string,
+    masothue: PropTypes.string,
+    linhVucHopTac: PropTypes.string,
+    nguoiLienHe: PropTypes.string,
+    chucDanh: PropTypes.string,
   }).isRequired,
   onFieldsChange: PropTypes.func.isRequired,
   onValidityChange: PropTypes.func.isRequired,

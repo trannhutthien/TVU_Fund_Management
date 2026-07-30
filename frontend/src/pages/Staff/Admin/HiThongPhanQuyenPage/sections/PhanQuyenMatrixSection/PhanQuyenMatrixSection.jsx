@@ -11,6 +11,7 @@ const ROLES_HEADER = [
   { key: 'ketoan', label: 'Kế toán (2)', color: '#0891b2', bg: 'rgba(8,145,178,0.10)' },
   { key: 'sinhvien', label: 'Sinh viên (4-SV)', color: 'var(--color-gold, #f0a500)', bg: 'rgba(240,165,0,0.10)' },
   { key: 'nhataitro', label: 'Nhà tài trợ (4-NTT)', color: '#10b981', bg: 'rgba(16,185,129,0.10)' },
+  { key: 'bankiemsoat', label: 'Ban KSV (5)', color: '#e11d48', bg: 'rgba(225,29,72,0.10)' },
 ];
 
 const PAGE_GROUPS = [
@@ -21,10 +22,12 @@ const PAGE_GROUPS = [
       { key: 'funds', label: 'Danh mục quỹ', path: '/funds' },
       { key: 'guidelines', label: 'Hướng dẫn & Quy định', path: '/guidelines' },
       { key: 'donors', label: 'Đối tác & Nhà tài trợ', path: '/donors' },
+      { key: 'track', label: 'Tra cứu đơn', path: '/track' },
       { key: 'profile', label: 'Cá nhân (Profile)', path: '/profile' },
       { key: 'apply', label: 'Tạo đơn hỗ trợ', path: '/apply' },
       { key: 'lich_su_giao_dich', label: 'Lịch sử giao dịch công khai', path: '/lich-su-giao-dich' },
       { key: 've_quy_phat_trien', label: 'Về Quỹ Phát Triển ĐHTV', path: '/ve-quy-phat-trien' },
+      { key: 'cuu_sinh_vien', label: 'Cựu sinh viên', path: '/alumni' },
     ]
   },
   {
@@ -47,6 +50,7 @@ const PAGE_GROUPS = [
       { key: 'giao_dich', label: 'Lịch sử giao dịch', path: '/giao-dich' },
       { key: 'giai_ngan', label: 'Giải ngân hồ sơ', path: '/giai-ngan' },
       { key: 'chung_tu', label: 'Đối soát chứng từ', path: '/chung-tu' },
+      { key: 'phan_bo', label: 'Trích lập Ngân sách', path: '/phan-bo' },
     ]
   },
   {
@@ -54,6 +58,15 @@ const PAGE_GROUPS = [
     items: [
       { key: 'phe_duyet', label: 'Lịch sử phê duyệt', path: '/phe-duyet' },
       { key: 'roles', label: 'Hệ thống & Phân quyền', path: '/roles' },
+      { key: 'nhat_ky', label: 'Nhật ký hệ thống', path: '/nhat-ky' },
+      { key: 'nhan_su', label: 'Quản lý nhân sự', path: '/nhan-su' },
+      { key: 'danhgia', label: 'Cảm nhận sinh viên', path: '/danhgia' },
+    ]
+  },
+  {
+    nhom: 'GIÁM SÁT',
+    items: [
+      { key: 'giam_sat', label: 'Nghiệm thu & Công nợ', path: '/giam-sat' },
     ]
   }
 ];
@@ -92,6 +105,7 @@ const PhanQuyenMatrixSection = () => {
         ketoan: false,
         sinhvien: false,
         nhataitro: false,
+        bankiemsoat: false,
       };
       return {
         ...prev,
@@ -142,7 +156,7 @@ const PhanQuyenMatrixSection = () => {
         </div>
         <Button
           variant="primary"
-          size="small"
+          size="sm"
           onClick={handleSave}
           disabled={saving}
           className={styles.saveBtn}

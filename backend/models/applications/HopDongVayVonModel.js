@@ -37,7 +37,16 @@ const createHopDong = async (data, connection) => {
       filehopdong,
       nguoiduyet_id,
       ghichu
-    ) VALUES (?, ?, ?, ?, ?, ?, 'Dang thuc hien', ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, 'Dang thuc hien', ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      sotienvon = VALUES(sotienvon),
+      laisuatphantram = VALUES(laisuatphantram),
+      ngaykyhopdong = VALUES(ngaykyhopdong),
+      kyhandothang = VALUES(kyhandothang),
+      ngaydaohan = VALUES(ngaydaohan),
+      filehopdong = VALUES(filehopdong),
+      nguoiduyet_id = VALUES(nguoiduyet_id),
+      ghichu = VALUES(ghichu)`,
     [
       yeucauhotroId,
       sotienvon,
@@ -51,7 +60,13 @@ const createHopDong = async (data, connection) => {
     ]
   );
 
-  return { hopdongvayvonId: result.insertId };
+  if (result.insertId > 0) {
+    return { hopdongvayvonId: result.insertId };
+  }
+  const [existing] = await executor.execute(
+    'SELECT hopdongvayvon_id FROM hopdongvayvon WHERE yeucauhotro_id = ?', [yeucauhotroId]
+  );
+  return { hopdongvayvonId: existing[0]?.hopdongvayvon_id || 0 };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -69,6 +84,14 @@ const createLichTraNo = async (data, connection) => {
   } = data;
 
   const executor = connection || pool;
+
+  // Check if lichtrano already exists for this hopdong
+  const [existingCheck] = await executor.execute(
+    'SELECT lichtrano_id FROM lichtrano WHERE hopdongvayvon_id = ? LIMIT 1', [hopdongvayvonId]
+  );
+  if (existingCheck.length > 0) {
+    return { lichtranoId: existingCheck[0].lichtrano_id, kythu: 1, ngaydenhan: ngaydaohan, sotiengocphaitra: parseFloat(sotienvon), sotienlaiphaitra, trangthai: 'Chua den han' };
+  }
 
   // Tính số tiền lãi phải trả
   const sotienlai = parseFloat(sotienvon) *

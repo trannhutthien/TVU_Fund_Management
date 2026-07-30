@@ -58,9 +58,9 @@ const PhanBoPage = () => {
   const [filterQuyDich, setFilterQuyDich] = useState('');
 
   // Quyền
-  const isAdmin = user?.role_id === 1;
-  const isKeToan = user?.role_id === 2;
-  const isCanBo = user?.role_id === 3;
+const isAdmin = user?.vaiTro === 1;
+const isKeToan = user?.vaiTro === 2;
+const isCanBo = user?.vaiTro === 3;
   const canRequest = isAdmin || isCanBo;
   const canApprove = isAdmin;
 

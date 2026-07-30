@@ -135,6 +135,10 @@ export const submitGuestApplication = async (req, res) => {
       tongKinhPhiDuAn,
       laDeTai,
       formTimestamp,
+      userRole,
+      donViCongTac,
+      soNamCongTac,
+      chuyenMon,
     } = req.body;
 
     // Anti-bot: Kiểm tra thời gian tối thiểu từ khi mở form (>= 3 giây)
@@ -152,17 +156,17 @@ export const submitGuestApplication = async (req, res) => {
       guestHoTen,
       guestEmail,
       guestSoDienThoai,
-      guestMssv,
-      guestKhoa,
-      guestLop,
-      guestSoTaiKhoan,
-      guestNganHang,
-      guestChuTaiKhoan,
       quyId,
       lyDo,
       soTienDeNghi,
       taiLieuDinhKem
     ];
+    // Non-student roles don't need guestLop
+    if (userRole === 'sinh_vien' || !userRole) {
+      requiredApplicationFields.push(guestMssv, guestKhoa, guestLop, guestSoTaiKhoan, guestNganHang, guestChuTaiKhoan);
+    } else {
+      requiredApplicationFields.push(guestSoTaiKhoan, guestNganHang, guestChuTaiKhoan);
+    }
     const normalizedEmail = guestEmail ? guestEmail.trim().toLowerCase() : "";
 
     if (requiredApplicationFields.some((value) => value === undefined || value === null || String(value).trim() === "")) {
@@ -275,13 +279,26 @@ export const submitGuestApplication = async (req, res) => {
     const otpExpiresAt = createGuestOtpExpiresAt();
     const trackingUuid = crypto.randomUUID();
 
+    // Map role-specific fields to generic columns
+    const validRoles = ['sinh_vien', 'can_bo_truong', 'can_bo_nghi_huu', 'nha_khoa_hoc'];
+    const resolvedUserRole = validRoles.includes(userRole) ? userRole : 'sinh_vien';
+
+    let resolvedKhoa = guestKhoa ? guestKhoa.trim() : null;
+    let resolvedLop = guestLop ? guestLop.trim() : null;
+    if (resolvedUserRole !== 'sinh_vien') {
+      // Non-student: guest_khoa = donViCongTac, guest_lop = soNamCongTac (nếu có)
+      resolvedKhoa = donViCongTac ? donViCongTac.trim() : resolvedKhoa;
+      resolvedLop = soNamCongTac ? String(soNamCongTac).trim() : null;
+    }
+
     const pendingApplication = {
       guestHoTen: guestHoTen.trim(),
       guestEmail: normalizedEmail,
       guestSoDienThoai: guestSoDienThoai.trim(),
-      guestMssv: guestMssv.trim(),
-      guestKhoa: guestKhoa.trim(),
-      guestLop: guestLop.trim(),
+      vaitro: resolvedUserRole,
+      guestMssv: guestMssv ? guestMssv.trim() : null,
+      guestKhoa: resolvedKhoa,
+      guestLop: resolvedLop,
       guestSoTaiKhoan: guestSoTaiKhoan.trim(),
       guestNganHang: guestNganHang.trim(),
       guestChuTaiKhoan: guestChuTaiKhoan.trim().toUpperCase(),
@@ -352,6 +369,11 @@ export const submitGuestDonation = async (req, res) => {
       chungTu,
       ghiChu,
       formTimestamp,
+      loaiNhaTaiTro,
+      masothue,
+      linhVucHopTac,
+      nguoiLienHe,
+      chucDanh,
     } = req.body;
 
     // Anti-bot: Kiểm tra thời gian tối thiểu từ khi mở form (>= 3 giây)
@@ -421,6 +443,11 @@ export const submitGuestDonation = async (req, res) => {
       guestSoDienThoai: guestSoDienThoai ? guestSoDienThoai.trim() : null,
       guestToChuc: guestToChuc ? guestToChuc.trim() : null,
       guestDiaChi: guestDiaChi ? guestDiaChi.trim() : null,
+      loaiNhaTaiTro: loaiNhaTaiTro || 'Ca nhan',
+      masothue: masothue ? masothue.trim() : null,
+      linhVucHopTac: linhVucHopTac ? linhVucHopTac.trim() : null,
+      nguoiLienHe: nguoiLienHe ? nguoiLienHe.trim() : null,
+      chucDanh: chucDanh ? chucDanh.trim() : null,
       quyId,
       soTien: amount,
       hinhThuc: normalizedMethod,

@@ -1544,12 +1544,12 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 - Mapping helpers `toDbAccountType`/`fromDbAccountType` ở UserModel, NguoiDungModel, GuestModel
 - Cập nhật whitelist role trong userController, authController, pheDuyetController
 
-**Frontend Sprint 2-3 (Chưa thực hiện):**
-- Tạo `beneficiaryTypes.js` registry
-- Cập nhật `RegisterForm` với tabs cho từng loại
-- Thêm bước `danhNghia` vào `ApplyPage`
-- Cập nhật `ProfilePage` với component map theo loại
-- Generalize labels "sinh viên" → "người nộp đơn" trong ~14 files
+**Frontend Sprint 2-3 (Đã thực hiện):**
+- ~~Tạo `beneficiaryTypes.js` registry~~
+- ~~Cập nhật `RegisterForm` với tabs cho từng loại~~
+- ~~Thêm bước `danhNghia` vào `ApplyPage`~~
+- ~~Cập nhật `ProfilePage` với component map theo loại~~
+- ~~Generalize labels "sinh viên" → "người nộp đơn" trong ~14 files~~
 
 ### 14.2 Chức Vụ Tổ Chức & Ban Kiểm Soát
 
@@ -1558,7 +1558,6 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 **Database:**
 - Tạo bảng `chucvuquy` với 4 nhóm: Hội đồng Quỹ, Ban Điều hành, Ban Kiểm soát, Văn phòng thường trực
 - Thêm `bankiemsoat` (role 5) vào `vaitro`
-- Thêm `xacnhandoclap` trên `nguoidung` (chỉ có ý nghĩa khi `vaitro_id = 5`)
 
 **Backend:**
 - CRUD cho `chucvuquy` qua `ChucVuModel` + `chucVuController`
@@ -1570,7 +1569,6 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 - `NhanSuSection` trong UserManagementPage CRUD nhân sự
 - UserManagementPage có tab chính "Quản lý người dùng" / "Chức vụ tổ chức"
 - `AboutFundPage` tab "Nhân sự" fetch dữ liệu từ API
-- `StaffSidebar` menu "Nhân sự" cho Admin
 - Route `/admin/nhan-su`
 
 ### 14.3 Báo Cáo Năm Tài Chính (D3)
@@ -1589,7 +1587,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 1 | **Phê duyệt 3 cấp** | Luồng phê duyệt chặt chẽ: Cấp 1 → Cấp 2 → Cấp 3 → Giải ngân. Lưu lịch sử đầy đủ (người duyệt, thời gian, kết quả, ghi chú/lý do). |
 | 2 | **Quản lý số dư thực tế** | Tính toán: Số dư khả dụng = Số dư hiện tại - Tổng tiền đơn "Chờ giải ngân". Tránh duyệt quá số dư thực tế của quỹ. |
 | 3 | **Trang Chi Tiết Quỹ Công Khai** | Route `/funds/:id` hiển thị đầy đủ thông tin quỹ, tiến trình gây quỹ, điều kiện xét duyệt, thời gian hoạt động. Có CTA "Nộp đơn ngay" và "Đóng góp ngay" theo trạng thái quỹ. |
-| 4 | **Tự Động Tạo Nhà Tài Tả** | Khi đăng ký tài khoản loại "Nhà tài tự" → tự động tạo hồ sơ trong bảng `nhataitro`. Phân luồng rõ ràng: Sinh viên vs Nhà tài trợ. |
+| 4 | **Tự Động Tạo Nhà Tài Trợ** | Khi đăng ký tài khoản loại "Nhà tài trợ" → tự động tạo hồ sơ trong bảng `nhataitro`. Phân luồng rõ ràng: Sinh viên vs Nhà tài trợ. |
 | 5 | **Quản Lý Trạng Thái Quỹ** | 3 trạng thái: **Đang hoạt động** / **Tạm dừng** / **Đã đóng**. Tự động lọc quỹ trên trang công khai theo trạng thái. Quỹ "Đã đóng" được bảo vệ để tránh thay đổi dữ liệu sai nghiệp vụ. |
 | 6 | **Tin Tức Động: Tin Mới & Tin Nổi Bật** | Cột `phanloai` trong bảng `tintuc` tách `Tin moi` và `Tin noi bat`. Landing Page có section Tin nổi bật riêng. |
 | 7 | **Cảm Nhận Sinh Viên / Testimonials** | Người dùng hoặc khách có thể gửi cảm nhận. Admin/Cán bộ kiểm duyệt trước khi hiển thị công khai. Landing Page hiển thị carousel cảm nhận nổi bật. |
@@ -1605,15 +1603,42 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 17 | **Định Dạng Số Dư Compact** | Card thống kê trên trang danh sách quỹ hiển thị số dư dạng compact: `2,000,000,000đ` → `2 tỷ`, `280,000,000đ` → `280 triệu`. |
 | 18 | **Đối Soát Chứng Từ Chi** | Kế toán upload file sao kê ngân hàng, hệ thống tự động parse và so khớp với dữ liệu trong bảng `giaodich`. Highlight các khoản: Đã khớp / Chưa khớp / Sai lệch. |
 
+### 14.5 Nghiệm Thu & Giám Sát
+
+**Mục tiêu:** Cho phép cán bộ tạo hồ sơ nghiệm thu, Admin duyệt kết quả cuối cùng.
+
+- Cán bộ tạo nghiệm thu (kiểm tra tiến độ hoặc nghiệm thu cuối cùng) → trạng thái `Cho đánh giá`
+- Admin duyệt → chọn `Đạt` / `Đạt có điều chỉnh` / `Không đạt`
+- Chỉnh sửa / xóa khi chưa duyệt
+- Timeline hiển thị lịch sử nghiệm thu với badge trạng thái
+
+### 14.6 Ma Trận Phân Quyền
+
+**Mục tiêu:** Admin quản lý quyền truy cập từng trang cho từng vai trò.
+
+- Matrix UI hiển thị tất cả trang × tất cả vai trò (bao gồm Ban Kiểm soát role 5)
+- Bật/tắt quyền bằng checkbox, lưu vào `page_permissions.json`
+- Ảnh hưởng đến: Public Header menu, Staff Sidebar, PageAccessGuard
+
+### 14.7 Sidebar Collapse & Responsive
+
+**M��态:** Trạng thái sidebar tự động lưu vào `localStorage`.
+
+- Nút toggle sidebar `position: fixed`, tự động ẩn/hiện theo kích thước màn hình
+- Khi collapse: chỉ hiện icon, ẩn label và group title
+- Mobile: sidebar dạng overlay với backdrop mờ
+
 ---
 
 ## 15. VẤN ĐỀ ĐÃ BIẾT
 
-1. **Bảng `danhgia` bị lỗi InnoDB corrupt** — không thể truy vấn. Cần repair hoặc recreate table.
-2. **`hopdongvayvon` và `lichtrano` chưa có dữ liệu mẫu** — cần tạo cho loại "Cho vay"
-3. **Beneficiary Expansion Frontend (Sprint 2-3)** chưa thực hiện
-4. **Route `/api/bao-cao/xuat` không có auth middleware** — bất kỳ ai cũng có thể xuất báo cáo
-5. **Frontend route `/api/applications/ai-suggest` không có auth** — AI suggestion có thể bị lạm dụng
+1. **`hopdongvayvon` và `lichtrano` chưa có dữ liệu mẫu** — cần tạo cho loại "Cho vay"
+2. **Route `/api/bao-cao/xuat` không có auth middleware** — bất kỳ ai cũng có thể xuất báo cáo
+3. **Frontend route `/api/applications/ai-suggest` không có auth** — AI suggestion có thể bị lạm dụng
+4. **4 cột UNUSED đã xóa** — `nguoidung.xacnhandoclap`, `donvihoc.tennganh`, `donvihoc.khoahoc`, `donvihoc.mota`
+5. **Bug `role_id` trong PhanBoPage** — đã sửa thành `vaiTro`
+6. **Bug `bankiemsoat` thiếu trong permissions API** — đã thêm vào sanitized output
+7. **Bug sidebar role 5 duplicate group** — đã gộp 2 group "GIÁM SÁT" thành 1
 
 ---
 

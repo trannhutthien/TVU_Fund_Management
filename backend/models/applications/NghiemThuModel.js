@@ -153,10 +153,104 @@ const checkEligibility = async (yeucauhotroId) => {
   return rows[0] || null;
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: getDetailByApplicationId
+// MỤC ĐÍCH: Lấy đầy đủ thông tin đơn + lịch sử nghiệm thu + tổng quan
+// ─────────────────────────────────────────────────────────────────────────────
+const getDetailByApplicationId = async (yeucauhotroId) => {
+  const [[don]] = await pool.query(
+    `SELECT
+      yc.yeucauhotro_id,
+      yc.trangthai,
+      yc.loaihotro,
+      yc.canghiemthu,
+      yc.lydo,
+      yc.sotiendenghi,
+      yc.tongkinhphidudan,
+      yc.ngaynop,
+      nd.hoten AS nguoi_nhan_ten,
+      nd.email AS nguoi_nhan_email,
+      nd.sodienthoai AS nguoi_nhan_sdt,
+      nd.masodinhdanh,
+      q.tenquy,
+      q.sodu AS quy_sodu
+    FROM yeucauhotro yc
+    LEFT JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
+    LEFT JOIN quy q ON yc.quy_id = q.quy_id
+    WHERE yc.yeucauhotro_id = ?
+    LIMIT 1`,
+    [yeucauhotroId]
+  );
+
+  if (!don) return null;
+
+  const lichSu = await getByApplicationId(yeucauhotroId);
+
+  const tongLan = lichSu.length;
+  const lanGanNhat = tongLan > 0 ? lichSu[tongLan - 1] : null;
+
+  const trangThaiChoPhep = ['Da giai ngan', 'Cho nghiem thu'];
+
+  return {
+    yeucauhotroId: don.yeucauhotro_id,
+    trangthai: don.trangthai,
+    loaihotro: don.loaihotro,
+    canghiemthu: don.canghiemthu,
+    lydo: don.lydo,
+    sotiendenghi: don.sotiendenghi,
+    tongkinhphidudan: don.tongkinhphidudan,
+    ngaynop: don.ngaynop,
+    nguoiNhan: {
+      ten: don.nguoi_nhan_ten,
+      email: don.nguoi_nhan_email,
+      sodienthoai: don.nguoi_nhan_sdt,
+      masodinhdanh: don.masodinhdanh,
+    },
+    quy: {
+      tenquy: don.tenquy,
+      sodu: don.quy_sodu,
+    },
+    tongQuan: {
+      tongLanNghiemThu: tongLan,
+      lanGanNhat: lanGanNhat?.lanthu || null,
+      ketQuaGanNhat: lanGanNhat?.ketqua || null,
+      ngayGanNhat: lanGanNhat?.ngaynghiemthu || null,
+      coTheTaoMoi: don.canghiemthu === 1 && trangThaiChoPhep.includes(don.trangthai),
+    },
+    lichSuNghiemThu: lichSu.map(nt => ({
+      nghiemthuId: nt.nghiemthu_id,
+      lanthu: nt.lanthu,
+      loaiKiemTra: nt.loaikiemtra,
+      ketqua: nt.ketqua,
+      soQuyetDinh: nt.soquyetdinh,
+      fileBienBan: nt.filebienban,
+      nguoiNghiemThuId: nt.nguoinghiemthu_id,
+      tenNguoiNghiemThu: nt.nguoi_nghiem_thu_ten,
+      nhanXet: nt.nhanxet,
+      ngayNghiemThu: nt.ngaynghiemthu,
+      ngayTao: nt.ngaytao,
+    })),
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: deleteById
+// MỤC ĐÍCH: Xóa 1 lượt nghiệm thu (chỉ khi chưa duyệt)
+// ─────────────────────────────────────────────────────────────────────────────
+const deleteById = async (nghiemthuId) => {
+  await pool.execute(
+    `DELETE FROM nghiemthu WHERE nghiemthu_id = ?`,
+    [nghiemthuId]
+  );
+  return true;
+};
+
 export default {
   createInspection,
   updateResult,
   getById,
   getByApplicationId,
-  checkEligibility
+  checkEligibility,
+  getDetailByApplicationId,
+  deleteById,
 };

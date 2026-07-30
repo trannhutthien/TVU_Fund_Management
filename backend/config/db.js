@@ -41,9 +41,14 @@ const dbConfig = parseDatabaseConfig();
 const pool = mysql.createPool({
   ...dbConfig,
   waitForConnections: true,
-  connectionLimit: 10,   // Số connection tối đa trong pool
-  queueLimit: 0,         // 0 = không giới hạn hàng chờ
-  timezone: "+07:00",    // Múi giờ Việt Nam
+  connectionLimit: 10,
+  queueLimit: 0,
+  timezone: "+07:00",
+  connectTimeout: 30000,
+  acquireTimeout: 30000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 5000,
+  maxReconnects: 5,
 });
 
 // Kiểm tra kết nối khi server khởi động
@@ -61,5 +66,15 @@ const testConnection = async () => {
 };
 
 testConnection();
+
+pool.on('connection', (connection) => {
+  connection.on('error', (err) => {
+    if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNRESET') {
+      console.warn('⚠️ DB connection lost, pool will reconnect:', err.message);
+    } else {
+      console.error('❌ DB connection error:', err.message);
+    }
+  });
+});
 
 export default pool;

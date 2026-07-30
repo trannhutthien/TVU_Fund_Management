@@ -172,14 +172,19 @@ const TaoQuyPage = () => {
       const tienMoiDot = mucTieu > 0 ? mucTieu / soDot : 0;
 
       const newDots = [];
+      const step = tongThoiGian / soDot;
       for (let i = 1; i <= soDot; i++) {
+        const ngayBatDauDot = new Date(today.getTime() + step * (i - 1));
+        const ngayKetThucDot = new Date(today.getTime() + step * i - 24 * 60 * 60 * 1000);
         const ngayDuKien = new Date(today.getTime() + tongThoiGian * (i / (soDot + 1)));
         newDots.push({
           thutu: i,
           tenDot: `Đợt ${i}`,
           mota: `Đợt giải ngân thứ ${i}`,
           sotiendukien: Math.round(tienMoiDot),
-          ngaydukien: ngayDuKien.toISOString().split('T')[0]
+          ngaydukien: ngayDuKien.toISOString().split('T')[0],
+          ngaybatdau: ngayBatDauDot.toISOString().split('T')[0],
+          ngayketthuc: ngayKetThucDot.toISOString().split('T')[0]
         });
       }
       setDotGiaiNgan(newDots);
@@ -767,6 +772,24 @@ const TaoQuyPage = () => {
                               className={styles.dotInput}
                               value={dot.ngaydukien}
                               onChange={handleDotChange(index, 'ngaydukien')}
+                            />
+                          </div>
+                          <div className={styles.dotField}>
+                            <label className={styles.dotLabel}>Ngày bắt đầu nhận đơn</label>
+                            <input
+                              type="date"
+                              className={styles.dotInput}
+                              value={dot.ngaybatdau}
+                              onChange={handleDotChange(index, 'ngaybatdau')}
+                            />
+                          </div>
+                          <div className={styles.dotField}>
+                            <label className={styles.dotLabel}>Ngày kết thúc nhận đơn</label>
+                            <input
+                              type="date"
+                              className={styles.dotInput}
+                              value={dot.ngayketthuc}
+                              onChange={handleDotChange(index, 'ngayketthuc')}
                             />
                           </div>
                           <div className={styles.dotField}>

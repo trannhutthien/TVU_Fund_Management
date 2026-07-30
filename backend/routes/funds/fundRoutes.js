@@ -1,5 +1,5 @@
 import express from "express";
-import { getFunds, createFund, getPublicFunds, updateFundStatus, getFundDetail, updateFund, getFundBankAccounts } from "../../controllers/funds/fundController.js";
+import { getFunds, createFund, getPublicFunds, updateFundStatus, getFundDetail, updateFund, getFundBankAccounts, getAvailableBalance } from "../../controllers/funds/fundController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
 
@@ -12,6 +12,11 @@ router.get("/public", getPublicFunds);
 
 // GET /api/funds/:id/bank-accounts — Lấy tài khoản ngân hàng của quỹ
 router.get("/:id/bank-accounts", getFundBankAccounts);
+
+// ─── PROTECTED ROUTES — đặt TRƯỚC /:id để tránh conflict ────────────────────
+
+// GET /api/funds/:id/available-balance — Kiểm tra hạn mức và số dư quỹ
+router.get("/:id/available-balance", protect, authorizeRoles(1, 2, 3), getAvailableBalance);
 
 // GET /api/funds/:id — Lấy chi tiết một quỹ (PUBLIC - không cần token)
 router.get("/:id", getFundDetail);

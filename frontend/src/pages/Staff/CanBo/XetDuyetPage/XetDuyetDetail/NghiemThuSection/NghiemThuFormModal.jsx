@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import {
@@ -15,8 +15,8 @@ import nghiemThuService from '@services/nghiemThuService';
 import styles from './NghiemThuFormModal.module.scss';
 
 const LOAI_KIEM_TRA_OPTIONS = [
-  { value: 'Kiem tra tien do', label: 'Kiểm tra tiến độ', desc: 'Theo dõi tiến độ thực hiện, không ảnh hưởng trạng thái đơn' },
-  { value: 'Nghiem thu cuoi cung', label: 'Nghiệm thu cuối cùng', desc: 'Chốt kết quả: Đạt / Đạt có điều chỉnh / Không đạt' },
+  { value: 'Kiem tra tien do', label: 'Kiểm tra tiến độ', desc: 'Theo dõi tiến độ thực hiện, chờ Admin duyệt' },
+  { value: 'Nghiem thu cuoi cung', label: 'Nghiệm thu cuối cùng', desc: 'Chốt kết quả: chờ Admin duyệt Đạt / Đạt có điều chỉnh / Không đạt' },
 ];
 
 const KET_QUA_OPTIONS = [
@@ -25,7 +25,13 @@ const KET_QUA_OPTIONS = [
   { value: 'Khong dat', label: 'Không đạt', color: '#dc2626' },
 ];
 
-const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess }) => {
+const NghiemThuFormModal = ({
+  yeucauhotroId,
+  mode = 'create',
+  inspectionData = null,
+  onClose,
+  onSuccess,
+}) => {
   const [loaiKiemTra, setLoaiKiemTra] = useState('Kiem tra tien do');
   const [ketqua, setKetqua] = useState('');
   const [nhanXet, setNhanXet] = useState('');
@@ -35,9 +41,28 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
+  // Pre-fill form for approve/edit modes
+  useEffect(() => {
+    if (inspectionData && (mode === 'approve' || mode === 'edit')) {
+      setLoaiKiemTra(inspectionData.loaiKiemTra || 'Kiem tra tien do');
+      setNhanXet(inspectionData.nhanXet || '');
+      setSoQuyetDinh(inspectionData.soQuyetDinh || '');
+      setFileBienBan(inspectionData.fileBienBan || '');
+      setKetqua(''); // Admin selects fresh
+    }
+  }, [inspectionData, mode]);
+
   const isNghiemThuCuoiCung = loaiKiemTra === 'Nghiem thu cuoi cung';
   const isKhongDat = ketqua === 'Khong dat';
-  const canSubmit = nhanXet.trim().length > 0 && (!isNghiemThuCuoiCung || ketqua) && !uploadingFile;
+  const isApproveMode = mode === 'approve';
+  const isEditMode = mode === 'edit';
+  const isCreateMode = mode === 'create';
+  const needsKetqua = isApproveMode;
+
+  const canSubmit = nhanXet.trim().length > 0
+    && (!needsKetqua || ketqua)
+    && !uploadingFile
+    && !submitting;
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -51,15 +76,15 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
     setUploadingFile(true);
     try {
       const res = await uploadService.uploadFile(file);
-      // Backend upload API trả về res.url hoặc res.data.url
-      const url = res?.url || res?.data?.url;
+      const basePath = import.meta.env.VITE_API_BASE_URL?.replace(/\/api\/?$/, '') || 'http://localhost:5001';
+      const url = res?.data?.filePath ? `${basePath}/${res.data.filePath}` : (res?.url || res?.data?.url);
       if (url) {
         setFileBienBan(url);
         toast.success('Tải tài liệu lên thành công');
       } else {
         toast.error('Không lấy được URL tài liệu sau tải lên');
       }
-    } catch (err) {
+    } catch {
       toast.error('Lỗi khi tải tài liệu lên');
     } finally {
       setUploadingFile(false);
@@ -68,29 +93,43 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
 
   const handleRequestSubmit = () => {
     if (!canSubmit) return;
-    setConfirming(true);
+    if (isApproveMode) {
+      setConfirming(true);
+    } else {
+      handleConfirmSubmit();
+    }
   };
 
   const handleConfirmSubmit = async () => {
     setSubmitting(true);
     try {
-      const createRes = await nghiemThuService.createInspection(yeucauhotroId, loaiKiemTra);
-      const newId = createRes?.data?.nghiemthuId;
-
-      if (newId) {
-        await nghiemThuService.updateResult(newId, {
-          ketqua: isNghiemThuCuoiCung ? ketqua : 'Dat',
+      if (isCreateMode) {
+        // ── TẠO MỚI ──
+        await nghiemThuService.createInspection(yeucauhotroId, loaiKiemTra);
+        toast.success(isNghiemThuCuoiCung
+          ? 'Đã tạo nghiệm thu cuối cùng, chờ Admin duyệt'
+          : 'Đã tạo kiểm tra tiến độ, chờ Admin duyệt'
+        );
+      } else if (isApproveMode) {
+        // ── DUYỆT (Admin) ──
+        await nghiemThuService.updateResult(inspectionData.nghiemthuId, {
+          ketqua,
           nhanXet: nhanXet.trim(),
           soQuyetDinh: soQuyetDinh.trim() || undefined,
           fileBienBan: fileBienBan || undefined,
         });
+        const label = KET_QUA_OPTIONS.find(k => k.value === ketqua)?.label || ketqua;
+        toast.success(`Đã duyệt: ${label}`);
+      } else if (isEditMode) {
+        // ── SỬA CHƯA DUYỆT ──
+        await nghiemThuService.updateInspection(inspectionData.nghiemthuId, {
+          nhanXet: nhanXet.trim(),
+          soQuyetDinh: soQuyetDinh.trim() || undefined,
+          fileBienBan: fileBienBan || undefined,
+        });
+        toast.success('Đã cập nhật thông tin nghiệm thu');
       }
 
-      toast.success(
-        isNghiemThuCuoiCung
-          ? `Nghiệm thu cuối cùng: ${KET_QUA_OPTIONS.find(k => k.value === ketqua)?.label || ketqua}`
-          : 'Đã ghi nhận kiểm tra tiến độ'
-      );
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -102,13 +141,25 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
     }
   };
 
+  const modalTitle = isApproveMode
+    ? `Duyệt nghiệm thu #${inspectionData?.nghiemthuId || ''}`
+    : isEditMode
+      ? `Sửa nghiệm thu lần ${inspectionData?.lanthu || ''}`
+      : `Nghiệm thu đơn #${yeucauhotroId}`;
+
+  const submitLabel = isApproveMode
+    ? 'Duyệt kết quả'
+    : isEditMode
+      ? 'Lưu thay đổi'
+      : isNghiemThuCuoiCung ? 'Tạo & chờ duyệt' : 'Ghi nhận kiểm tra';
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <header className={styles.header}>
           <div className={styles.headerTitle}>
             <HiOutlineClipboardDocumentCheck size={22} className={styles.headerIcon} />
-            <h2>Nghiệm thu đơn #{yeucauhotroId}</h2>
+            <h2>{modalTitle}</h2>
           </div>
           <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Đóng">
             <HiOutlineXMark size={22} />
@@ -116,38 +167,50 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
         </header>
 
         <div className={styles.body}>
-          {/* Loại kiểm tra */}
-          <fieldset className={styles.fieldset}>
-            <legend className={styles.legend}>Loại kiểm tra</legend>
-            <div className={styles.radioGroup}>
-              {LOAI_KIEM_TRA_OPTIONS.map((opt) => (
-                <label
-                  key={opt.value}
-                  className={`${styles.radioCard} ${loaiKiemTra === opt.value ? styles.radioCardActive : ''}`}
-                >
-                  <input
-                    type="radio"
-                    name="loaiKiemTra"
-                    value={opt.value}
-                    checked={loaiKiemTra === opt.value}
-                    onChange={(e) => {
-                      setLoaiKiemTra(e.target.value);
-                      setKetqua('');
-                      setConfirming(false);
-                    }}
-                    className={styles.radioInput}
-                  />
-                  <div className={styles.radioContent}>
-                    <span className={styles.radioLabel}>{opt.label}</span>
-                    <span className={styles.radioDesc}>{opt.desc}</span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          {/* Loại kiểm tra — chỉ hiện khi tạo mới */}
+          {isCreateMode && (
+            <fieldset className={styles.fieldset}>
+              <legend className={styles.legend}>Loại kiểm tra</legend>
+              <div className={styles.radioGroup}>
+                {LOAI_KIEM_TRA_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`${styles.radioCard} ${loaiKiemTra === opt.value ? styles.radioCardActive : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="loaiKiemTra"
+                      value={opt.value}
+                      checked={loaiKiemTra === opt.value}
+                      onChange={(e) => {
+                        setLoaiKiemTra(e.target.value);
+                        setKetqua('');
+                        setConfirming(false);
+                      }}
+                      className={styles.radioInput}
+                    />
+                    <div className={styles.radioContent}>
+                      <span className={styles.radioLabel}>{opt.label}</span>
+                      <span className={styles.radioDesc}>{opt.desc}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
-          {/* Kết quả (chỉ hiện khi nghiệm thu cuối cùng) */}
-          {isNghiemThuCuoiCung && (
+          {/* Hiển thị loại kiểm tra khi duyệt/sửa (read-only) */}
+          {(isApproveMode || isEditMode) && (
+            <div className={styles.readonlyField}>
+              <span className={styles.readonlyLabel}>Loại kiểm tra:</span>
+              <span className={styles.readonlyValue}>
+                {isNghiemThuCuoiCung ? 'Nghiệm thu cuối cùng' : 'Kiểm tra tiến độ'}
+              </span>
+            </div>
+          )}
+
+          {/* Kết quả — hiện khi DUYỆT (cả 2 loại) */}
+          {isApproveMode && (
             <fieldset className={styles.fieldset}>
               <legend className={styles.legend}>Kết quả nghiệm thu</legend>
               <div className={styles.ketQuaGroup}>
@@ -177,16 +240,18 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
               value={nhanXet}
               onChange={(e) => setNhanXet(e.target.value)}
               placeholder={
-                isNghiemThuCuoiCung
-                  ? 'Nhận xét về kết quả nghiệm thu...'
-                  : 'Ghi chú về tiến độ thực hiện...'
+                isApproveMode
+                  ? 'Nhận xét của Admin về kết quả...'
+                  : isNghiemThuCuoiCung
+                    ? 'Nhận xét về kết quả nghiệm thu...'
+                    : 'Ghi chú về tiến độ thực hiện...'
               }
               maxLength={500}
             />
             <div className={styles.charCount}>{nhanXet.length}/500</div>
           </fieldset>
 
-          {/* Số quyết định (tuỳ chọn) */}
+          {/* Số quyết định */}
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>Số quyết định (tuỳ chọn)</legend>
             <input
@@ -199,7 +264,7 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
             />
           </fieldset>
 
-          {/* Tài liệu đính kèm / Biên bản nghiệm thu */}
+          {/* Tài liệu đính kèm */}
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>Biên bản nghiệm thu / Tài liệu đính kèm (tuỳ chọn)</legend>
             <div className={styles.fileUploadRow}>
@@ -229,7 +294,7 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
           </fieldset>
 
           {/* Cảnh báo "Không đạt" */}
-          {isNghiemThuCuoiCung && isKhongDat && confirming && (
+          {isApproveMode && isKhongDat && confirming && (
             <div className={styles.warningBox}>
               <HiOutlineExclamationTriangle size={20} className={styles.warningIcon} />
               <div>
@@ -251,10 +316,10 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
           )}
 
           {/* Cảnh báo "Đạt" / "Đạt có điều chỉnh" */}
-          {isNghiemThuCuoiCung && !isKhongDat && ketqua && confirming && (
+          {isApproveMode && !isKhongDat && ketqua && confirming && (
             <div className={styles.confirmBox}>
               <div className={styles.confirmTitle}>
-                Xác nhận nghiệm thu cuối cùng: <strong>{KET_QUA_OPTIONS.find(k => k.value === ketqua)?.label}</strong>?
+                Xác nhận nghiệm thu: <strong>{KET_QUA_OPTIONS.find(k => k.value === ketqua)?.label}</strong>?
               </div>
               <div className={styles.warningActions}>
                 <Button variant="ghost" onClick={() => setConfirming(false)}>
@@ -274,12 +339,12 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
           </Button>
           {!confirming && (
             <Button
-              variant={isNghiemThuCuoiCung && isKhongDat ? 'danger' : 'primary'}
-              disabled={!canSubmit || submitting}
+              variant={isApproveMode && isKhongDat ? 'danger' : 'primary'}
+              disabled={!canSubmit}
               loading={submitting}
               onClick={handleRequestSubmit}
             >
-              {isNghiemThuCuoiCung ? 'Nghiệm thu cuối cùng' : 'Ghi nhận kiểm tra'}
+              {submitLabel}
             </Button>
           )}
         </footer>
@@ -290,10 +355,18 @@ const NghiemThuFormModal = ({ yeucauhotroId, existingHistory, onClose, onSuccess
 
 NghiemThuFormModal.propTypes = {
   yeucauhotroId: PropTypes.number.isRequired,
-  existingHistory: PropTypes.array,
+  mode: PropTypes.oneOf(['create', 'approve', 'edit']),
+  inspectionData: PropTypes.shape({
+    nghiemthuId: PropTypes.number,
+    lanthu: PropTypes.number,
+    loaiKiemTra: PropTypes.string,
+    ketqua: PropTypes.string,
+    nhanXet: PropTypes.string,
+    soQuyetDinh: PropTypes.string,
+    fileBienBan: PropTypes.string,
+  }),
   onClose: PropTypes.func.isRequired,
   onSuccess: PropTypes.func,
 };
 
 export default NghiemThuFormModal;
-

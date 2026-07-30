@@ -270,7 +270,7 @@ const NhatKyDetailModal = ({
             </section>
 
             <div className={styles.footer}>
-              <Button variant="outline" fullWidth onClick={onClose}>
+              <Button variant="secondary" fullWidth onClick={onClose}>
                 Đóng
               </Button>
             </div>

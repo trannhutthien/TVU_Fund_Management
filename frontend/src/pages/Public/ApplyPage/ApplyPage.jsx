@@ -11,6 +11,8 @@ import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
 import FundTitleSection from '@components/sections/FundsPage/FundTitleSection/FundTitleSection';
 import FundSelectSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/FundSelectSection/FundSelectSection';
+import UserRoleSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/UserRoleSection/UserRoleSection';
+import UserFieldsByRole from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/UserFieldsByRole/UserFieldsByRole';
 import RequestContentSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/RequestContentSection/RequestContentSection';
 import BankInfoSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/BankInfoSection/BankInfoSection';
 import DonationAmountSection from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionForm/DonationAmountSection/DonationAmountSection';
@@ -57,6 +59,11 @@ const INITIAL_GUEST_FIELDS = {
   guestChuTaiKhoan: '',
   guestToChuc: '',
   guestDiaChi: '',
+  loaiNhaTaiTro: 'Ca nhan',
+  masothue: '',
+  linhVucHopTac: '',
+  nguoiLienHe: '',
+  chucDanh: '',
   hinhThuc: 'Khac',
   maGiaoDich: '',
   ghiChu: '',
@@ -89,6 +96,7 @@ const GuestDonorInfoSection = memo(({
   onFieldsChange,
   onValidityChange,
   resetKey,
+  showTypeSelector,
 }) => {
   return (
     <DonorInfoSection
@@ -96,6 +104,7 @@ const GuestDonorInfoSection = memo(({
       onFieldsChange={onFieldsChange}
       onValidityChange={onValidityChange}
       resetKey={resetKey}
+      showTypeSelector={showTypeSelector}
     />
   );
 });
@@ -195,6 +204,8 @@ const ApplyPage = () => {
   const [successInfo, setSuccessInfo] = useState(null); // { email, tempPassword, trackingUuid }
 
   const [activeStep, setActiveStep] = useState(1);
+  const [userRole, setUserRole] = useState(null); // 'sinh_vien' | 'can_bo_truong' | 'can_bo_nghi_huu' | 'nha_khoa_hoc'
+  const [userFields, setUserFields] = useState({}); // Extra fields by role (khoa, lop, donViCongTac, etc.)
 
   const handlePaymentMethodChange = useCallback((method) => {
     setPaymentMethod(method);
@@ -218,6 +229,7 @@ const ApplyPage = () => {
   const userType = user?.loai_tai_khoan || user?.loaiTaiKhoan || user?.loai_nguoi_dung;
   const isStudent = userType === 'SINH_VIEN';
   const isDonorUser = userType === 'NHA_TAI_TRO';
+  const isCanBo = userType === 'CAN_BO' || userType === 'NHA_KHOA_HOC';
   const isDonor = isDonorUser ? true : (isStudent ? false : (guestRole === 'donor'));
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -377,16 +389,41 @@ const ApplyPage = () => {
         !!selectedFund && 
         !!donationAmount && 
         parseFloat(donationAmount) >= 10000 &&
-        !!selectedBankAccountId // Phải chọn tài khoản ngân hàng
+        !!selectedBankAccountId
       );
     }
-    return !!selectedFund;
-  }, [isDonor, selectedFund, donationAmount, selectedBankAccountId]);
+    // Non-donor: must select fund AND user role
+    return !!selectedFund && !!userRole;
+  }, [isDonor, selectedFund, donationAmount, selectedBankAccountId, userRole]);
 
   const isStep2Valid = useMemo(() => {
     if (isDonor) {
-      return hasUploadedProof;
+      // Only require proof upload for online payment (Khac)
+      if (paymentMethod === 'Khac') return hasUploadedProof;
+      // Chuyen khoan / Tien mat: no proof needed, step 2 is always valid
+      return true;
     }
+
+    // Validate user fields by role
+    const isUserInfoValid = (() => {
+      if (!userRole) return true; // No role selected yet
+      if (userRole === 'sinh_vien') {
+        if (isAuthenticated) return !!(userFields.khoa && userFields.lop);
+        // Guest: require all fields
+        return !!(userFields.hoTen && userFields.maSoDinhDanh && userFields.email && userFields.soDienThoai && userFields.khoa && userFields.lop);
+      }
+      if (userRole === 'can_bo_truong' || userRole === 'can_bo_nghi_huu') {
+        if (isAuthenticated) return !!(userFields.donViCongTac || user?.donViCongTac || user?.donvicongtac);
+        return !!(userFields.hoTen && userFields.maSoDinhDanh && userFields.email && userFields.soDienThoai);
+      }
+      if (userRole === 'nha_khoa_hoc') {
+        if (isAuthenticated) return !!(userFields.donViCongTac || user?.donViCongTac || user?.donvicongtac);
+        return !!(userFields.hoTen && userFields.maSoDinhDanh && userFields.email && userFields.soDienThoai);
+      }
+      return true;
+    })();
+    if (!isUserInfoValid) return false;
+
     const baseValid = !!(
       contentValues.tieu_de?.length >= 10 &&
       contentValues.mo_ta?.length >= 50 &&
@@ -398,7 +435,6 @@ const ApplyPage = () => {
     );
     if (!baseValid) return false;
 
-    // Validate tongkinhphidudan khi chọn "Tai tro co thu hoi"
     if (contentValues.loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) {
       const tongKinhPhi = parseFloat(contentValues.tong_kinh_phi_du_an);
       const soTien = parseFloat(contentValues.so_tien_yeu_cau);
@@ -411,16 +447,19 @@ const ApplyPage = () => {
     }
 
     return true;
-  }, [isDonor, hasUploadedProof, contentValues, isAuthenticated, selectedFund]);
+  }, [isDonor, hasUploadedProof, paymentMethod, contentValues, isAuthenticated, selectedFund, userRole, userFields, user]);
 
   const isStep3Valid = useMemo(() => {
     if (isDonor) {
-      return guestDonorInfoValid;
+      // Only require guest donor info for online payment (Khac) for non-auth users
+      if (!isAuthenticated && paymentMethod === 'Khac') return guestDonorInfoValid;
+      return true;
     }
     return isAuthenticated
       ? !!(bankValues.selectedBankId && bankValues.soDienThoai?.length > 0)
-      : isGuestStudentInfoValid(guestFields);
-  }, [isDonor, guestDonorInfoValid, isAuthenticated, bankValues, guestFields]);
+      // Khách vãng lai: chỉ cần validate thông tin ngân hàng (bước 1,2 đã validate ở bước tương ứng)
+      : !!(guestFields.guestNganHang?.trim() && isValidBankAccountNumber(guestFields.guestSoTaiKhoan) && guestFields.guestChuTaiKhoan?.trim());
+  }, [isDonor, guestDonorInfoValid, isAuthenticated, paymentMethod, bankValues, guestFields]);
 
   const isStep4Valid = useMemo(() => {
     return hasUploadedProof;
@@ -575,6 +614,9 @@ const ApplyPage = () => {
               ? parseFloat(contentValues.tong_kinh_phi_du_an)
               : null,
             laDeTai: (contentValues.loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI || contentValues.la_de_tai) ? 1 : 0,
+            // Thông tin vai trò người nộp
+            vaiTroNguoiNop: userRole || undefined,
+            chiTietVaiTro: userRole ? { ...userFields } : undefined,
           };
           response = await applicationService.create(applicationData);
         }
@@ -599,6 +641,8 @@ const ApplyPage = () => {
           });
           setDonationAmount('');
           setUploadedFiles([]);
+          setUserRole(null);
+          setUserFields({});
           setIsOnlinePaymentCompleted(false);
           setOnlineTxnId('');
           setTimeout(() => navigate('/profile'), 1500);
@@ -622,6 +666,11 @@ const ApplyPage = () => {
             guestSoDienThoai: currentGuestFields.guestSoDienThoai,
             guestToChuc: currentGuestFields.guestToChuc,
             guestDiaChi: currentGuestFields.guestDiaChi,
+            loaiNhaTaiTro: currentGuestFields.loaiNhaTaiTro || 'Ca nhan',
+            masothue: currentGuestFields.masothue || null,
+            linhVucHopTac: currentGuestFields.linhVucHopTac || null,
+            nguoiLienHe: currentGuestFields.nguoiLienHe || null,
+            chucDanh: currentGuestFields.chucDanh || null,
             quyId: selectedFund.quyId,
             soTien: parseFloat(donationAmount),
             hinhThuc: paymentMethod,
@@ -646,13 +695,22 @@ const ApplyPage = () => {
           
           response = await guestService.submitDonation(payload);
         } else {
+          // Guest non-donor: map userFields → backend payload
           const payload = {
-            guestHoTen: guestFields.guestHoTen,
-            guestEmail: guestFields.guestEmail,
-            guestSoDienThoai: guestFields.guestSoDienThoai,
-            guestMssv: guestFields.guestMssv,
-            guestKhoa: guestFields.guestKhoa,
-            guestLop: guestFields.guestLop,
+            guestHoTen: userFields.hoTen || guestFields.guestHoTen,
+            guestEmail: userFields.email || guestFields.guestEmail,
+            guestSoDienThoai: userFields.soDienThoai || guestFields.guestSoDienThoai,
+            userRole,
+            guestMssv: userFields.maSoDinhDanh || guestFields.guestMssv,
+            guestKhoa: userRole === 'sinh_vien'
+              ? (userFields.khoa || guestFields.guestKhoa)
+              : (userFields.donViCongTac || guestFields.guestKhoa),
+            guestLop: userRole === 'sinh_vien'
+              ? (userFields.lop || guestFields.guestLop)
+              : (userRole === 'can_bo_nghi_huu' ? userFields.soNamCongTac : null),
+            donViCongTac: userFields.donViCongTac || null,
+            soNamCongTac: userFields.soNamCongTac || null,
+            chuyenMon: userFields.chuyenMon || null,
             guestSoTaiKhoan: guestFields.guestSoTaiKhoan,
             guestNganHang: guestFields.guestNganHang,
             guestChuTaiKhoan: guestFields.guestChuTaiKhoan,
@@ -958,7 +1016,7 @@ const ApplyPage = () => {
   }
 
   // ─── PHÂN NHÁNH GIAO DIỆN 3: CHƯA ĐÃ XÁC ĐỊNH VAI TRÒ (CHƯA CHỌN VAI TRÒ HOẶC LÀ ADMIN/CÁN BỘ CHƯA CHỌN)
-  const isStrictUser = isAuthenticated && (isStudent || isDonorUser);
+  const isStrictUser = isAuthenticated && (isStudent || isDonorUser || isCanBo);
   if (!isStrictUser && !guestRole) {
     return (
       <div className={styles.applyPage}>
@@ -1089,6 +1147,29 @@ const ApplyPage = () => {
                           <span>Bằng tiền mặt</span>
                         </button>
                       </div>
+                    </div>
+                  )}
+
+                  {/* PHẦN 1A: Chọn vai trò (tất cả người dùng không phải nhà tài trợ) */}
+                  {!isDonor && (
+                    <div className={`${styles.stepSectionWrapper} ${activeStep < 1 ? styles.disabledSection : ''}`}>
+                      <UserRoleSection
+                        selectedRole={userRole}
+                        onSelect={setUserRole}
+                        disabled={activeStep < 1}
+                      />
+                    </div>
+                  )}
+
+                  {/* PHẦN 1A2: Thông tin cá nhân theo vai trò */}
+                  {!isDonor && userRole && (
+                    <div className={`${styles.stepSectionWrapper} ${activeStep < 1 ? styles.disabledSection : ''}`}>
+                      <UserFieldsByRole
+                        role={userRole}
+                        values={userFields}
+                        onChange={setUserFields}
+                        isGuest={!isAuthenticated}
+                      />
                     </div>
                   )}
 
@@ -1260,6 +1341,7 @@ const ApplyPage = () => {
                         onFieldsChange={handleGuestDonorFieldsChange}
                         onValidityChange={handleGuestDonorValidityChange}
                         resetKey={guestDonorResetKey}
+                        showTypeSelector
                       />
                     </div>
                   )}
@@ -1318,72 +1400,7 @@ const ApplyPage = () => {
                         />
                       ) : (
                         <div className={styles.guestFormCard}>
-                          <h3>Thông tin cá nhân & Ngân hàng</h3>
-                          <div className={styles.guestFormRowThree}>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="text" 
-                                label="Họ và tên"
-                                placeholder="Nhập họ và tên..."
-                                value={guestFields.guestHoTen}
-                                onChange={(e) => handleInputChange('guestHoTen', e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="email" 
-                                label="Email liên lạc"
-                                placeholder="Nhập email..."
-                                value={guestFields.guestEmail}
-                                onChange={(e) => handleInputChange('guestEmail', e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="tel" 
-                                label="Số điện thoại"
-                                placeholder="Nhập SĐT..."
-                                value={guestFields.guestSoDienThoai}
-                                onChange={(e) => handleInputChange('guestSoDienThoai', e.target.value)}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <div className={styles.guestFormRowThree}>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="text" 
-                                label="Mã số định danh (MSSV/MSNV)"
-                                placeholder="Nhập MSSV hoặc MSNV..."
-                                value={guestFields.guestMssv}
-                                onChange={(e) => handleInputChange('guestMssv', e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="text" 
-                                label="Khoa / Phòng ban"
-                                placeholder="Ví dụ: Công nghệ thông tin..."
-                                value={guestFields.guestKhoa}
-                                onChange={(e) => handleInputChange('guestKhoa', e.target.value)}
-                                required
-                              />
-                            </div>
-                            <div className={styles.inputGroup}>
-                              <Input 
-                                type="text" 
-                                label="Lớp / Đơn vị"
-                                placeholder="Ví dụ: DA20TTB..."
-                                value={guestFields.guestLop}
-                                onChange={(e) => handleInputChange('guestLop', e.target.value)}
-                                required
-                              />
-                            </div>
-                          </div>
-                          <hr className={styles.divider} />
+                          <h3>Thông tin ngân hàng nhận giải ngân</h3>
                           <div className={styles.guestFormRowThree}>
                             <div className={styles.inputGroup}>
                               <Input 
@@ -1445,8 +1462,8 @@ const ApplyPage = () => {
                   )}
 
                   {/* Xác thực bảo mật Robot cho khách vãng lai (Chỉ hiển thị khi làm trực tuyến) */}
-                  {!isAuthenticated && (!isDonor || paymentMethod === 'Khac') && (
-                    <div className={`${styles.stepSectionWrapper} ${(activeStep < lastStepIndex || !isStep1Valid || !isStep2Valid || (lastStepIndex === 4 && !isStep3Valid)) ? styles.disabledSection : ''}`}>
+                  {!isAuthenticated && (
+                    <div className={`${styles.stepSectionWrapper} ${(activeStep < 2 || !isStep1Valid) ? styles.disabledSection : ''}`}>
                       <div className={styles.guestFormCard}>
                         <h3>Xác minh bảo mật chống spam</h3>
                         <label className={styles.checkboxLabel}>
@@ -1462,8 +1479,8 @@ const ApplyPage = () => {
                     </div>
                   )}
 
-                  {/* Nút bấm Lưu nháp / Gửi đơn / Reset (Chỉ hiển thị khi làm trực tuyến và đạt bước cuối) */}
-                  {(!isDonor || paymentMethod === 'Khac') && activeStep >= lastStepIndex && (
+                  {/* Nút bấm Lưu nháp / Gửi đơn / Reset */}
+                  {(!isDonor || paymentMethod === 'Khac' || (paymentMethod === 'Chuyen khoan' && activeStep >= 2) || (paymentMethod === 'Tien mat' && activeStep >= 2)) && activeStep >= (isDonor ? 2 : lastStepIndex) && (
                     <ApplicationFooter
                       onSaveDraft={null}
                       onSubmit={handleSubmit}

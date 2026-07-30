@@ -1,0 +1,139 @@
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+}
+
+.cardTitle {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fieldIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(59, 111, 245, 0.08);
+  color: #3b6ff5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.fieldContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.fieldValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.fieldValueHighlight {
+  font-size: 16px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.fieldSub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.badgeRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badgeBlue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.badgeYellow {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.badgeGreen {
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+.badgeRed {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.badgeGray {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+.badgePurple {
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+}
+
+.reasonBlock {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.reasonText {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

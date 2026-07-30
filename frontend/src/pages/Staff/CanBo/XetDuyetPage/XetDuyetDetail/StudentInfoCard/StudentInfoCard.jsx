@@ -1,139 +1,131 @@
 import { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { HiOutlineUser } from 'react-icons/hi2';
-import { userService } from '@services/userService';
+import {
+  HiOutlineUser,
+  HiOutlineEnvelope,
+  HiOutlinePhone,
+  HiOutlineAcademicCap,
+  HiOutlineBriefcase,
+  HiOutlineCalendarDays,
+  HiOutlineUserCircle,
+  HiOutlineUserGroup,
+} from 'react-icons/hi2';
+import userService from '@services/userService';
 import styles from './StudentInfoCard.module.scss';
 
-const GIOI_TINH_MAP = { Nam: 'Nam', Nu: 'Nữ', Khac: 'Khác' };
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '—';
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('vi-VN');
-  } catch {
-    return dateStr;
-  }
+const LOAI_TAI_KHOAN_MAP = {
+  sinhvien:   { label: 'Sinh viên',   cls: 'student' },
+  canbo:      { label: 'Cán bộ',      cls: 'staff' },
+  nhakhoahoc: { label: 'Nhà khoa học', cls: 'researcher' },
 };
 
 const StudentInfoCard = ({ userId, fallback }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userId) return undefined;
+    if (!userId) {
+      setUser(fallback || null);
+      setLoading(false);
+      return;
+    }
     let mounted = true;
     setLoading(true);
-    setError(false);
-    userService
-      .getById(userId)
+    userService.getById(userId)
       .then((res) => {
-        if (!mounted) return;
-        setUser(res?.data || res?.user || null);
+        const userData = res?.user || res?.data?.user || res?.data || res || null;
+        if (mounted) setUser(userData || fallback || null);
       })
       .catch(() => {
-        if (mounted) setError(true);
+        if (mounted) setUser(fallback || null);
       })
       .finally(() => {
         if (mounted) setLoading(false);
       });
-    return () => {
-      mounted = false;
-    };
-  }, [userId]);
+    return () => { mounted = false; };
+  }, [userId, fallback]);
 
-  const data = user || fallback || {};
+  if (loading) {
+    return (
+      <div className={styles.card}>
+        <div className={styles.skeleton}>Đang tải thông tin...</div>
+      </div>
+    );
+  }
 
-  const hoTen = data.hoTen || '—';
-  const mssv = data.maSoDinhDanh || '—';
-  const khoaPhong = data.khoaPhong || '—';
-  const email = data.email || '';
-  const sdt = data.soDienThoai || '';
-  const gioiTinh = GIOI_TINH_MAP[data.gioiTinh] || data.gioiTinh || '—';
-  const ngaySinh = formatDate(data.ngaySinh);
-  const donViCongTac = data.donViCongTac || '—';
+  if (!user) return null;
+
+  const loaiTK = LOAI_TAI_KHOAN_MAP[user.loaiTaiKhoan || user.loaitaikhoan] || LOAI_TAI_KHOAN_MAP.sinhvien;
+  const danhNghia = user.danhNghia || user.danhnghia;
+  const tenDaiDien = user.tenDaiDien || user.tendaidien;
+  const tinhTrangCongTac = user.tinhTrangCongTac || user.tinhtrangcongtac;
+  const isStaff = loaiTK.cls === 'staff' || loaiTK.cls === 'researcher';
 
   return (
-    <section className={styles.card}>
-      <div className={styles.cardHeader}>
-        <HiOutlineUser className={styles.headerIcon} />
-        <h2 className={styles.cardTitle}>Thông tin người nộp</h2>
+    <div className={styles.card}>
+      <div className={styles.header}>
+        <HiOutlineUserCircle size={18} className={styles.headerIcon} />
+        <h3 className={styles.headerTitle}>Thông tin người nộp đơn</h3>
       </div>
 
-      {loading ? (
-        <div className={styles.placeholder}>Đang tải...</div>
-      ) : error && !user ? (
-        <div className={styles.placeholder}>Không tải được thông tin</div>
-      ) : (
-        <div className={styles.grid}>
-          <div className={styles.field}>
-            <div className={styles.label}>Họ và tên</div>
-            <div className={styles.value}>{hoTen}</div>
-          </div>
-
-          <div className={styles.field}>
-            <div className={styles.label}>Mã số định danh</div>
-            <div className={styles.value}>{mssv}</div>
-          </div>
-
-          <div className={styles.field}>
-            <div className={styles.label}>Khoa / Phòng</div>
-            <div className={styles.value}>{khoaPhong}</div>
-          </div>
-
-          <div className={styles.field}>
-            <div className={styles.label}>Email</div>
-            {email ? (
-              <a className={`${styles.value} ${styles.link}`} href={`mailto:${email}`}>
-                {email}
-              </a>
-            ) : (
-              <div className={styles.value}>—</div>
-            )}
-          </div>
-
-          <div className={styles.field}>
-            <div className={styles.label}>Số điện thoại</div>
-            {sdt ? (
-              <a className={`${styles.value} ${styles.link}`} href={`tel:${sdt}`}>
-                {sdt}
-              </a>
-            ) : (
-              <div className={styles.value}>—</div>
-            )}
-          </div>
-
-          <div className={styles.field}>
-            <div className={styles.label}>Giới tính</div>
-            <div className={styles.value}>{gioiTinh}</div>
-          </div>
-
-          <div className={styles.field}>
-            <div className={styles.label}>Ngày sinh</div>
-            <div className={styles.value}>{ngaySinh}</div>
-          </div>
-
-          <div className={styles.field}>
-            <div className={styles.label}>Đơn vị công tác</div>
-            <div className={styles.value}>{donViCongTac}</div>
-          </div>
+      {danhNghia && (
+        <div className={styles.collectiveBanner}>
+          <HiOutlineUserGroup size={14} />
+          <span>Nộp với danh nghĩa: <strong>{danhNghia}</strong>{tenDaiDien ? ` — ${tenDaiDien}` : ''}</span>
         </div>
       )}
-    </section>
-  );
-};
 
-StudentInfoCard.propTypes = {
-  userId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  fallback: PropTypes.shape({
-    hoTen: PropTypes.string,
-    maSoDinhDanh: PropTypes.string,
-    khoaPhong: PropTypes.string,
-    email: PropTypes.string,
-    soDienThoai: PropTypes.string,
-  }),
+      <div className={styles.twoCol}>
+        {/* Cột trái */}
+        <div className={styles.col}>
+          <div className={styles.avatarRow}>
+            <div className={styles.avatar}>
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.hoTen || user.hoten} />
+              ) : (
+                <HiOutlineUser size={24} />
+              )}
+            </div>
+            <div className={styles.nameBlock}>
+              <span className={styles.name}>{user.hoTen || user.hoten || '—'}</span>
+              <span className={`${styles.typeBadge} ${styles[loaiTK.cls]}`}>{loaiTK.label}</span>
+            </div>
+          </div>
+          <div className={styles.field}>
+            <HiOutlineEnvelope size={14} className={styles.fieldIcon} />
+            <a href={`mailto:${user.email}`} className={styles.fieldLink}>{user.email || '—'}</a>
+          </div>
+          <div className={styles.field}>
+            <HiOutlinePhone size={14} className={styles.fieldIcon} />
+            <a href={`tel:${user.soDienThoai || user.sodienthoai}`} className={styles.fieldLink}>{user.soDienThoai || user.sodienthoai || '—'}</a>
+          </div>
+        </div>
+
+        {/* Cột phải */}
+        <div className={styles.col}>
+          <div className={styles.field}>
+            <span className={styles.fieldLabel}>Mã số định danh</span>
+            <span className={styles.fieldValue}>{user.maSoDinhDanh || user.masodinhdanh || '—'}</span>
+          </div>
+          <div className={styles.field}>
+            <HiOutlineAcademicCap size={14} className={styles.fieldIcon} />
+            <span className={styles.fieldValue}>{user.khoa || user.khoaPhong || user.donviCongTac || user.donvicongtac || '—'}</span>
+          </div>
+          <div className={styles.field}>
+            <HiOutlineBriefcase size={14} className={styles.fieldIcon} />
+            <span className={styles.fieldValue}>{user.lop || '—'}</span>
+          </div>
+          {isStaff && tinhTrangCongTac && (
+            <div className={styles.field}>
+              <span className={styles.fieldLabel}>Tình trạng công tác</span>
+              <span className={`${styles.statusDot} ${tinhTrangCongTac === 'Dang cong tac' ? styles.active : styles.inactive}`}>
+                {tinhTrangCongTac === 'Dang cong tac' ? 'Đang công tác' : 'Đã nghỉ hưu'}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default StudentInfoCard;

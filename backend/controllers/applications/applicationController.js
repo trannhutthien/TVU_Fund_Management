@@ -380,7 +380,7 @@ export const getApplicationById = async (req, res) => {
       message: "Lấy thông tin đơn thành công",
       data: {
         requestId: application.yeucauhotro_id,
-        tieuDe: application.lydo ? (application.lydo.substring(0, 50) + (application.lydo.length > 50 ? '...' : '')) : '',
+        tieuDe: application.lydo || '',
         moTa: application.lydo,
         lyDo: application.lydo,
         soTienYeuCau: parseFloat(application.sotiendenghi),
@@ -390,7 +390,14 @@ export const getApplicationById = async (req, res) => {
           id: application.nguoidung_id,
           hoTen: application.nguoi_nop_ho_ten,
           email: application.nguoi_nop_email,
-          maSoDinhDanh: application.masodinhdanh
+          maSoDinhDanh: application.masodinhdanh,
+          soDienThoai: application.nguoi_nop_sodienthoai,
+          donViCongTac: application.donvicongtac,
+          tinhTrangCongTac: application.tinhtrangcongtac,
+          loaiTaiKhoan: application.nguoi_nop_loaitaikhoan,
+          tenVaiTro: application.nguoi_nop_vaitro,
+          khoa: application.nguoi_nop_khoa,
+          lop: application.nguoi_nop_lop
         },
         quy: {
           id: application.quy_id,
@@ -409,6 +416,7 @@ export const getApplicationById = async (req, res) => {
         ngayNop: application.ngaynop,
         ngayCapNhat: application.ngaycapnhat,
         loaiHotro: application.loaihotro,
+        dotDuyet: application.dot_duyet_ten || null,
         canNghiemThu: application.canghiemthu === 1,
         tongKinhPhiDuAn: application.tongkinhphidudan ? parseFloat(application.tongkinhphidudan) : null,
         laDeTai: application.laidetac === 1,
@@ -477,15 +485,24 @@ export const getAllApplications = async (req, res) => {
       message: "Lấy danh sách đơn thành công",
       data: result.applications.map(app => ({
         requestId: app.yeucauhotro_id,
-        tieuDe: app.lydo ? (app.lydo.substring(0, 50) + (app.lydo.length > 50 ? '...' : '')) : '',
+        tieuDe: app.lydo || '',
         moTa: app.lydo,
         soTienYeuCau: parseFloat(app.sotiendenghi),
         trangThai: app.trangthai,
+        dotDuyet: app.dot_duyet_ten || null,
+        loaiHoTro: app.loaihotro,
         nguoiNop: {
           id: app.nguoidung_id,
           hoTen: app.nguoi_nop_ho_ten,
           email: app.nguoi_nop_email,
-          maSoDinhDanh: app.masodinhdanh
+          maSoDinhDanh: app.masodinhdanh,
+          soDienThoai: app.nguoi_nop_sodienthoai,
+          donViCongTac: app.donvicongtac,
+          tinhTrangCongTac: app.tinhtrangcongtac,
+          loaiTaiKhoan: app.nguoi_nop_loaitaikhoan,
+          tenVaiTro: app.nguoi_nop_vaitro,
+          khoa: app.nguoi_nop_khoa,
+          lop: app.nguoi_nop_lop
         },
         quy: {
           id: app.quy_id,

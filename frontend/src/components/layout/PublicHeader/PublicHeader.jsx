@@ -47,7 +47,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   const [publicSettings, setPublicSettings] = useState(DEFAULT_PUBLIC_SETTINGS);
   const navRef = useRef(null);
   const searchRef = useRef(null);
-  const isStaffUser = isAuthenticated && [1, 2, 3].includes(Number(user?.vaiTro));
+  const isStaffUser = isAuthenticated && [1, 2, 3, 5].includes(Number(user?.vaiTro));
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -264,6 +264,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       else if (user.vaiTro === 4) {
         roleKey = user.loaiTaiKhoan === 'NHA_TAI_TRO' ? 'nhataitro' : 'sinhvien';
       }
+      else if (user.vaiTro === 5) roleKey = 'bankiemsoat';
       return !!perm[roleKey];
     } else {
       return !!perm.sinhvien || !!perm.nhataitro;
@@ -308,8 +309,8 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     if (onLoginClick) {
       onLoginClick();
     } else {
-      // Nếu không, navigate to /login page
-      navigate('/login');
+      // Nếu không, navigate to landing page
+      navigate('/');
     }
     closeMobileMenu();
   };

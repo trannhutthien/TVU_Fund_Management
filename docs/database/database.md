@@ -1,7 +1,7 @@
 # TVU Fund Management — Database Schema Reference
 
 > **Database:** `tvu_fund_management` · **Charset:** utf8mb4 · **Engine:** InnoDB
-> **Cập nhật từ DB thực tế localhost:** 2026-07-13
+> **Cập nhật:** 2026-07-30
 
 ---
 
@@ -59,10 +59,7 @@
 | `donvihoc_id` | int(11) | NO | PK | |
 | `madonvi` | varchar(20) | NO | UNIQUE | Mã khoa/ngành |
 | `tenkhoa` | varchar(200) | NO | | Tên khoa |
-| `tennganh` | varchar(200) | YES | NULL | Tên ngành |
 | `lop` | varchar(100) | YES | NULL | Lớp |
-| `khoahoc` | varchar(50) | YES | NULL | Khóa học |
-| `mota` | text | YES | NULL | |
 | `trangthai` | enum | YES | `'Hoat dong'` | `Hoat dong` · `Ngung hoat dong` |
 | `ngaytao` | timestamp | NO | CURRENT_TIMESTAMP | |
 
@@ -103,6 +100,7 @@
 | `vaitro_id` | int(11) | NO | | FK → `vaitro` (1=Admin, 2=KT, 3=UBQL) |
 | `loaitaikhoan` | enum | YES | NULL | `Sinh vien` · `Nha tai tro` · `Can bo` · `Nha khoa hoc` |
 | `tinhtrangcongtac` | enum | YES | NULL | `Dang cong tac` · `Da nghi huu` (chỉ khi loaitaikhoan='Can bo') |
+| `donvicongtac` | varchar(200) | YES | NULL | Đơn vị công tác |
 | `trangthai` | enum | YES | `'Hoat dong'` | `Hoat dong` · `Khoa` · `Cho duyet` |
 | `ngaytao` | timestamp | NO | CURRENT_TIMESTAMP | |
 | `ngaycapnhat` | timestamp | NO | CURRENT_TIMESTAMP | ON UPDATE |
@@ -156,6 +154,10 @@
 | `email` | varchar(100) | YES | NULL | |
 | `sodienthoai` | varchar(15) | YES | NULL | |
 | `diachi` | text | YES | NULL | |
+| `masothue` | varchar(30) | YES | NULL | Mã số thuế |
+| `linhVucHopTac` | varchar(100) | YES | NULL | Lĩnh vực hợp tác |
+| `nguoiLienHe` | varchar(100) | YES | NULL | Người liên hệ |
+| `chucDanh` | varchar(50) | YES | NULL | Chức danh người liên hệ |
 | `website` | varchar(255) | YES | NULL | |
 | `mota` | text | YES | NULL | |
 | `logo` | varchar(255) | YES | NULL | |
@@ -226,6 +228,8 @@
 | `sotiendachi` | decimal(15,2) | NO | 0.00 | Số tiền đã chi |
 | `ngaydukien` | date | YES | NULL | Ngày dự kiến giải ngân |
 | `ngaythucte` | date | YES | NULL | Ngày thực tế giải ngân |
+| `ngaybatdau` | date | YES | NULL | Ngày bắt đầu đợt |
+| `ngayketthuc` | date | YES | NULL | Ngày kết thúc đợt |
 | `trangthai` | enum | NO | `'chuatoi'` | `chuatoi` · `dangchodutien` · `hoanthanh` |
 | `ngaytao` | datetime | YES | CURRENT_TIMESTAMP | |
 
@@ -357,6 +361,9 @@
 | `mucthuhoi` | decimal(15,2) | NO | | Số tiền phải thu hồi |
 | `laisuat` | decimal(5,2) | YES | NULL | Lãi suất (%) |
 | `thoihanhoantra_thang` | int(11) | YES | NULL | Thời hạn hoàn trả (tháng) |
+| `trangthai` | enum | NO | `'Chua thu'` | `Chua thu` · `Dang thu` · `Da thu het` |
+| `ngaybatdauthuhoi` | date | YES | NULL | Ngày bắt đầu thu hồi |
+| `sotiendadathu` | decimal(15,2) | NO | 0.00 | Số tiền đã thu hồi |
 | `soquyetdinh_hopdong` | varchar(100) | YES | NULL | Số QĐ/Hợp đồng |
 | `filehopdong` | varchar(255) | YES | NULL | File hợp đồng |
 | `ngaytao` | timestamp | NO | CURRENT_TIMESTAMP | |
@@ -397,6 +404,11 @@
 | `ngaythuctra` | date | YES | NULL | Ngày thực trả |
 | `sotienthuctra` | decimal(15,2) | YES | NULL | Số tiền thực trả |
 | `trangthai` | enum | NO | `'Chua den han'` | `Chua den han` · `Da tra` · `Qua han` · `Tra mot phan` |
+| `trangthaixacnhan` | enum | NO | `'Cho xac nhan'` | `Cho xac nhan` · `Da xac nhan` · `Bi tu choi` |
+| `ngayxacnhan` | datetime | YES | NULL | Thời điểm xác nhận |
+| `nguoiduyet_id` | int(11) | YES | NULL | FK → `nguoidung` (người xác nhận) |
+| `minhchungtrano` | varchar(255) | YES | NULL | File minh chứng trả nợ |
+| `ghichuxacnhan` | text | YES | NULL | Ghi chú xác nhận |
 | `ngaytao` | timestamp | NO | CURRENT_TIMESTAMP | |
 | `ngaycapnhat` | timestamp | NO | CURRENT_TIMESTAMP | ON UPDATE |
 
@@ -447,6 +459,11 @@
 | `guest_sodienthoai` | varchar(15) | YES | NULL | |
 | `guest_tochuc` | varchar(200) | YES | NULL | |
 | `guest_diachi` | varchar(255) | YES | NULL | |
+| `loaiNhaTaiTro` | varchar(20) | YES | `'Ca nhan'` | Loại nhà tài trợ |
+| `masothue` | varchar(30) | YES | NULL | Mã số thuế |
+| `linhVucHopTac` | varchar(100) | YES | NULL | Lĩnh vực hợp tác |
+| `nguoiLienHe` | varchar(100) | YES | NULL | Người liên hệ |
+| `chucDanh` | varchar(50) | YES | NULL | Chức danh |
 | `quy_id` | int(11) | NO | | Tham chiếu `quy` (không FK) |
 | `sotien` | decimal(15,2) | NO | | |
 | `hinhthuc` | enum | NO | | `Tien mat` · `Chuyen khoan` · `Khac` |
@@ -480,9 +497,12 @@
 | `guest_sotaikhoan` | varchar(50) | YES | NULL | |
 | `guest_nganhang` | varchar(100) | YES | NULL | |
 | `guest_chutaikhoan` | varchar(100) | YES | NULL | |
+| `vaitro` | varchar(30) | YES | `'sinh_vien'` | Vai trò: sinh_vien/can_bo_truong/can_bo_nghi_huu/nha_khoa_hoc |
 | `quy_id` | int(11) | NO | | Tham chiếu `quy` (không FK) |
 | `lydo` | text | NO | | |
 | `sotiendenghi` | decimal(15,2) | NO | | |
+| `loaihotro` | enum | YES | `'Tai tro khong hoan lai'` | `Tai tro khong hoan lai` · `Tai tro co thu hoi` · `Cho vay` |
+| `tongkinhphidudan` | decimal(15,2) | YES | NULL | Tổng kinh phí dự kiến |
 | `tailieudinhkem` | text | YES | NULL | |
 | `trang_thai_staging` | enum | YES | `'CHO_XAC_MINH'` | `CHO_XAC_MINH` · `DA_CHUYEN` · `HET_HAN` |
 | `yeucauhotro_id_ref` | int(11) | YES | NULL | ID trong `yeucauhotro` sau migrate |
@@ -520,7 +540,6 @@
 |-----|------|------|---------|---------|
 | `chucvu_id` | int(11) | NO | PK AUTO_INCREMENT | |
 | `nguoidung_id` | int(11) | YES | NULL | FK → `nguoidung` (ON DELETE SET NULL) |
-| `hoten` | varchar(100) | YES | NULL | Họ tên (fallback từ nguoidung nếu có nguoidung_id) |
 | `chucdanh` | varchar(150) | NO | | Chức danh / Chức vụ trong Quỹ |
 | `nhom` | enum | NO | | `Hoi dong quy` · `Ban dieu hanh` · `Ban kiem soat` · `Van phong thuong truc` |
 | `ngaybatdaunhiemky` | date | YES | NULL | Ngày bắt đầu nhiệm kỳ |
@@ -617,6 +636,8 @@
 | `tintuc` | `trangthai` | `Ban nhap`, `Da xuat ban`, `Da an` |
 | `hopdongvayvon` | `trangthai` | `Dang thuc hien`, `Da tat toan`, `Qua han` |
 | `lichtrano` | `trangthai` | `Chua den han`, `Da tra`, `Qua han`, `Tra mot phan` |
+| `lichtrano` | `trangthaixacnhan` | `Cho xac nhan`, `Da xac nhan`, `Bi tu choi` |
+| `dieukhoanthuhoi` | `trangthai` | `Chua thu`, `Dang thu`, `Da thu het` |
 | `nghiemthu` | `loaikiemtra` | `Kiem tra tien do`, `Nghiem thu cuoi cung` |
 | `nghiemthu` | `ketqua` | `Cho danh gia`, `Dat`, `Dat co dieu chinh`, `Khong dat` |
 | `dutoanhangnam` | `trangthai` | `Cho duyet`, `Da duyet`, `Tu choi` |

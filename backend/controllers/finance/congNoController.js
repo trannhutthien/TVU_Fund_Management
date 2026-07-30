@@ -249,9 +249,9 @@ export const sendReminder = async (req, res) => {
 
 export const getNghiemThuList = async (req, res) => {
   try {
-    const { trangthaiNT, loaiKiemTra, quyId, page, limit } = req.query;
+    const { trangthaiNT, loaiKiemTra, quyId, search, fromDate, toDate, page, limit } = req.query;
     const result = await CongNoModel.getNghiemThuList({
-      trangthaiNT, loaiKiemTra, quyId, page, limit,
+      trangthaiNT, loaiKiemTra, quyId, search, fromDate, toDate, page, limit,
     });
     return res.status(200).json({ success: true, ...result });
   } catch (error) {

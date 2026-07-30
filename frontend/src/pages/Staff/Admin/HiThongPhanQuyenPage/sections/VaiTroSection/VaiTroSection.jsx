@@ -156,7 +156,7 @@ const VaiTroSection = () => {
               <div className={styles.cardFooter}>
                 <Button
                   variant="ghost"
-                  size="small"
+                  size="sm"
                   className={styles.viewUsersBtn}
                   onClick={() => setViewingUsersRole(role)}
                 >
@@ -166,8 +166,8 @@ const VaiTroSection = () => {
 
                 {canEdit && (
                   <Button
-                    variant="outline"
-                    size="small"
+                    variant="secondary"
+                    size="sm"
                     className={styles.editBtn}
                     onClick={() => setEditingRole(role)}
                   >

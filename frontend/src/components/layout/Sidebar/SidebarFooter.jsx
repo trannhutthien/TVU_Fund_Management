@@ -24,7 +24,7 @@ const SidebarFooter = ({ isCollapsed }) => {
   const handleLogout = async () => {
     if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
       await logout();
-      navigate('/login');
+      navigate('/');
     }
   };
 

@@ -92,10 +92,7 @@ CREATE TABLE `donvihoc` (
   `donvihoc_id` int(11) NOT NULL,
   `madonvi` varchar(20) NOT NULL,
   `tenkhoa` varchar(200) NOT NULL,
-  `tennganh` varchar(200) DEFAULT NULL,
   `lop` varchar(100) DEFAULT NULL,
-  `khoahoc` varchar(50) DEFAULT NULL,
-  `mota` text DEFAULT NULL,
   `trangthai` enum('Hoat dong','Ngung hoat dong') DEFAULT 'Hoat dong',
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -211,9 +208,10 @@ CREATE TABLE `guest_yeucauhotro` (
   `guest_hoten` varchar(100) NOT NULL,
   `guest_email` varchar(100) NOT NULL,
   `guest_sodienthoai` varchar(15) DEFAULT NULL,
-  `guest_mssv` varchar(20) DEFAULT NULL COMMENT 'Mã số sinh viên',
-  `guest_khoa` varchar(100) DEFAULT NULL,
-  `guest_lop` varchar(50) DEFAULT NULL,
+  `vaitro` varchar(30) DEFAULT 'sinh_vien' COMMENT 'sinh_vien, can_bo_truong, can_bo_nghi_huu, nha_khoa_hoc',
+  `guest_mssv` varchar(20) DEFAULT NULL COMMENT 'Mã số định danh: MSSV/MSNV/mã NCKH',
+  `guest_khoa` varchar(100) DEFAULT NULL COMMENT 'Khoa (sinh_vien) hoặc Đơn vị công tác (can_bo, nha_khoa_hoc)',
+  `guest_lop` varchar(50) DEFAULT NULL COMMENT 'Lớp (sinh_vien) hoặc Số năm công tác (can_bo_nghi_huu)',
   `guest_sotaikhoan` varchar(50) DEFAULT NULL,
   `guest_nganhang` varchar(100) DEFAULT NULL,
   `guest_chutaikhoan` varchar(100) DEFAULT NULL,
@@ -372,18 +370,17 @@ CREATE TABLE `nguoidung` (
   `trangthai` enum('Hoat dong','Khoa','Cho duyet') DEFAULT 'Hoat dong',
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
   `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `taikhoannganhang_id` int(11) DEFAULT NULL,
-  `xacnhandoclap` tinyint(1) DEFAULT NULL COMMENT 'Chi dung khi vaitro=Ban Kiem Soat: Admin xac nhan khong co quan he than nhan theo Dieu 8'
+  `taikhoannganhang_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `nguoidung`
 --
 
-INSERT INTO `nguoidung` (`nguoidung_id`, `email`, `matkhau`, `hoten`, `masodinhdanh`, `ngaysinh`, `gioitinh`, `sodienthoai`, `diachi`, `donvihoc_id`, `avatar`, `vaitro_id`, `loaitaikhoan`, `tinhtrangcongtac`, `donvicongtac`, `trangthai`, `ngaytao`, `ngaycapnhat`, `taikhoannganhang_id`, `xacnhandoclap`) VALUES
-(1, 'binh@tvu.edu.vn', '$2b$10$Na73pLlsi0OZaIalztXtZOgKxUJAHhW.QXM98siPMrG9bO6mOeKXy', 'Nguyễn Văn Bình', 'ADMIN001', NULL, NULL, '0987654321', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-11 18:53:44', NULL, NULL),
-(2, 'ketoan@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Trần Thị Kế Toán', 'KT001', NULL, NULL, NULL, NULL, NULL, NULL, 2, NULL, NULL, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL, NULL),
-(3, 'canboquy@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Lê Văn Tùng', 'CB001', NULL, NULL, NULL, NULL, NULL, NULL, 3, NULL, NULL, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL, NULL);
+INSERT INTO `nguoidung` (`nguoidung_id`, `email`, `matkhau`, `hoten`, `masodinhdanh`, `ngaysinh`, `gioitinh`, `sodienthoai`, `diachi`, `donvihoc_id`, `avatar`, `vaitro_id`, `loaitaikhoan`, `tinhtrangcongtac`, `donvicongtac`, `trangthai`, `ngaytao`, `ngaycapnhat`, `taikhoannganhang_id`) VALUES
+(1, 'binh@tvu.edu.vn', '$2b$10$Na73pLlsi0OZaIalztXtZOgKxUJAHhW.QXM98siPMrG9bO6mOeKXy', 'Nguyễn Văn Bình', 'ADMIN001', NULL, NULL, '0987654321', NULL, NULL, NULL, 1, NULL, NULL, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-11 18:53:44', NULL),
+(2, 'ketoan@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Trần Thị Kế Toán', 'KT001', NULL, NULL, NULL, NULL, NULL, NULL, 2, NULL, NULL, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL),
+(3, 'canboquy@tvu.edu.vn', '$2b$10$XtEgUgbxwOf5qoudQSir0.9K9iQ/Ym5IQeshlAsYEHfqWtkDDbvSW', 'Lê Văn Tùng', 'CB001', NULL, NULL, NULL, NULL, NULL, NULL, 3, NULL, NULL, NULL, 'Hoat dong', '2026-06-02 11:40:34', '2026-07-03 09:56:18', NULL);
 
 -- --------------------------------------------------------
 
@@ -398,6 +395,10 @@ CREATE TABLE `nhataitro` (
   `email` varchar(100) DEFAULT NULL,
   `sodienthoai` varchar(15) DEFAULT NULL,
   `diachi` text DEFAULT NULL,
+  `masothue` varchar(30) DEFAULT NULL,
+  `linhVucHopTac` varchar(100) DEFAULT NULL,
+  `nguoiLienHe` varchar(100) DEFAULT NULL,
+  `chucDanh` varchar(50) DEFAULT NULL,
   `website` varchar(255) DEFAULT NULL,
   `mota` text DEFAULT NULL,
   `logo` varchar(255) DEFAULT NULL,

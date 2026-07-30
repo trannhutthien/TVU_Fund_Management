@@ -345,6 +345,8 @@ export const getMe = async (req, res) => {
         tenVaiTro: user.tenvaitro || null,
         loaiTaiKhoan: user.loaitaikhoan || null,
         khoaPhong: user.khoaphong || null,
+        tinhTrangCongTac: user.tinhtrangcongtac || null,
+        donViCongTac: user.donvicongtac || null,
         trangThai: user.trangthai,
         createdAt: user.ngaytao || null,
         hasPassword: !!user.hasPassword,

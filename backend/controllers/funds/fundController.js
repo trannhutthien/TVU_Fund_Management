@@ -1,3 +1,4 @@
+import pool from "../../config/db.js";
 import FundModel from "../../models/funds/FundModel.js";
 import LoaiQuyModel from "../../models/funds/LoaiQuyModel.js";
 import BankAccountModel from "../../models/funds/BankAccountModel.js";
@@ -832,5 +833,79 @@ export const getFundBankAccounts = async (req, res) => {
       success: false,
       message: "Lỗi server, vui lòng thử lại sau",
     });
+  }
+};
+
+// ─── GET /api/funds/:id/available-balance ────────────────────────────────────
+// Kiểm tra hạn mức và số dư quỹ cho 1 đơn cụ thể
+// Query params: userId, requestedAmount, excludeApplicationId
+export const getAvailableBalance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, requestedAmount, excludeApplicationId } = req.query;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID quỹ không hợp lệ" });
+    }
+
+    const fund = await FundModel.getFundById(id);
+    if (!fund) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy quỹ" });
+    }
+
+    const fundBalance = Number(fund.so_du) || 0;
+    const maxPerApplication = fund.so_tien_ho_tro_toi_da ? Number(fund.so_tien_ho_tro_toi_da) : null;
+    const reqAmount = requestedAmount ? Number(requestedAmount) : 0;
+
+    let pendingQuery = `
+      SELECT COALESCE(SUM(yc.sotiendenghi), 0) AS tong_cho_giai_ngan
+      FROM yeucauhotro yc
+      WHERE yc.quy_id = ?
+        AND yc.trangthai IN ('Cho giai ngan', 'Cho duyet cap 3')
+    `;
+    const pendingParams = [id];
+
+    if (excludeApplicationId) {
+      pendingQuery += ' AND yc.yeucauhotro_id != ?';
+      pendingParams.push(parseInt(excludeApplicationId));
+    }
+
+    const [[{ tong_cho_giai_ngan }]] = await pool.query(pendingQuery, pendingParams);
+    const availableBalance = fundBalance - Number(tong_cho_giai_ngan);
+
+    let soLuotNhan = 0;
+    if (userId) {
+      const namHienTai = new Date().getFullYear();
+      const excludeClause = excludeApplicationId ? ' AND yeucauhotro_id != ?' : '';
+      const params = excludeApplicationId
+        ? [id, userId, namHienTai, parseInt(excludeApplicationId)]
+        : [id, userId, namHienTai];
+      const [[{ dem }]] = await pool.query(
+        `SELECT COUNT(*) AS dem
+         FROM yeucauhotro
+         WHERE quy_id = ? AND nguoidung_id = ?
+           AND YEAR(ngaynop) = ?
+           AND trangthai IN ('Da giai ngan', 'Hoan thanh', 'Cho giai ngan', 'Cho duyet cap 3')
+           ${excludeClause}`,
+        params
+      );
+      soLuotNhan = Number(dem) || 0;
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tongSoDu: fundBalance,
+        soTienChoGiaiNgan: Number(tong_cho_giai_ngan),
+        soDuKhaDung: availableBalance,
+        mucHoTroToiDa: maxPerApplication,
+        soLuotDaNhan: soLuotNhan,
+        vuotMucTieuDaNhan: reqAmount > 0 && maxPerApplication !== null && reqAmount > maxPerApplication,
+        khongDuSoDu: reqAmount > 0 && reqAmount > availableBalance,
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getAvailableBalance:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };

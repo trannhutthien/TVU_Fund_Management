@@ -94,6 +94,7 @@ const getApplicationById = async (yeucauhotroId) => {
       yc.yeucauhotro_id,
       yc.nguoidung_id,
       yc.quy_id,
+      yc.dot_id,
       yc.lydo,
       yc.sotiendenghi,
       yc.tailieudinhkem,
@@ -110,9 +111,17 @@ const getApplicationById = async (yeucauhotroId) => {
       nd.hoten as nguoi_nop_ho_ten,
       nd.email as nguoi_nop_email,
       nd.masodinhdanh,
+      nd.sodienthoai as nguoi_nop_sodienthoai,
+      nd.donvicongtac,
+      nd.tinhtrangcongtac,
+      v.tenvaitro as nguoi_nop_vaitro,
+      nd.loaitaikhoan as nguoi_nop_loaitaikhoan,
+      dh.tenkhoa as nguoi_nop_khoa,
+      dh.lop as nguoi_nop_lop,
       q.tenquy,
       q.loaiquy_id,
       q.sodu as quy_so_du,
+      dg.tendot as dot_duyet_ten,
       dkh.dieukhoanthuhoi_id,
       dkh.mucthuhoi as dkh_mucthuhoi,
       dkh.laisuat as dkh_laisuat,
@@ -131,7 +140,10 @@ const getApplicationById = async (yeucauhotroId) => {
       hd.ghichu as hd_ghichu
      FROM yeucauhotro yc
      INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
+     LEFT JOIN vaitro v ON nd.vaitro_id = v.vaitro_id
+     LEFT JOIN donvihoc dh ON nd.donvihoc_id = dh.donvihoc_id
      INNER JOIN quy q ON yc.quy_id = q.quy_id
+     LEFT JOIN dotgiaingan dg ON yc.dot_id = dg.dot_id
      LEFT JOIN dieukhoanthuhoi dkh ON yc.yeucauhotro_id = dkh.yeucauhotro_id
      LEFT JOIN hopdongvayvon hd ON yc.yeucauhotro_id = hd.yeucauhotro_id
      WHERE yc.yeucauhotro_id = ?
@@ -263,6 +275,7 @@ const getAllApplications = async (filters, limit, offset) => {
       yc.yeucauhotro_id,
       yc.nguoidung_id,
       yc.quy_id,
+      yc.dot_id,
       yc.lydo,
       yc.sotiendenghi,
       yc.trangthai,
@@ -273,12 +286,23 @@ const getAllApplications = async (filters, limit, offset) => {
       nd.hoten as nguoi_nop_ho_ten,
       nd.email as nguoi_nop_email,
       nd.masodinhdanh,
+      nd.sodienthoai as nguoi_nop_sodienthoai,
+      nd.donvicongtac,
+      nd.tinhtrangcongtac,
+      v.tenvaitro as nguoi_nop_vaitro,
+      nd.loaitaikhoan as nguoi_nop_loaitaikhoan,
+      dh.tenkhoa as nguoi_nop_khoa,
+      dh.lop as nguoi_nop_lop,
       q.tenquy,
       q.loaiquy_id,
-      q.sodu as quy_so_du
+      q.sodu as quy_so_du,
+      dg.tendot as dot_duyet_ten
     FROM yeucauhotro yc
     INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
+    LEFT JOIN vaitro v ON nd.vaitro_id = v.vaitro_id
+    LEFT JOIN donvihoc dh ON nd.donvihoc_id = dh.donvihoc_id
     INNER JOIN quy q ON yc.quy_id = q.quy_id
+    LEFT JOIN dotgiaingan dg ON yc.dot_id = dg.dot_id
     ${whereClause}
     ORDER BY yc.ngaynop DESC
     LIMIT ? OFFSET ?

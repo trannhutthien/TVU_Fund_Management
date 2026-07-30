@@ -133,7 +133,7 @@ const GoogleAuthCallbackPage = () => {
               {errorMsg}
             </p>
             <button
-              onClick={() => navigate('/login', { replace: true })}
+              onClick={() => navigate('/', { replace: true })}
               style={{
                 background: '#4285F4',
                 color: '#fff',

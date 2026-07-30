@@ -144,13 +144,15 @@ const createFund = async (fundData) => {
       // Dùng chi tiết đợt giải ngân từ form
       for (const dot of dotGiaiNgan) {
         await connection.execute(
-          `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, sotiendukien, ngaydukien, trangthai)
-           VALUES (?, ?, ?, ?, ?, ?, 'chuatoi')`,
+          `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, ngaybatdau, ngayketthuc, sotiendukien, ngaydukien, trangthai)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'chuatoi')`,
           [
             result.insertId,
             dot.thutu,
             dot.tenDot || `Đợt ${dot.thutu}`,
             dot.mota || null,
+            dot.ngaybatdau ? String(dot.ngaybatdau).slice(0, 10) : null,
+            dot.ngayketthuc ? String(dot.ngayketthuc).slice(0, 10) : null,
             parseFloat(dot.sotiendukien) || 0,
             dot.ngaydukien ? String(dot.ngaydukien).slice(0, 10) : null
           ]
@@ -167,13 +169,15 @@ const createFund = async (fundData) => {
       for (let i = 1; i <= soDot; i++) {
         const roundDate = new Date(startDate.getTime() + totalTime * (i / (soDot + 1)));
         await connection.execute(
-          `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, sotiendukien, ngaydukien, trangthai)
-           VALUES (?, ?, ?, ?, ?, ?, 'chuatoi')`,
+          `INSERT INTO dotgiaingan (quy_id, thutu, tendot, mota, ngaybatdau, ngayketthuc, sotiendukien, ngaydukien, trangthai)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'chuatoi')`,
           [
             result.insertId,
             i,
             `Đợt ${i}`,
             `Đợt giải ngân thứ ${i} của quỹ "${tenQuy}"`,
+            null,
+            null,
             amountPerRound,
             roundDate.toISOString().split('T')[0]
           ]

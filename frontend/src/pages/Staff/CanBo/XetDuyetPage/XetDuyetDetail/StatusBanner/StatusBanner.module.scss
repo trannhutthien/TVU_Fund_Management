@@ -1,0 +1,95 @@
+.banner {
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border-left: 4px solid transparent;
+}
+
+.warning {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-left-color: #f59e0b;
+  color: #92400e;
+}
+
+.info {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left-color: #3b82f6;
+  color: #1e40af;
+}
+
+.success {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-left-color: #22c55e;
+  color: #166534;
+}
+
+.danger {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-left-color: #ef4444;
+  color: #991b1b;
+}
+
+.mainRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.requestId {
+  font-weight: 700;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.fundName {
+  font-size: 13px;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.dotDuyet {
+  font-size: 12px;
+  opacity: 0.75;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.warningList {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warningItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 6px;
+  color: #991b1b;
+}
+
+@media (max-width: 640px) {
+  .banner { padding: 12px 14px; }
+  .mainRow { gap: 8px; }
+  .fundName { display: none; }
+}

@@ -8,6 +8,7 @@ import {
   updateUserInfo,
   getUserGrowth,
   deleteUser,
+  getFaculties,
 } from "../../controllers/users/userController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
@@ -19,6 +20,9 @@ router.get("/growth", protect, authorizeRoles(1, 3), getUserGrowth);
 
 // GET /api/users/stats — Admin / Cán bộ
 router.get("/stats", protect, authorizeRoles(1, 3), getUserStats);
+
+// GET /api/users/faculties — Công khai (dùng cho form nộp đơn)
+router.get("/faculties", getFaculties);
 
 // GET /api/users — Admin / Cán bộ
 router.get("/", protect, authorizeRoles(1, 3), getUsers);

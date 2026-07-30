@@ -68,13 +68,15 @@ import CanBoBaoCaoPage from './pages/Staff/CanBo/BaoCaoPage'
 import PhanBoPage from './pages/Staff/CanBo/PhanBoPage/PhanBoPage'
 import TaoTinTucPage from './pages/Admin/TinTuc/TaoTinTucPage'
 import GiamSatNghiemThuCongNoPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/index.jsx'
+import NghiemThuDetailPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/NghiemThuDetailPage/NghiemThuDetailPage'
+
 
 // Protected Route: Bảo vệ routes cần đăng nhập
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()
 
   if (loading) return <div>Loading...</div>
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/" replace />
   return children
 }
 
@@ -196,7 +198,10 @@ function App() {
             {/* Shared Routes - Admin, Ke toan, Can bo, Ban kiem soat */}
             <Route element={<RoleBasedRoute allowedRoles={[1, 2, 3, 5]} redirectTo="/" />}>
               <Route path="/giam-sat" element={<GiamSatNghiemThuCongNoPage />} />
+              <Route path="/giam-sat/nghiem-thu/:yeucauhotroId" element={<NghiemThuDetailPage />} />
             </Route>
+
+
           </Route>
 
           {/* Wildcard Fallback Route */}

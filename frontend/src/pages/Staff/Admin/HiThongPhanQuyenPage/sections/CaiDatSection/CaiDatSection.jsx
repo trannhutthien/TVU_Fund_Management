@@ -63,6 +63,7 @@ const CaiDatSection = () => {
   const [dinhDangChoPhep, setDinhDangChoPhep] = useState(['PDF', 'JPG', 'PNG', 'DOC']);
   
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [laiSuatNganHangThamChieu, setLaiSuatNganHangThamChieu] = useState('');
 
   // ─── Landing Page Content State ──────────────────────────────
   const [heroContent, setHeroContent] = useState({
@@ -135,6 +136,7 @@ const CaiDatSection = () => {
           setSoFileToiDa(cfg.so_file_toi_da || 5);
           setDinhDangChoPhep(cfg.dinh_dang_cho_phep || ['PDF', 'JPG', 'PNG', 'DOC']);
           setMaintenanceMode(cfg.maintenanceMode || false);
+          setLaiSuatNganHangThamChieu(cfg.laisuatnganhangthamchieu != null ? String(cfg.laisuatnganhangthamchieu) : '');
           // Landing page content
           setHeroContent({
             hero_badge: cfg.hero_badge || '', hero_title: cfg.hero_title || '',
@@ -370,7 +372,7 @@ const CaiDatSection = () => {
               <div className={styles.formActions}>
                 <Button
                   variant="primary"
-                  size="small"
+                  size="sm"
                   disabled={saving}
                   onClick={() =>
                     handleSaveSettings({
@@ -450,7 +452,7 @@ const CaiDatSection = () => {
               <div className={styles.formActions}>
                 <Button
                   variant="primary"
-                  size="small"
+                  size="sm"
                   disabled={saving}
                   onClick={() =>
                     handleSaveSettings({
@@ -502,7 +504,7 @@ const CaiDatSection = () => {
               <div className={styles.formActions}>
                 <Button
                   variant="primary"
-                  size="small"
+                  size="sm"
                   disabled={saving}
                   onClick={() =>
                     handleSaveSettings({
@@ -551,13 +553,57 @@ const CaiDatSection = () => {
               <div className={styles.formActions}>
                 <Button
                   variant="primary"
-                  size="small"
+                  size="sm"
                   disabled={saving}
                   onClick={() =>
                     handleSaveSettings({
                       thoi_han_xu_ly_ngay: thoiHanXuLyNgay,
                       so_cap_duyet: soCapDuyet,
                       ky_tu_ly_do_toi_thieu: kyTuLyDoToiThieu,
+                    })
+                  }
+                >
+                  Lưu thay đổi
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2.5: Loan settings */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <HiOutlineDocumentText className={styles.cardIcon} />
+              <h3 className={styles.cardTitle}>Quy định khoản vay (Điều 18)</h3>
+            </div>
+            <div className={styles.cardBody}>
+              <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>
+                Lãi suất cho vay tối đa bằng 70% lãi suất ngân hàng cùng thời điểm. Giá trị này dùng để kiểm tra ràng buộc khi duyệt đơn "Cho vay".
+              </p>
+              <div className={styles.formGrid}>
+                <Input
+                  label="Lãi suất ngân hàng tham chiếu (%/năm)"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={laiSuatNganHangThamChieu}
+                  onChange={(e) => setLaiSuatNganHangThamChieu(e.target.value)}
+                  placeholder="VD: 6.5"
+                  disabled={saving}
+                />
+                {laiSuatNganHangThamChieu && (
+                  <div style={{ fontSize: 13, color: '#3b82f6', alignSelf: 'end', paddingBottom: 8 }}>
+                    Mốc duyệt tối đa: <strong>{Math.round(parseFloat(laiSuatNganHangThamChieu) * 0.7 * 100) / 100}%/năm</strong>
+                  </div>
+                )}
+              </div>
+              <div className={styles.formActions}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() =>
+                    handleSaveSettings({
+                      laisuatnganhangthamchieu: laiSuatNganHangThamChieu ? parseFloat(laiSuatNganHangThamChieu) : null,
                     })
                   }
                 >
@@ -613,7 +659,7 @@ const CaiDatSection = () => {
               <div className={styles.formActions}>
                 <Button
                   variant="primary"
-                  size="small"
+                  size="sm"
                   disabled={saving}
                   onClick={() =>
                     handleSaveSettings({
@@ -653,7 +699,7 @@ const CaiDatSection = () => {
                 <Input label="Stat 4 - Phụ đề" value={heroContent.hero_stat_quy_sub} onChange={(e) => updateHeroContent('hero_stat_quy_sub', e.target.value)} disabled={saving} />
               </div>
               <div className={styles.formActions}>
-                <Button variant="primary" size="small" disabled={saving} onClick={() => handleSaveSettings(heroContent)}>Lưu thay đổi</Button>
+                <Button variant="primary" size="sm" disabled={saving} onClick={() => handleSaveSettings(heroContent)}>Lưu thay đổi</Button>
               </div>
             </div>
           </div>
@@ -679,7 +725,7 @@ const CaiDatSection = () => {
               </div>
               <p className={styles.helperNote}>Các bước quy trình (SV & NTT) lưu dạng JSON. Chỉnh sửa nâng cao có thể cần trực tiếp file settings.</p>
               <div className={styles.formActions}>
-                <Button variant="primary" size="small" disabled={saving} onClick={() => handleSaveSettings(processContent)}>Lưu thay đổi</Button>
+                <Button variant="primary" size="sm" disabled={saving} onClick={() => handleSaveSettings(processContent)}>Lưu thay đổi</Button>
               </div>
             </div>
           </div>
@@ -743,7 +789,7 @@ const CaiDatSection = () => {
               </div>
 
               <div className={styles.formActions}>
-                <Button variant="primary" size="small" disabled={saving} onClick={() => handleSaveSettings({ ...donorWallContent, ...aiContent, ...testimonialsContent, ...footerContent, ...guidelinesContent })}>Lưu tất cả thay đổi</Button>
+                <Button variant="primary" size="sm" disabled={saving} onClick={() => handleSaveSettings({ ...donorWallContent, ...aiContent, ...testimonialsContent, ...footerContent, ...guidelinesContent })}>Lưu tất cả thay đổi</Button>
               </div>
             </div>
           </div>
@@ -794,12 +840,12 @@ const CaiDatSection = () => {
                     <Input label="Chủ tài khoản" value={bankForm.chuTaiKhoan} onChange={(e) => setBankForm(p => ({ ...p, chuTaiKhoan: e.target.value }))} disabled={saving} />
                   </div>
                   <div className={styles.formActions}>
-                    <Button variant="ghost" size="small" onClick={resetBankForm} disabled={saving}>Hủy</Button>
-                    <Button variant="primary" size="small" loading={saving} onClick={handleSaveBankAccount}>{editingBankId ? 'Cập nhật' : 'Thêm mới'}</Button>
+                    <Button variant="ghost" size="sm" onClick={resetBankForm} disabled={saving}>Hủy</Button>
+                    <Button variant="primary" size="sm" loading={saving} onClick={handleSaveBankAccount}>{editingBankId ? 'Cập nhật' : 'Thêm mới'}</Button>
                   </div>
                 </div>
               ) : (
-                <Button variant="primary" size="small" icon={<HiOutlinePlus size={16} />} onClick={() => setShowBankForm(true)} disabled={saving}>Thêm tài khoản</Button>
+                <Button variant="primary" size="sm" icon={<HiOutlinePlus size={16} />} onClick={() => setShowBankForm(true)} disabled={saving}>Thêm tài khoản</Button>
               )}
             </div>
           </div>

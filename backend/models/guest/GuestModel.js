@@ -4,6 +4,7 @@ const toApplicationRow = (data) => ({
   guest_hoten: data.guest_hoten ?? data.guestHoTen,
   guest_email: data.guest_email ?? data.guestEmail,
   guest_sodienthoai: data.guest_sodienthoai ?? data.guestSoDienThoai ?? null,
+  vaitro: data.vaitro ?? 'sinh_vien',
   guest_mssv: data.guest_mssv ?? data.guestMssv ?? null,
   guest_khoa: data.guest_khoa ?? data.guestKhoa ?? null,
   guest_lop: data.guest_lop ?? data.guestLop ?? null,
@@ -25,6 +26,11 @@ const toDonationRow = (data) => ({
   guest_sodienthoai: data.guest_sodienthoai ?? data.guestSoDienThoai ?? null,
   guest_tochuc: data.guest_tochuc ?? data.guestToChuc ?? null,
   guest_diachi: data.guest_diachi ?? data.guestDiaChi ?? null,
+  loaiNhaTaiTro: data.loaiNhaTaiTro ?? 'Ca nhan',
+  masothue: data.masothue ?? null,
+  linhVucHopTac: data.linhVucHopTac ?? null,
+  nguoiLienHe: data.nguoiLienHe ?? null,
+  chucDanh: data.chucDanh ?? null,
   quy_id: data.quy_id ?? data.quyId,
   sotien: data.sotien ?? data.soTien,
   hinhthuc: data.hinhthuc ?? data.hinhThuc ?? "Chuyen khoan",
@@ -56,7 +62,14 @@ const ensureApplicationDonViHocId = async (connection, tenKhoa) => {
   return dvInsert.insertId;
 };
 
-const ensureApplicationUser = async (connection, app, email, plainPassword, loaitaikhoan = 'Sinh vien') => {
+const ROLE_TO_LOAITAIKHOAN = {
+  'sinh_vien': 'Sinh vien',
+  'can_bo_truong': 'Can bo',
+  'can_bo_nghi_huu': 'Can bo',
+  'nha_khoa_hoc': 'Nha khoa hoc',
+};
+
+const ensureApplicationUser = async (connection, app, email, plainPassword) => {
   const [users] = await connection.query(
     "SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1",
     [email]
@@ -70,6 +83,7 @@ const ensureApplicationUser = async (connection, app, email, plainPassword, loai
   const hashedPassword = await bcrypt.default.hash(plainPassword, 10);
   const maSoDinhDanh = app.guest_mssv || `SV${Date.now()}`;
   const donvihocId = await ensureApplicationDonViHocId(connection, app.guest_khoa);
+  const loaitaikhoan = ROLE_TO_LOAITAIKHOAN[app.vaitro] || 'Sinh vien';
 
   const [userInsert] = await connection.query(
     `INSERT INTO nguoidung (
@@ -127,10 +141,11 @@ const createMainApplicationRecords = async (connection, app, nguoiDungId) => {
   const [dotRows] = await connection.query(
     `SELECT dot_id FROM dotgiaingan 
      WHERE quy_id = ? 
-       AND ngaydukien <= ?
        AND trangthai IN ('chuatoi', 'dangchodutien')
-     ORDER BY thutu DESC LIMIT 1`,
-    [app.quy_id, today]
+       AND (ngaybatdau IS NULL OR ngaybatdau <= ?)
+       AND (ngayketthuc IS NULL OR ngayketthuc >= ?)
+     ORDER BY thutu ASC LIMIT 1`,
+    [app.quy_id, today, today]
   );
   const dotId = dotRows[0]?.dot_id || null;
 
@@ -188,12 +203,12 @@ const ensureDonorRecord = async (connection, don, email, nguoiDungId) => {
     return donors[0].nhataitro_id;
   }
 
-  const loaiNhaTaiTro = don.guest_tochuc ? "To chuc" : "Ca nhan";
+  const loaiNhaTaiTro = don.loaiNhaTaiTro || (don.guest_tochuc ? "To chuc" : "Ca nhan");
   const tenNhaTaiTro = don.guest_tochuc || don.guest_hoten;
   const [donorInsert] = await connection.query(
-    `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, diachi, trangthai)
-     VALUES (?, ?, ?, ?, ?, ?, 'Hoat dong')`,
-    [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, don.guest_sodienthoai, don.guest_diachi]
+    `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, diachi, masothue, linhVucHopTac, nguoiLienHe, chucDanh, trangthai)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Hoat dong')`,
+    [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, don.guest_sodienthoai, don.guest_diachi, don.masothue || null, don.linhVucHopTac || null, don.nguoiLienHe || null, don.chucDanh || null]
   );
 
   return donorInsert.insertId;
@@ -296,6 +311,11 @@ const createGuestDonation = async (data) => {
     otpCode,
     otpExpiresAt,
     trackingUuid,
+    loaiNhaTaiTro,
+    masothue,
+    linhVucHopTac,
+    nguoiLienHe,
+    chucDanh,
   } = data;
 
   const [result] = await pool.execute(
@@ -305,6 +325,11 @@ const createGuestDonation = async (data) => {
       guest_sodienthoai,
       guest_tochuc,
       guest_diachi,
+      loaiNhaTaiTro,
+      masothue,
+      linhVucHopTac,
+      nguoiLienHe,
+      chucDanh,
       quy_id,
       sotien,
       hinhthuc,
@@ -316,13 +341,18 @@ const createGuestDonation = async (data) => {
       otp_expires_at,
       tracking_uuid,
       trang_thai_staging
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CHO_XAC_MINH')`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CHO_XAC_MINH')`,
     [
       guestHoTen,
       guestEmail,
       guestSoDienThoai || null,
       guestToChuc || null,
       guestDiaChi || null,
+      loaiNhaTaiTro || 'Ca nhan',
+      masothue || null,
+      linhVucHopTac || null,
+      nguoiLienHe || null,
+      chucDanh || null,
       quyId,
       soTien,
       hinhThuc || "Chuyen khoan",
@@ -433,12 +463,13 @@ const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword, loa
         }
       }
 
-      // Tạo người dùng vai trò Sinh viên (vaitro_id = 4)
+      // Tạo người dùng vai trò Sinh viên (vaitro_id = 4), loaitaikhoan từ cột vaitro
+      const resolvedLoaitaikhoan = ROLE_TO_LOAITAIKHOAN[app.vaitro] || loaitaikhoan;
       const [userInsert] = await connection.query(
         `INSERT INTO nguoidung (
           email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, donvihoc_id, trangthai
         ) VALUES (?, ?, ?, ?, ?, 4, ?, ?, 'Hoat dong')`,
-        [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, loaitaikhoan, donvihoc_id]
+        [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, resolvedLoaitaikhoan, donvihoc_id]
       );
       nguoiDungId = userInsert.insertId;
 
@@ -467,10 +498,11 @@ const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword, loa
     const [dotRows] = await connection.query(
       `SELECT dot_id FROM dotgiaingan 
        WHERE quy_id = ? 
-         AND ngaydukien <= ?
          AND trangthai IN ('chuatoi', 'dangchodutien')
-       ORDER BY thutu DESC LIMIT 1`,
-      [app.quy_id, today]
+         AND (ngaybatdau IS NULL OR ngaybatdau <= ?)
+         AND (ngayketthuc IS NULL OR ngayketthuc >= ?)
+       ORDER BY thutu ASC LIMIT 1`,
+      [app.quy_id, today, today]
     );
     const dotId = dotRows[0]?.dot_id || null;
 
@@ -546,6 +578,7 @@ const verifyOTPAndCreateApplication = async (applicationData, plainPassword) => 
         guest_hoten,
         guest_email,
         guest_sodienthoai,
+        vaitro,
         guest_mssv,
         guest_khoa,
         guest_lop,
@@ -563,11 +596,12 @@ const verifyOTPAndCreateApplication = async (applicationData, plainPassword) => 
         tracking_uuid,
         trang_thai_staging,
         is_email_verified
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
       [
         app.guest_hoten,
         app.guest_email,
         app.guest_sodienthoai,
+        app.vaitro,
         app.guest_mssv,
         app.guest_khoa,
         app.guest_lop,
@@ -637,6 +671,11 @@ const verifyOTPAndCreateDonation = async (donationData, plainPassword) => {
         guest_sodienthoai,
         guest_tochuc,
         guest_diachi,
+        loaiNhaTaiTro,
+        masothue,
+        linhVucHopTac,
+        nguoiLienHe,
+        chucDanh,
         quy_id,
         sotien,
         hinhthuc,
@@ -649,13 +688,18 @@ const verifyOTPAndCreateDonation = async (donationData, plainPassword) => {
         tracking_uuid,
         trang_thai_staging,
         is_email_verified
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
       [
         don.guest_hoten,
         don.guest_email,
         don.guest_sodienthoai,
         don.guest_tochuc,
         don.guest_diachi,
+        don.loaiNhaTaiTro || 'Ca nhan',
+        don.masothue,
+        don.linhVucHopTac,
+        don.nguoiLienHe,
+        don.chucDanh,
         don.quy_id,
         don.sotien,
         don.hinhthuc,
@@ -763,11 +807,12 @@ const verifyOTPAndMigrateDonation = async (email, otpCode, plainPassword, loaita
     if (donors.length > 0) {
       nhaTaiTroId = donors[0].nhataitro_id;
     } else {
-      const loaiNhaTaiTro = don.guest_tochuc ? "To chuc" : "Ca nhan";
+      const loaiNhaTaiTro = don.loaiNhaTaiTro || (don.guest_tochuc ? "To chuc" : "Ca nhan");
+      const tenNhaTaiTro = don.guest_tochuc || don.guest_hoten;
       const [donorInsert] = await connection.query(
-        `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, diachi, trangthai) 
-         VALUES (?, ?, ?, ?, ?, ?, 'Hoat dong')`,
-        [nguoiDungId, don.guest_hoten, loaiNhaTaiTro, email, don.guest_sodienthoai, don.guest_diachi]
+        `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, diachi, masothue, linhVucHopTac, nguoiLienHe, chucDanh, trangthai) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Hoat dong')`,
+        [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, don.guest_sodienthoai, don.guest_diachi, don.masothue || null, don.linhVucHopTac || null, don.nguoiLienHe || null, don.chucDanh || null]
       );
       nhaTaiTroId = donorInsert.insertId;
     }

@@ -231,7 +231,9 @@
     100px
     minmax(0, 1fr)
     120px
+    minmax(0, 1.5fr)
     minmax(0, 1fr)
+    140px
     130px
     120px
     120px;
@@ -250,7 +252,9 @@
     100px
     minmax(0, 1fr)
     120px
+    minmax(0, 1.5fr)
     minmax(0, 1fr)
+    140px
     130px
     120px
     130px
@@ -294,8 +298,24 @@
 .colCode { width: 100px; }
 .colName { flex: 1; }
 .colMssv { width: 120px; }
+.colTopic {
+  flex: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  color: #334155;
+}
 .colFund {
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.colDotDuyet {
+  width: 140px;
+  font-size: 13px;
+  color: #475569;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -319,6 +339,12 @@
 .name {
   font-weight: 600;
   color: #1e293b;
+}
+
+.topic {
+  font-weight: 500;
+  color: #334155;
+  cursor: default;
 }
 
 .amount {
@@ -428,7 +454,7 @@
 @media (max-width: 1024px) {
   .row,
   .row:has(.colStatus) {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 6px;
   }
 
