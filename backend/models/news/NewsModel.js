@@ -7,7 +7,7 @@ const getLandingNews = async () => {
   const getGroup = async (phanLoai) => {
     const [featured] = await pool.query(
       `SELECT 
-        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+        tintuc_id, tieude, motangan, avatar, noidung, danhmuc, ngayxuatban, phanloai
       FROM tintuc
       WHERE trangthai = 'Da xuat ban' AND lanoibat = 1 AND phanloai = ?
       ORDER BY ngayxuatban DESC, ngaytao DESC
@@ -17,7 +17,7 @@ const getLandingNews = async () => {
 
     const [featuredSmall] = await pool.query(
       `SELECT 
-        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+        tintuc_id, tieude, motangan, avatar, noidung, danhmuc, ngayxuatban, phanloai
       FROM tintuc
       WHERE trangthai = 'Da xuat ban' AND lanoibat = 2 AND phanloai = ?
       ORDER BY ngayxuatban DESC, ngaytao DESC
@@ -27,7 +27,7 @@ const getLandingNews = async () => {
 
     const [sidebar] = await pool.query(
       `SELECT 
-        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+        tintuc_id, tieude, motangan, avatar, noidung, danhmuc, ngayxuatban, phanloai
       FROM tintuc
       WHERE trangthai = 'Da xuat ban' AND lanoibat = 3 AND phanloai = ?
       ORDER BY ngayxuatban DESC, ngaytao DESC
@@ -37,7 +37,7 @@ const getLandingNews = async () => {
 
     const [recent] = await pool.query(
       `SELECT 
-        tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+        tintuc_id, tieude, motangan, avatar, noidung, danhmuc, ngayxuatban, phanloai
       FROM tintuc
       WHERE trangthai = 'Da xuat ban' AND lanoibat = 0 AND phanloai = ?
       ORDER BY ngayxuatban DESC, ngaytao DESC
@@ -50,7 +50,7 @@ const getLandingNews = async () => {
     if (!featuredFinal) {
       const [fallback] = await pool.query(
         `SELECT 
-          tintuc_id, tieude, motangan, avatar, danhmuc, ngayxuatban, phanloai
+          tintuc_id, tieude, motangan, avatar, noidung, danhmuc, ngayxuatban, phanloai
         FROM tintuc
         WHERE trangthai = 'Da xuat ban' AND phanloai = ?
         ORDER BY ngayxuatban DESC, ngaytao DESC

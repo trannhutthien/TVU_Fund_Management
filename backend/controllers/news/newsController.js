@@ -36,6 +36,12 @@ const normalizePhanloai = (value) => (
   PHANLOAI_VALUES.includes(value) ? value : 'Tin moi'
 );
 
+const extractFirstImage = (html) => {
+  if (!html || typeof html !== 'string') return null;
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match ? match[1] : null;
+};
+
 // Convert ISO string → MySQL datetime 'YYYY-MM-DD HH:MM:SS'
 const toMySQLDatetime = (val) => {
   if (!val) return null;
@@ -54,11 +60,12 @@ export const getLandingNews = async (req, res) => {
     // Map dữ liệu để trả về frontend
     const mapNewsItem = (news) => {
       if (!news) return null;
+      const avatarUrl = buildNewsImageUrl(news.avatar) || buildNewsImageUrl(extractFirstImage(news.noidung));
       return {
         id: news.tintuc_id,
         title: news.tieude,
         summary: news.motangan,
-        avatar: buildNewsImageUrl(news.avatar),
+        avatar: avatarUrl,
         category: news.danhmuc,
         phanloai: normalizePhanloai(news.phanloai),
         publishDate: news.ngayxuatban
