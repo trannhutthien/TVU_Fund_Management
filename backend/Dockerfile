@@ -18,7 +18,7 @@ COPY templates/ ./templates/
 COPY uploads/ ./uploads/
 
 # Create uploads subdirectories if they don't exist
-RUN mkdir -p uploads/avatars/staffs uploads/avatars/students uploads/avatars/fund uploads/avatars/donor uploads/documents uploads/proofs
+RUN mkdir -p uploads/avatars/staffs uploads/avatars/students uploads/avatars/fund uploads/avatars/donor uploads/documents uploads/proofs uploads/tintuc
 
 # HF Spaces expects port 7860
 ENV PORT=7860
