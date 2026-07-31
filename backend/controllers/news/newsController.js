@@ -1,5 +1,7 @@
 import NewsModel from "../../models/news/NewsModel.js";
 
+const getBaseUrl = () => process.env.BASE_URL || "http://localhost:5001";
+
 const buildNewsImageUrl = (imagePath) => {
   if (!imagePath) return null;
 
@@ -22,11 +24,11 @@ const buildNewsImageUrl = (imagePath) => {
     return imagePath;
   }
 
-  // Trả về đường dẫn tương đối — trình duyệt tự ghép với domain hiện tại
+  // Trả về absolute URL với BASE_URL
   if (cleanPath.startsWith('uploads/')) {
-    return `/${cleanPath}`;
+    return `${getBaseUrl()}/${cleanPath}`;
   }
-  return `/uploads/tintuc/${cleanPath}`;
+  return `${getBaseUrl()}/uploads/tintuc/${cleanPath}`;
 };
 
 const PHANLOAI_VALUES = ['Tin moi', 'Tin noi bat', 'baocaohoatdong', 'chuongtrinh', 'cuusinhvien'];

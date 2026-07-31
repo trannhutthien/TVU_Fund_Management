@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-
 /**
  * Image Helper
  *
@@ -26,14 +23,8 @@ const toRelativeUploadPath = (imagePath) => {
   }
 };
 
-const uploadFileExists = (relativePath) => {
-  if (!relativePath || !relativePath.startsWith("uploads/")) return true;
-  return fs.existsSync(path.join(process.cwd(), relativePath));
-};
-
 const buildAbsoluteUploadUrl = (relativePath) => {
   if (!relativePath || !relativePath.startsWith("uploads/")) return null;
-  if (!uploadFileExists(relativePath)) return null;
   return `${getBaseUrl()}/${relativePath}`;
 };
 
