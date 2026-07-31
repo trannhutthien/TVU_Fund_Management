@@ -54,7 +54,8 @@ export const register = async (req, res) => {
     const { 
       hoTen, 
       mssv, 
-      lopKhoa, 
+      khoaPhong,
+      lop,
       email, 
       password,
       tenToChuc,
@@ -75,10 +76,10 @@ export const register = async (req, res) => {
 
     // 2. Validate dữ liệu theo loại tài khoản
     if (loaiTaiKhoan === 'sinhvien') {
-      if (!hoTen || !mssv || !lopKhoa || !email || !password) {
+      if (!hoTen || !mssv || !khoaPhong || !lop || !email || !password) {
         return res.status(400).json({
           success: false,
-          message: "Vui lòng nhập đầy đủ thông tin: họ tên, MSSV, lớp/khoa, email, mật khẩu",
+          message: "Vui lòng nhập đầy đủ thông tin: họ tên, MSSV, khoa, lớp, email, mật khẩu",
         });
       }
     } else if (loaiTaiKhoan === 'canbo') {
@@ -137,7 +138,8 @@ export const register = async (req, res) => {
       loaiTaiKhoan: loaiTaiKhoan === 'sinhvien' ? 'SINH_VIEN' : (loaiTaiKhoan === 'canbo' ? 'CAN_BO' : 'NHA_TAI_TRO'),
       tinhTrangCongTac: loaiTaiKhoan === 'canbo' ? (tinhTrangCongTac || 'Dang cong tac') : null,
       donViCongTac: loaiTaiKhoan === 'canbo' ? (donViCongTac || null) : null,
-      khoaPhong: loaiTaiKhoan === 'sinhvien' ? lopKhoa.trim() : (loaiTaiKhoan === 'nhataitro' ? loaiNhaTaiTro || null : null),
+      khoaPhong: loaiTaiKhoan === 'sinhvien' ? khoaPhong.trim() : (loaiTaiKhoan === 'nhataitro' ? loaiNhaTaiTro || null : null),
+      lop: loaiTaiKhoan === 'sinhvien' ? lop.trim() : null,
       soDienThoai: soDienThoai || null,
       trangThai: 'HOAT_DONG',
       avatar: null,
@@ -203,6 +205,7 @@ export const register = async (req, res) => {
         tenVaiTro: newUser.tenvaitro || null,
         loaiTaiKhoan: newUser.loaitaikhoan,
         khoaPhong: newUser.khoaphong,
+        lop: newUser.lop,
         createdAt: newUser.ngaytao,
         hasPassword: true,
       },
@@ -345,6 +348,7 @@ export const getMe = async (req, res) => {
         tenVaiTro: user.tenvaitro || null,
         loaiTaiKhoan: user.loaitaikhoan || null,
         khoaPhong: user.khoaphong || null,
+        lop: user.lop || null,
         tinhTrangCongTac: user.tinhtrangcongtac || null,
         donViCongTac: user.donvicongtac || null,
         trangThai: user.trangthai,

@@ -6,19 +6,19 @@ import pool from "../../config/db.js";
 // LƯU Ý: Schema database dùng "nguoidung_id" là PRIMARY KEY, không phải "id"
 
 // Helper to find or create donvihoc_id
-const getOrCreateDonViHocId = async (tenKhoa) => {
+const getOrCreateDonViHocId = async (tenKhoa, lop) => {
   if (!tenKhoa) return null;
   const [rows] = await pool.query(
-    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? LIMIT 1",
-    [tenKhoa]
+    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? AND (lop = ? OR (lop IS NULL AND ? IS NULL)) LIMIT 1",
+    [tenKhoa, lop || null, lop || null]
   );
   if (rows.length > 0) {
     return rows[0].donvihoc_id;
   }
   const madonvi = `DV${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const [result] = await pool.query(
-    "INSERT INTO donvihoc (madonvi, tenkhoa, trangthai) VALUES (?, ?, 'Hoat dong')",
-    [madonvi, tenKhoa]
+    "INSERT INTO donvihoc (madonvi, tenkhoa, lop, trangthai) VALUES (?, ?, ?, 'Hoat dong')",
+    [madonvi, tenKhoa, lop || null]
   );
   return result.insertId;
 };
@@ -58,6 +58,7 @@ const createUser = async (userData) => {
     roleId,
     loaiTaiKhoan,
     khoaPhong,
+    lop,
     soDienThoai,
     trangThai,
     avatar,
@@ -66,7 +67,7 @@ const createUser = async (userData) => {
     donViCongTac
   } = userData;
 
-  const donvihoc_id = await getOrCreateDonViHocId(khoaPhong);
+  const donvihoc_id = await getOrCreateDonViHocId(khoaPhong, lop);
 
   const dbStatus = trangThai === 'HOAT_DONG' ? 'Hoat dong' : (trangThai === 'KHOA' ? 'Khoa' : (trangThai === 'CHO_DUYET' ? 'Cho duyet' : (trangThai || 'Hoat dong')));
   const dbLoaiTaiKhoan = toDbAccountType(loaiTaiKhoan);
@@ -126,6 +127,7 @@ const getUserForProfile = async (userId) => {
       nd.vaitro_id, 
       nd.loaitaikhoan, 
       dv.tenkhoa AS khoaphong, 
+      dv.lop,
       nd.tinhtrangcongtac,
       nd.donvicongtac,
       nd.trangthai,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { HiXMark, HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
 import PropTypes from 'prop-types';
@@ -379,16 +380,19 @@ const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCo
 
   return (
     <aside className={`${styles.staffSidebar} ${isOpen ? styles.open : ''} ${isCollapsed ? styles.collapsed : ''}`}>
-      {/* Collapse Toggle Button – desktop only */}
-      <button
-        className={styles.collapseToggle}
-        onClick={onToggleCollapse}
-        aria-label={isCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
-        type="button"
-        style={{ left: isCollapsed ? '57px' : '245px', top: '110px' }}
-      >
-        {isCollapsed ? <HiChevronRight size={16} /> : <HiChevronLeft size={16} />}
-      </button>
+      {/* Collapse Toggle Button – desktop only (Portal để tránh overflow clip) */}
+      {createPortal(
+        <button
+          className={styles.collapseToggle}
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? 'Mở sidebar' : 'Thu gọn sidebar'}
+          type="button"
+          style={{ left: isCollapsed ? '57px' : '245px', top: '110px' }}
+        >
+          {isCollapsed ? <HiChevronRight size={16} /> : <HiChevronLeft size={16} />}
+        </button>,
+        document.body
+      )}
 
       {/* Mobile Close Button – chỉ hiện trên mobile */}
       <button

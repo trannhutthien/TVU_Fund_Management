@@ -60,7 +60,9 @@ const NewsSection = ({
     if (data) {
       setFeatured(mapItem(data.featured));
       setFeaturedSmall((data.featuredSmall || []).map(mapItem).filter(Boolean));
-      setSidebar((data.sidebar || []).map(mapItem).filter(Boolean));
+      const sidebarItems = (data.sidebar || []).map(mapItem).filter(Boolean);
+      const recentItems = (data.recent || []).map(mapItem).filter(Boolean);
+      setSidebar(sidebarItems.length > 0 ? sidebarItems : recentItems);
     } else {
       setFeatured(null);
       setFeaturedSmall([]);

@@ -41,12 +41,12 @@ const toDonationRow = (data) => ({
   tracking_uuid: data.tracking_uuid ?? data.trackingUuid,
 });
 
-const ensureApplicationDonViHocId = async (connection, tenKhoa) => {
+const ensureApplicationDonViHocId = async (connection, tenKhoa, lop) => {
   if (!tenKhoa) return null;
 
   const [dvRows] = await connection.query(
-    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? LIMIT 1",
-    [tenKhoa]
+    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? AND (lop = ? OR (lop IS NULL AND ? IS NULL)) LIMIT 1",
+    [tenKhoa, lop || null, lop || null]
   );
 
   if (dvRows.length > 0) {
@@ -55,8 +55,8 @@ const ensureApplicationDonViHocId = async (connection, tenKhoa) => {
 
   const madonvi = `DV${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const [dvInsert] = await connection.query(
-    "INSERT INTO donvihoc (madonvi, tenkhoa, trangthai) VALUES (?, ?, 'Hoat dong')",
-    [madonvi, tenKhoa]
+    "INSERT INTO donvihoc (madonvi, tenkhoa, lop, trangthai) VALUES (?, ?, ?, 'Hoat dong')",
+    [madonvi, tenKhoa, lop || null]
   );
 
   return dvInsert.insertId;
@@ -82,7 +82,7 @@ const ensureApplicationUser = async (connection, app, email, plainPassword) => {
   const bcrypt = await import("bcryptjs");
   const hashedPassword = await bcrypt.default.hash(plainPassword, 10);
   const maSoDinhDanh = app.guest_mssv || `SV${Date.now()}`;
-  const donvihocId = await ensureApplicationDonViHocId(connection, app.guest_khoa);
+  const donvihocId = await ensureApplicationDonViHocId(connection, app.guest_khoa, app.guest_lop);
   const loaitaikhoan = ROLE_TO_LOAITAIKHOAN[app.vaitro] || 'Sinh vien';
 
   const [userInsert] = await connection.query(

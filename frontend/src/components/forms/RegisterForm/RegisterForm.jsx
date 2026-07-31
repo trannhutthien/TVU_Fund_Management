@@ -40,7 +40,8 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
   const [studentForm, setStudentForm] = useState({
     hoTen: '',
     mssv: '',
-    lopKhoa: '',
+    khoa: '',
+    lop: '',
     email: '',
     password: ''
   });
@@ -118,8 +119,12 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
       newErrors.mssv = 'Vui lòng nhập MSSV';
     }
 
-    if (!studentForm.lopKhoa.trim()) {
-      newErrors.lopKhoa = 'Vui lòng nhập lớp/khoa';
+    if (!studentForm.khoa.trim()) {
+      newErrors.khoa = 'Vui lòng nhập khoa';
+    }
+
+    if (!studentForm.lop.trim()) {
+      newErrors.lop = 'Vui lòng nhập lớp';
     }
 
     if (!studentForm.email.trim()) {
@@ -219,7 +224,8 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
         data = {
           hoTen: studentForm.hoTen,
           mssv: studentForm.mssv,
-          lopKhoa: studentForm.lopKhoa,
+          khoaPhong: studentForm.khoa,
+          lop: studentForm.lop,
           email: studentForm.email,
           password: studentForm.password,
           loaiTaiKhoan: 'sinhvien'
@@ -353,36 +359,52 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
               {errors.hoTen && <span className="register-form-error-text">{errors.hoTen}</span>}
             </div>
 
-            {/* MSSV + Lớp/Khoa */}
+            {/* MSSV */}
+            <div className="register-form-field">
+              <label className="register-form-label">MSSV</label>
+              <div className={`register-form-input-wrapper ${errors.mssv ? 'register-form-input-error' : ''}`}>
+                <HiOutlineIdentification className="register-form-icon-left" />
+                <input
+                  type="text"
+                  className="register-form-input"
+                  placeholder="110121..."
+                  value={studentForm.mssv}
+                  onChange={handleStudentChange('mssv')}
+                />
+              </div>
+              {errors.mssv && <span className="register-form-error-text">{errors.mssv}</span>}
+            </div>
+
+            {/* Khoa + Lớp */}
             <div className="register-form-field-row">
               <div className="register-form-field">
-                <label className="register-form-label">MSSV</label>
-                <div className={`register-form-input-wrapper ${errors.mssv ? 'register-form-input-error' : ''}`}>
-                  <HiOutlineIdentification className="register-form-icon-left" />
-                  <input
-                    type="text"
-                    className="register-form-input"
-                    placeholder="110121..."
-                    value={studentForm.mssv}
-                    onChange={handleStudentChange('mssv')}
-                  />
-                </div>
-                {errors.mssv && <span className="register-form-error-text">{errors.mssv}</span>}
-              </div>
-
-              <div className="register-form-field">
-                <label className="register-form-label">LỚP/KHOA</label>
-                <div className={`register-form-input-wrapper ${errors.lopKhoa ? 'register-form-input-error' : ''}`}>
+                <label className="register-form-label">KHOA</label>
+                <div className={`register-form-input-wrapper ${errors.khoa ? 'register-form-input-error' : ''}`}>
                   <HiOutlineAcademicCap className="register-form-icon-left" />
                   <input
                     type="text"
                     className="register-form-input"
-                    placeholder="DA21TTB..."
-                    value={studentForm.lopKhoa}
-                    onChange={handleStudentChange('lopKhoa')}
+                    placeholder="Khoa CNTT"
+                    value={studentForm.khoa}
+                    onChange={handleStudentChange('khoa')}
                   />
                 </div>
-                {errors.lopKhoa && <span className="register-form-error-text">{errors.lopKhoa}</span>}
+                {errors.khoa && <span className="register-form-error-text">{errors.khoa}</span>}
+              </div>
+
+              <div className="register-form-field">
+                <label className="register-form-label">LỚP</label>
+                <div className={`register-form-input-wrapper ${errors.lop ? 'register-form-input-error' : ''}`}>
+                  <HiOutlineAcademicCap className="register-form-icon-left" />
+                  <input
+                    type="text"
+                    className="register-form-input"
+                    placeholder="DA21TTB"
+                    value={studentForm.lop}
+                    onChange={handleStudentChange('lop')}
+                  />
+                </div>
+                {errors.lop && <span className="register-form-error-text">{errors.lop}</span>}
               </div>
             </div>
 

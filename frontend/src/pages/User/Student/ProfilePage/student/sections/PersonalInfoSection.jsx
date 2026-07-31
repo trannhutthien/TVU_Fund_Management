@@ -36,6 +36,7 @@ const PersonalInfoSection = ({ user, onSave }) => {
     soDienThoai: '',
     diaChi: '',
     khoaPhong: '',
+    lop: '',
   });
 
   const userType = user?.loai_tai_khoan || user?.loaiTaiKhoan || user?.loai_nguoi_dung;
@@ -50,6 +51,7 @@ const PersonalInfoSection = ({ user, onSave }) => {
         soDienThoai: user.soDienThoai || user.so_dien_thoai || '',
         diaChi: user.diaChi || user.dia_chi || '',
         khoaPhong: user.khoaPhong || user.khoa_phong || '',
+        lop: user.lop || '',
       });
     }
   }, [user, isEditing]);
@@ -99,6 +101,7 @@ const PersonalInfoSection = ({ user, onSave }) => {
         so_dien_thoai: formData.soDienThoai.trim() || null,
         dia_chi: formData.diaChi.trim() || null,
         khoa_phong: isSinhVien ? formData.khoaPhong.trim() || null : null,
+        lop: isSinhVien ? formData.lop.trim() || null : null,
       };
 
       const response = await userService.update(userId, payload);
@@ -114,6 +117,7 @@ const PersonalInfoSection = ({ user, onSave }) => {
           soDienThoai: response.data.so_dien_thoai,
           diaChi: response.data.dia_chi,
           khoaPhong: response.data.khoa_phong,
+          lop: response.data.lop,
           avatar: response.data.avatar,
         };
         
@@ -245,6 +249,19 @@ const PersonalInfoSection = ({ user, onSave }) => {
               type="text"
               value={isEditing ? formData.khoaPhong : (user?.khoaPhong || user?.khoa_phong || '—')}
               onChange={(e) => handleInputChange('khoaPhong', e.target.value)}
+              leftIcon={<HiOutlineAcademicCap size={18} />}
+              disabled={!isEditing || loading}
+            />
+          </div>
+        )}
+
+        {isSinhVien && (
+          <div className={styles.fullWidth}>
+            <Input
+              label="Lớp"
+              type="text"
+              value={isEditing ? formData.lop : (user?.lop || '—')}
+              onChange={(e) => handleInputChange('lop', e.target.value)}
               leftIcon={<HiOutlineAcademicCap size={18} />}
               disabled={!isEditing || loading}
             />

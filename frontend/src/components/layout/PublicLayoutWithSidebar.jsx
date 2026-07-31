@@ -14,9 +14,24 @@ import styles from './PublicLayoutWithSidebar.module.scss';
 const PublicLayoutWithSidebar = () => {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('staffSidebarCollapsed')) || false;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('staffSidebarCollapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => !prev);
   };
 
   const closeSidebar = () => {
@@ -63,7 +78,7 @@ const PublicLayoutWithSidebar = () => {
           aria-hidden="true"
         />
       )}
-      <StaffSidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+      <StaffSidebar isOpen={isSidebarOpen} onClose={closeSidebar} isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
       <div className={styles.mainContent}>
         <PageAccessGuard>
           <Outlet />

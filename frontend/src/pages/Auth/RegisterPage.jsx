@@ -21,7 +21,8 @@ const RegisterPage = () => {
     // Sinh viên
     hoTen: '',
     mssv: '',
-    lopKhoa: '',
+    khoa: '',
+    lop: '',
     // Nhà tài trợ
     tenToChuc: '',
     loaiNhaTaiTro: 'Ca nhan',
@@ -49,7 +50,8 @@ const RegisterPage = () => {
     if (accountType === 'sinhvien') {
       if (!formData.hoTen.trim()) newErrors.hoTen = 'Vui lòng nhập họ tên';
       if (!formData.mssv.trim()) newErrors.mssv = 'Vui lòng nhập MSSV';
-      if (!formData.lopKhoa.trim()) newErrors.lopKhoa = 'Vui lòng nhập lớp/khoa';
+      if (!formData.khoa.trim()) newErrors.khoa = 'Vui lòng nhập khoa';
+      if (!formData.lop.trim()) newErrors.lop = 'Vui lòng nhập lớp';
     } else {
       if (!formData.tenToChuc.trim()) newErrors.tenToChuc = 'Vui lòng nhập tên tổ chức';
       if (!formData.soDienThoai.trim()) newErrors.soDienThoai = 'Vui lòng nhập số điện thoại';
@@ -92,7 +94,8 @@ const RegisterPage = () => {
       if (accountType === 'sinhvien') {
         payload.hoTen = formData.hoTen.trim();
         payload.mssv = formData.mssv.trim();
-        payload.lopKhoa = formData.lopKhoa.trim();
+        payload.khoaPhong = formData.khoa.trim();
+        payload.lop = formData.lop.trim();
       } else {
         payload.tenToChuc = formData.tenToChuc.trim();
         payload.soDienThoai = formData.soDienThoai.trim();
@@ -171,13 +174,22 @@ const RegisterPage = () => {
                 errorMessage={errors.mssv}
               />
               <Input
-                label="LỚP/KHOA"
+                label="KHOA"
                 type="text"
-                placeholder="CNTT K45"
-                value={formData.lopKhoa}
-                onChange={handleChange('lopKhoa')}
-                error={!!errors.lopKhoa}
-                errorMessage={errors.lopKhoa}
+                placeholder="Khoa CNTT"
+                value={formData.khoa}
+                onChange={handleChange('khoa')}
+                error={!!errors.khoa}
+                errorMessage={errors.khoa}
+              />
+              <Input
+                label="LỚP"
+                type="text"
+                placeholder="DA21TTB"
+                value={formData.lop}
+                onChange={handleChange('lop')}
+                error={!!errors.lop}
+                errorMessage={errors.lop}
               />
             </>
           ) : (

@@ -10,19 +10,19 @@ const checkEmailExists = async (email) => {
 };
 
 // Helper to find or create donvihoc_id
-const getOrCreateDonViHocId = async (tenKhoa) => {
+const getOrCreateDonViHocId = async (tenKhoa, lop) => {
   if (!tenKhoa) return null;
   const [rows] = await pool.query(
-    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? LIMIT 1",
-    [tenKhoa]
+    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? AND (lop = ? OR (lop IS NULL AND ? IS NULL)) LIMIT 1",
+    [tenKhoa, lop || null, lop || null]
   );
   if (rows.length > 0) {
     return rows[0].donvihoc_id;
   }
   const madonvi = `DV${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const [result] = await pool.query(
-    "INSERT INTO donvihoc (madonvi, tenkhoa, trangthai) VALUES (?, ?, 'Hoat dong')",
-    [madonvi, tenKhoa]
+    "INSERT INTO donvihoc (madonvi, tenkhoa, lop, trangthai) VALUES (?, ?, ?, 'Hoat dong')",
+    [madonvi, tenKhoa, lop || null]
   );
   return result.insertId;
 };
@@ -31,10 +31,10 @@ const getOrCreateDonViHocId = async (tenKhoa) => {
 const createUser = async (userData) => {
   const { 
     maSoDinhDanh, hoTen, email, matKhau, roleId, trangThai, 
-    khoaphong, soDienThoai, diaChi, loaiTaiKhoan, avatar 
+    khoaphong, lop, soDienThoai, diaChi, loaiTaiKhoan, avatar 
   } = userData;
 
-  const donvihoc_id = await getOrCreateDonViHocId(khoaphong);
+  const donvihoc_id = await getOrCreateDonViHocId(khoaphong, lop);
   
   const dbStatus = trangThai === 'HOAT_DONG' ? 'Hoat dong' : (trangThai === 'KHOA' ? 'Khoa' : (trangThai === 'CHO_DUYET' ? 'Cho duyet' : (trangThai || 'Hoat dong')));
   const dbLoaiTaiKhoan = toDbAccountType(loaiTaiKhoan);
@@ -66,7 +66,9 @@ const createUser = async (userData) => {
 const getUserById = async (userId) => {
   const [rows] = await pool.query(
     `SELECT n.nguoidung_id, n.masodinhdanh, n.hoten, n.email, n.avatar, n.sodienthoai, n.diachi,
-            n.vaitro_id, n.loaitaikhoan, dv.tenkhoa AS khoaphong, n.trangthai, n.ngaytao
+            n.vaitro_id, n.loaitaikhoan,       dv.tenkhoa AS khoaphong,
+      dv.lop,
+      n.trangthai, n.ngaytao
      FROM nguoidung n
      LEFT JOIN donvihoc dv ON n.donvihoc_id = dv.donvihoc_id
      WHERE n.nguoidung_id = ?
@@ -233,6 +235,7 @@ const getUserList = async ({
       n.vaitro_id,
       n.loaitaikhoan,
       dv.tenkhoa AS khoaphong,
+      dv.lop,
       n.trangthai,
       n.ngaytao,
       v.tenvaitro,
@@ -364,6 +367,7 @@ const updateUserInfo = async (userId, data) => {
   const soDienThoaiVal = data.sodienthoai !== undefined ? data.sodienthoai : data.so_dien_thoai;
   const diaChiVal = data.diachi !== undefined ? data.diachi : data.dia_chi;
   const khoaPhongVal = data.khoaphong !== undefined ? data.khoaphong : data.khoa_phong;
+  const lopVal = data.lop;
   const avatarVal = data.avatar;
 
   const sets = [];
@@ -385,8 +389,21 @@ const updateUserInfo = async (userId, data) => {
     sets.push("diachi = ?");
     params.push(diaChiVal || null);
   }
-  if (khoaPhongVal !== undefined) {
-    const donvihoc_id = await getOrCreateDonViHocId(khoaPhongVal);
+  if (khoaPhongVal !== undefined || lopVal !== undefined) {
+    const currentDonvi = await pool.query("SELECT donvihoc_id FROM nguoidung WHERE nguoidung_id = ?", [userId]);
+    const currentDonviId = currentDonvi[0]?.[0]?.donvihoc_id;
+    let currentKhoa = null;
+    let currentLop = null;
+    if (currentDonviId) {
+      const [dvRows] = await pool.query("SELECT tenkhoa, lop FROM donvihoc WHERE donvihoc_id = ?", [currentDonviId]);
+      if (dvRows.length > 0) {
+        currentKhoa = dvRows[0].tenkhoa;
+        currentLop = dvRows[0].lop;
+      }
+    }
+    const newKhoa = khoaPhongVal !== undefined ? (khoaPhongVal || null) : currentKhoa;
+    const newLop = lopVal !== undefined ? (lopVal || null) : currentLop;
+    const donvihoc_id = await getOrCreateDonViHocId(newKhoa, newLop);
     sets.push("donvihoc_id = ?");
     params.push(donvihoc_id);
   }

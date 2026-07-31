@@ -210,6 +210,7 @@ export const getUsers = async (req, res) => {
         ten_vai_tro: user.tenvaitro,
         loai_tai_khoan: user.loaitaikhoan,
         khoa_phong: user.khoaphong,
+        lop: user.lop,
         trang_thai: user.trangthai,
         created_at: user.ngaytao,
         ten_nha_tai_tro: user.tennhataitro,
@@ -300,6 +301,7 @@ export const updateUserInfo = async (req, res) => {
       so_dien_thoai,
       dia_chi,
       khoa_phong,
+      lop,
       avatar,
       ten_nha_tai_tro,
       loai_ntt,
@@ -332,6 +334,7 @@ export const updateUserInfo = async (req, res) => {
       so_dien_thoai: so_dien_thoai?.trim(),
       dia_chi: dia_chi?.trim(),
       khoa_phong: khoa_phong?.trim(),
+      lop: lop?.trim(),
       avatar,
     });
 
@@ -358,7 +361,7 @@ export const updateUserInfo = async (req, res) => {
       doituong_id: id,
       mota: `Cập nhật thông tin tài khoản cho người dùng ${existing.email} (Họ tên: ${existing.hoten})`,
       dulieucu: existing,
-      dulieumoi: { ho_ten, email, so_dien_thoai, dia_chi, khoa_phong, avatar }
+      dulieumoi: { ho_ten, email, so_dien_thoai, dia_chi, khoa_phong, lop, avatar }
     });
 
     const updated = await UserModel.getUserByIdWithRole(id);
@@ -377,6 +380,7 @@ export const updateUserInfo = async (req, res) => {
         ten_vai_tro: updated.tenvaitro,
         loai_tai_khoan: updated.loaitaikhoan,
         khoa_phong: updated.khoaphong,
+        lop: updated.lop,
         trang_thai: updated.trangthai,
         created_at: updated.ngaytao,
       },
@@ -435,6 +439,7 @@ export const getUserById = async (req, res) => {
         },
         loaiTaiKhoan: user.loaitaikhoan,
         khoaPhong: user.khoaphong,
+        lop: user.lop,
         trangThai: user.trangthai,
         createdAt: user.ngaytao
       }
@@ -540,6 +545,7 @@ export const updateUserStatus = async (req, res) => {
         },
         loaiTaiKhoan: updatedUser.loaitaikhoan,
         khoaPhong: updatedUser.khoaphong,
+        lop: updatedUser.lop,
         trangThai: updatedUser.trangthai,
         createdAt: updatedUser.ngaytao
       }
