@@ -8,14 +8,11 @@ COPY package.json package-lock.json* ./
 # Install production dependencies only
 RUN npm install --omit=dev
 
-# Copy backend source code
+# Copy backend source code (includes uploads/ if tracked in git)
 COPY . .
 
 # Copy templates for report generation
 COPY templates/ ./templates/
-
-# Copy uploads (seed data: avatars, documents)
-COPY uploads/ ./uploads/
 
 # Create uploads subdirectories if they don't exist
 RUN mkdir -p uploads/avatars/staffs uploads/avatars/students uploads/avatars/fund uploads/avatars/donor uploads/documents uploads/proofs uploads/tintuc
