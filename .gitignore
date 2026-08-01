@@ -77,7 +77,9 @@ BaoCaoKhoaLuan/generated_assets/
 # ========================
 # Optional
 # ========================
-backend/uploads/
+backend/uploads/*
+!backend/uploads/tintuc/
+!backend/uploads/tintuc/**
 # docs/
 # assets/
 # *.docx
