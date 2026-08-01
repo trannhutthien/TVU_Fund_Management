@@ -9,7 +9,8 @@ import {
   createNews,
   updateNews,
   deleteNews,
-  updateNewsStatus
+  updateNewsStatus,
+  fixNewsAvatars
 } from "../../controllers/news/newsController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
@@ -52,5 +53,8 @@ router.delete("/:id", protect, authorizeRoles(1), deleteNews);
 
 // PUT /api/news/:id/status - Cập nhật trạng thái hiển thị (Cán bộ: 3, Admin: 1)
 router.put("/:id/status", protect, authorizeRoles(1, 3), updateNewsStatus);
+
+// POST /api/news/fix-avatars - Tự động gán avatar cho bài viết chưa có (Admin only)
+router.post("/fix-avatars", protect, authorizeRoles(1), fixNewsAvatars);
 
 export default router;

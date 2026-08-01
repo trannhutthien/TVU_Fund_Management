@@ -1,4 +1,11 @@
 import NewsModel from "../../models/news/NewsModel.js";
+import pool from "../../config/db.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const getBaseUrl = () => process.env.BASE_URL || "http://localhost:5001";
 
@@ -569,4 +576,52 @@ export default {
   updateNews,
   deleteNews,
   updateNewsStatus
+};
+
+export const fixNewsAvatars = async (req, res) => {
+  try {
+    const uploadsDir = path.join(__dirname, "../../uploads/tintuc");
+    if (!fs.existsSync(uploadsDir)) {
+      return res.status(200).json({ success: true, message: "No uploads directory", updated: 0 });
+    }
+
+    const files = fs.readdirSync(uploadsDir).filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f));
+    if (files.length === 0) {
+      return res.status(200).json({ success: true, message: "No images found", updated: 0 });
+    }
+
+    const [news] = await pool.query(
+      `SELECT tintuc_id, tieude, avatar, ngaytao FROM tintuc WHERE avatar IS NULL OR avatar = ''`
+    );
+
+    let updated = 0;
+    for (const article of news) {
+      const articleDate = new Date(article.ngaytao);
+      let bestMatch = null;
+      let bestDiff = Infinity;
+
+      for (const file of files) {
+        const stat = fs.statSync(path.join(uploadsDir, file));
+        const diff = Math.abs(stat.mtime.getTime() - articleDate.getTime());
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestMatch = file;
+        }
+      }
+
+      if (bestMatch) {
+        const avatarPath = `uploads/tintuc/${bestMatch}`;
+        await pool.query(
+          `UPDATE tintuc SET avatar = ?, ngaycapnhat = CURRENT_TIMESTAMP WHERE tintuc_id = ?`,
+          [avatarPath, article.tintuc_id]
+        );
+        updated++;
+      }
+    }
+
+    return res.status(200).json({ success: true, message: `Fixed ${updated} avatars`, updated });
+  } catch (error) {
+    console.error("fixNewsAvatars error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
 };
