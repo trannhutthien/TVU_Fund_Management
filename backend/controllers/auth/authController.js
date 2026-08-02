@@ -573,13 +573,15 @@ export const forgotPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     await NguoiDungModel.updatePassword(user.nguoidung_id, hashedPassword);
 
-    // 5. Gửi mật khẩu mới qua email
-    await sendPasswordResetEmail(email, user.hoten, newPassword);
-
-    // 6. Trả về kết quả thành công
+    // 5. Trả về kết quả thành công trước (fire-and-forget email)
     return res.status(200).json({
       success: true,
       message: "Mật khẩu mới đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.",
+    });
+
+    // 6. Gửi email nền (không block response)
+    sendPasswordResetEmail(email, user.hoten, newPassword).catch((err) => {
+      console.error("[ForgotPassword] Gửi email thất bại:", err.message);
     });
   } catch (error) {
     console.error("Lỗi forgotPassword:", error);

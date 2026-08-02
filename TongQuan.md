@@ -525,9 +525,25 @@ Admin xem danh sách đề xuất chờ duyệt, kiểm tra tính hợp lệ, v�
 #### Bước 3: Thu Hồi (Nếu Cần)
 
 Nếu có sai sót hoặc cần điều chỉnh, Admin có thể thu hồi phân bổ đã duyệt:
-- `quy.sodu` quỹ đích bị trừ
-- `quy.sodu` quỹ nguồn được cộng lại
-- Trạng thái phân bổ chuyển sang `Da thu hoi`
+
+**Luồng thu hồi (`POST /api/funds/allocate/:id/rollback`):**
+
+1. Kiểm tra phân bổ tồn tại và trạng thái = `Da duyet`
+2. **Row-level locking trong transaction:**
+   - `SELECT ... FOR UPDATE` trên bản ghi phân bổ
+   - `SELECT ... FOR UPDATE` trên quỹ đích (lock hàng)
+   - `SELECT ... FOR UPDATE` trên quỹ nguồn (lock hàng)
+3. Kiểm tra số dư quỹ đích **còn đủ** (tiền chưa bị giải ngân)
+4. Thực hiện đảo giao dịch:
+   - Trừ `quy.sodu` quỹ đích (lấy lại tiền)
+   - Cộng `quy.sodu` quỹ nguồn (hoàn tiền)
+5. Cập nhật trạng thái phân bổ → `Da thu hoi`
+6. Commit transaction. Nếu lỗi → rollback toàn bộ
+
+**Lỗi thường gặp:**
+- `INSUFFICIENT_DESTINATION_FUND_BALANCE_FOR_ROLLBACK` (400) — tiền đã bị giải ngân, không thể thu hồi
+
+**Tại sao dùng `FOR UPDATE`:** Tránh race condition khi 2 admin cùng thao tác trên cùng 1 quỹ — row-level locking đảm bảo chỉ 1 process có thể修改 số dư tại 1 thời điểm.
 
 ---
 
@@ -628,14 +644,37 @@ Khi tạo giao dịch `Chi` với `hangmucchi = 'Bo_may_hoat_dong'`, hệ thốn
 
 Đối soát giao dịch là quá trình kiểm tra và xác minh rằng số tiền thực tế trong giao dịch ngân hàng khớp với số tiền ghi nhận trong hệ thống. Đây là bước quan trọng trong kiểm soát tài chính, giúp phát hiện các giao dịch bất thường hoặc sai lệch.
 
-Mỗi giao dịch trong hệ thống đều có thể được đánh dấu là: **Chưa đối soát** (mặc định), **Đã đối soát** (khớp), hoặc **Bất thường** (cần xem xét). Khi đánh dấu "Bất thường", kế toán cần xem xét kỹ lưỡng và có thể ghi chú số tiền thực tế khác với số tiền hệ thống.
+#### Cách 1: Đối Soát Thủ Công
 
-#### Cập Nhật Trạng Thái
+Mỗi giao dịch trong hệ thống đều có thể được đánh dấu là: **Chưa đối soát** (mặc định), **Đã đối soát** (khớp), hoặc **Bất thường** (cần xem xét).
 
 Kế toán hoặc Admin cập nhật trạng thái đối soát qua `PATCH /api/transactions/:id/doi-soat`:
 - `Chua_doi_soat` → Đặt lại mọi trường đối soát về null
 - `Da_doi_soat` → Ghi nhận số tiền thực tế (mặc định = số tiền hệ thống)
 - `Bat_thuong` → Đánh dấu cần xem xét, ghi nhận số tiền thực tế nếu khác
+
+#### Cách 2: Đối Soát Tự Động (Upload File Sao Kê)
+
+Kế toán upload file sao kê ngân hàng (hỗ trợ CSV, Excel, TXT), hệ thống tự động:
+
+**Bước 1 — Upload & Parse:**
+- File được upload qua `POST /api/upload` (loại `documents`)
+- Hệ thống parse nội dung file, extract các dòng giao dịch
+- Mỗi dòng bao gồm: ngày GD, số tiền, nội dung/Mô tả, số tài khoản
+
+**Bước 2 — So Khớp Tự Động:**
+- So khớp từng giao dịch trong file với dữ liệu `giaodich` trong hệ thống
+- Tiêu chí khớp: **số tiền**, **ngày**, **nội dung** (fuzzy match)
+- Phân loại kết quả:
+  - **Đã khớp** (green) — giao dịch trong hệ thống khớp hoàn toàn với sao kê
+  - **Chưa khớp** (yellow) — có trong hệ thống nhưng không tìm thấy trong sao kê
+  - **Sai lệch** (red) — có trong cả hai nhưng khác biệt về số tiền hoặc thông tin
+
+**Bước 3 — Xử Lý:**
+- Kế toán xem danh sách kết quả trên UI
+- Xác nhận các khoản đã khớp
+- Xem xét và xử lý các khoản sai lệch (liên hệ đối tác, điều chỉnh)
+- Đánh dấu trạng thái đối soát cho từng giao dịch
 
 ---
 
@@ -665,6 +704,381 @@ Hệ thống cung cấp chức năng xuất báo cáo tài chính dưới 2 đ�
 2. **Block 2 — Phải thu:** Từ các điều khoản thu hồi (`dieukhoanthuhoi`)
 3. **Block 3 — Ngân sách nội bộ:** Phân bổ từ quỹ cha xuống quỹ con (`phanbongansach`)
 4. **Block 4 — Ngân sách hoạt động:** Dự toán hàng năm và thực chi (`dutoanhangnam`)
+
+---
+
+### 5A. CÁC LUỒNG HỖ TRỢ & TIỆN ÍCH
+
+#### 5A.1 Đăng Ký Tài Khoản
+
+Hệ thống hỗ trợ 3 loại tài khoản khi đăng ký: **Sinh viên**, **Nhà tài trợ**, **Cán bộ**.
+
+**Luồng thực thi:**
+
+1. Kiểm tra **chế độ bảo trì** — nếu bật, trả 503 block mọi đăng ký mới
+2. Validate theo loại tài khoản:
+   - **Sinh viên:** `hoTen`, `mssv`, `khoaPhong`, `lop`, `email`, `password` (bắt buộc)
+   - **Nhà tài trợ:** `tenToChuc`, `email`, `soDienThoai`, `password` (bắt buộc)
+   - **Cán bộ:** `hoTen`, `email`, `password` (bắt buộc)
+3. Validate email (regex), password (>= 8 ký tự)
+4. Kiểm tra email trùng trong DB → 409 nếu đã tồn tại
+5. Hash password bằng bcrypt (salt rounds: 10)
+6. Tạo user mới:
+   - `roleId` = 4 (Nguoi dung) — mọi đăng ký đều nhận role mặc định
+   - `maSoDinhDanh`: `mssv` (SV), `CB{timestamp}` (CB), `NTT{timestamp}` (NTT)
+   - `trangthai` = `HOAT_DONG`
+7. Nếu loại Nhà tài trợ → tự động tạo bản ghi trong `nhataitro` (failure không rollback user)
+8. Tạo JWT token pair (access + refresh)
+9. Log sự kiện đăng ký
+10. Trả về `accessToken`, `refreshToken`, `user` (không chứa password)
+
+#### 5A.2 Đăng Nhập & JWT
+
+**Luồng đăng nhập:**
+
+1. Validate `email` + `matKhau` không rỗng
+2. Tìm user theo email — trả 401 chung (không tiết lộ email có tồn tại không)
+3. Kiểm tra **chế độ bảo trì**: nếu ON và user không phải Admin → 503
+4. Kiểm tra tài khoản bị khóa (`KHOA`) → 403
+5. Kiểm tra vai trò bị tạm dừng (`TAM_DUNG`) → 403
+6. So sánh password với bcrypt.compare → 401 nếu sai
+7. Tạo JWT token pair:
+   - **Access token**: `JWT_SECRET`, hết hạn `JWT_EXPIRES_IN` (mặc định 2h)
+   - **Refresh token**: `JWT_REFRESH_SECRET` (secret riêng), hết hạn `JWT_REFRESH_EXPIRES_IN` (mặc định 30d)
+   - Payload: `{ user_id, vai_tro }`
+8. Trả về `accessToken`, `refreshToken`, `user`
+
+**Refresh Token (rotation):**
+
+1. Client gửi `refreshToken`
+2. Verify với `JWT_REFRESH_SECRET` → 401 nếu hết hạn/sai
+3. Tìm user theo decoded `user_id` → 401 nếu không tồn tại
+4. Kiểm tra account locked → 403
+5. **Rotate** — tạo token pair MỚI HOÀN TOÀN (cả access + refresh)
+6. Trả về token mới
+
+#### 5A.3 Quên Mật Khẩu
+
+1. Client gửi `{ email }`
+2. Tìm user theo email → 404 nếu không tồn tại
+3. Kiểm tra account locked → 403
+4. Tạo password random **8 ký tự** (A-Z, a-z, 0-9)
+5. Hash password mới bằng bcrypt
+6. Ghi đè password cũ trong DB (mật khẩu cũ bị thay vĩnh viễn)
+7. Gửi email chứa password mới (plaintext) cho user
+8. Trả về thông báo thành công (không trả password trong response)
+
+> **Lưu ý:** Không có cơ chế token/link, không có expiry. Password cũ bị thay thế ngay lập tức. Sử dụng `Math.random()` (không cryptographically secure).
+
+#### 5A.4 Đổi Mật Khẩu
+
+1. Client gửi `{ oldPassword, newPassword, confirmPassword }`
+2. Validate: `newPassword` >= 6 ký tự, `newPassword` == `confirmPassword`
+3. Lấy password hash hiện tại từ DB
+4. **Nếu user đã có password** (`matkhau !== null`):
+   - `oldPassword` là bắt buộc
+   - So sánh `oldPassword` với hash → 401 nếu sai
+   - Kiểm tra `newPassword` != `oldPassword` → 400 nếu trùng
+5. **Nếu user chưa có password** (Google OAuth account, `matkhau === null`):
+   - `oldPassword` **không bắt buộc** — cho phép set password lần đầu
+6. Hash password mới, ghi vào DB
+7. Trả về thông báo thành công
+
+#### 5A.5 Google OAuth
+
+**Bước 1 — Redirect Google:**
+1. Tạo URL authorization với `access_type: "offline"`, scope: `userinfo.profile` + `userinfo.email`, `prompt: "select_account"`
+2. Redirect browser đến Google
+
+**Bước 2 — Callback:**
+1. Nhận `code` từ Google query params
+2. Nếu user huỷ → redirect `${FRONTEND_URL}/login?error=google_cancelled`
+3. Exchange `code` lấy Google tokens
+4. Verify ID token → extract `email`, `name`, `picture`
+5. Tìm user theo email:
+   - **Chưa có** → tạo user mới từ Google (password = null, avatar = picture)
+   - **Đã có** → check locked/suspended
+6. Tạo JWT pair của ứng dụng
+7. Redirect về frontend: `${FRONTEND_URL}/auth/google/callback?accessToken=...&refreshToken=...&user=...`
+
+> **Lưu ý:** User Google lần đầu có `matkhau = null`, có thể set password sau qua `updatePassword`.
+
+#### 5A.6 Upload File
+
+Hệ thống hỗ trợ **6 loại upload** + **xóa file**, tất cả dùng Multer disk storage.
+
+**Cấu trúc thư mục:**
+```
+backend/uploads/
+├── avatars/donor/      # Avatar nhà tài trợ
+├── avatars/fund/       # Ảnh bìa quỹ
+├── avatars/staffs/     # Avatar cán bộ + admin
+├── avatars/students/   # Avatar sinh viên
+├── documents/         # File đính kèm (PDF, DOC)
+├── proofs/            # minh chứng
+└── tintuc/            # Ảnh tin tức
+```
+
+| Loại | Endpoint | Giới hạn | Thư mục lưu | Auth |
+|------|----------|----------|-------------|------|
+| Chung | `POST /api/upload` | PDF/JPG/PNG/DOC, ≤5MB | `documents/` | Có |
+| Công khai | `POST /api/upload/public` | PDF/JPG/PNG/DOC, ≤5MB | `documents/` | Không |
+| Nhiều file | `POST /api/upload/multiple` | Max 5 files, mỗi file ≤10MB | `documents/` | Có |
+| Avatar | `POST /api/upload/avatar` | JPG/PNG, ≤5MB | `avatars/{folder}/` | Có |
+| Ảnh quỹ | `POST /api/upload/fund` | JPG/PNG, ≤5MB | `avatars/fund/` | Có |
+| Ảnh SV | `POST /api/upload/student` | JPG/PNG, ≤5MB | `avatars/students/` | Có |
+| Ảnh tin | `POST /api/upload/news` | JPG/PNG, ≤5MB | `tintuc/` | Có |
+
+**Avatar folder phân loại theo role:**
+- Role 1, 2, 3 → `avatars/staffs/`
+- Role 4 + `SINH_VIEN` → `avatars/students/`
+- Role 4 + `NHA_TAI_TRO` → `avatars/staffs/`
+
+**Xóa file:** `DELETE /api/upload/:filename` — chỉ xóa được file trong `documents/`, không xóa được avatar/ảnh quỹ/ảnh tin.
+
+**Định dạng tên file:** `{tenGoc}_{timestamp}_{9soNgauNhau}{extension}` — ký tự đặc biệt bị thay bằng `_`.
+
+#### 5A.7 Quản Lý Tin Tức
+
+**Quy trình trạng thái:**
+```
+Ban nhap (Draft) → Da xuat ban (Published) → Da an (Hidden)
+```
+
+**Tạo tin (`POST /api/news`):**
+1. Validate `title` (không rỗng) và `content` (không rỗng)
+2. Nếu status = `Da xuat ban` và không có `publishDate` → tự động set ngày hiện tại
+3. `phanloai` được normalize: `Tin moi`, `Tin noi bat`, `baocaohoatdong`, `chuongtrinh`, `cuusinhvien`
+4. `lanoibat` mặc định = 0 (không nổi bật)
+5. Lưu vào DB, trả về tin vừa tạo với URL ảnh
+
+**Sửa tin (`PUT /api/news/:id`):**
+- Nếu chuyển sang `Da xuat ban` mà chưa có ngày → tự set ngày
+- Nếu chuyển sang `Ban nhap` → xóa ngày xuất bản (null)
+
+**Đổi trạng thái (`PUT /api/news/:id/status`):**
+- Chỉ 3 trạng thái: `Ban nhap`, `Da xuat ban`, `Da an`
+- Tự động xử lý ngày xuất bản theo logic trên
+
+**Xóa tin (`DELETE /api/news/:id`):**
+- Chỉ Admin mới xóa được
+- **Không xóa file ảnh** trên disk (chỉ xóa bản ghi DB)
+
+**Xem công khai:**
+- `GET /api/news/landing` — tin cho landing page (featured + recent)
+- `GET /api/news/public` — danh sách phân trang, filter theo `phanloai`
+- `GET /api/news/:id` — chỉ trả tin `Da xuat ban`, 404 cho draft/hidden
+
+**Xây dựng URL ảnh:** Dùng `process.env.BASE_URL` + relative path → trả về URL tuyệt đối cho production.
+
+#### 5A.8 Cảm Nhận Sinh Viên (Testimonials)
+
+**Quy trình trạng thái:**
+```
+Gửi → Cho duyet → Da duyet / Tu choi
+```
+
+**Gửi đánh giá (`POST /api/danhgia`):**
+1. Yêu cầu đăng nhập (`optionalProtect` — phải có token)
+2. Validate `noiDung` (bắt buộc, tối đa 500 ký tự)
+3. Lưu với trạng thái `Cho duyet`
+4. Trả về thông báo "đã gửi, chờ duyệt"
+
+**Duyệt (`PATCH /api/danhgia/:id/trangthai`):**
+- Admin/Cán bộ chọn: `Da duyet` hoặc `Tu choi`
+- Nếu từ chối phải nhập lý do
+
+**Đặt nổi bật (`PATCH /api/danhgia/:id/noi-bat`):**
+- Chỉ đặt nổi bật được khi trạng thái đã `Da duyet`
+- Có thứ tự hiển thị (`thuTu`)
+
+**Xem công khai:**
+- `GET /api/danhgia/landing` — top 6 đánh giá đã duyệt (hiển thị trên landing page)
+- `GET /api/danhgia` — phân trang, filter theo khoa/từ khóa
+
+> **Bug đã biết:** `getBodyField()` chưa được define trong `danhGiaController.js` → 2 PATCH endpoint sẽ gặp `ReferenceError` khi chạy.
+
+#### 5A.9 Sinh Viên Nổi Bật
+
+**Quy trình:**
+```
+Thêm/Sửa → Hien thi / An
+```
+
+**Tạo (`POST /api/student-showcase`):**
+1. Admin/Cán bộ nhập: `nguoiDungId`, `namHoc`, `thanhTich`, `thuTu`, `trangThai`
+2. Validate `nguoiDungId` (bắt buộc, số)
+3. `trangThai` mặc định = `Hien thi`
+4. Avatar được tự động lấy từ `nguoidung.avatar`
+
+**Đổi trạng thái (`PUT /api/student-showcase/:id/status`):**
+- `Hien thi` (hiển thị trên trang công khai) hoặc `An` (ẩn)
+
+**Xem công khai:** `GET /api/student-showcase/public` — chỉ trả SV có `Hien thi`
+
+#### 5A.10 Chức Vụ Tổ Chức
+
+**4 nhóm chức vụ:**
+| Nhóm | Mô tả |
+|------|-------|
+| Hội đồng Quỹ | Ban lãnh đạo cao nhất |
+| Ban Điều hành | Quản lý vận hành hàng ngày |
+| Ban Kiểm soát | Giám sát độc lập (Điều 8 Điều lệ) |
+| Văn phòng Thường trực | Hành chính, hỗ trợ |
+
+**CRUD (Admin only):**
+- `POST /api/chuc-vu` — tạo mới (yêu cầu `chucDanh`, `nhom`)
+- `PUT /api/chuc-vu/:id` — cập nhật
+- `DELETE /api/chuc-vu/:id` — **soft delete** (chuyển `trangthai` = `Het nhiem ky`)
+- `PUT /api/chuc-vu/reorder` — sắp xếp lại thứ tự (dùng MySQL transaction)
+
+**Xem công khai:** `GET /api/chuc-vu/public` — chỉ hiển thị `Dang nhiem`, sắp xếp theo nhóm và `thuTu`
+
+#### 5A.11 Cài Đặt Hệ Thống
+
+**60 trường cấu hình** trong `system_settings.json`,分为 các nhóm:
+
+| Nhóm | Fields |
+|------|--------|
+| Nhận diện | `ten_he_thong`, `don_vi_quan_ly` |
+| Liên hệ | `email_lien_he`, `email_ho_tro`, `so_dien_thoai`, `dia_chi_lien_he`, `gio_lam_viec` |
+| Social | `facebook_url`, `youtube_url`, `linkedin_url` |
+| TK nhận TT | `ngan_hang`, `chi_nhanh`, `so_tai_khoan`, `chu_tai_khoan` |
+| Quy tắc | `thoi_han_xu_ly_ngay`, `so_cap_duyet`, `ky_tu_ly_do_toi_thieu` |
+| Upload | `kich_thuoc_toi_da_mb`, `so_file_toi_da`, `dinh_dang_cho_phep` |
+| Hệ thống | `maintenanceMode`, `laisuatnganhangthamchieu` |
+| Landing page | `hero_*`, `process_*`, `donor_wall_*`, `ai_*`, `testimonials_*`, `progress_*`, `footer_*`, `guidelines_*` |
+
+**Flow cập nhật:**
+1. Admin gọi `PATCH /api/system/settings` với các field cần thay
+2. Validate `so_cap_duyet` (1-5) nếu có
+3. Merge vào settings hiện tại, ghi file JSON
+4. Audit log với action `CAP_NHAT_CAI_DAT_HE_THONG`
+
+**Flow xem:**
+- `GET /api/system/settings` — Admin/BKS xem đầy đủ (bao gồm internal config)
+- `GET /api/system/public` — Công khai, chỉ trả các trường public (bỏ sensitive)
+
+#### 5A.12 Phân Quyền Trang (Page Permissions)
+
+**Ma trận 26 trang × 6 vai trò:**
+
+| Trang | Admin | Cán bộ | Kế toán | SV | NTT | BKS |
+|-------|:-----:|:------:|:-------:|:--:|:---:|:---:|
+| Trang chủ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Danh mục quỹ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Hướng dẫn | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Vinh danh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Cá nhân | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Tạo đơn | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ |
+| Tra cứu | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Dashboard | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
+| Quản lý NN | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Xét duyệt | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Danh sách Quỹ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ |
+| Nhà tài trợ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| SV nổi bật | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Tin tức | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Báo cáo | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
+| Khoản TT | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ |
+| Lịch sử GD | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Về Quỹ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Cựu SV | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Giao dịch | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ |
+| Giải ngân | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ |
+| Đối soát CT | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ |
+| Phê duyệt | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Phân quyền | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Nhật ký | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Nhân sự | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Giám sát | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
+| Phân bổ | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Cảm nhận | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+
+**Flow cập nhật:**
+1. Admin gọi `PATCH /api/system/permissions` với ma trận mới
+2. Merge vào `page_permissions.json`, ghi file
+3. Audit log (fire-and-forget)
+4. Frontend đọc permissions → lọc sidebar + menu theo vai trò
+
+#### 5A.13 Quản Lý Vai Trò
+
+- `PATCH /api/vaitro/:role_id` — cập nhật mô tả/trạng thái
+- **Bảo vệ:** Không cho sửa Admin (role_id=1) và Nguoi dung (role_id=4)
+- Trạng thái: `Hoat dong` hoặc `Tam dung`
+- Khi `Tam dung`: user có role đó bị block khi login hoặc gọi API
+- Audit log với action `CAP_NHAT_VAI_TRO`
+
+#### 5A.14 Chế Độ Bảo Trì (Maintenance Mode)
+
+**Kích hoạt:** Admin set `maintenanceMode: true` trong `system_settings.json`
+
+**Ảnh hưởng:**
+
+| Vị trí | Hành vi |
+|--------|---------|
+| `POST /api/auth/register` | Trả 503 — block đăng ký mới |
+| `POST /api/auth/login` | Trả 503 nếu user không phải Admin (role_id=1) |
+| `protect` middleware | Trả 503 nếu decoded token không phải Admin |
+
+**Đặc điểm kỹ thuật:**
+- Đọc file JSON **đồng bộ** (`readFileSync`) trên MỖI request → toggle có hiệu lực ngay lập tức, không cần restart
+- Admin **luôn được miễn** — có thể đăng nhập và truy cập mọi endpoint
+- File default: `maintenanceMode: false`
+
+#### 5A.15 Audit Log Tự Động
+
+**Hệ thống ghi log 2 lớp:**
+
+**Lớp 1 — Middleware tự động (`auditLogMiddleware.js`):**
+1. Bắt mọi request `POST/PUT/PATCH/DELETE` có prefix `/api/`
+2. Skip: `/api/nhat-ky`, `/api/auth/refresh-token`, `/api/applications/ai-suggest`, `/api/bao-cao/xuat`
+3. Trên response `finish` event:
+   - Skip nếu `req._systemLogWritten = true` (controller đã log trước)
+   - Skip nếu status < 200 hoặc >= 400
+   - Extract route params, URL path
+4. Map URL prefix → resource type (17 mapping: `/api/news` → `tintuc`, `/api/funds` → `quy`, ...)
+5. Sanitize data: mask password/token, convert Date, detect circular refs, truncate JSON > 6000 chars
+6. Ghi log async với: action (`API_TAO_MOI/CAP_NHAT/XOA`), user ID, IP, method, path, status, duration, body
+
+**Lớp 2 — Controller explicit log:**
+- Các controller quan trọng tự gọi `logSystemActivity()` với action cụ thể (VD: `NOP_YEU_CAU_HO_TRO`, `DUYET_PHAN_BO`)
+- Dùng `req._systemLogWritten = true` để báo middleware không log trùng
+
+**Xem nhật ký:**
+- `GET /api/nhat-ky` — phân trang, filter: keyword, hành động, đối tượng, ngày
+- `GET /api/nhat-ky/stats` — thống kê tổng, hôm nay, tuần này, user hôm nay
+- `GET /api/nhat-ky/export` — xuất Excel (.xlsx) với filter
+
+#### 5A.16 Rate Limiting
+
+**Triển khai:** In-memory, per-IP, dùng `Map`.
+
+**Cấu hình:**
+- `windowMs`: cửa sổ thời gian (mặc định 1 giờ)
+- `max`: số request tối đa trong cửa sổ (mặc định 3)
+- Message lỗi khi bị limit
+
+**Flow:**
+1. Extract IP từ `x-forwarded-for` hoặc `req.socket.remoteAddress`
+2. Nếu IP mới → tạo entry `{count: 1, resetTime: now + windowMs}`
+3. Nếu window hết hạn → reset count
+4. Nếu count >= max → trả 429 với thông báo còn bao nhiêu phút
+5. Cleanup tự động mỗi 5 phút (xóa entries hết hạn)
+
+> **Lưu ý:** Rate limiter là per-process (reset khi server restart), không distributed.
+
+#### 5A.17 Đối Soát Chứng Từ Chi
+
+Kế toán upload file sao kê ngân hàng (CSV/Excel/TXT), hệ thống tự động:
+
+1. Parse file → extract các giao dịch
+2. So khớp với dữ liệu trong `giaodich` theo: số tiền, ngày, nội dung
+3. Phân loại kết quả:
+   - **Đã khớp** — giao dịch trong hệ thống khớp với sao kê
+   - **Chưa khớp** — có trong hệ thống nhưng không tìm thấy trong sao kê
+   - **Sai lệch** — có trong cả hai nhưng số tiền/khác biệt
+4. Hiển thị kết quả trên UI để kế toán xem xét
 
 ---
 
@@ -1730,4 +2144,4 @@ cd frontend && npm run build
 
 ---
 
-*Cập nhật lần cuối: 2026-07-14*
+*Cập nhật lần cuối: 2026-08-02*

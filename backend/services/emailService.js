@@ -24,6 +24,8 @@ const createEmailError = (code, message, cause = null) => {
   return error;
 };
 
+let cachedTransporter = null;
+
 const createTransportConfig = () => {
   if (!isConfigured()) {
     throw createEmailError(
@@ -45,23 +47,36 @@ const createTransportConfig = () => {
       port,
       secure: process.env.MAIL_SECURE === "true" || port === 465,
       auth,
+      connectionTimeout: 30000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
     };
   }
 
   return {
     service: process.env.MAIL_SERVICE || "gmail",
     auth,
+    connectionTimeout: 30000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
   };
 };
 
-const sendMailWrapper = async (mailOptions) => {
-  const transporter = nodemailer.createTransport(createTransportConfig());
+const getTransporter = () => {
+  if (!cachedTransporter) {
+    cachedTransporter = nodemailer.createTransport(createTransportConfig());
+  }
+  return cachedTransporter;
+};
 
+const sendMailWrapper = async (mailOptions) => {
   try {
+    const transporter = getTransporter();
     await transporter.sendMail(mailOptions);
     return true;
   } catch (err) {
     console.error("[Email Service] SMTP error:", err.message);
+    cachedTransporter = null;
     throw createEmailError(
       EMAIL_SEND_FAILED,
       "Could not send email through SMTP.",

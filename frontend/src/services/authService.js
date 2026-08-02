@@ -34,7 +34,7 @@ export const authService = {
 
   // Quên mật khẩu - gửi mật khẩu mới qua email
   forgotPassword: async (email) => {
-    const response = await api.post(API_ENDPOINTS.FORGOT_PASSWORD, { email })
+    const response = await api.post(API_ENDPOINTS.FORGOT_PASSWORD, { email }, { timeout: 30000 })
     return response.data
   },
 }

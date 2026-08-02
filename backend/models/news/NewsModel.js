@@ -45,18 +45,28 @@ const getLandingNews = async () => {
       [phanLoai]
     );
 
-    // Fallback: Nếu không có featured lớn, lấy bài mới nhất của phân loại đó
+    // Fallback: Nếu không có featured lớn, lấy bài mới nhất chưa hiển thị ở nhóm khác
     let featuredFinal = featured[0];
     if (!featuredFinal) {
-      const [fallback] = await pool.query(
-        `SELECT 
-          tintuc_id, tieude, motangan, avatar, noidung, danhmuc, ngayxuatban, phanloai
-        FROM tintuc
-        WHERE trangthai = 'Da xuat ban' AND phanloai = ?
-        ORDER BY ngayxuatban DESC, ngaytao DESC
-        LIMIT 1`,
-        [phanLoai]
-      );
+      const usedIds = [
+        ...featuredSmall.map(n => n.tintuc_id),
+        ...sidebar.map(n => n.tintuc_id),
+        ...recent.map(n => n.tintuc_id),
+      ];
+
+      let fallbackQuery = `SELECT
+        tintuc_id, tieude, motangan, avatar, noidung, danhmuc, ngayxuatban, phanloai
+      FROM tintuc
+      WHERE trangthai = 'Da xuat ban' AND phanloai = ?`;
+      const params = [phanLoai];
+
+      if (usedIds.length > 0) {
+        fallbackQuery += ` AND tintuc_id NOT IN (${usedIds.map(() => '?').join(',')})`;
+        params.push(...usedIds);
+      }
+
+      fallbackQuery += ` ORDER BY ngayxuatban DESC, ngaytao DESC LIMIT 1`;
+      const [fallback] = await pool.query(fallbackQuery, params);
       featuredFinal = fallback[0] || null;
     }
 

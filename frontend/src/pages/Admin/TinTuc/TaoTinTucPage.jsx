@@ -366,7 +366,14 @@ const TaoTinTucPage = () => {
       }
       if (result?.success) {
         toast.success(isEditMode ? 'Cập nhật bài viết thành công!' : 'Tạo bài viết thành công!');
-        navigate(`${prefix}/tintuc/tao`, { state: { activeTab: 'quan-ly' } });
+        if (isEditMode) {
+          navigate(`${prefix}/tintuc/tao`, { state: { activeTab: 'quan-ly' } });
+        } else {
+          setForm(INITIAL_FORM);
+          setErrors({});
+          const editor = quillRef.current?.getEditor();
+          if (editor) editor.setText('');
+        }
       } else {
         toast.error(result?.message || 'Không thể lưu bài viết');
       }
