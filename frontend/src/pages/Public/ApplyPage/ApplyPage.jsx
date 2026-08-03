@@ -327,7 +327,7 @@ const ApplyPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [isDonor, selectedBankAccountId, transactionId]);
+  }, [isDonor]);
 
   const handleFundSelect = useCallback((fund) => {
     setSelectedFund((prev) => (prev === fund ? prev : fund));
