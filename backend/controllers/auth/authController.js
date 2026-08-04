@@ -242,7 +242,7 @@ export const login = async (req, res) => {
     }
 
     // Kiểm tra chế độ bảo trì
-    if (getMaintenanceMode() && user.role_id !== 1) {
+    if (getMaintenanceMode() && Number(user.vaitro_id) !== 1) {
       return res.status(503).json({
         success: false,
         message: "Hệ thống đang trong chế độ bảo trì. Chỉ Admin được phép truy cập lúc này.",

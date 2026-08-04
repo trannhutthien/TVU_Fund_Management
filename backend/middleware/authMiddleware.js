@@ -71,7 +71,7 @@ export const protect = async (req, res, next) => {
 // Ví dụ dùng: router.get("/...", protect, requireRole("quan_tri"), controller)
 export const requireRole = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.vai_tro)) {
+    if (!roles.includes(Number(req.user.vai_tro))) {
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền thực hiện thao tác này",
