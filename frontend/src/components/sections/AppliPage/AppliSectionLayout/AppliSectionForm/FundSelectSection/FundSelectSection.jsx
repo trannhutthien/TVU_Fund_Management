@@ -81,8 +81,9 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     if (parentFund) {
       setSelectedLoaiQuy(parentFund.loaiQuy);
       setSelectedFundId(parentFund.quyId);
+      onFundSelect?.(normalizeSelectedFund(parentFund));
     }
-  }, [isDonor, donationTarget, allFunds]);
+  }, [isDonor, donationTarget, allFunds, onFundSelect]);
 
   const handleTargetChange = (target) => {
     setDonationTarget(target);
