@@ -71,12 +71,12 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     ]
   );
 
-  // Tự động chọn Quỹ phát triển Đại học Trà Vinh khi ở chế độ parent_fund
+  // Tự động chọn quỹ mẹ khi ở chế độ parent_fund
   useEffect(() => {
     if (!isDonor || donationTarget !== 'parent_fund' || allFunds.length === 0) return;
 
     const parentFund = allFunds.find(
-      (f) => f.tenQuy === 'Quỹ phát triển Đại học Trà Vinh'
+      (f) => f.loaiDieuHanh === 'Tap trung - Be chung' && f.quyChaId === null
     );
     if (parentFund) {
       setSelectedLoaiQuy(parentFund.loaiQuy);
@@ -102,8 +102,8 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
       const isActive = fund.trangThai === 'Dang hoat dong';
       const isNotBeChung = isDonor || fund.loaiDieuHanh !== 'Tap trung - Be chung';
 
-      // Ẩn Quỹ phát triển Đại học Trà Vinh khi người dùng chọn chế độ custom_fund
-      if (isDonor && donationTarget === 'custom_fund' && fund.tenQuy === 'Quỹ phát triển Đại học Trà Vinh') {
+      // Ẩn quỹ mẹ khi người dùng chọn chế độ custom_fund
+      if (isDonor && donationTarget === 'custom_fund' && fund.loaiDieuHanh === 'Tap trung - Be chung' && fund.quyChaId === null) {
         return false;
       }
       return isMatchLoai && isActive && isNotBeChung;
