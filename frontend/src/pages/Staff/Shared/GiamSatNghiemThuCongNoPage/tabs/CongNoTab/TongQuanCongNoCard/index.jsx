@@ -5,6 +5,7 @@ import {
   HiOutlineExclamationTriangle,
   HiOutlineBuildingOffice2,
   HiOutlineClock,
+  HiOutlineReceiptPercent,
 } from 'react-icons/hi2';
 import { formatCurrency } from '@utils/formatters';
 import styles from './index.module.scss';
@@ -50,6 +51,14 @@ const CARDS = [
     bg: 'rgba(124, 58, 237, 0.08)',
     isCurrency: false,
   },
+  {
+    key: 'tongLaiPhat',
+    label: 'Lai phat chua thu',
+    icon: HiOutlineReceiptPercent,
+    color: '#dc2626',
+    bg: 'rgba(220, 38, 38, 0.06)',
+    isCurrency: true,
+  },
 ];
 
 const TongQuanCongNoCard = ({ data }) => {
@@ -85,6 +94,7 @@ TongQuanCongNoCard.propTypes = {
     dangQuaHan: PropTypes.number,
     soHoSoQuaHan: PropTypes.number,
     choXacNhan: PropTypes.number,
+    tongLaiPhat: PropTypes.number,
   }),
 };
 

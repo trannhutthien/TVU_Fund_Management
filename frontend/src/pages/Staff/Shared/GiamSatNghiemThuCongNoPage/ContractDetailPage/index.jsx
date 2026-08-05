@@ -111,9 +111,13 @@ const ContractDetailPage = () => {
   const kyDaTra = lichTraNo.filter((k) => k.trangthai === 'Da tra').length;
   const kyQuaHan = lichTraNo.filter((k) => k.trangthai === 'Qua han').length;
   const kyChoXacNhan = lichTraNo.filter((k) => k.trangthaixacnhan === 'Cho xac nhan' && k.trangthai !== 'Da tra').length;
+  const tongLaiPhat = lichTraNo.reduce((acc, k) => {
+    if (k.trangthai === 'Da tra') return acc;
+    return acc + Number(k.sotienlaiphat || 0);
+  }, 0);
   const tongNo = lichTraNo.reduce((acc, k) => {
     if (k.trangthai === 'Da tra') return acc;
-    return acc + (Number(k.sotiengocphaitra) + Number(k.sotienlaiphaitra)) - Number(k.sotienthuctra || 0);
+    return acc + (Number(k.sotiengocphaitra) + Number(k.sotienlaiphaitra) + Number(k.sotienlaiphat || 0)) - Number(k.sotienthuctra || 0);
   }, 0);
 
   return (
@@ -193,15 +197,15 @@ const ContractDetailPage = () => {
                 <span className={`${styles.summaryValue} ${styles.textRed}`}>{formatCurrency(tongNo)}</span>
               </div>
               <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>Ky qua han</span>
-                <span className={`${styles.summaryValue} ${kyQuaHan > 0 ? styles.textRed : ''}`}>
-                  {kyQuaHan}/{tongSoKy}
+                <span className={styles.summaryLabel}>Lai phat</span>
+                <span className={`${styles.summaryValue} ${tongLaiPhat > 0 ? styles.textRed : ''}`}>
+                  {formatCurrency(tongLaiPhat)}
                 </span>
               </div>
               <div className={styles.summaryCard}>
-                <span className={styles.summaryLabel}>Cho xac nhan</span>
-                <span className={`${styles.summaryValue} ${kyChoXacNhan > 0 ? styles.textPurple : ''}`}>
-                  {kyChoXacNhan}/{tongSoKy}
+                <span className={styles.summaryLabel}>Ky qua han</span>
+                <span className={`${styles.summaryValue} ${kyQuaHan > 0 ? styles.textRed : ''}`}>
+                  {kyQuaHan}/{tongSoKy}
                 </span>
               </div>
               <div className={styles.summaryCard}>
@@ -220,6 +224,7 @@ const ContractDetailPage = () => {
                     <th>Ngay den han</th>
                     <th>Goc phai tra</th>
                     <th>Lai phai tra</th>
+                    <th>Lai phat</th>
                     <th>Thuc tra</th>
                     <th>Con lai</th>
                     <th>Trang thai</th>
@@ -238,8 +243,9 @@ const ContractDetailPage = () => {
                     const ttBadge = TRANG_THAI_BADGES[row.trangthai] || TRANG_THAI_BADGES['Chua den han'];
                     const xnBadge = XAC_NHAN_BADGES[row.trangthaixacnhan] || XAC_NHAN_BADGES['Cho xac nhan'];
                     const soPhaiTra = Number(row.sotiengocphaitra) + Number(row.sotienlaiphaitra);
+                    const laiPhat = Number(row.sotienlaiphat || 0);
                     const thucTra = Number(row.sotienthuctra || 0);
-                    const conLai = soPhaiTra - thucTra;
+                    const conLai = soPhaiTra + laiPhat - thucTra;
                     const isOverdue = row.trangthai === 'Qua han';
 
                     return (
@@ -254,6 +260,11 @@ const ContractDetailPage = () => {
                         </td>
                         <td className={styles.cellAmount}>{formatCurrency(row.sotiengocphaitra)}</td>
                         <td className={styles.cellAmount}>{formatCurrency(row.sotienlaiphaitra)}</td>
+                        <td className={styles.cellAmount}>
+                          {laiPhat > 0 ? (
+                            <span style={{ color: '#dc2626' }}>{formatCurrency(laiPhat)}</span>
+                          ) : '--'}
+                        </td>
                         <td className={styles.cellAmount}>
                           {thucTra > 0 ? formatCurrency(thucTra) : '--'}
                         </td>

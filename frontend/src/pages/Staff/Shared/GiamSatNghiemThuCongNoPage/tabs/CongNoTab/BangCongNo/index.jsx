@@ -33,8 +33,6 @@ const BangCongNo = ({ userRole }) => {
   });
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0 });
 
-  const isKeToan = userRole === 2;
-
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     try {
@@ -121,14 +119,14 @@ const BangCongNo = ({ userRole }) => {
               <th>Ky qua han</th>
               <th>Ngay den han</th>
               <th>Trang thai</th>
-              {isKeToan && <th>Hanh dong</th>}
+              <th>Hanh dong</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={isKeToan ? 9 : 8} className={styles.loadingCell}>Dang tai...</td></tr>
+              <tr><td colSpan={9} className={styles.loadingCell}>Dang tai...</td></tr>
             ) : data.length === 0 ? (
-              <tr><td colSpan={isKeToan ? 9 : 8} className={styles.emptyCell}>Khong co hop dong cong no nao</td></tr>
+              <tr><td colSpan={9} className={styles.emptyCell}>Khong co hop dong cong no nao</td></tr>
             ) : data.map((row) => {
               const hasOverdue = Number(row.kyQuaHan) > 0;
               const hasPending = Number(row.kyChoXacNhan) > 0;
@@ -186,20 +184,18 @@ const BangCongNo = ({ userRole }) => {
                       )}
                     </div>
                   </td>
-                  {isKeToan && (
-                    <td>
-                      <div className={styles.actionCol}>
-                        <button
-                          type="button"
-                          className={styles.duyetBtn}
-                          onClick={() => handleViewDetail(row)}
-                        >
-                          <HiOutlineEye size={13} />
-                          <span>Chi tiet</span>
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                  <td>
+                    <div className={styles.actionCol}>
+                      <button
+                        type="button"
+                        className={styles.duyetBtn}
+                        onClick={() => handleViewDetail(row)}
+                      >
+                        <HiOutlineEye size={13} />
+                        <span>Chi tiet</span>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               );
             })}

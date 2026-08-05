@@ -75,8 +75,8 @@ export const confirmPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Ky nay da duoc xac nhan roi' });
     }
 
-    // 3. Validate so tien
-    const soPhaiTra = Number(lichtrano.sotiengocphaitra) + Number(lichtrano.sotienlaiphaitra);
+    // 3. Validate so tien (bao gom goc + lai + lai phat)
+    const soPhaiTra = Number(lichtrano.sotiengocphaitra) + Number(lichtrano.sotienlaiphaitra) + Number(lichtrano.sotienlaiphat || 0);
     const soThucNhan = parseFloat(soTienThucNhan) || 0;
     if (soThucNhan <= 0) {
       await connection.rollback();

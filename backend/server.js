@@ -30,6 +30,7 @@ import chucVuRoutes from "./routes/system/chucVuRoutes.js";
 import congNoRoutes from "./routes/finance/congNoRoutes.js";
 import lichTraNoRoutes from "./routes/finance/lichTraNoRoutes.js";
 import { auditLogMiddleware } from "./middleware/auditLogMiddleware.js";
+import laiPhatService from "./services/laiPhatService.js";
 
 dotenv.config();
 
@@ -96,4 +97,33 @@ const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server chạy tại http://0.0.0.0:${PORT}`);
+
+    // ═══ Cron job: Kiem tra qua han moi ngay luc 00:05 ═══
+    const chayKiemTraQuaHan = async () => {
+        try {
+            const result = await laiPhatService.capNhatTrangThaiQuaHan();
+            if (result.soKyQuaHanMoi > 0) {
+                console.log(`[CRON] Cap nhat qua han: ${result.soKyQuaHanMoi} ky, ${result.soHopDongQuaHan} hop dong`);
+            }
+        } catch (err) {
+            console.error('[CRON] Loi cap nhat qua han:', err.message);
+        }
+    };
+
+    // Chay luc 00:05 moi ngay
+    const tinhThoiGianDenLanChayTiep = () => {
+        const now = new Date();
+        const target = new Date(now);
+        target.setHours(0, 5, 0, 0);
+        if (target <= now) target.setDate(target.getDate() + 1);
+        return target - now;
+    };
+
+    const chayDinhKy = () => {
+        chayKiemTraQuaHan();
+        setTimeout(chayDinhKy, 24 * 60 * 60 * 1000); // 24h sau chay lai
+    };
+
+    setTimeout(chayDinhKy, tinhThoiGianDenLanChayTiep());
+    console.log(`[CRON] Kiem tra qua han se chay luc 00:05 moi ngay`);
 });

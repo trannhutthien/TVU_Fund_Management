@@ -11,19 +11,19 @@ const CongNoModel = {
         AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')
     `);
 
-    // Cong no cho vay — SUM con lai tu lichtrano chua tra het
+    // Cong no cho vay — SUM con lai tu lichtrano chua tra het (bao gom lai phat)
     const [[duNoVay]] = await pool.query(`
       SELECT COALESCE(SUM(
         CASE 
           WHEN lt.trangthai = 'Da tra' THEN 0
-          WHEN lt.trangthai = 'Tra mot phan' THEN (lt.sotiengocphaitra + lt.sotienlaiphaitra) - COALESCE(lt.sotienthuctra, 0)
-          ELSE lt.sotiengocphaitra + lt.sotienlaiphaitra
+          WHEN lt.trangthai = 'Tra mot phan' THEN (lt.sotiengocphaitra + lt.sotienlaiphaitra + lt.sotienlaiphat) - COALESCE(lt.sotienthuctra, 0)
+          ELSE lt.sotiengocphaitra + lt.sotienlaiphaitra + lt.sotienlaiphat
         END
       ), 0) AS tongDuNoVay
       FROM lichtrano lt
       INNER JOIN hopdongvayvon hd ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
       INNER JOIN yeucauhotro yc ON hd.yeucauhotro_id = yc.yeucauhotro_id
-      WHERE hd.trangthai = 'Dang thuc hien'
+      WHERE hd.trangthai IN ('Dang thuc hien', 'Qua han')
         AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')
     `);
 
@@ -35,9 +35,9 @@ const CongNoModel = {
         AND gd.trangthai = 'Thanh cong'
     `);
 
-    // 3. Dang qua han — SUM tien cac ky qua han (cho vay)
+    // 3. Dang qua han — SUM tien cac ky qua han (bao gom lai phat)
     const [[quaHanVay]] = await pool.query(`
-      SELECT COALESCE(SUM(lt.sotiengocphaitra + lt.sotienlaiphaitra - COALESCE(lt.sotienthuctra, 0)), 0) AS tienQuaHan
+      SELECT COALESCE(SUM(lt.sotiengocphaitra + lt.sotienlaiphaitra + lt.sotienlaiphat - COALESCE(lt.sotienthuctra, 0)), 0) AS tienQuaHan
       FROM lichtrano lt
       INNER JOIN hopdongvayvon hd ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
       WHERE lt.trangthai = 'Qua han'
@@ -59,12 +59,25 @@ const CongNoModel = {
         AND lt.trangthai IN ('Qua han', 'Tra mot phan')
     `);
 
+    // 6. Tong tien lai phat chua thu
+    const [[tongLaiPhat]] = await pool.query(`
+      SELECT COALESCE(SUM(
+        CASE
+          WHEN lt.trangthai = 'Da tra' THEN 0
+          ELSE lt.sotienlaiphat
+        END
+      ), 0) AS tongLaiPhat
+      FROM lichtrano lt
+      WHERE lt.sotienlaiphat > 0
+    `);
+
     return {
       tongDuNo: Number(duNo.tongDuNo) + Number(duNoVay.tongDuNoVay),
       daThuHoi: Number(daThu.daThuHoi),
       dangQuaHan: Number(quaHanVay.tienQuaHan),
       soHoSoQuaHan: Number(soHSQuaHan.soHoSo),
       choXacNhan: Number(choXacNhan.soKy),
+      tongLaiPhat: Number(tongLaiPhat.tongLaiPhat),
     };
   },
 
@@ -74,7 +87,7 @@ const CongNoModel = {
 
     // Base conditions on hopdongvayvon + yeucauhotro
     const baseConditions = [
-      "hd.trangthai = 'Dang thuc hien'",
+      "hd.trangthai IN ('Dang thuc hien', 'Qua han')",
       "yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')"
     ];
 
@@ -146,14 +159,21 @@ const CongNoModel = {
         q.quy_id,
         q.tenquy,
         q.sodu AS quy_sodu,
-        -- Tong no (sum of remaining debt across all periods)
+        -- Tong no (bao gom goc + lai + lai phat)
         COALESCE(SUM(
           CASE
             WHEN lt.trangthai = 'Da tra' THEN 0
-            WHEN lt.trangthai = 'Tra mot phan' THEN (lt.sotiengocphaitra + lt.sotienlaiphaitra) - COALESCE(lt.sotienthuctra, 0)
-            ELSE lt.sotiengocphaitra + lt.sotienlaiphaitra
+            WHEN lt.trangthai = 'Tra mot phan' THEN (lt.sotiengocphaitra + lt.sotienlaiphaitra + lt.sotienlaiphat) - COALESCE(lt.sotienthuctra, 0)
+            ELSE lt.sotiengocphaitra + lt.sotienlaiphaitra + lt.sotienlaiphat
           END
         ), 0) AS tongNo,
+        -- Tong tien lai phat
+        COALESCE(SUM(
+          CASE
+            WHEN lt.trangthai = 'Da tra' THEN 0
+            ELSE lt.sotienlaiphat
+          END
+        ), 0) AS tongLaiPhat,
         -- So ky qua han
         SUM(CASE WHEN lt.trangthai = 'Qua han' THEN 1 ELSE 0 END) AS kyQuaHan,
         -- So ky cho xac nhan
@@ -200,6 +220,7 @@ const CongNoModel = {
         lt.ngaydenhan,
         lt.sotiengocphaitra,
         lt.sotienlaiphaitra,
+        lt.sotienlaiphat,
         lt.ngaythuctra,
         lt.sotienthuctra,
         lt.trangthai,
