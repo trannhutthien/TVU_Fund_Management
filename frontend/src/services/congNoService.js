@@ -3,6 +3,7 @@ import api from './api';
 const congNoService = {
   getTongQuan: () => api.get('/cong-no/tong-quan'),
   getDanhSach: (params) => api.get('/cong-no/danh-sach', { params }),
+  getDanhSachKyTraNo: (hopdongvayvonId) => api.get(`/cong-no/ky-tra-no/${hopdongvayvonId}`),
   getChiTiet: (yeucauhotroId) => api.get(`/cong-no/chi-tiet/${yeucauhotroId}`),
   confirmPayment: (lichtranoId, data) => api.put(`/cong-no/xac-nhan/${lichtranoId}`, data),
   rejectPayment: (lichtranoId, data) => api.put(`/cong-no/tu-choi/${lichtranoId}`, data),

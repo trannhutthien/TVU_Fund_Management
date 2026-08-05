@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getTongQuan,
   getDanhSach,
+  getDanhSachKyTraNo,
   getChiTiet,
   confirmPayment,
   rejectPayment,
@@ -22,6 +23,9 @@ router.get('/tong-quan', protect, authorizeRoles(1, 2, 3, 5), getTongQuan);
 
 // GET /api/cong-no/danh-sach — Danh sach ky tra no (all roles)
 router.get('/danh-sach', protect, authorizeRoles(1, 2, 3, 5), getDanhSach);
+
+// GET /api/cong-no/ky-tra-no/:hopdongvayvonId — Danh sach ky tra no cua hop dong (all roles)
+router.get('/ky-tra-no/:hopdongvayvonId', protect, authorizeRoles(1, 2, 3, 5), getDanhSachKyTraNo);
 
 // GET /api/cong-no/chi-tiet/:yeucauhotroId — Chi tiet hop dong (all roles)
 router.get('/chi-tiet/:yeucauhotroId', protect, authorizeRoles(1, 2, 3, 5), getChiTiet);

@@ -25,6 +25,17 @@ export const getDanhSach = async (req, res) => {
   }
 };
 
+export const getDanhSachKyTraNo = async (req, res) => {
+  try {
+    const { hopdongvayvonId } = req.params;
+    const data = await CongNoModel.getDanhSachKyTraNo(parseInt(hopdongvayvonId));
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('Loi getDanhSachKyTraNo:', error);
+    return res.status(500).json({ success: false, message: 'Loi server' });
+  }
+};
+
 export const getChiTiet = async (req, res) => {
   try {
     const { yeucauhotroId } = req.params;

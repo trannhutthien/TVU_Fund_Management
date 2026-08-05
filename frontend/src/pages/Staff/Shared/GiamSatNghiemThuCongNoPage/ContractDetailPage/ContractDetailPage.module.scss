@@ -1,0 +1,352 @@
+.page {
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+// ── Header ──
+.header {
+  margin-bottom: 24px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 12px;
+
+  &:hover {
+    border-color: var(--color-primary, #3b6ff5);
+    color: var(--color-primary, #3b6ff5);
+  }
+}
+
+.headerTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerIcon {
+  color: var(--color-primary, #3b6ff5);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+// ── Loading / Empty ──
+.loadingBox,
+.emptyBox {
+  text-align: center;
+  padding: 60px 20px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-style: italic;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+// ── Info Card ──
+.infoCard {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.infoValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+// ── Summary Row ──
+.summaryRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.summaryCard {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summaryLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.summaryValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.textRed {
+  color: #dc2626 !important;
+}
+
+.textGreen {
+  color: #16a34a !important;
+}
+
+.textPurple {
+  color: #7c3aed !important;
+}
+
+// ── Table ──
+.tableWrap {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.tableTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  padding: 16px 20px 0;
+  margin: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  thead {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+
+    th {
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #64748b;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.1s;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: #f8fafc;
+      }
+    }
+
+    td {
+      padding: 10px 12px;
+      color: #334155;
+      vertical-align: middle;
+    }
+  }
+}
+
+.rowOverdue {
+  background: rgba(220, 38, 38, 0.02) !important;
+}
+
+.cellBold {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.cellCenter {
+  text-align: center;
+}
+
+.cellDate {
+  white-space: nowrap;
+}
+
+.cellAmount {
+  font-weight: 700;
+  font-family: 'Roboto Mono', monospace;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.kyText {
+  font-weight: 600;
+  color: #334155;
+}
+
+.textRed {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.loadingCell,
+.emptyCell {
+  text-align: center;
+  padding: 40px 12px !important;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+// ── Badges ──
+.badgeCol {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ttBadge,
+.xnBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  width: fit-content;
+}
+
+// ── File link ──
+.fileLink {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-primary, #3b6ff5);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.noFile {
+  font-size: 12px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+// ── Action buttons ──
+.actionCol {
+  display: flex;
+  gap: 6px;
+}
+
+.duyetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 5px;
+  background: rgba(22, 163, 74, 0.06);
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(22, 163, 74, 0.12);
+    border-color: rgba(22, 163, 74, 0.5);
+  }
+}
+
+.nhacBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  border-radius: 5px;
+  background: rgba(217, 119, 6, 0.06);
+  color: #d97706;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(217, 119, 6, 0.12);
+    border-color: rgba(217, 119, 6, 0.5);
+  }
+}
+
+@media (max-width: 768px) {
+  .summaryRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tableWrap {
+    overflow-x: auto;
+  }
+}

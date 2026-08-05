@@ -69,76 +69,73 @@ const CongNoModel = {
   },
 
   async getDanhSach({ trangthaiKy = '', loaiHotro = '', quyId = '', tuNgay = '', denNgay = '', search = '', page = 1, limit = 20 }) {
-    const conditions = [];
+    const havingConditions = [];
     const params = [];
 
-    // Only active contracts
-    conditions.push("hd.trangthai = 'Dang thuc hien'");
-    conditions.push("yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')");
+    // Base conditions on hopdongvayvon + yeucauhotro
+    const baseConditions = [
+      "hd.trangthai = 'Dang thuc hien'",
+      "yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')"
+    ];
 
-    if (trangthaiKy) {
-      conditions.push('lt.trangthai = ?');
-      params.push(trangthaiKy);
-    }
     if (loaiHotro) {
-      conditions.push('yc.loaihotro = ?');
+      baseConditions.push('yc.loaihotro = ?');
       params.push(loaiHotro);
     }
     if (quyId) {
-      conditions.push('yc.quy_id = ?');
+      baseConditions.push('yc.quy_id = ?');
       params.push(parseInt(quyId));
     }
-    if (tuNgay) {
-      conditions.push('lt.ngaydenhan >= ?');
-      params.push(tuNgay);
-    }
-    if (denNgay) {
-      conditions.push('lt.ngaydenhan <= ?');
-      params.push(denNgay);
-    }
     if (search) {
-      conditions.push('(nd.hoten LIKE ? OR nd.email LIKE ?)');
+      baseConditions.push('(nd.hoten LIKE ? OR nd.email LIKE ?)');
       params.push(`%${search}%`, `%${search}%`);
     }
 
-    const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+    // Period-level filters for HAVING (filter contracts that have at least one matching period)
+    if (trangthaiKy) {
+      havingConditions.push('SUM(CASE WHEN lt.trangthai = ? THEN 1 ELSE 0 END) > 0');
+      params.push(trangthaiKy);
+    }
+    if (tuNgay) {
+      havingConditions.push('SUM(CASE WHEN lt.ngaydenhan >= ? THEN 1 ELSE 0 END) > 0');
+      params.push(tuNgay);
+    }
+    if (denNgay) {
+      havingConditions.push('SUM(CASE WHEN lt.ngaydenhan <= ? THEN 1 ELSE 0 END) > 0');
+      params.push(denNgay);
+    }
 
-    // Count
+    const whereClause = 'WHERE ' + baseConditions.join(' AND ');
+    const havingClause = havingConditions.length > 0 ? 'HAVING ' + havingConditions.join(' AND ') : '';
+
+    // Count distinct contracts
     const countQuery = `
-      SELECT COUNT(*) as total
-      FROM lichtrano lt
-      INNER JOIN hopdongvayvon hd ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
-      INNER JOIN yeucauhotro yc ON hd.yeucauhotro_id = yc.yeucauhotro_id
-      INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
-      INNER JOIN quy q ON yc.quy_id = q.quy_id
-      ${whereClause}
+      SELECT COUNT(*) as total FROM (
+        SELECT hd.hopdongvayvon_id
+        FROM hopdongvayvon hd
+        INNER JOIN yeucauhotro yc ON hd.yeucauhotro_id = yc.yeucauhotro_id
+        INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
+        LEFT JOIN lichtrano lt ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
+        ${whereClause}
+        GROUP BY hd.hopdongvayvon_id
+        ${havingClause}
+      ) AS contracts
     `;
     const [[{ total }]] = await pool.query(countQuery, params);
 
-    // Data
+    // Data: group by hopdongvayvon
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const offset = (pageNum - 1) * limitNum;
 
     const dataQuery = `
       SELECT
-        lt.lichtrano_id,
-        lt.kythu,
-        lt.ngaydenhan,
-        lt.sotiengocphaitra,
-        lt.sotienlaiphaitra,
-        lt.ngaythuctra,
-        lt.sotienthuctra,
-        lt.trangthai,
-        lt.trangthaixacnhan,
-        lt.minhchungtrano,
-        lt.ghichuxacnhan,
-        lt.ngayxacnhan,
         hd.hopdongvayvon_id,
         hd.sotienvon,
         hd.laisuatphantram,
         hd.kyhandothang,
         hd.ngaydaohan,
+        hd.trangthai AS hd_trangthai,
         yc.yeucauhotro_id,
         yc.loaihotro,
         yc.lydo AS tieuDe,
@@ -148,27 +145,38 @@ const CongNoModel = {
         nd.sodienthoai AS nguoi_nhan_sdt,
         q.quy_id,
         q.tenquy,
-        q.sodu AS quy_sodu
-      FROM lichtrano lt
-      INNER JOIN hopdongvayvon hd ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
+        q.sodu AS quy_sodu,
+        -- Tong no (sum of remaining debt across all periods)
+        COALESCE(SUM(
+          CASE
+            WHEN lt.trangthai = 'Da tra' THEN 0
+            WHEN lt.trangthai = 'Tra mot phan' THEN (lt.sotiengocphaitra + lt.sotienlaiphaitra) - COALESCE(lt.sotienthuctra, 0)
+            ELSE lt.sotiengocphaitra + lt.sotienlaiphaitra
+          END
+        ), 0) AS tongNo,
+        -- So ky qua han
+        SUM(CASE WHEN lt.trangthai = 'Qua han' THEN 1 ELSE 0 END) AS kyQuaHan,
+        -- So ky cho xac nhan
+        SUM(CASE WHEN lt.trangthaixacnhan = 'Cho xac nhan' AND lt.trangthai IN ('Qua han', 'Tra mot phan') THEN 1 ELSE 0 END) AS kyChoXacNhan,
+        -- So ky da tra
+        SUM(CASE WHEN lt.trangthai = 'Da tra' THEN 1 ELSE 0 END) AS kyDaTra,
+        -- Tong so ky
+        COUNT(*) AS tongSoKy,
+        -- Ngay den han gan nhat
+        MIN(CASE WHEN lt.trangthai != 'Da tra' THEN lt.ngaydenhan END) AS ngayDenHanGanNhat
+      FROM hopdongvayvon hd
       INNER JOIN yeucauhotro yc ON hd.yeucauhotro_id = yc.yeucauhotro_id
       INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
       INNER JOIN quy q ON yc.quy_id = q.quy_id
+      LEFT JOIN lichtrano lt ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
       ${whereClause}
+      GROUP BY hd.hopdongvayvon_id
+      ${havingClause}
       ORDER BY
-        CASE lt.trangthaixacnhan
-          WHEN 'Cho xac nhan' THEN 0
-          WHEN 'Bi tu choi' THEN 1
-          ELSE 2
-        END,
-        CASE lt.trangthai
-          WHEN 'Qua han' THEN 0
-          WHEN 'Tra mot phan' THEN 1
-          WHEN 'Chua den han' THEN 2
-          WHEN 'Da tra' THEN 3
-          ELSE 4
-        END,
-        lt.ngaydenhan ASC
+        -- Priority: contracts with overdue periods first, then by nearest due date
+        SUM(CASE WHEN lt.trangthai = 'Qua han' THEN 1 ELSE 0 END) DESC,
+        MIN(CASE WHEN lt.trangthai != 'Da tra' THEN lt.ngaydenhan END) ASC,
+        hd.ngaydaohan ASC
       LIMIT ? OFFSET ?
     `;
     const [rows] = await pool.query(dataQuery, [...params, limitNum, offset]);
@@ -182,6 +190,29 @@ const CongNoModel = {
         limit: limitNum,
       },
     };
+  },
+
+  async getDanhSachKyTraNo(hopdongvayvonId) {
+    const [rows] = await pool.query(`
+      SELECT
+        lt.lichtrano_id,
+        lt.kythu,
+        lt.ngaydenhan,
+        lt.sotiengocphaitra,
+        lt.sotienlaiphaitra,
+        lt.ngaythuctra,
+        lt.sotienthuctra,
+        lt.trangthai,
+        lt.trangthaixacnhan,
+        lt.minhchungtrano,
+        lt.ghichuxacnhan,
+        lt.ngayxacnhan
+      FROM lichtrano lt
+      WHERE lt.hopdongvayvon_id = ?
+      ORDER BY lt.kythu ASC
+    `, [hopdongvayvonId]);
+
+    return rows;
   },
 
   async getChiTietHopDong(yeucauhotroId) {

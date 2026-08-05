@@ -69,6 +69,7 @@ import PhanBoPage from './pages/Staff/CanBo/PhanBoPage/PhanBoPage'
 import TaoTinTucPage from './pages/Admin/TinTuc/TaoTinTucPage'
 import GiamSatNghiemThuCongNoPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/index.jsx'
 import NghiemThuDetailPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/NghiemThuDetailPage/NghiemThuDetailPage'
+import ContractDetailPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/ContractDetailPage/index.jsx'
 
 
 // Protected Route: Bảo vệ routes cần đăng nhập
@@ -199,6 +200,7 @@ function App() {
             <Route element={<RoleBasedRoute allowedRoles={[1, 2, 3, 5]} redirectTo="/" />}>
               <Route path="/giam-sat" element={<GiamSatNghiemThuCongNoPage />} />
               <Route path="/giam-sat/nghiem-thu/:yeucauhotroId" element={<NghiemThuDetailPage />} />
+              <Route path="/giam-sat/cong-no/:yeucauhotroId" element={<ContractDetailPage />} />
             </Route>
 
 

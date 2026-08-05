@@ -1,26 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
   HiOutlineMagnifyingGlass,
   HiOutlineFunnel,
   HiOutlineArrowPath,
-  HiOutlineCheckCircle,
-  HiOutlineXMark,
-  HiOutlineBellAlert,
+  HiOutlineEye,
 } from 'react-icons/hi2';
 import { formatCurrency } from '@utils/formatters';
 import congNoService from '@services/congNoService';
-import DuyetXacNhanModal from '../DuyetXacNhanModal/index.jsx';
 import styles from './index.module.scss';
-
-const TRANG_THAI_KY_OPTIONS = [
-  { value: '', label: 'Tat ca' },
-  { value: 'Chua den han', label: 'Chua den han' },
-  { value: 'Qua han', label: 'Qua han' },
-  { value: 'Tra mot phan', label: 'Tra mot phan' },
-  { value: 'Da tra', label: 'Da tra' },
-];
 
 const LOAI_HOTRO_OPTIONS = [
   { value: '', label: 'Tat ca' },
@@ -28,29 +18,20 @@ const LOAI_HOTRO_OPTIONS = [
   { value: 'Tai tro co thu hoi', label: 'Co thu hoi' },
 ];
 
-const TRANG_THAI_BADGES = {
-  'Chua den han': { label: 'Chua den han', color: '#64748b', bg: '#f1f5f9' },
-  'Qua han': { label: 'Qua han', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.08)' },
-  'Tra mot phan': { label: 'Tra mot phan', color: '#d97706', bg: 'rgba(217, 119, 6, 0.08)' },
-  'Da tra': { label: 'Da tra', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.08)' },
-};
-
-const XAC_NHAN_BADGES = {
-  'Cho xac nhan': { label: 'Cho xac nhan', color: '#7c3aed', bg: 'rgba(124, 58, 237, 0.08)' },
-  'Da xac nhan': { label: 'Da xac nhan', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.08)' },
-  'Bi tu choi': { label: 'Tu choi', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.08)' },
-};
+const TRANG_THAI_KY_OPTIONS = [
+  { value: '', label: 'Tat ca ky' },
+  { value: 'Qua han', label: 'Co ky qua han' },
+  { value: 'Cho xac nhan', label: 'Co ky cho xac nhan' },
+];
 
 const BangCongNo = ({ userRole }) => {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    trangthaiKy: '', loaiHotro: '', quyId: '', search: '',
+    trangthaiKy: '', loaiHotro: '', search: '',
   });
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0 });
-
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [showDuyetModal, setShowDuyetModal] = useState(false);
 
   const isKeToan = userRole === 2;
 
@@ -69,24 +50,13 @@ const BangCongNo = ({ userRole }) => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleDuyet = (row) => {
-    setSelectedRow(row);
-    setShowDuyetModal(true);
-  };
-
-  const handleReminder = async (row) => {
-    try {
-      await congNoService.sendReminder(row.lichtrano_id);
-      toast.success(`Da gui nhac no toi ${row.nguoi_nhan_ten}`);
-    } catch {
-      toast.error('Khong gui duoc nhac no');
-    }
-  };
-
-  const handleDuyetSuccess = () => {
-    setShowDuyetModal(false);
-    setSelectedRow(null);
-    fetchData(pagination.currentPage);
+  const handleViewDetail = (row) => {
+    navigate(`/giam-sat/cong-no/${row.yeucauhotro_id}`, {
+      state: {
+        hopdongId: row.hopdongvayvon_id,
+        tenNguoiNhan: row.nguoi_nhan_ten,
+      },
+    });
   };
 
   return (
@@ -146,11 +116,11 @@ const BangCongNo = ({ userRole }) => {
               <th>Nguoi nhan</th>
               <th>Quy</th>
               <th>Loai</th>
-              <th>Ky</th>
+              <th>Tien vay</th>
+              <th>Tong no</th>
+              <th>Ky qua han</th>
               <th>Ngay den han</th>
-              <th>So tien phai tra</th>
               <th>Trang thai</th>
-              <th>Minh chung</th>
               {isKeToan && <th>Hanh dong</th>}
             </tr>
           </thead>
@@ -158,15 +128,17 @@ const BangCongNo = ({ userRole }) => {
             {loading ? (
               <tr><td colSpan={isKeToan ? 9 : 8} className={styles.loadingCell}>Dang tai...</td></tr>
             ) : data.length === 0 ? (
-              <tr><td colSpan={isKeToan ? 9 : 8} className={styles.emptyCell}>Khong co ky tra no nao</td></tr>
+              <tr><td colSpan={isKeToan ? 9 : 8} className={styles.emptyCell}>Khong co hop dong cong no nao</td></tr>
             ) : data.map((row) => {
-              const ttBadge = TRANG_THAI_BADGES[row.trangthai] || TRANG_THAI_BADGES['Chua den han'];
-              const xnBadge = XAC_NHAN_BADGES[row.trangthaixacnhan] || XAC_NHAN_BADGES['Cho xac nhan'];
-              const soPhaiTra = Number(row.sotiengocphaitra) + Number(row.sotienlaiphaitra);
-              const isOverdue = row.trangthai === 'Qua han';
+              const hasOverdue = Number(row.kyQuaHan) > 0;
+              const hasPending = Number(row.kyChoXacNhan) > 0;
+              const allPaid = Number(row.kyDaTra) === Number(row.tongSoKy);
+              const ngayDenHan = row.ngayDenHanGanNhat
+                ? new Date(row.ngayDenHanGanNhat).toLocaleDateString('vi-VN')
+                : '--';
 
               return (
-                <tr key={row.lichtrano_id} className={isOverdue ? styles.rowOverdue : ''}>
+                <tr key={row.hopdongvayvon_id} className={hasOverdue ? styles.rowOverdue : ''}>
                   <td>
                     <div className={styles.cellBold}>{row.nguoi_nhan_ten}</div>
                     <div className={styles.cellSub}>{row.nguoi_nhan_email}</div>
@@ -177,57 +149,54 @@ const BangCongNo = ({ userRole }) => {
                       {row.loaihotro === 'Cho vay' ? 'Vay von' : 'Co thu hoi'}
                     </span>
                   </td>
-                  <td className={styles.cellCenter}>
-                    <span className={styles.kyText}>{row.kythu}/{row.kyhandothang}</span>
-                  </td>
-                  <td className={styles.cellDate}>
-                    <span className={isOverdue ? styles.textRed : ''}>
-                      {new Date(row.ngaydenhan).toLocaleDateString('vi-VN')}
+                  <td className={styles.cellAmount}>{formatCurrency(row.sotienvon)}</td>
+                  <td className={styles.cellAmount}>
+                    <span style={{ color: Number(row.tongNo) > 0 ? '#dc2626' : '#16a34a' }}>
+                      {formatCurrency(row.tongNo)}
                     </span>
                   </td>
-                  <td className={styles.cellAmount}>{formatCurrency(soPhaiTra)}</td>
+                  <td className={styles.cellCenter}>
+                    {hasOverdue ? (
+                      <span className={styles.textRed}>{row.kyQuaHan}/{row.tongSoKy}</span>
+                    ) : (
+                      <span>0/{row.tongSoKy}</span>
+                    )}
+                  </td>
+                  <td className={styles.cellDate}>
+                    <span className={hasOverdue ? styles.textRed : ''}>{ngayDenHan}</span>
+                  </td>
                   <td>
                     <div className={styles.badgeCol}>
-                      <span className={styles.ttBadge} style={{ color: ttBadge.color, background: ttBadge.bg }}>
-                        {ttBadge.label}
-                      </span>
-                      <span className={styles.xnBadge} style={{ color: xnBadge.color, background: xnBadge.bg }}>
-                        {xnBadge.label}
-                      </span>
+                      {allPaid ? (
+                        <span className={styles.ttBadge} style={{ color: '#16a34a', background: 'rgba(22, 163, 74, 0.08)' }}>
+                          Da tat toan
+                        </span>
+                      ) : hasOverdue ? (
+                        <span className={styles.ttBadge} style={{ color: '#dc2626', background: 'rgba(22, 38, 38, 0.08)' }}>
+                          Qua han
+                        </span>
+                      ) : hasPending ? (
+                        <span className={styles.ttBadge} style={{ color: '#7c3aed', background: 'rgba(124, 58, 237, 0.08)' }}>
+                          Cho xac nhan
+                        </span>
+                      ) : (
+                        <span className={styles.ttBadge} style={{ color: '#64748b', background: '#f1f5f9' }}>
+                          Dang tra
+                        </span>
+                      )}
                     </div>
-                  </td>
-                  <td className={styles.cellCenter}>
-                    {row.minhchungtrano ? (
-                      <a href={row.minhchungtrano} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
-                        Xem
-                      </a>
-                    ) : (
-                      <span className={styles.noFile}>Chua nop</span>
-                    )}
                   </td>
                   {isKeToan && (
                     <td>
                       <div className={styles.actionCol}>
-                        {row.trangthaixacnhan === 'Cho xac nhan' && row.minhchungtrano && (
-                          <button
-                            type="button"
-                            className={styles.duyetBtn}
-                            onClick={() => handleDuyet(row)}
-                          >
-                            <HiOutlineCheckCircle size={13} />
-                            <span>Duyet</span>
-                          </button>
-                        )}
-                        {row.trangthaixacnhan === 'Cho xac nhan' && !row.minhchungtrano && row.trangthai === 'Qua han' && (
-                          <button
-                            type="button"
-                            className={styles.nhacBtn}
-                            onClick={() => handleReminder(row)}
-                          >
-                            <HiOutlineBellAlert size={13} />
-                            <span>Nhac no</span>
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          className={styles.duyetBtn}
+                          onClick={() => handleViewDetail(row)}
+                        >
+                          <HiOutlineEye size={13} />
+                          <span>Chi tiet</span>
+                        </button>
                       </div>
                     </td>
                   )}
@@ -252,15 +221,6 @@ const BangCongNo = ({ userRole }) => {
             </button>
           ))}
         </div>
-      )}
-
-      {/* Duyet modal */}
-      {showDuyetModal && selectedRow && (
-        <DuyetXacNhanModal
-          data={selectedRow}
-          onConfirm={handleDuyetSuccess}
-          onClose={() => { setShowDuyetModal(false); setSelectedRow(null); }}
-        />
       )}
     </div>
   );
