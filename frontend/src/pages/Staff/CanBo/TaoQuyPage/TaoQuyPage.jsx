@@ -19,6 +19,7 @@ import CurrencyInput from '@components/common/CurrencyInput';
 import { formatCurrencyPlain } from '@utils/formatters';
 import useAuthStore from '@stores/authStore';
 import { createFund, getFundById, updateFund, getAllLoaiQuy } from '@services/fundService';
+import { LOAI_HO_TRO_OPTIONS } from '@constants/loaiHoTro';
 import { uploadService } from '@services/uploadService';
 import api from '@services/api';
 import styles from './TaoQuyPage.module.scss';
@@ -49,6 +50,7 @@ const TRANG_THAI_OPTIONS = [
     loai_dieuhanh: 'Tap trung - Be chung',
     quy_cha_id: '',
     so_dot_giai_ngan: '',
+    loai_hotro: 'Tai tro khong hoan lai',
   };
 
 const buildImageUrl = (path) => {
@@ -146,6 +148,7 @@ const TaoQuyPage = () => {
               ? 'Tap trung - Muc chi'
               : 'Tap trung - Be chung',
             quy_cha_id: fund.quyChaId !== null ? String(fund.quyChaId) : '',
+            loai_hotro: fund.loaiHoTro || 'Tai tro khong hoan lai',
           });
         }
       } catch (err) {
@@ -338,11 +341,12 @@ const TaoQuyPage = () => {
       dieuKienTomTat: form.dieu_kien_tom_tat?.trim() || null,
       soDu: form.so_du === '' ? 0 : Number(form.so_du),
       trangThai: form.trang_thai,
-      nguoiTao: user?.id || null, // Thêm ID người tạo từ user hiện tại
+      nguoiTao: user?.id || null,
       loaiDieuHanh: form.loai_dieuhanh,
       quyChaId: form.loai_dieuhanh === 'Tap trung - Muc chi' ? Number(form.quy_cha_id) : null,
       soDotGiaiNgan: form.so_dot_giai_ngan ? Number(form.so_dot_giai_ngan) : 0,
-      dotGiaiNgan: dotGiaiNgan // Chi tiết các đợt giải ngân
+      dotGiaiNgan: dotGiaiNgan,
+      loaiHoTro: form.loai_hotro || 'Tai tro khong hoan lai',
     };
 
     try {
@@ -506,6 +510,23 @@ const TaoQuyPage = () => {
                 >
                   <option value="Tap trung - Be chung">Quỹ chung (Bể lớn)</option>
                   <option value="Tap trung - Muc chi">Mục chi con (Trích từ bể lớn)</option>
+                </select>
+              </div>
+
+              <div className={styles.col}>
+                <label className={styles.label}>
+                  Loại hình hỗ trợ <span className={styles.required}>*</span>
+                </label>
+                <select
+                  className={styles.select}
+                  value={form.loai_hotro}
+                  onChange={handleChange('loai_hotro')}
+                >
+                  {LOAI_HO_TRO_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 

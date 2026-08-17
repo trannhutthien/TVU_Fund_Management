@@ -61,6 +61,16 @@ const PheDuyetDetailModal = ({ record, onClose }) => {
     'Tu choi cap 3': { status: 'rejected', label: 'Từ chối cấp 3' },
     'Da duyet': { status: 'approved', label: 'Đã duyệt' },
     'Da nhan': { status: 'approved', label: 'Đã nhận' },
+    'Cho giai ngan dot 1': { status: 'processing', label: 'Chờ giải ngân đợt 1' },
+    'Da giai ngan dot 1': { status: 'approved', label: 'Đã giải ngân đợt 1' },
+    'Cho nghiem thu dot 1': { status: 'processing', label: 'Chờ nghiệm thu đợt 1' },
+    'Da nghiem thu dot 1': { status: 'processing', label: 'Đã nghiệm thu đợt 1' },
+    'Cho giai ngan dot 2': { status: 'processing', label: 'Chờ giải ngân đợt 2' },
+    'Cho nghiem thu': { status: 'processing', label: 'Chờ nghiệm thu' },
+    'Da nghiem thu': { status: 'approved', label: 'Đã nghiệm thu' },
+    'Nghiem thu khong dat': { status: 'rejected', label: 'Nghiệm thu không đạt' },
+    'Dang thu hoi no': { status: 'warning', label: 'Đang thu hồi nợ' },
+    'Hoan thanh': { status: 'approved', label: 'Hoàn thành' },
   };
 
   const currentStatus = record.trang_thai_don || record.trang_thai_ktt || 'Cho duyet';
@@ -113,7 +123,7 @@ const PheDuyetDetailModal = ({ record, onClose }) => {
           <div className={styles.summaryCard}>
             <div className={styles.summaryHeader}>
               <h3 className={styles.summaryTitle}>
-                {isYeuCau ? (record.tieu_de || 'Đề xuất xin hỗ trợ quỹ') : (record.ten_nha_tai_tro || 'Khoản tài trợ quỹ')}
+                {isYeuCau ? (record.tieu_de || record.lydo_don || 'Đề xuất xin hỗ trợ quỹ') : (record.ten_nha_tai_tro || 'Khoản tài trợ quỹ')}
               </h3>
               <StatusBadge status={statusInfo.status}>
                 {statusInfo.label}

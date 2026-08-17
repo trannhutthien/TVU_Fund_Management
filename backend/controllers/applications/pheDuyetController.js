@@ -151,6 +151,7 @@ export const getAllPheDuyet = async (req, res) => {
         -- Nếu là đơn hỗ trợ
         yc.sotiendenghi AS so_tien_de_nghi,
         yc.trangthai AS trang_thai_don,
+        yc.tieu_de,
         yc.lydo AS lydo_don,
         yc.ngaynop AS ngay_nop_don,
         sv.hoten AS ten_sinh_vien,

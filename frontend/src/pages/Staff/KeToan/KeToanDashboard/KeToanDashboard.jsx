@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import statisticsService from '@services/statisticsService';
+import congNoService from '@services/congNoService';
 import XacNhanModal from '@pages/Staff/KeToan/KhoanTaiTroPage/XacNhanModal/XacNhanModal';
 import KeToanStatsSection from './sections/KeToanStatsSection';
+import CongNoSection from './sections/CongNoSection';
 import CashFlowChartSection from './sections/CashFlowChartSection';
 import TransactionStatusSection from './sections/TransactionStatusSection';
 import RecentTransactionSection from './sections/RecentTransactionSection';
@@ -28,6 +30,7 @@ const KeToanDashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [fundHealthData, setFundHealthData] = useState([]);
   const [pendingDonations, setPendingDonations] = useState([]);
+  const [congNoData, setCongNoData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(formatLastUpdate());
 
@@ -36,7 +39,7 @@ const KeToanDashboard = () => {
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [summary, cashflow, txStatus, recentTx, fundHealth, pending] =
+      const [summary, cashflow, txStatus, recentTx, fundHealth, pending, congNo] =
         await Promise.all([
           statisticsService.getKeToanSummary().catch(() => null),
           statisticsService.getKeToanCashflow(6).catch(() => []),
@@ -44,6 +47,7 @@ const KeToanDashboard = () => {
           statisticsService.getKeToanRecentTransactions(10).catch(() => []),
           statisticsService.getKeToanFundHealth().catch(() => []),
           statisticsService.getKeToanPendingDonations(5).catch(() => []),
+          congNoService.getTongQuan().catch(() => null),
         ]);
 
       setSummaryData(summary);
@@ -52,6 +56,7 @@ const KeToanDashboard = () => {
       setRecentTransactions(recentTx || []);
       setFundHealthData(fundHealth || []);
       setPendingDonations(pending || []);
+      setCongNoData(congNo);
       setLastUpdate(formatLastUpdate());
     } catch (err) {
       console.error('Lỗi load Kế toán Dashboard:', err);
@@ -89,6 +94,12 @@ const KeToanDashboard = () => {
 
       <div className={styles.content}>
         <KeToanStatsSection data={summaryData} isLoading={isLoading} />
+
+        <CongNoSection
+          summaryData={summaryData}
+          congNoData={congNoData}
+          isLoading={isLoading}
+        />
 
         <div className={styles.chartRow}>
           <CashFlowChartSection data={cashflowData} isLoading={isLoading} />

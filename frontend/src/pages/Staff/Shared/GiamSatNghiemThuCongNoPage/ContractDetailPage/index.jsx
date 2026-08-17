@@ -10,8 +10,10 @@ import {
 } from 'react-icons/hi2';
 import { useAuth } from '@context/AuthContext';
 import congNoService from '@services/congNoService';
+import thuHoiService from '@services/thuHoiService';
 import { formatCurrency } from '@utils/formatters';
 import DuyetXacNhanModal from '../tabs/CongNoTab/DuyetXacNhanModal/index.jsx';
+import DuyetXacNhanThuHoiModal from './components/DuyetXacNhanThuHoiModal/index.jsx';
 import styles from './ContractDetailPage.module.scss';
 
 const TRANG_THAI_BADGES = {
@@ -39,6 +41,9 @@ const ContractDetailPage = () => {
 
   const [selectedRow, setSelectedRow] = useState(null);
   const [showDuyetModal, setShowDuyetModal] = useState(false);
+  const [recoveryData, setRecoveryData] = useState(null);
+  const [showThuHoiModal, setShowThuHoiModal] = useState(false);
+  const [selectedLanNop, setSelectedLanNop] = useState(null);
 
   const userRole = user?.roleId || user?.role_id || user?.vaiTro || user?.role?.id;
   const isKeToan = userRole === 2;
@@ -77,6 +82,16 @@ const ContractDetailPage = () => {
     }
   }, [yeucauhotroId]);
 
+  const fetchRecoveryData = useCallback(async () => {
+    if (!yeucauhotroId) return;
+    try {
+      const res = await thuHoiService.getRecoveryDetailByYeuCauHoTro(yeucauhotroId);
+      setRecoveryData(res.data?.data || null);
+    } catch {
+      // Silent fail — don't have dieukhoanthuhoi
+    }
+  }, [yeucauhotroId]);
+
   useEffect(() => {
     fetchData();
     fetchContractInfo();
@@ -104,6 +119,37 @@ const ContractDetailPage = () => {
     setShowDuyetModal(false);
     setSelectedRow(null);
     fetchData();
+  };
+
+  const handleDuyetThuHoi = (lanNop) => {
+    setSelectedLanNop(lanNop);
+    setShowThuHoiModal(true);
+  };
+
+  const handleDuyetThuHoiSuccess = async (lanNopId, data) => {
+    try {
+      await thuHoiService.confirmPayment(lanNopId, data);
+      toast.success('Xac nhan thanh cong');
+      setShowThuHoiModal(false);
+      setSelectedLanNop(null);
+      fetchRecoveryData();
+      fetchData();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Loi xac nhan');
+    }
+  };
+
+  const handleRejectThuHoi = async (lanNopId, data) => {
+    try {
+      await thuHoiService.rejectPayment(lanNopId, data);
+      toast.success('Da tu choi');
+      setShowThuHoiModal(false);
+      setSelectedLanNop(null);
+      fetchRecoveryData();
+      fetchData();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Loi tu choi');
+    }
   };
 
   // Calculate summary from lichTraNo
@@ -324,6 +370,136 @@ const ContractDetailPage = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* ═══ TAI TRO CO THU HOI / DON VAY THAT BAI NGHIEM THU VIEW ═══ */}
+            {recoveryData && (recoveryData.loaihotro === 'Tai tro co thu hoi' || (recoveryData.loaihotro === 'Cho vay' && recoveryData.trangthaiDon === 'Dang thu hoi no')) && (
+              <>
+                {/* Recovery Info Card */}
+                <div className={styles.infoCard}>
+                  <div className={styles.infoGrid}>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Nguoi nhan</span>
+                      <span className={styles.infoValue}>{recoveryData.nguoiNhanTen}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Email</span>
+                      <span className={styles.infoValue}>{recoveryData.nguoiNhanEmail}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Quy</span>
+                      <span className={styles.infoValue}>{recoveryData.tenquy}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Muc thu hoi</span>
+                      <span className={styles.infoValue}>{formatCurrency(recoveryData.mucthuhoi)}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Thoi han hoan tra</span>
+                      <span className={styles.infoValue}>{recoveryData.thoihanhoantra_thang} thang</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Da thu</span>
+                      <span className={styles.infoValue} style={{ color: '#16a34a' }}>{formatCurrency(recoveryData.sotiendadathu)}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Con lai</span>
+                      <span className={styles.infoValue} style={{ color: recoveryData.mucthuhoi - recoveryData.sotiendadathu > 0 ? '#dc2626' : '#16a34a' }}>
+                        {formatCurrency(recoveryData.mucthuhoi - recoveryData.sotiendadathu)}
+                      </span>
+                    </div>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Trang thai</span>
+                      <span className={styles.infoValue}>{recoveryData.trangthai}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className={styles.summaryRow}>
+                  <div className={styles.summaryCard}>
+                    <span className={styles.summaryLabel}>Muc thu hoi</span>
+                    <span className={styles.summaryValue}>{formatCurrency(recoveryData.mucthuhoi)}</span>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <span className={styles.summaryLabel}>Da thu</span>
+                    <span className={`${styles.summaryValue} ${styles.textGreen}`}>{formatCurrency(recoveryData.sotiendadathu)}</span>
+                  </div>
+                  <div className={styles.summaryCard}>
+                    <span className={styles.summaryLabel}>Con lai</span>
+                    <span className={`${styles.summaryValue} ${(recoveryData.mucthuhoi - recoveryData.sotiendadathu) > 0 ? styles.textRed : styles.textGreen}`}>
+                      {formatCurrency(recoveryData.mucthuhoi - recoveryData.sotiendadathu)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Payment history table */}
+                <div className={styles.tableWrap}>
+                  <h3 className={styles.tableTitle}>Lich su nop tien thu hoi</h3>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>STT</th>
+                        <th>Ngay nop</th>
+                        <th>So tien</th>
+                        <th>Minh chung</th>
+                        <th>Trang thai</th>
+                        {isKeToan && <th>Hanh dong</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(!recoveryData.lichSuNopTien || recoveryData.lichSuNopTien.length === 0) ? (
+                        <tr>
+                          <td colSpan={isKeToan ? 6 : 5} className={styles.emptyCell}>
+                            Chua co lan nop tien nao
+                          </td>
+                        </tr>
+                      ) : recoveryData.lichSuNopTien.map((lan, index) => {
+                        const xnBadge = XAC_NHAN_BADGES[lan.trangthaixacnhan] || XAC_NHAN_BADGES['Cho xac nhan'];
+                        return (
+                          <tr key={lan.lan_nop_id}>
+                            <td className={styles.cellCenter}>{index + 1}</td>
+                            <td className={styles.cellDate}>
+                              {lan.ngaytao ? new Date(lan.ngaytao).toLocaleDateString('vi-VN') : '--'}
+                            </td>
+                            <td className={styles.cellAmount}>{formatCurrency(lan.sotien)}</td>
+                            <td className={styles.cellCenter}>
+                              {lan.minhchungtrano ? (
+                                <a href={lan.minhchungtrano} target="_blank" rel="noopener noreferrer" className={styles.fileLink}>
+                                  Xem
+                                </a>
+                              ) : (
+                                <span className={styles.noFile}>Chua nop</span>
+                              )}
+                            </td>
+                            <td>
+                              <span className={styles.xnBadge} style={{ color: xnBadge.color, background: xnBadge.bg }}>
+                                {xnBadge.label}
+                              </span>
+                            </td>
+                            {isKeToan && (
+                              <td>
+                                <div className={styles.actionCol}>
+                                  {lan.trangthaixacnhan === 'Cho xac nhan' && lan.minhchungtrano && (
+                                    <button
+                                      type="button"
+                                      className={styles.duyetBtn}
+                                      onClick={() => handleDuyetThuHoi(lan)}
+                                    >
+                                      <HiOutlineCheckCircle size={13} />
+                                      <span>Duyet</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </>
         )}
 
@@ -341,6 +517,16 @@ const ContractDetailPage = () => {
           data={selectedRow}
           onConfirm={handleDuyetSuccess}
           onClose={() => { setShowDuyetModal(false); setSelectedRow(null); }}
+        />
+      )}
+
+      {/* Duyet thu hoi modal */}
+      {showThuHoiModal && selectedLanNop && (
+        <DuyetXacNhanThuHoiModal
+          data={selectedLanNop}
+          onConfirm={handleDuyetThuHoiSuccess}
+          onReject={handleRejectThuHoi}
+          onClose={() => { setShowThuHoiModal(false); setSelectedLanNop(null); }}
         />
       )}
     </div>

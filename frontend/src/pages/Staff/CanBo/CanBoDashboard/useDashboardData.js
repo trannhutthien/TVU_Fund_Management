@@ -19,6 +19,11 @@ const isProcessing = (status) => [
   'Da duyet cap 3',
   'Dang xu ly',
   'Cho giai ngan',
+  'Cho giai ngan dot 1',
+  'Cho nghiem thu',
+  'Cho nghiem thu dot 1',
+  'Cho giai ngan dot 2',
+  'Da nghiem thu dot 1',
 ].includes(status);
 
 const isRejected = (status) => [
@@ -26,10 +31,16 @@ const isRejected = (status) => [
   'Tu choi cap 1',
   'Tu choi cap 2',
   'Tu choi cap 3',
+  'Nghiem thu khong dat',
+  'Dang thu hoi no',
 ].includes(status);
 
 const isApproved = (status) => [
   'Da giai ngan',
+  'Da giai ngan dot 1',
+  'Da giai ngan dot 2',
+  'Da nghiem thu',
+  'Da nghiem thu dot 1',
   'Da duyet',
   'Hoan thanh',
 ].includes(status);
@@ -188,7 +199,7 @@ const useDashboardData = (selectedYear) => {
       const bucket = result[d.getMonth()];
       const amount = Number(a.soTienYeuCau || 0);
       bucket.tong += amount;
-      if (isApproved(a.trangThai) || a.trangThai === 'Cho giai ngan' || a.trangThai === 'Da duyet cap 3') {
+      if (isApproved(a.trangThai) || a.trangThai === 'Cho giai ngan' || a.trangThai === 'Cho giai ngan dot 1' || a.trangThai === 'Cho giai ngan dot 2' || a.trangThai === 'Da duyet cap 3') {
         bucket.daDuyet += amount;
       }
     });

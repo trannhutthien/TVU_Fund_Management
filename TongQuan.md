@@ -48,24 +48,28 @@ Dự án được xây dựng theo kiến trúc client-server tiêu chuẩn vớ
 |-----|----------|----------|----------------|
 | **Frontend** | React | 18.x | Thư viện UI phổ biến nhất, component-based, ecosystem lớn |
 | **Build Tool** | Vite | 6.x | nhanh hơn Webpack 10-100x, HMR tức thì, ES modules native |
-| **Routing** | React Router | 6.x | Standard routing cho React SPA, nested routes, lazy loading |
+| **Routing** | React Router | 7.x | Standard routing cho React SPA, nested routes, lazy loading |
 | **State Management** | Zustand | 5.x | Nhẹ (~1KB), API đơn giản, không cần boilerplate |
 | **UI Library** | Ant Design | 5.x | Component phong phú, hỗ trợ tiếng Việt, responsive |
-| **Backend** | Node.js + Express | 18.x / 4.x | Non-blocking I/O, JavaScript đồng nhất full-stack, ecosystem npm lớn |
+| **Form Management** | React Hook Form + Yup | 7.x / 1.x | Form validation hiệu suất cao, schema-based |
+| **Server State** | @tanstack/react-query | 5.x | Cache, refetch, optimistic updates cho API calls |
+| **Notifications** | react-toastify | 11.x | Toast notification nhẹ, tùy biến cao |
+| **Sanitization** | DOMPurify | 3.x | Sanitize HTML content chống XSS |
+| **Backend** | Node.js + Express | 18.x / 5.x | Non-blocking I/O, JavaScript đồng nhất full-stack, ecosystem npm lớn |
 | **ORM/Query** | MySQL2 (promise) | 3.x | Native queries cho performance, hỗ trợ async/await |
 | **Database** | MySQL | 8.x (InnoDB) | ACID compliance, relational integrity, phổ biến trong giáo dục |
 | **Auth** | JWT (jsonwebtoken) | 9.x | Stateless, scalable, tiêu chuẩn REST API |
-| **File Upload** | Multer | 1.x | Xử lý multipart/form-data, storage linh hoạt |
+| **File Upload** | Multer | 2.x | Xử lý multipart/form-data, storage linh hoạt |
 | **Report Export** | Docxtemplater + ExcelJS | — | Tạo báo cáo DOCX và XLSX từ template |
-| **Charts** | Recharts | 2.x | Thư viện chart React declarative, nhẹ và tùy biến cao |
+| **Charts** | Recharts | 3.x | Thư viện chart React declarative, nhẹ và tùy biến cao |
 
 ### 2.2 Chi Tiết Frontend
 
 **Cấu trúc thư mục:**
 ```
 frontend/src/
-├── components/         # 19 nhóm component (common, layout)
-│   ├── common/         # 19 component tái sử dụng
+├── components/         # 26 nhóm component (common, layout)
+│   ├── common/         # 26 component tái sử dụng
 │   │   ├── ApplicationStatusStepper/   # Hiển thị tiến trình duyệt đơn
 │   │   ├── Card/                       # FundCard, FeatureCard, StatCard
 │   │   ├── ChucVuCard/                 # Card vị trí tổ chức
@@ -85,8 +89,9 @@ frontend/src/
 │   │   ├── KeToan/     # KeToanDashboard, KeToanGiaiNganPage...
 │   │   └── CanBo/      # CanBoDashboard, CanBoQuyListPage...
 │   └── User/           # Trang người dùng (Dashboard, ProfilePage)
-├── services/           # 15 service files (API calls)
-├── hooks/              # usePermission.js (custom hook phân quyền)
+├── services/           # 25 service files (API calls)
+├── context/            # AuthContext.jsx, NotificationContext.jsx
+├── hooks/              # usePermission.js, useAuth.js (custom hooks)
 ├── constants/          # roles.js, applicationStatus.js, loaiHoTro.js, loaiHoTroInfo.js...
 ├── stores/             # Zustand stores (auth, navigation)
 └── App.jsx             # Route configuration chính
@@ -108,27 +113,30 @@ backend/
 ├── config/
 │   ├── db.js                    # MySQL connection pool (connectionLimit: 10)
 │   ├── system_settings.json     # Cài đặt hệ thống (tên trường, lãi suất tham chiếu...)
-│   └── page_permissions.json    # Phân quyền trang theo vai trò (26 trang)
+│   └── page_permissions.json    # Phân quyền trang theo vai trò (30 trang)
 ├── middleware/
 │   ├── authMiddleware.js        # JWT verification + maintenance mode check
 │   ├── rolesMiddleware.js       # Role-based access control (hardcoded IDs)
 │   ├── auditLogMiddleware.js    # Auto-log mọi POST/PUT/PATCH/DELETE
 │   └── rateLimiter.js           # In-memory IP-based rate limiting
-├── models/                      # 19 model files
+├── models/                      # 21 model files
 │   ├── auth/                    # UserModel.js, NguoiDungModel.js
 │   ├── funds/                   # FundModel.js, BankAccountModel.js, PhanBoNganSachModel.js...
 │   ├── donations/               # DonationModel.js, DonorModel.js
 │   ├── applications/            # ApplicationModel.js, PheDuyetModel.js, NghiemThuModel.js...
 │   ├── transactions/            # TransactionModel.js
 │   ├── reports/                 # DuToanModel.js
+│   ├── finance/                 # CongNoModel.js
+│   ├── common/                  # ThongBaoModel.js
 │   ├── system/                  # ChucVuModel.js
 │   ├── news/                    # NewsModel.js
 │   ├── showcase/                # StudentShowcaseModel.js
 │   ├── testimonials/            # DanhGiaModel.js
 │   └── guest/                   # GuestModel.js
-├── controllers/                 # 20 controller files
-├── routes/                      # 22 route files
-├── server.js                    # Entry point, mount tất cả routes
+├── controllers/                 # 24 controller files
+├── routes/                      # 27 route files
+├── services/                    # emailService.js, laiPhatService.js
+├── server.js                    # Entry point, mount tất cả routes + cron jobs
 └── uploads/                     # File storage (PDF, images)
 ```
 
@@ -145,10 +153,10 @@ backend/
 **Tên database:** `tvu_fund_management`
 **Engine:** InnoDB (hỗ trợ transactions, foreign keys)
 **Charset:** utf8mb4 (hỗ trợ tiếng Việt đầy đủ)
-**Số lượng bảng:** 25 bảng
+**Số lượng bảng:** 27 bảng
 **Kết nối:** localhost:3306 (local) hoặc Aiven Cloud (production)
 
-**25 Bảng Chính:**
+**27 Bảng Chính:**
 
 | # | Bảng | Mô Tả |
 |---|------|-------|
@@ -156,7 +164,7 @@ backend/
 | 2 | `donvihoc` | Đơn vị học: khoa, ngành, lớp |
 | 3 | `taikhoannganhang` | Tài khoản ngân hàng (trường + cá nhân) |
 | 4 | `nguoidung` | Trung tâm người dùng — hub cho mọi mối quan hệ |
-| 5 | `loaiquy` | 7 loại quỹ: Từ thiện, Học bổng, Y tế, Môi trường, Khác, Thi đua, Phát triển |
+| 5 | `loaiquy` | 9 loại quỹ: Phát triển, Học bổng, Nghiên cứu, Vay vốn, Khởi nghiệp, Phong trào, Xã hội, CSVC, Đào tạo |
 | 6 | `quy` | Quỹ tài chính — self-referential (quỹ cha → quỹ con) |
 | 7 | `nhataitro` | Nhà tài trợ: cá nhân, tổ chức, doanh nghiệp, đối tác |
 | 8 | `khoantaitro` | Khoản tài trợ từ nhà tài trợ vào quỹ |
@@ -175,8 +183,10 @@ backend/
 | 21 | `tintuc` | Tin tức & sự kiện |
 | 22 | `danhgia` | Cảm nhận sinh viên (đang corrupt) |
 | 23 | `chucvuquy` | Vị trí tổ chức quỹ |
-| 24 | `guest_yeucauhotro` | Staging cho đơn khách (tạm lưu trước OTP) |
-| 25 | `guest_khoantaitro` | Staging cho tài trợ khách |
+| 24 | `guest_tracking` | Tracking đơn khách (thay thế 2 bảng cũ, minimal info) |
+| 25 | `thong_bao` | Thong bao trong he thong (bell notification) |
+| 26 | `chitiet_dutoan` | Chi tiet khoan chi cua de xuat du toan |
+| 27 | `dexuatchuongtrinh` | Đề xuất chương trình mới từ nhà tài trợ (3-cấp duyệt) |
 
 ---
 
@@ -187,9 +197,9 @@ backend/
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                      FRONTEND (React)                    │
-│  Vite + React Router v6 + Zustand + Ant Design          │
+│  Vite + React Router v7 + Zustand + Ant Design          │
 │  Cổng: 5173 (dev)                                       │
-│  19 component groups, 15 services, 4 dashboards         │
+│  26 component groups, 25 services, 4 dashboards         │
 └───────────────────────┬─────────────────────────────────┘
                         │ HTTP/REST API (JSON)
                         │ JWT Bearer Token Auth
@@ -197,14 +207,14 @@ backend/
 │                   BACKEND (Node.js/Express)              │
 │  REST API + JWT Auth + MySQL2 + Multer + Docxtemplater  │
 │  Cổng: 5001                                            │
-│  22 route files, 20 controllers, 19 models              │
-│  Auto audit logging + Rate limiting                     │
+│  28 route files, 24 controllers, 21 models              │
+│  Auto audit logging + Rate limiting + Cron jobs         │
 └───────────────────────┬─────────────────────────────────┘
                         │ MySQL2 Promise Pool
                         │ connectionLimit: 10
 ┌───────────────────────▼─────────────────────────────────┐
 │               DATABASE (MySQL InnoDB)                    │
-│  tvu_fund_management — 25 bảng, charset utf8mb4        │
+│  tvu_fund_management — 26 bảng, charset utf8mb4        │
 │  Localhost:3306 hoặc Aiven Cloud                        │
 │  ACID transactions, row-level locking                   │
 └─────────────────────────────────────────────────────────┘
@@ -212,28 +222,28 @@ backend/
 
 ### 3.2 Cấu Trúc Route API
 
-Hệ thống có 26 prefix route chính, mỗi prefix xử lý một nhóm nghiệp vụ:
+Hệ thống có 28 prefix route chính, mỗi prefix xử lý một nhóm nghiệp vụ:
 
 | Prefix | Mô Tả | Số Endpoint |
 |--------|-------|------------|
 | `/api/auth` | Xác thực (đăng nhập, đăng ký, JWT) | 9 |
-| `/api/users` | Quản lý người dùng | 8 |
+| `/api/users` | Quản lý người dùng | 9 |
 | `/api/roles` | Quản lý vai trò | 4 |
-| `/api/funds` | Quản lý quỹ | 7 |
+| `/api/funds` | Quản lý quỹ | 8 |
 | `/api/funds/allocate` | Phân bổ ngân sách | 6 |
 | `/api/donations` | Quản lý khoản tài trợ | 10 |
 | `/api/donors` | Quản lý nhà tài trợ | 7 |
-| `/api/transactions` | Quản lý giao dịch | 8 |
-| `/api/applications` | Quản lý đơn đề nghị | 9 |
+| `/api/transactions` | Quản lý giao dịch | 12 |
+| `/api/applications` | Quản lý đơn đề nghị | 10 |
 | `/api/pheduyet` | Lịch sử phê duyệt | 4 |
-| `/api/nghiem-thu` | Nghiệm thu | 3 |
-| `/api/statistics` | Thống kê, báo cáo | 14 |
+| `/api/nghiem-thu` | Nghiệm thu | 6 |
+| `/api/statistics` | Thống kê, báo cáo | 16 |
 | `/api/bao-cao` | Xuất báo cáo DOCX/XLSX | 1 |
 | `/api/disbursement-rounds` | Đợt giải ngân | 4 |
-| `/api/du-toan` | Ngân sách hoạt động | 3 |
+| `/api/du-toan` | Ngân sách hoạt động (2-cap duyet) | 6 |
 | `/api/bank-accounts` | Tài khoản ngân hàng | 9 |
 | `/api/upload` | Tải file lên | 8 |
-| `/api/news` | Tin tức | 10 |
+| `/api/news` | Tin tức | 11 |
 | `/api/student-showcase` | Sinh viên nổi bật | 7 |
 | `/api/danhgia` | Cảm nhận sinh viên | 6 |
 | `/api/chuc-vu` | Vị trí tổ chức | 7 |
@@ -241,7 +251,11 @@ Hệ thống có 26 prefix route chính, mỗi prefix xử lý một nhóm nghi�
 | `/api/nguoidung` | Danh sách người dùng | 1 |
 | `/api/nhat-ky` | Nhật ký hệ thống | 4 |
 | `/api/system/settings` | Cài đặt hệ thống | 5 |
+| `/api/thong-bao` | Thông báo trong hệ thống | 5 |
 | `/api/guest` | Khách (chưa đăng nhập) | 5 |
+| `/api/cong-no` | Công nợ (cho vay) | 9 |
+| `/api/lich-tra-no` | Lịch trả nợ | 3 |
+| `/api/thu-hoi` | Thu hồi vốn (tài trợ có thu hồi) | 8 |
 
 ---
 
@@ -299,11 +313,13 @@ Hệ thống sẽ kiểm tra tự động: quỹ tồn tại và đang hoạt đ
 **Cách 2 — Khách (chưa đăng nhập):**
 
 Đối với người chưa có tài khoản, hệ thống cung cấp quy trình OTP verification:
-1. Khách điền thông tin qua form tại `/apply` (bao gồm: họ tên, email, số điện thoại, MSSV, khoa, lớp, tài khoản ngân hàng)
-2. Hệ thống lưu tạm vào bảng `guest_yeucauhotro` kèm mã OTP 6 chữ số
+1. Khách điền thông tin qua form tại `/apply` (bao gồm: họ tên, email, tiêu đề, mô tả, số tiền, quỹ, loai ho tro)
+2. Hệ thống lưu toàn bộ dữ liệu form vào JWT token (`otpToken`) và tạo minimal record trong bảng `guest_tracking` (chỉ lưu: uuid, tên, email, loại, quỹ, số tiền, OTP hash)
 3. Khách nhập mã OTP nhận được qua email
-4. Hệ thống tự động: (a) tạo tài khoản người dùng với mật khẩu tạm thời, (b) tạo đơn đề nghị chính thức, (c) trả về UUID để theo dõi
+4. Hệ thống tự động: (a) tạo tài khoản người dùng với mật khẩu tạm thời, (b) tạo đơn đề nghị chính thức (lấy toàn bộ dữ liệu từ `otpToken`), (c) cập nhật `guest_tracking.trangthai = 'DA_CHUYEN'`, (d) trả về UUID để theo dõi
 5. Khách có thể theo dõi trạng thái đơn bằng UUID mà không cần đăng nhập
+
+> **Lưu ý:** Dữ liệu form được lưu trong JWT token (stateless), không lưu đầy đủ vào database. `guest_tracking` chỉ lưu minimal info để track trạng thái. Nếu khách truy cập lại trên cùng 1 thiết bị, hệ thống tự detect `otpToken` từ localStorage.
 
 #### Bước 2: Phân Đợt Giải Ngân
 
@@ -343,12 +359,26 @@ Khi kế toán nhấn "Giải ngân", hệ thống sẽ kiểm tra số dư qu�
 
 #### Bước 6: Nghiệm Thu (Đối Với Khoản Vay và Tài Trợ Có Thu Hồi)
 
-Đối với các đơn thuộc loại "Cho vay" hoặc "Tài trợ có thu hồi", sau khi giải ngân cần thực hiện nghiệm thu để kiểm tra việc sử dụng vốn:
+Đối với các đơn thuộc loại "Cho vay" hoặc "Tài trợ có thu hồi", sau khi giải ngân cần thực hiện nghiệm thu để kiểm tra việc sử dụng vốn. **Khoản vay áp dụng cơ chế 2 giai đoạn giải ngân:**
 
-- Cán bộ Quỹ tạo đợt nghiệm thu qua `POST /api/nghiem-thu`
-- Có 2 loại kiểm tra: **Kiểm tra tiến độ** (dọc quá trình) và **Nghiệm thu cuối cùng**
-- Kết quả nghiệm thu: **Đạt**, **Đạt có điều chỉnh**, hoặc **Không đạt**
-- Nếu "Không đạt": đơn bị đánh dấu `Nghiem thu khong dat`, không thể giải ngân lại
+**Flow 2 giai đoạn giải ngân (khoản vay):**
+
+1. **Sau duyệt cấp 3:** Trạng thái chuyển sang `Cho giai ngan dot 1`
+2. **Giải ngân đợt 1 (50%):** Kế toán giải ngân 50% số tiền vay → `Da giai ngan dot 1`. Lãi suất tính từ ngày giải ngân dot 1.
+3. **Nghiệm thu đợt 1:** Cán bộ Quỹ tạo nghiệm thu, có tối đa 3 lần (tiến độ + cuối cùng). Cần **ít nhất 2/3 lần "Nghiệm thu cuối cùng" đạt** để chuyển sang giải ngân dot 2.
+   - Nếu đạt → `Da nghiem thu dot 1` → `Cho giai ngan dot 2`
+   - Nếu 3 lần nghiệm thu cuối cùng đều không đạt → `Nghiem thu khong dat` → `Dang thu hoi no` (tự động tạo điều khoản thu hồi)
+4. **Giải ngân đợt 2 (50%):** Kế toán giải ngân 50% còn lại → `Da giai ngan dot 2`
+5. **Nghiệm thu đợt 2:** Chỉ cần **1 lần "Nghiệm thu cuối cùng" đạt** → `Da nghiem thu` → `Hoan thanh`
+
+> **Thu hồi vốn:** Khi nghiệm thu không đạt (3 lần cuối cùng đều không đạt), hệ thống tự động:
+> - Chuyển trạng thái sang `Dang thu hoi no`
+> - Tạo điều khoản thu hồi (`dieukhoanthuhoi`) với: số tiền thu hồi = số tiền đã giải ngân, thời hạn 3 tháng, lãi suất 0%
+> - Gửi email thông báo cho sinh viên
+
+> **Lãi suất:** Được tính từ ngày giải ngân dot 1 (ngày bắt đầu), không phải theo từng giai đoạn.
+
+**Tài trợ có thu hồi:** Giải ngân 1 lần, nghiệm thu 1 lần (nếu `laidetac = 1` hoặc `loaihotro = 'Tai tro co thu hoi'`).
 
 #### Flow Diagram
 
@@ -411,11 +441,18 @@ Khi kế toán nhấn "Giải ngân", hệ thống sẽ kiểm tra số dư qu�
 | `Cho duyet cap 3` | Chờ Kế toán duyệt | — |
 | `Da duyet cap 3` | Đã duyệt cấp 3, chờ giải ngân | Kế toán |
 | `Cho giai ngan` | Đã duyệt, quỹ thiếu tiền, chờ bổ sung | Kế toán |
-| `Da giai ngan` | Đã giải ngân thành công | Kế toán |
-| `Cho nghiem thu` | Đã giải ngân, chờ nghiệm thu | — |
+| `Cho giai ngan dot 1` | Chờ giải ngân đợt 1 (50%) — khoản vay | — |
+| `Da giai ngan dot 1` | Đã giải ngân đợt 1, chờ nghiệm thu | Kế toán |
+| `Cho nghiem thu dot 1` | Đã giải ngân dot 1, chờ nghiệm thu | — |
+| `Da nghiem thu dot 1` | Đã nghiệm thu dot 1 đạt, chờ giải ngân dot 2 | Cán bộ Quỹ |
+| `Cho giai ngan dot 2` | Chờ giải ngân đợt 2 (50%) — khoản vay | — |
+| `Da giai ngan` | Đã giải ngân thành công (tài trợ) | Kế toán |
+| `Cho nghiem thu` | Đã giải ngân, chờ nghiệm thu (tài trợ) | — |
 | `Da nghiem thu` | Đã nghiệm thu, hoàn tất | Cán bộ Quỹ |
+| `Hoan thanh` | Hoàn tất (đã nghiệm thu dot 2) | Kế toán |
+| `Dang thu hoi no` | Đang thu hồi vốn (nghiem thu khong dat) | Hệ thống |
 | `Tu choi cap 1/2/3` | Bị từ chối tại cấp N | Cấp N |
-| `Nghiem thu khong dat` | Nghiệm thu không đạt | Cán bộ Quỹ |
+| `Nghiem thu khong dat` | Nghiệm thu không đạt (3 lần cuối cùng) | Cán bộ Quỹ |
 
 #### 3 Loại Hình Hỗ Trợ
 
@@ -569,19 +606,28 @@ Cơ chế này giúp quản lý dòng tiền theo từng giai đoạn, tránh t�
 
 Quy trình khách là cơ chế đặc biệt cho phép người chưa có tài khoản trên hệ thống có thể nộp đơn đề nghị hỗ trợ hoặc tài trợ. Đây là tính năng quan trọng giúp mở rộng đối tượng tiếp cận quỹ — không chỉ sinh viên đang học mà còn cả cựu sinh viên, phụ huynh, hoặc các mạnh thường quân chưa quen với hệ thống.
 
-Quy trình sử dụng phương pháp xác thực OTP (One-Time Password) qua email: sau khi khách điền form, hệ thống sẽ gửi mã 6 chữ số qua email, khách nhập mã để xác thực. Sau xác thực thành công, hệ thống tự động tạo tài khoản và chuyển dữ liệu từ bảng tạm (staging) sang các bảng chính thức.
+Quy trình sử dụng phương pháp xác thực OTP (One-Time Password) qua email: sau khi khách điền form, hệ thống sẽ gửi mã 6 chữ số qua email, khách nhập mã để xác thực. Sau xác thực thành công, hệ thống tự động tạo tài khoản và chuyển dữ liệu sang các bảng chính thức.
+
+> **Kiến trúc OTP Stateless:** Toàn bộ dữ liệu form được lưu trong JWT token (`otpToken`) — không lưu đầy đủ vào database. Bảng `guest_tracking` chỉ lưu minimal info (uuid, tên, email, loại, quỹ, số tiền, OTP hash) để track trạng thái. Điều này giúp tiết kiệm dung lượng database và tránh lưu dữ liệu nhạy cảm.
 
 #### Bước 1: Gửi Form
 
-Khách truy cập trang `/apply`, chọn "Tôi là Nhà tài trợ" hoặc "Tôi là Sinh viên", điền đầy đủ thông tin. Dữ liệu được lưu tạm vào `guest_yeucauhotro` hoặc `guest_khoantaitro` kèm mã OTP ngẫu nhiên và `tracking_uuid`.
+Khách truy cập trang `/apply`, chọn "Tôi là Nhà tài trợ" hoặc "Tôi là Sinh viên", điền đầy đủ thông tin. Hệ thống:
+1. Tạo JWT token (`otpToken`) chứa toàn bộ dữ liệu form (họ tên, email, tiêu đề, mô tả, số tiền, quỹ, loại hỗ trợ...)
+2. Tạo record trong bảng `guest_tracking` với minimal info (uuid, tên, email, loai, quy_id, sotien, otp_hash)
+3. Gửi email OTP 6 chữ số cho khách
+4. Trả về `otpToken` + `trackingUuid` cho frontend (lưu vào localStorage)
 
 #### Bước 2: Xác Thực OTP
 
 Khách nhận mã OTP 6 chữ số qua email, nhập vào form xác thực. Hệ thống kiểm tra mã OTP, sau đó:
-1. Tạo tài khoản người dùng mới (email = email khách, mật khẩu tạm thời)
-2. Tạo bản ghi chính thức trong `nguoidung` + `nhataitro`/`yeucauhotro`
-3. Xóa bản ghi staging
-4. Trả về UUID + mật khẩu tạm thời cho khách
+1. **Dual flow verification:**
+   - **Token-based (ApplyPage):** Nếu frontend có `otpToken` → decode JWT để lấy dữ liệu form
+   - **DB-based fallback (TrackPage):** Nếu không có token → query `guest_tracking` theo `tracking_uuid` + `otp_hash`
+2. Tạo tài khoản người dùng mới (email = email khách, mật khẩu tạm thời)
+3. Tạo bản ghi chính thức trong `nguoidung` + `yeucauhotro`/`khoantaitro` (dữ liệu từ JWT token)
+4. Cập nhật `guest_tracking.trangthai = 'DA_CHUYEN'`, `nguoidung_id`, `doituong_id`
+5. Trả về UUID + mật khẩu tạm thời cho khách
 
 #### Bước 3: Theo Dõi Trạng Thái
 
@@ -594,18 +640,19 @@ Khách có thể theo dõi trạng thái đơn hoặc khoản tài trợ bằng 
         │
         ▼
     ┌──────────────────┐
-    │  Lưu tạm + OTP   │ → guest_yeucauhotro / guest_khoantaitro
+    │  Lưu JWT Token   │ → otpToken (toàn bộ dữ liệu form)
+    │  + guest_tracking │ → minimal info: uuid, tên, email, loai, quy, sotien
     └────────┬─────────┘
              │ Gửi OTP
              ▼
     ┌──────────────────┐
     │  Nhập mã OTP     │ ← 6 chữ số
     └────────┬─────────┘
-             │ Xác thực
+             │ Xác thực (dual flow)
              ▼
     ┌──────────────────┐
     │  Tạo tài khoản   │ → UUID + mật khẩu tạm
-    │  + Đơn/Khoản TT  │
+    │  + Đơn/Khoản TT  │ → Dữ liệu từ JWT token
     └────────┬─────────┘
              │
              ▼
@@ -616,25 +663,240 @@ Khách có thể theo dõi trạng thái đơn hoặc khoản tài trợ bằng 
 
 ---
 
-### 5.6 Quy Trình Ngân Sách Hoạt Động (Du Toan)
+### 5.6 Quy Trình Đề Xuất Chương Trình (3-Cấp Duyệt)
 
 #### Mô Tả Tổng Quan
 
-Ngân sách hoạt động (dự toán hàng năm) là cơ chế kiểm soát chi tiêu cho các hoạt động vận hành hệ thống quỹ (tham dự án, bộ máy hoạt động, nhiệm vụ khác). Kế toán đề xuất ngân sách cho một năm tài chính, Admin duyệt, và sau đó mọi giao dịch `Chi` thuộc nhóm `Bo_may_hoat_dong` đều phải nằm trong giới hạn ngân sách đã duyệt.
+Quy trình đề xuất chương trình là cơ chế để nhà tài trợ đề xuất tạo chương trình/hoạt động mới cho trường với nguồn tài trợ kèm theo. Đây là quy trình 3 cấp duyệt được thiết kế để đảm bảo kiểm soát chặt chẽ và minh bạch tài chính:
 
-Điều này đảm bảo rằng chi tiêu vận hành không vượt quá dự toán, tạo cơ chế kiểm soát tài chính nội bộ hiệu quả.
+1. **Cấp 1 — Cán bộ (vaitro = 3):** Duyệt nội dung, kiểm tra tính khả thi, có thể sửa quỹ thành phần nếu nhà tài trợ chọn sai
+2. **Cấp 2 — Kế toán (vaitro = 2):** Xác nhận đã nhận tiền thực tế, **cộng tiền vào Quỹ Thành Phần (Cấp 2)**
+3. **Cấp 3 — Admin (vaitro = 1):** Duyệt tạo hoạt động, **tự động tạo Quỹ Cấp 3 và trích tiền từ Quỹ Thành Phần**
+
+> **Lý do có 3 cấp**: Tiền phải vào Quỹ Thành Phần trước (step 2), sau đó mới trích ra tạo hoạt động (step 3). Điều này đảm bảo nguyên tắc kế toán rõ ràng: tiền tài trợ → quỹ chung → hoạt động cụ thể.
+
+#### Luồng Tiền
+
+```
+Nhà Tài Trợ
+    ↓ (Chuyển khoản)
+💰 Tiền thực tế
+    ↓ (Bước 2: Kế toán xác nhận)
+🏦 Quỹ Thành Phần (Cấp 2)
+    ↓ (Bước 3: Admin tạo hoạt động)
+📋 Hoạt Động/Chương Trình (Quỹ Cấp 3)
+```
+
+#### Bước 1: Cán Bộ Duyệt Nội Dung
+
+Cán bộ Quỹ xem danh sách đề xuất chờ duyệt tại `/can-bo/de-xuat`. Tại đây, cán bộ kiểm tra:
+- Thông tin đề xuất hợp lệ
+- Tính khả thi của chương trình
+- **Quỹ thành phần phù hợp** — nếu nhà tài trợ chọn sai, cán bộ có thể sửa lại
+
+**API**: `POST /api/donations/propose-program/:id/approve-by-canbo`
+
+**Body**:
+```json
+{
+  "ghiChu": "Đã xem xét, đề xuất hợp lệ",
+  "quyThanhPhanId": 5  // Optional: Sửa quỹ nếu NTT chọn sai
+}
+```
+
+**Database changes**:
+```sql
+UPDATE dexuatchuongtrinh 
+SET trangthai = 'Can bo da duyet',
+    canbo_duyet_id = ?,
+    ngay_canbo_duyet = CURRENT_TIMESTAMP,
+    ghi_chu_canbo = ?,
+    quythanhphan_id = ?  -- Cập nhật nếu có sửa
+WHERE dexuatchuongtrinh_id = ?;
+```
+
+**Từ chối**: `POST /api/donations/propose-program/:id/reject-by-canbo` (yêu cầu lý do từ chối)
+
+#### Bước 2: Kế Toán Xác Nhận Tiền
+
+Kế toán xem danh sách đề xuất đã duyệt cấp 1 tại `/ke-toan/de-xuat`. Sau khi xác nhận đã nhận tiền thực tế từ nhà tài trợ, kế toán thực hiện:
+
+**API**: `POST /api/donations/propose-program/:id/confirm-money`
+
+**Body**:
+```json
+{
+  "soTienThucTe": 50000000  // Optional: Số tiền thực tế nếu khác đề xuất
+}
+```
+
+**Database changes** (trong transaction):
+```sql
+-- 1. Cộng tiền vào Quỹ Thành Phần (Cấp 2)
+UPDATE quy 
+SET sodu = sodu + ?, 
+    ngaycapnhat = CURRENT_TIMESTAMP 
+WHERE quy_id = ?;
+
+-- 2. Tạo giao dịch Thu (audit trail)
+INSERT INTO giaodich (
+  quy_id, loaigiaodich, sotien, ghichu, nguoithuchien_id, trangthai, ngaygiaodich
+) VALUES (?, 'Thu', ?, ?, ?, 'Thanh cong', CURRENT_TIMESTAMP);
+
+-- 3. Cập nhật đề xuất
+UPDATE dexuatchuongtrinh 
+SET trangthai = 'Da nhan tien',
+    ketoan_xacnhan_id = ?,
+    ngay_ketoan_xacnhan = CURRENT_TIMESTAMP,
+    so_tien_thuc_te = ?
+WHERE dexuatchuongtrinh_id = ?;
+```
+
+**Ví dụ**:
+```
+Trước: Quỹ Học Bổng (Cấp 2) = 100,000,000 đ
+Sau:  Quỹ Học Bổng (Cấp 2) = 150,000,000 đ (+50tr)
+```
+
+#### Bước 3: Admin Tạo Hoạt Động
+
+Admin xem danh sách đề xuất đã xác nhận tiền tại `/admin/de-xuat`. Admin kiểm tra ngân sách Quỹ Thành Phần và quyết định tạo hoạt động.
+
+**API**: `POST /api/donations/propose-program/:id/create-activity`
+
+**Body**:
+```json
+{
+  "ghiChu": "Đã kiểm tra, tạo hoạt động"
+}
+```
+
+**Database changes** (trong transaction):
+```sql
+-- 1. Tạo Quỹ Cấp 3 (Hoạt động/Chương trình)
+INSERT INTO quy (
+  tenquy, loaiquy_id, mota, sotienmuctieu, sotienhotrotoida, 
+  soluonghotrotoida, ngaybatdau, ngayketthuc, sodu, nguoitao_id, 
+  trangthai, loaidieuhanh, quy_cha_id, loaihotro, capdo
+) VALUES (...);  -- sodu = 0 ban đầu
+
+-- 2. Tạo bản ghi phân bổ ngân sách
+INSERT INTO phanbongansach (
+  quy_nguon_id, quy_dich_id, sotien, soquyetdinh, trangthai, 
+  nguoi_de_xuat_id, nguoi_duyet_id, ngayduyet, ghichu, namtaichinh
+) VALUES (?, ?, ?, ?, 'Da duyet', ?, ?, CURRENT_TIMESTAMP, ?, ?);
+
+-- 3. Trừ tiền từ Quỹ Thành Phần (Cấp 2)
+UPDATE quy 
+SET sodu = sodu - ?, 
+    ngaycapnhat = CURRENT_TIMESTAMP 
+WHERE quy_id = ?;
+
+-- 4. Cộng tiền vào Quỹ Hoạt Động (Cấp 3)
+UPDATE quy 
+SET sodu = sodu + ?, 
+    ngaycapnhat = CURRENT_TIMESTAMP 
+WHERE quy_id = ?;
+
+-- 5. Cập nhật đề xuất
+UPDATE dexuatchuongtrinh 
+SET trangthai = 'Da tao hoat dong',
+    admin_duyet_id = ?,
+    ngay_admin_duyet = CURRENT_TIMESTAMP,
+    ghi_chu_admin = ?,
+    quyketqua_id = ?
+WHERE dexuatchuongtrinh_id = ?;
+```
+
+**Kiểm tra ngân sách**: Hệ thống kiểm tra `quy.sodu` của Quỹ Thành Phần phải >= số tiền cần phân bổ. Nếu không đủ → trả lỗi `INSUFFICIENT_PARENT_FUND_BALANCE`.
+
+**Ví dụ**:
+```
+Quỹ Học Bổng (Cấp 2): 150tr - 50tr = 100tr
+Học Bổng A (Cấp 3 mới tạo): 0 + 50tr = 50tr
+```
+
+#### Trạng Thái Đề Xuất
+
+| Trạng thái | Mô tả | Bước tiếp theo |
+|-----------|-------|----------------|
+| `Cho duyet` | Mới tạo, chờ cán bộ duyệt | Cán bộ duyệt/từ chối |
+| `Can bo da duyet` | Cán bộ đã duyệt nội dung | Kế toán xác nhận tiền |
+| `Tu choi` | Cán bộ từ chối | Kết thúc |
+| `Da nhan tien` | Kế toán đã xác nhận tiền, đã cộng vào quỹ thành phần | Admin tạo hoạt động |
+| `Da tao hoat dong` | Hoàn tất, đã tạo hoạt động (quỹ cấp 3) | Kết thúc (Success) |
+
+#### Flow Diagram
+
+```
+    Nhà tài trợ tạo đề xuất chương trình
+            │
+            ▼
+    ┌──────────────────┐
+    │   "Cho duyet"     │
+    └────────┬─────────┘
+             │ Bước 1: Cán bộ duyệt
+             ▼
+    ┌──────────────────┐
+    │"Can bo da duyet"  │
+    └────────┬─────────┘
+             │ Bước 2: Kế toán xác nhận tiền
+             │         + Cộng vào Quỹ Thành Phần
+             ▼
+    ┌──────────────────┐
+    │ "Da nhan tien"    │
+    └────────┬─────────┘
+             │ Bước 3: Admin tạo hoạt động
+             │         + Tạo Quỹ Cấp 3
+             │         + Trích tiền từ Quỹ Thành Phần
+             ▼
+    ┌──────────────────┐
+    │"Da tao hoat dong" │ → Hoàn thành
+    └──────────────────┘
+```
+
+#### Đặc Điểm Kỹ Thuật
+
+- **Transaction safety**: Mỗi bước dùng MySQL transaction với row-level locking (`FOR UPDATE`) để tránh race condition
+- **Audit trail**: Lưu đầy đủ `canbo_duyet_id`, `ketoan_xacnhan_id`, `admin_duyet_id` và timestamp
+- **Backward compatibility**: API cũ vẫn hoạt động (1-step approval)
+- **Validation**: Kiểm tra role, trạng thái, số dư quỹ ở mỗi bước
+
+---
+
+### 5.7 Quy Trình Ngân Sách Hoạt Động (Du Toan)
+
+#### Mô Tả Tổng Quan
+
+Ngân sách hoạt động (dự toán hàng năm) là cơ chế kiểm soát chi tiêu cho các hoạt động vận hành hệ thống quỹ (tham dự án, bộ máy hoạt động, nhiệm vụ khác). Theo **Điều 17.2**, quy trình duyệt dự toán gồm 2 cấp:
+
+1. **Cấp 1 — Hội đồng Quỹ:** Duyệt初步 về mức chi và tính phù hợp
+2. **Cấp 2 — Hiệu trưởng ĐHTV:** Duyệt最终 theo **Điều 20.3**
+
+Mỗi đề xuất tạo 2 bản ghi trong `dutoanhangnam` (cap 1 + cap 2), liên kết qua `parent_id`. Hệ thống cũng lưu chi tiết từng khoản chi (`chitiet_dutoan`) và lý do đề xuất.
 
 #### Bước 1: Đề Xuất
 
-Kế toán nhập năm tài chính và số tiền dự toán qua `POST /api/du-toan`.
+Kế toán nhập năm tài chính, lý do đề xuất, file minh chứng, và chi tiết các khoản chi qua `POST /api/du-toan`. Hệ thống tự động:
+- Tạo bản ghi cap 1 (`capduyet=1`, `trangthai='Cho duyet'`)
+- Tạo bản ghi cap 2 (`capduyet=2`, `parent_id` trỏ về cap 1)
+- Luôn tạo trong transaction, rollback nếu lỗi
 
-#### Bước 2: Duyệt
+#### Bước 2: Duyệt Cấp 1 — Hội đồng Quỹ
 
-Admin xem và duyệt/từ chối qua `PUT /api/du-toan/:id`.
+Hội đồng Quỹ (role 1,2,3) xem và duyệt/từ chối cap 1 qua `PUT /api/du-toan/:id/approve`. Chỉ user có role phu hop moi duoc duyet cap tuong ung.
 
-#### Bước 3: Kiểm Tra Giới Hạn
+#### Bước 3: Duyệt Cấp 2 — Hiệu trưởng
+
+Hiệu trưởng (role 1) duyệt/từ chối cap 2. Khi cả 2 cap đều `Da duyet` → `trangthai_tong = 'Da duyet'`.
+
+#### Bước 4: Kiểm Tra Giới Hạn
 
 Khi tạo giao dịch `Chi` với `hangmucchi = 'Bo_may_hoat_dong'`, hệ thống tự động kiểm tra `DuToanModel.checkLimit`: phải có ngân sách đã duyệt cho năm đó, và tổng chi tích lũy + số tiền hiện tại ≤ số tiền duyệt.
+
+#### Bước 5: Xem Thống Kê
+
+Hệ thống hiển thị thống kê năm trước (tong thu, tong chi, chi bo may, thu hoi no...) khi chon nam de de xuat.
 
 ---
 
@@ -678,7 +940,90 @@ Kế toán upload file sao kê ngân hàng (hỗ trợ CSV, Excel, TXT), hệ th
 
 ---
 
-### 5.8 Quy Trình Xuất Báo Cáo
+### 5.8 Quy Trình Trả Nợ & Nhận Minh Chứng (Loan Payment)
+
+#### Mô Tả Tổng Quan
+
+Đối với khoản vay (`Cho vay`), sau khi giải ngân hệ thống tự động tạo hợp đồng vay vốn (`hopdongvayvon`) và lịch trả nợ (`lichtrano`). Sinh viên thực hiện trả tiền theo lịch và nộp minh chứng. Kế toán xác nhận hoặc từ chối minh chứng.
+
+#### Bước 1: Sinh Viên Nộp Minh Chứng
+
+Sinh viên truy cập trang lịch trả nợ (`/lich-tra-no`), chọn kỳ đến hạn, nộp minh chứng (file PDF/JPG/PNG). Trạng thái chuyển sang `Cho xac nhan`.
+
+#### Bước 2: Kế Toán Xác Nhận
+
+Kế toán xem danh sách minh chứng chờ xử lý, kiểm tra tính hợp lệ:
+- **Xác nhận:** `trangthai='Da tra'`, `trangthaixacnhan='Da xac nhan'`. Hệ thống tự động tạo giao dịch `Thu hoi no` và cộng tiền vào quỹ.
+- **Từ chối:** `trangthaixacnhan='Bi tu choi'`. Sinh viên nhận email thông báo và có thể nộp lại.
+
+#### Bước 3: Kiểm Tra Tất Toan
+
+Khi tất cả các kỳ đã trả, hợp đồng tự động chuyển sang `Da tat toan`.
+
+---
+
+### 5.9 Quy Trình Thu Hồi Nợ & Lãi Phạt Quá Hạn (Dieu 19.3)
+
+#### Mô Tả Tổng Quan
+
+Theo **Điều 19.3** Điều lệ, khoản vay quá hạn bị tính lãi phạt. Công thức:
+
+```
+LaiPhat = GocConLai × LaiSuatPhat × SoNgayQuaHan / 365
+```
+
+Trong đó:
+- `GocConLai` = Goc phai tra - Goc da tra
+- `LaiSuatPhat` = LaiSuatNganHangThamChieu × HeSoPhat (he so mac dinh = 2)
+- `LaiSuatNganHangThamChieu` = 2.6%/nam (cau hinh trong `system_settings.json`)
+- `HeSoPhat` = 2 (mac dinh)
+- → `LaiSuatPhat` = 5.2%/nam
+
+#### Cron Job Tinh Lai Phat
+
+He thong chay cron job **00:05 moi ngay** (`laiPhatService.capNhatTrangThaiQuaHan`):
+1. Tim cac ky tra no `Chua den han` nhung da qua ngay den han
+2. Cap nhat `trangthai='Qua han'`
+3. Tinh lai phat theo cong thuc tren, luu vao `lichtrano.sotienlaiphat`
+
+---
+
+### 5.10 He Thong Thong Bao (Email + Bell Notification)
+
+#### Mô Tả Tổng Quan
+
+He thong thong bao ho tro 2 luong: **email** (qua SMTP/Gmail) va **bell notification** (trong he thong). Ap dung cho cac su kien lien quan den tra no.
+
+#### 5 Email Templates
+
+| # | Template | Su kien | Nguoi nhan |
+|---|----------|---------|-----------|
+| 1 | `sendPaymentProofNotificationEmail` | SV nop minh chung | Ke toan + BKS |
+| 2 | `sendPaymentConfirmedEmail` | Ke toan xac nhan | Sinh vien |
+| 3 | `sendPaymentRejectedEmail` | Ke toan tu choi | Sinh vien |
+| 4 | `sendPaymentDueReminderEmail` | Nhac truoc 7 ngay | Sinh vien |
+| 5 | `sendPaymentOverdueEmail` | Canh bao qua han | Sinh vien |
+
+#### Bell Notification
+
+Luu trong bang `thong_bao`. Trigger boi:
+- `confirmPayment` → tao thong bao "Xac nhan thanh toan"
+- `rejectPayment` → tao thong bao "Minh chung bi tu choi"
+- `sendReminder` → tao thong bao "Nhac no"
+- Cron job 08:00 → tao thong bao "Sap den han"
+
+Frontend: `NotificationContext` + `useNotification` hook + `NotificationBell` component. Poll moi 30 giay.
+
+#### Cron Job Nhac No
+
+He thong chay cron job **08:00 moi ngay**:
+1. Tim cac ky tra no den han trong 7 ngay toi
+2. Gui email nhac no (fire-and-forget)
+3. Tao thong bao trong he thong
+
+---
+
+### 5.11 Quy Trình Xuất Báo Cáo
 
 #### Mô Tả Tổng Quan
 
@@ -704,6 +1049,36 @@ Hệ thống cung cấp chức năng xuất báo cáo tài chính dưới 2 đ�
 2. **Block 2 — Phải thu:** Từ các điều khoản thu hồi (`dieukhoanthuhoi`)
 3. **Block 3 — Ngân sách nội bộ:** Phân bổ từ quỹ cha xuống quỹ con (`phanbongansach`)
 4. **Block 4 — Ngân sách hoạt động:** Dự toán hàng năm và thực chi (`dutoanhangnam`)
+
+---
+
+### 5.12 Quy Trình Thu Hồi Vốn (Dieu Khoan Thu Hoi)
+
+#### Mô Tả Tổng Quan
+
+Đối với khoản tài trợ có thu hồi (`loaihotro = 'Tai tro co thu hoi'`) hoặc khoản vay không đạt nghiệm thu, hệ thống tạo điều khoản thu hồi (`dieukhoanthuhoi`). Sinh viên nộp tiền thu hồi qua từng đợt, kế toán xác nhận.
+
+#### Bước 1: Hệ Thống Tạo Điều Khoản Thu Hồi
+
+Khi nghiệm thu không đạt (3 lần cuối cùng đều không đạt), hệ thống tự động:
+- Chuyển trạng thái `yeucauhotro` sang `Dang thu hoi no`
+- Tạo bản ghi `dieukhoanthuhoi` với: số tiền thu hồi = số tiền đã giải ngân, thời hạn 3 tháng, lãi suất 0%
+
+#### Bước 2: Sinh Viên Nộp Tiền Thu Hồi
+
+Sinh viên truy cập trang `/nghia-vu-hoan-tra`, xem điều khoản thu hồi và nộp tiền:
+- POST `/api/thu-hoi/:id/nop-tien` — upload minh chứng chuyển khoản
+- Hệ thống tạo bản ghi `lan nop tien` với trạng thái `Cho xac nhan`
+
+#### Bước 3: Kế Toán Xác Nhận
+
+Kế toán xem danh sách `/api/thu-hoi/danh-sach`, kiểm tra minh chứng:
+- **Xác nhận:** `PUT /api/thu-hoi/:lanNopId/xac-nhan` → cộng tiền vào quỹ, tạo giao dịch `Thu hoi no`
+- **Từ chối:** `PUT /api/thu-hoi/:lanNopId/tu-choi` → sinh viên nhận thông báo
+
+#### Bước 4: Kiểm Tra Hoàn Thành
+
+Khi tổng tiền đã thu >= số tiền phải thu hồi → `dieukhoanthuhoi.trangthai = 'Da thu het'`
 
 ---
 
@@ -961,7 +1336,7 @@ Thêm/Sửa → Hien thi / An
 
 #### 5A.12 Phân Quyền Trang (Page Permissions)
 
-**Ma trận 26 trang × 6 vai trò:**
+**Ma trận 30 trang × 6 vai trò:**
 
 | Trang | Admin | Cán bộ | Kế toán | SV | NTT | BKS |
 |-------|:-----:|:------:|:-------:|:--:|:---:|:---:|
@@ -969,13 +1344,16 @@ Thêm/Sửa → Hien thi / An
 | Danh mục quỹ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Hướng dẫn | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Vinh danh | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Thống kê công khai | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Khoản TT công khai | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Cá nhân | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Tạo đơn | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ |
+| Nghĩa vụ hoàn trả | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ |
 | Tra cứu | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Dashboard | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
 | Quản lý NN | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
-| Xét duyệt | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
-| Danh sách Quỹ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ |
+| Xét duyệt | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
+| Danh sách Quỹ | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
 | Nhà tài trợ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
 | SV nổi bật | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
 | Tin tức | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
@@ -993,6 +1371,9 @@ Thêm/Sửa → Hien thi / An
 | Nhân sự | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | Giám sát | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
 | Phân bổ | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Dự toán | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ |
+| Công nợ | ✓ | ✗ | ✓ | ✗ | ✗ | ✓ |
+| Thu hồi | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ |
 | Cảm nhận | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
 
 **Flow cập nhật:**
@@ -1068,6 +1449,29 @@ Thêm/Sửa → Hien thi / An
 
 > **Lưu ý:** Rate limiter là per-process (reset khi server restart), không distributed.
 
+#### 5A.17 Hệ Thống Badge Thông Báo Sidebar
+
+Hệ thống hiển thị badge (chấm đỏ với số) trên sidebar menu để thông báo số lượng cần xử lý. Badge được cập nhật mỗi 60 giây.
+
+**API:** `GET /statistics/pending-count` — trả về 4 count tùy vai trò:
+
+| Count Field | Ý Nghĩa | Admin (1) | KeToan (2) | CanBo (3) | BanKS (5) |
+|-------------|---------|-----------|------------|-----------|-----------|
+| `pendingCount` | Đơn chờ xử lý | cap 2 | cap 3 + giaingan + dot 1 + dot 2 | cap 1 | Cho duyet (pheduyet) |
+| `nghiemThuCongNo` | Nghiệm thu + Công nợ | nt + congno | nt + congno | nt only | nt + congno |
+| `khoanTaiTro` | Khoản tài trợ | Da duyet | Cho duyet | — | — |
+| `doiSoatChungTu` | Đối soát chứng từ | Chua doi soat | Chua doi soat | — | — |
+
+**Ánh xạ badgeKey → sidebar item:**
+- "Xét duyệt" → `pendingCount` (role 1, 3)
+- "Giải ngân" → `pendingCount` (role 2)
+- "Phê duyệt" → `pendingCount` (role 5)
+- "Nghiệm thu & Công nợ" → `nghiemThuCongNo`
+- "Khoản tài trợ" → `khoanTaiTro`
+- "Đối soát chứng từ" → `doiSoatChungTu`
+
+**Frontend:** `StaffSidebar` component poll API mỗi 60 giây, hiển thị badge number trên menu item.
+
 #### 5A.17 Đối Soát Chứng Từ Chi
 
 Kế toán upload file sao kê ngân hàng (CSV/Excel/TXT), hệ thống tự động:
@@ -1134,7 +1538,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 
 ---
 
-## 7. DANH SÁCH TẤT CẢ API ENDPOINTS (172 endpoints)
+## 7. DANH SÁCH TẤT CẢ API ENDPOINTS (204 endpoints)
 
 ### 7.1 Auth — `/api/auth` (9 endpoints)
 
@@ -1150,18 +1554,19 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 8 | GET | `/api/auth/google` | Public | Chuyển hướng Google OAuth |
 | 9 | GET | `/api/auth/google/callback` | Public | Google OAuth callback |
 
-### 7.2 Users — `/api/users` (8 endpoints)
+### 7.2 Users — `/api/users` (9 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
 | 1 | GET | `/api/users/growth` | Protect (1,3) | Thống kê tăng trưởng用户 |
 | 2 | GET | `/api/users/stats` | Protect (1,3) | Tổng quan用户 |
-| 3 | GET | `/api/users/` | Protect (1,3) | Danh sách用户 (filter, pagination) |
-| 4 | GET | `/api/users/:id` | Protect (1,3) | Chi tiết user |
-| 5 | POST | `/api/users/` | Protect (1,3) | Tạo user mới |
-| 6 | PATCH | `/api/users/:id` | Protect | Cập nhật info user |
-| 7 | PUT | `/api/users/:id/status` | Protect (1,3) | Khóa/mở khóa tài khoản |
-| 8 | DELETE | `/api/users/:id` | Protect (1) | Xóa user (Admin only) |
+| 3 | GET | `/api/users/faculties` | Public | Danh sách khoa (dùng cho form) |
+| 4 | GET | `/api/users/` | Protect (1,3) | Danh sách用户 (filter, pagination) |
+| 5 | GET | `/api/users/:id` | Protect (1,2,3) | Chi tiết user |
+| 6 | POST | `/api/users/` | Protect (1,3) | Tạo user mới |
+| 7 | PATCH | `/api/users/:id` | Protect | Cập nhật info user |
+| 8 | PUT | `/api/users/:id/status` | Protect (1,3) | Khóa/mở khóa tài khoản |
+| 9 | DELETE | `/api/users/:id` | Protect (1) | Xóa user (Admin only) |
 
 ### 7.3 Roles — `/api/roles` (4 endpoints)
 
@@ -1172,19 +1577,20 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 3 | GET | `/api/roles/:id/users` | Protect (1,3) | Users theo vai trò |
 | 4 | PATCH | `/api/roles/:id` | Protect (1) | Cập nhật vai trò |
 
-### 7.4 Applications — `/api/applications` (9 endpoints)
+### 7.4 Applications — `/api/applications` (10 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
 | 1 | POST | `/api/applications/ai-suggest` | Protect | AI gợi ý đơn |
-| 2 | POST | `/api/applications/` | Protect (3,4) | Nộp đơn mới |
-| 3 | GET | `/api/applications/my-applications` | Protect (4) | Đơn của tôi |
-| 4 | GET | `/api/applications/` | Protect (1,2,3,5) | Tất cả đơn (filter) |
-| 5 | GET | `/api/applications/:id` | Protect (1,2,3,4,5) | Chi tiết đơn |
-| 6 | PUT | `/api/applications/:id/reject` | Protect (1,2,3) | Từ chối đơn |
-| 7 | PUT | `/api/applications/:id/staff-approve` | Protect (3) | Duyệt cấp 1 |
-| 8 | PUT | `/api/applications/:id/admin-approve` | Protect (1) | Duyệt cấp 2 |
-| 9 | POST | `/api/applications/:id/disburse` | Protect (2) | Duyệt cấp 3 + giải ngân |
+| 2 | POST | `/api/applications/public/ai-suggest` | RateLimit | AI gợi ý cho khách |
+| 3 | POST | `/api/applications/` | Protect (3,4) | Nộp đơn mới |
+| 4 | GET | `/api/applications/my-applications` | Protect (4) | Đơn của tôi |
+| 5 | GET | `/api/applications/` | Protect (1,2,3,5) | Tất cả đơn (filter) |
+| 6 | GET | `/api/applications/:id` | Protect (1,2,3,4,5) | Chi tiết đơn |
+| 7 | PUT | `/api/applications/:id/reject` | Protect (1,2,3) | Từ chối đơn |
+| 8 | PUT | `/api/applications/:id/staff-approve` | Protect (3) | Duyệt cấp 1 |
+| 9 | PUT | `/api/applications/:id/admin-approve` | Protect (1) | Duyệt cấp 2 |
+| 10 | POST | `/api/applications/:id/disburse` | Protect (2) | Duyệt cấp 3 + giải ngân |
 
 ### 7.5 Phe Duyet — `/api/pheduyet` (4 endpoints)
 
@@ -1195,32 +1601,37 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 3 | GET | `/api/pheduyet/timeline/:type/:id` | Protect (1,5) | Timeline phê duyệt |
 | 4 | GET | `/api/pheduyet/` | Protect (1,5) | Tất cả lượt duyệt |
 
-### 7.6 Nghiem Thu — `/api/nghiem-thu` (3 endpoints)
+### 7.6 Nghiem Thu — `/api/nghiem-thu` (6 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
-| 1 | POST | `/api/nghiem-thu/` | Protect (1,3) | Tạo biên bản nghiệm thu |
-| 2 | PUT | `/api/nghiem-thu/:id` | Protect (1,3) | Cập nhật kết quả |
-| 3 | GET | `/api/nghiem-thu/application/:yeucauhotroId` | Protect | Lịch sử nghiệm thu |
+| 1 | POST | `/api/nghiem-thu/` | Protect (3) | Tạo biên bản nghiệm thu |
+| 2 | PUT | `/api/nghiem-thu/:id` | Protect (1) | Cập nhật kết quả |
+| 3 | PUT | `/api/nghiem-thu/:id/edit` | Protect (1,3) | Sửa thông tin nghiệm thu |
+| 4 | DELETE | `/api/nghiem-thu/:id` | Protect (1,3) | Xóa nghiệm thu chưa duyệt |
+| 5 | GET | `/api/nghiem-thu/application/:yeucauhotroId` | Protect | Lịch sử nghiệm thu |
+| 6 | GET | `/api/nghiem-thu/application/:yeucauhotroId/detail` | Protect | Chi tiết nghiệm thu |
 
-### 7.7 Funds — `/api/funds` (7 endpoints)
+### 7.7 Funds — `/api/funds` (8 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
 | 1 | GET | `/api/funds/public` | Public | Danh sách quỹ công khai |
 | 2 | GET | `/api/funds/:id/bank-accounts` | Public | TK ngân hàng quỹ |
 | 3 | GET | `/api/funds/:id` | Public | Chi tiết quỹ |
-| 4 | GET | `/api/funds/` | Protect (1,2,3,5) | Tất cả quỹ |
-| 5 | POST | `/api/funds/` | Protect (1,3) | Tạo quỹ mới |
-| 6 | PUT | `/api/funds/:id` | Protect (1,3) | Cập nhật quỹ |
-| 7 | PUT | `/api/funds/:id/status` | Protect (1,3) | Đổi trạng thái quỹ |
+| 4 | GET | `/api/funds/:id/available-balance` | Protect (1,2,3) | Số dư khả dụng quỹ |
+| 5 | GET | `/api/funds/` | Protect (1,2,3,5) | Tất cả quỹ |
+| 6 | POST | `/api/funds/` | Protect (1,3) | Tạo quỹ mới |
+| 7 | PUT | `/api/funds/:id` | Protect (1,3) | Cập nhật quỹ |
+| 8 | PUT | `/api/funds/:id/status` | Protect (1,3) | Đổi trạng thái quỹ |
 
-### 7.8 Loai Quy — `/api/loai-quy` (2 endpoints)
+### 7.8 Loai Quy — `/api/loai-quy` (3 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
-| 1 | GET | `/api/loai-quy/` | Public | Danh sách loại quỹ |
-| 2 | POST | `/api/loai-quy/` | Protect (1,3) | Tạo loại quỹ mới |
+| 1 | GET | `/api/loai-quy/groups` | Public | Nhóm loại quỹ |
+| 2 | GET | `/api/loai-quy/` | Public | Danh sách loại quỹ |
+| 3 | POST | `/api/loai-quy/` | Protect (1,3) | Tạo loại quỹ mới |
 
 ### 7.9 Disbursement Rounds — `/api/disbursement-rounds` (4 endpoints)
 
@@ -1283,20 +1694,22 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 6 | GET | `/api/donors/` | Protect (1,3) | Danh sách nhà tài trợ |
 | 7 | GET | `/api/donors/:id` | Protect (1,3) | Chi tiết nhà tài trợ |
 
-### 7.14 Transactions — `/api/transactions` (10 endpoints)
+### 7.14 Transactions — `/api/transactions` (12 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
 | 1 | GET | `/api/transactions/public` | Public | Giao dịch công khai |
 | 2 | GET | `/api/transactions/public/summary` | Public | Tổng quan thu chi |
-| 3 | GET | `/api/transactions/public/export` | Public | Xuất giao dịch |
-| 4 | GET | `/api/transactions/public/:id` | Public | Chi tiết giao dịch |
-| 5 | GET | `/api/transactions/` | Protect (1,2,5) | Tất cả giao dịch |
-| 6 | GET | `/api/transactions/summary` | Protect (1,2,5) | Tổng quan (auth) |
-| 7 | GET | `/api/transactions/export` | Protect (1,2,5) | Xuất Excel |
-| 8 | POST | `/api/transactions/chi-khac` | Protect (1,2) | Ghi chi khác |
+| 3 | GET | `/api/transactions/public/:id` | Public | Chi tiết GD công khai |
+| 4 | GET | `/api/transactions/` | Protect (1,2,5) | Tất cả giao dịch |
+| 5 | GET | `/api/transactions/summary` | Protect (1,2,5) | Tổng quan (auth) |
+| 6 | GET | `/api/transactions/export` | Protect (1,2,5) | Xuất Excel |
+| 7 | POST | `/api/transactions/chi-khac` | Protect (1,2) | Ghi chi khác |
+| 8 | GET | `/api/transactions/by-application/:yeucauhotroId` | Protect (1,2,5) | GD theo đơn |
 | 9 | GET | `/api/transactions/:id` | Protect (1,2,5) | Chi tiết |
 | 10 | PATCH | `/api/transactions/:id/doi-soat` | Protect (1,2) | Đối soát |
+| 11 | PATCH | `/api/transactions/:id/upload-proof` | Protect (1,2) | Upload minh chứng |
+| 12 | DELETE | `/api/transactions/:id` | Protect (1) | Xóa GD (Admin) |
 
 ### 7.15 Bao Cao — `/api/bao-cao` (1 endpoint)
 
@@ -1304,25 +1717,26 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 |---|--------|------|-------------------|-------|
 | 1 | POST | `/api/bao-cao/xuat` | Protect | Xuất báo cáo (DOCX/XLSX) |
 
-### 7.16 Statistics — `/api/statistics` (15 endpoints)
+### 7.16 Statistics — `/api/statistics` (16 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
 | 1 | GET | `/api/statistics/public` | Public | Thống kê công khai |
 | 2 | GET | `/api/statistics/fund-breakdown` | Public | Phân bổ quỹ |
 | 3 | GET | `/api/statistics/impact` | Public | Thống kê tác động |
-| 4 | GET | `/api/statistics/available-years` | Protect (1,2,5) | Năm tài chính khả dụng |
-| 5 | GET | `/api/statistics/ketoan/summary` | Protect (1,2,5) | Tổng quan kế toán |
-| 6 | GET | `/api/statistics/ketoan/cashflow` | Protect (1,2,5) | Dòng tiền |
-| 7 | GET | `/api/statistics/ketoan/transaction-status` | Protect (1,2,5) | Trạng thái GD |
-| 8 | GET | `/api/statistics/ketoan/recent-transactions` | Protect (1,2,5) | GD gần đây |
-| 9 | GET | `/api/statistics/ketoan/fund-health` | Protect (1,2,5) | Sức khỏe quỹ |
-| 10 | GET | `/api/statistics/ketoan/pending-donations` | Protect (1,2,5) | Tài trợ chờ xử lý |
-| 11 | GET | `/api/statistics/ketoan/report` | Protect (1,2,5) | Thống kê báo cáo |
-| 12 | GET | `/api/statistics/yearly-report` | Protect (1,2,5) | Báo cáo năm (Điều 17.2, 18) |
-| 13 | GET | `/api/statistics/applications/stats` | Protect (1,5) | Thống kê đơn |
-| 14 | GET | `/api/statistics/admin/advanced` | Protect (1,5) | Thống kê nâng cao |
-| 15 | GET | `/api/statistics/pending-count` | Protect (1,2,3) | Số chờ xử lý (badge) |
+| 4 | GET | `/api/statistics/public/report` | Public | Thống kê báo cáo công khai |
+| 5 | GET | `/api/statistics/available-years` | Protect (1,2,5) | Năm tài chính khả dụng |
+| 6 | GET | `/api/statistics/ketoan/summary` | Protect (1,2,5) | Tổng quan kế toán |
+| 7 | GET | `/api/statistics/ketoan/cashflow` | Protect (1,2,5) | Dòng tiền |
+| 8 | GET | `/api/statistics/ketoan/transaction-status` | Protect (1,2,5) | Trạng thái GD |
+| 9 | GET | `/api/statistics/ketoan/recent-transactions` | Protect (1,2,5) | GD gần đây |
+| 10 | GET | `/api/statistics/ketoan/fund-health` | Protect (1,2,5) | Sức khỏe quỹ |
+| 11 | GET | `/api/statistics/ketoan/pending-donations` | Protect (1,2,5) | Tài trợ chờ xử lý |
+| 12 | GET | `/api/statistics/ketoan/report` | Protect (1,2,5) | Thống kê báo cáo |
+| 13 | GET | `/api/statistics/yearly-report` | Protect (1,2,5) | Báo cáo năm (Điều 17.2, 18) |
+| 14 | GET | `/api/statistics/applications/stats` | Protect (1,5) | Thống kê đơn |
+| 15 | GET | `/api/statistics/admin/advanced` | Protect (1,5) | Thống kê nâng cao |
+| 16 | GET | `/api/statistics/pending-count` | Protect (1,2,3,5) | Số chờ xử lý (badge) |
 
 ### 7.17 Du Toan — `/api/du-toan` (3 endpoints)
 
@@ -1361,7 +1775,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 6 | PUT | `/api/chuc-vu/:id` | Protect (1) | Cập nhật vị trí |
 | 7 | DELETE | `/api/chuc-vu/:id` | Protect (1) | Xóa vị trí (soft delete) |
 
-### 7.20 News — `/api/news` (10 endpoints)
+### 7.20 News — `/api/news` (11 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
@@ -1375,6 +1789,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 8 | GET | `/api/news/admin/:id` | Protect (1,3) | Chi tiết tin (admin) |
 | 9 | DELETE | `/api/news/:id` | Protect (1) | Xóa tin |
 | 10 | PUT | `/api/news/:id/status` | Protect (1,3) | Đổi trạng thái hiển thị |
+| 11 | POST | `/api/news/fix-avatars` | Protect (1) | Fix avatar cho tin cũ |
 
 ### 7.21 Student Showcase — `/api/student-showcase` (7 endpoints)
 
@@ -1422,41 +1837,89 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 7 | POST | `/api/upload/news` | Protect + UploadNews | Upload ảnh tin |
 | 8 | DELETE | `/api/upload/:filename` | Protect | Xóa file |
 
-### 7.25 Tổng Hợp
+### 7.25 Thong Bao — `/api/thong-bao` (4 endpoints)
+
+| # | Method | Path | Middleware (Roles) | Mô tả |
+|---|--------|------|-------------------|-------|
+| 1 | GET | `/api/thong-bao/unread-count` | Protect | So thong bao chua doc |
+| 2 | GET | `/api/thong-bao/` | Protect | Danh sach thong bao |
+| 3 | PUT | `/api/thong-bao/:id/doc` | Protect | Danh dau da doc |
+| 4 | PUT | `/api/thong-bao/doc-tat-ca` | Protect | Danh dau tat ca da doc |
+
+### 7.26 Cong No — `/api/cong-no` (9 endpoints)
+
+| # | Method | Path | Middleware (Roles) | Mô tả |
+|---|--------|------|-------------------|-------|
+| 1 | GET | `/api/cong-no/tong-quan` | Protect (1,2,3,5) | Tong quan cong no |
+| 2 | GET | `/api/cong-no/danh-sach` | Protect (1,2,3,5) | Danh sach hop dong |
+| 3 | GET | `/api/cong-no/ky-tra-no/:hopdongvayvonId` | Protect (1,2,3,5) | Ky tra no theo hop dong |
+| 4 | GET | `/api/cong-no/chi-tiet/:yeucauhotroId` | Protect (1,2,3,5) | Chi tiet cong no |
+| 5 | PUT | `/api/cong-no/xac-nhan/:lichtranoId` | Protect (2) | Xac nhan minh chung |
+| 6 | PUT | `/api/cong-no/tu-choi/:lichtranoId` | Protect (2) | Tu choi minh chung |
+| 7 | POST | `/api/cong-no/nhac-no/:lichtranoId` | Protect (1,2,3) | Gui nhac no |
+| 8 | GET | `/api/cong-no/nghiem-thu/tong-quan` | Protect (1,2,3,5) | Tong quan nghiem thu |
+| 9 | GET | `/api/cong-no/nghiem-thu` | Protect (1,2,3,5) | Danh sach nghiem thu |
+
+### 7.27 Lich Tra No — `/api/lich-tra-no` (3 endpoints)
+
+| # | Method | Path | Middleware (Roles) | Mô tả |
+|---|--------|------|-------------------|-------|
+| 1 | GET | `/api/lich-tra-no/cua-toi` | Protect (4) | Lich tra no cua toi |
+| 2 | POST | `/api/lich-tra-no/:lichtranoId/nop-minh-chung` | Protect (4) | Nop minh chung tra no |
+| 3 | DELETE | `/api/lich-tra-no/:lichtranoId/huy-minh-chung` | Protect (4) | Huy minh chung |
+
+### 7.28 Thu Hoi Von — `/api/thu-hoi` (8 endpoints)
+
+| # | Method | Path | Middleware (Roles) | Mô tả |
+|---|--------|------|-------------------|-------|
+| 1 | POST | `/api/thu-hoi/:id/nop-tien` | Protect (4) | SV nộp tiền thu hồi |
+| 2 | GET | `/api/thu-hoi/danh-sach` | Protect (2) | Danh sách cho kế toán |
+| 3 | GET | `/api/thu-hoi/by-yeucau/:yeucauhotroId` | Protect (1,2) | Chi tiết theo yêu cầu |
+| 4 | GET | `/api/thu-hoi/:id` | Protect (2) | Chi tiết điều khoản thu hồi |
+| 5 | GET | `/api/thu-hoi/:id/lich-su` | Protect (2,4) | Lịch sử nộp tiền |
+| 6 | PUT | `/api/thu-hoi/:lanNopId/xac-nhan` | Protect (2) | Xác nhận nộp tiền |
+| 7 | PUT | `/api/thu-hoi/:lanNopId/tu-choi` | Protect (2) | Từ chối nộp tiền |
+| 8 | DELETE | `/api/thu-hoi/:lanNopId/huy` | Protect (4) | Hủy lần nộp tiền |
+
+### 7.29 Tổng Hợp
 
 | Nhóm | Số endpoint |
 |------|------------|
 | Auth | 9 |
-| Users | 8 |
+| Users | 9 |
 | Roles | 4 |
-| Applications | 9 |
+| Applications | 10 |
 | Phe Duyet | 4 |
-| Nghiem Thu | 3 |
-| Funds | 7 |
-| Loai Quy | 2 |
+| Nghiem Thu | 6 |
+| Funds | 8 |
+| Loai Quy | 3 |
 | Disbursement Rounds | 4 |
 | Phan Bo Ngan Sach | 6 |
 | Bank Accounts | 9 |
 | Donations | 10 |
 | Donors | 7 |
-| Transactions | 10 |
+| Transactions | 12 |
 | Bao Cao | 1 |
-| Statistics | 15 |
-| Du Toan | 3 |
+| Statistics | 16 |
+| Du Toan | 6 |
+| Cong No | 9 |
+| Lich Tra No | 3 |
+| Thong Bao | 4 |
+| Thu Hoi | 8 |
 | System (vaitro/nguoidung/nhatky/settings) | 12 |
 | Chuc Vu | 7 |
-| News | 10 |
+| News | 11 |
 | Student Showcase | 7 |
 | Danh Gia | 6 |
 | Guest | 5 |
 | Upload | 8 |
-| **TỔNG** | **172** |
+| **TỔNG** | **204** |
 
 ---
 
-## 8. DANH SÁCH TẤT CẢ FRONTEND ROUTES (63 routes)
+## 8. DANH SÁCH TẤT CẢ FRONTEND ROUTES (80 routes)
 
-### 8.1 Public Routes (16 routes)
+### 8.1 Public Routes (18 routes)
 
 | # | Path | Component | Ghi chú |
 |---|------|-----------|---------|
@@ -1474,8 +1937,10 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 12 | `/news` | NewsPage | Danh sách tin |
 | 13 | `/testimonials` | TestimonialsPage | Cảm nhận |
 | 14 | `/lich-su-giao-dich` | PublicLichSuGiaoDichPage | Lịch sử GD |
-| 15 | `/ve-quy-phat-trien` | AboutFundPage | Về quỹ |
-| 16 | `/alumni` | AlumniPage | Cựu SV |
+| 15 | `/thong-ke-cong-khai` | PublicThongKeThuChiPage | Thống kê công khai |
+| 16 | `/khoan-tai-tro-cong-khai` | PublicKhoanTaiTroPage | Khoản tài trợ công khai |
+| 17 | `/ve-quy-phat-trien` | AboutFundPage | Về quỹ |
+| 18 | `/alumni` | AlumniPage | Cựu SV |
 
 ### 8.2 Auth Routes (2 routes)
 
@@ -1490,71 +1955,101 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 |---|------|-----------|---------|
 | 19 | `/auth/google/callback` | GoogleAuthCallbackPage | Google OAuth callback |
 
-### 8.4 Student Dashboard (1 route)
+### 8.4 Student Dashboard & Routes (2 routes)
 
 | # | Path | Component | Roles | Ghi chú |
 |---|------|-----------|-------|---------|
 | 20 | `/dashboard` | DashboardPage | All logged-in | Dashboard theo role |
+| 21 | `/nghia-vu-hoan-tra` | NghiaVuHoanTraPage | Role 4 | Nghĩa vụ hoàn trả |
 
-### 8.5 Admin Routes — Role 1 only (21 routes)
-
-| # | Path | Component | Sidebar Label |
-|---|------|-----------|--------------|
-| 21 | `/admin/dashboard` | AdminDashboard | Tổng quan |
-| 22 | `/admin/users` | CanBoUserManagementPage(isAdmin) | Quản lý người dùng |
-| 23 | `/admin/nhan-su` | CanBoUserManagementPage(isAdmin, tab=chuc_vu) | Nhân sự |
-| 24 | `/admin/roles` | HiThongPhanQuyenPage | Hệ thống & Phân quyền |
-| 25 | `/admin/nhat-ky` | NhatKyPage | Nhật ký hệ thống |
-| 26 | `/admin/xet-duyet` | XetDuyetPage(isAdmin) | Xét duyệt hồ sơ |
-| 27 | `/admin/phe-duyet` | PheDuyetPage | Lịch sử phê duyệt |
-| 28 | `/admin/quy` | CanBoQuyListPage(isAdmin) | Danh sách Quỹ |
-| 29 | `/admin/quy/tao` | CanBoTaoQuyPage | (sub-route) |
-| 30 | `/admin/quy/sua/:id` | CanBoTaoQuyPage | (sub-route) |
-| 31 | `/admin/phan-bo` | PhanBoPage | Trích lập Ngân sách |
-| 32 | `/admin/nha-tai-tro` | CanBoNhaTaiTroPage(isAdmin) | Nhà tài trợ |
-| 33 | `/admin/khoan-tai-tro` | KeToanKhoanTaiTroPage | Khoản tài trợ |
-| 34 | `/admin/giao-dich` | KeToanLichSuGiaoDichPage | Lịch sử giao dịch |
-| 35 | `/admin/chung-tu` | DoiSoatChungTuPage | Đối soát chứng từ |
-| 36 | `/admin/sinh-vien-noi-bat` | StudentShowcasePage | Sinh viên nổi bật |
-| 37 | `/admin/danhgia` | DanhGiaPage | Cảm nhận sinh viên |
-| 38 | `/admin/tin-tuc` | Placeholder | Tin tức & Sự kiện |
-| 39 | `/admin/tintuc/tao` | TaoTinTucPage | Tạo bài viết |
-| 40 | `/admin/tintuc/chinh-sua/:id` | TaoTinTucPage | (sub-route) |
-| 41 | `/admin/bao-cao` | AdminBaoCaoPage | Thống kê & Báo cáo |
-
-### 8.6 Ke Toan Routes — Roles 1,2 (7 routes)
+### 8.5 Admin Routes — Role 1 only (22 routes)
 
 | # | Path | Component | Sidebar Label |
 |---|------|-----------|--------------|
-| 42 | `/ke-toan/dashboard` | KeToanDashboard | Tổng quan |
-| 43 | `/ke-toan/giai-ngan` | KeToanGiaiNganPage | Giải ngân hồ sơ |
-| 44 | `/ke-toan/giao-dich` | KeToanLichSuGiaoDichPage | Lịch sử giao dịch |
-| 45 | `/ke-toan/khoan-tai-tro` | KeToanKhoanTaiTroPage | Khoản tài trợ |
-| 46 | `/ke-toan/bao-cao` | ThongKeThuChiPage | Thống kê thu chi |
-| 47 | `/ke-toan/chung-tu` | DoiSoatChungTuPage | Đối soát chứng từ |
-| 48 | `/ke-toan/phan-bo` | PhanBoPage | Trích lập Ngân sách |
+| 22 | `/admin/dashboard` | AdminDashboard | Tổng quan |
+| 23 | `/admin/users` | CanBoUserManagementPage(isAdmin) | Quản lý người dùng |
+| 24 | `/admin/nhan-su` | CanBoUserManagementPage(isAdmin, tab=chuc_vu) | Nhân sự |
+| 25 | `/admin/roles` | HiThongPhanQuyenPage | Hệ thống & Phân quyền |
+| 26 | `/admin/nhat-ky` | NhatKyPage | Nhật ký hệ thống |
+| 27 | `/admin/xet-duyet` | XetDuyetPage(isAdmin) | Xét duyệt hồ sơ |
+| 28 | `/admin/phe-duyet` | PheDuyetPage | Lịch sử phê duyệt |
+| 29 | `/admin/quy` | CanBoQuyListPage(isAdmin) | Danh sách Quỹ |
+| 30 | `/admin/quy/tao` | CanBoTaoQuyPage | (sub-route) |
+| 31 | `/admin/quy/sua/:id` | CanBoTaoQuyPage | (sub-route) |
+| 32 | `/admin/phan-bo` | PhanBoPage | Trích lập Ngân sách |
+| 33 | `/admin/du-toan` | DuToanNamPage | Dự toán hàng năm |
+| 34 | `/admin/nha-tai-tro` | CanBoNhaTaiTroPage(isAdmin) | Nhà tài trợ |
+| 35 | `/admin/khoan-tai-tro` | KeToanKhoanTaiTroPage | Khoản tài trợ |
+| 36 | `/admin/giao-dich` | KeToanLichSuGiaoDichPage | Lịch sử giao dịch |
+| 37 | `/admin/chung-tu` | DoiSoatChungTuPage | Đối soát chứng từ |
+| 38 | `/admin/sinh-vien-noi-bat` | StudentShowcasePage | Sinh viên nổi bật |
+| 39 | `/admin/danhgia` | DanhGiaPage | Cảm nhận sinh viên |
+| 40 | `/admin/tin-tuc` | Placeholder | Tin tức & Sự kiện |
+| 41 | `/admin/tintuc/tao` | TaoTinTucPage | Tạo bài viết |
+| 42 | `/admin/tintuc/chinh-sua/:id` | TaoTinTucPage | (sub-route) |
+| 43 | `/admin/bao-cao` | AdminBaoCaoPage | Thống kê & Báo cáo |
 
-### 8.7 Can Bo Quy Routes — Roles 1,3 (15 routes)
+### 8.6 Ke Toan Routes — Roles 1,2 (10 routes)
 
 | # | Path | Component | Sidebar Label |
 |---|------|-----------|--------------|
-| 49 | `/can-bo/dashboard` | CanBoDashboard | Tổng quan |
-| 50 | `/can-bo/xet-duyet` | XetDuyetPage | Xét duyệt hồ sơ |
-| 51 | `/xet-duyet/:request_id` | XetDuyetDetail | (standalone, no sidebar) |
-| 52 | `/can-bo/quy` | CanBoQuyListPage | Danh sách Quỹ |
-| 53 | `/can-bo/quy/tao` | CanBoTaoQuyPage | (sub-route) |
-| 54 | `/can-bo/quy/sua/:id` | CanBoTaoQuyPage | (sub-route) |
-| 55 | `/can-bo/phan-bo` | PhanBoPage | Trích lập Ngân sách |
-| 56 | `/can-bo/nha-tai-tro` | CanBoNhaTaiTroPage | Nhà tài trợ |
-| 57 | `/can-bo/users` | CanBoUserManagementPage | Quản lý người dùng |
-| 58 | `/can-bo/sinh-vien-noi-bat` | StudentShowcasePage | Sinh viên nổi bật |
-| 59 | `/can-bo/danhgia` | DanhGiaPage | Cảm nhận sinh viên |
-| 60 | `/can-bo/tin-tuc` | Placeholder | Tin tức & Sự kiện |
-| 61 | `/can-bo/tintuc/tao` | TaoTinTucPage | Tạo bài viết |
-| 62 | `/can-bo/tintuc/chinh-sua/:id` | TaoTinTucPage | (sub-route) |
-| 63 | `/can-bo/bao-cao` | CanBoBaoCaoPage | Thống kê & Báo cáo |
+| 44 | `/ke-toan/dashboard` | KeToanDashboard | Tổng quan |
+| 45 | `/ke-toan/xet-duyet` | XetDuyetPage(userRole=2) | Giải ngân hồ sơ |
+| 46 | `/ke-toan/giai-ngan` | → redirect `/ke-toan/xet-duyet` | (redirect) |
+| 47 | `/ke-toan/giai-ngan/:request_id` | GiaiNganDetailPage | Chi tiết giải ngân |
+| 48 | `/ke-toan/giao-dich` | KeToanLichSuGiaoDichPage | Lịch sử giao dịch |
+| 49 | `/ke-toan/khoan-tai-tro` | KeToanKhoanTaiTroPage | Khoản tài trợ |
+| 50 | `/ke-toan/bao-cao` | ThongKeThuChiPage | Thống kê thu chi |
+| 51 | `/ke-toan/chung-tu` | DoiSoatChungTuPage | Đối soát chứng từ |
+| 52 | `/ke-toan/phan-bo` | PhanBoPage | Trích lập Ngân sách |
+| 53 | `/ke-toan/du-toan` | DuToanNamPage | Dự toán hàng năm |
 
-### 8.8 Wildcard
+### 8.7 Can Bo Quy Routes — Roles 1,3 (16 routes)
+
+| # | Path | Component | Sidebar Label |
+|---|------|-----------|--------------|
+| 54 | `/can-bo/dashboard` | CanBoDashboard | Tổng quan |
+| 55 | `/can-bo/xet-duyet` | XetDuyetPage(userRole=3) | Xét duyệt hồ sơ |
+| 56 | `/can-bo/quy` | CanBoQuyListPage | Danh sách Quỹ |
+| 57 | `/can-bo/quy/tao` | CanBoTaoQuyPage | (sub-route) |
+| 58 | `/can-bo/quy/sua/:id` | CanBoTaoQuyPage | (sub-route) |
+| 59 | `/can-bo/phan-bo` | PhanBoPage | Trích lập Ngân sách |
+| 60 | `/can-bo/du-toan` | DuToanNamPage | Dự toán hàng năm |
+| 61 | `/can-bo/nha-tai-tro` | CanBoNhaTaiTroPage | Nhà tài trợ |
+| 62 | `/can-bo/users` | CanBoUserManagementPage | Quản lý người dùng |
+| 63 | `/can-bo/sinh-vien-noi-bat` | StudentShowcasePage | Sinh viên nổi bật |
+| 64 | `/can-bo/danhgia` | DanhGiaPage | Cảm nhận sinh viên |
+| 65 | `/can-bo/tin-tuc` | Placeholder | Tin tức & Sự kiện |
+| 66 | `/can-bo/tintuc/tao` | TaoTinTucPage | Tạo bài viết |
+| 67 | `/can-bo/tintuc/chinh-sua/:id` | TaoTinTucPage | (sub-route) |
+| 68 | `/can-bo/bao-cao` | CanBoBaoCaoPage | Thống kê & Báo cáo |
+
+### 8.8 Xet Duyet Detail — Roles 1,2,3 (1 route)
+
+| # | Path | Component | Roles | Ghi chú |
+|---|------|-----------|-------|---------|
+| 69 | `/xet-duyet/:request_id` | XetDuyetDetail | 1,2,3 | Standalone, no sidebar |
+
+### 8.9 Ban Kiem Soat Routes — Role 5 (6 routes)
+
+| # | Path | Component | Sidebar Label |
+|---|------|-----------|--------------|
+| 70 | `/kiem-soat/dashboard` | AdminDashboard | Tổng quan |
+| 71 | `/kiem-soat/quy` | CanBoQuyListPage | Danh sách Quỹ |
+| 72 | `/kiem-soat/phe-duyet` | PheDuyetPage | Phê duyệt |
+| 73 | `/kiem-soat/khoan-tai-tro` | KeToanKhoanTaiTroPage | Khoản tài trợ |
+| 74 | `/kiem-soat/giao-dich` | KeToanLichSuGiaoDichPage | Giao dịch |
+| 75 | `/kiem-soat/bao-cao` | AdminBaoCaoPage | Báo cáo |
+
+### 8.10 Shared Routes — Roles 1,2,3,5 (3 routes)
+
+| # | Path | Component | Ghi chú |
+|---|------|-----------|---------|
+| 76 | `/giam-sat` | GiamSatNghiemThuCongNoPage | Giám sát nghiệm thu & công nợ |
+| 77 | `/giam-sat/nghiem-thu/:yeucauhotroId` | NghiemThuDetailPage | Chi tiết nghiệm thu |
+| 78 | `/giam-sat/cong-no/:yeucauhotroId` | ContractDetailPage | Chi tiết công nợ |
+
+### 8.11 Wildcard
 
 | Path | Behavior |
 |------|----------|
@@ -1568,7 +2063,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
-| `trangthai` | `Cho duyet cap 1` (DEFAULT), `Da duyet cap 1`, `Tu choi cap 1`, `Cho duyet cap 2`, `Da duyet cap 2`, `Tu choi cap 2`, `Cho duyet cap 3`, `Da duyet cap 3`, `Tu choi cap 3`, `Cho giai ngan`, `Da giai ngan`, `Tu choi`, `Dang xu ly`, `Cho nghiem thu`, `Da nghiem thu`, `Nghiem thu khong dat` |
+| `trangthai` | `Cho duyet cap 1` (DEFAULT), `Da duyet cap 1`, `Tu choi cap 1`, `Cho duyet cap 2`, `Da duyet cap 2`, `Tu choi cap 2`, `Cho duyet cap 3`, `Da duyet cap 3`, `Tu choi cap 3`, `Cho giai ngan`, `Da giai ngan`, `Tu choi`, `Dang xu ly`, `Cho nghiem thu`, `Da nghiem thu`, `Nghiem thu khong dat`, `Cho giai ngan dot 1`, `Da giai ngan dot 1`, `Cho nghiem thu dot 1`, `Da nghiem thu dot 1`, `Cho giai ngan dot 2`, `Dang thu hoi no`, `Hoan thanh` |
 | `loaihotro` | `Tai tro khong hoan lai` (DEFAULT), `Tai tro co thu hoi`, `Cho vay` |
 
 ### 9.2 nguoidung
@@ -1591,7 +2086,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
-| `loaigiaodich` | `Thu`, `Chi` (DEFAULT) |
+| `loaigiaodich` | `Thu`, `Chi` (DEFAULT), `Thu hoi no` |
 | `hangmucchi` | `Tai_tro_cho_vay`, `Tham_dinh_du_an`, `Bo_may_hoat_dong`, `Nhiem_vu_khac`, NULL |
 | `trangthai` | `Thanh cong`, `That bai`, `Dang xu ly` (DEFAULT) |
 | `hinhthuc` | `Tien mat`, `Chuyen khoan` |
@@ -1615,7 +2110,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
-| `ketqua` | `Cho duyet`, `Da duyet`, `Tu choi`, `Yeu cau bo sung` |
+| `ketqua` | `Cho duyet`, `Duyet`, `Da duyet`, `Tu choi` |
 
 ### 9.8 nghiemthu
 
@@ -1634,19 +2129,20 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
-| `trangthai` | `Dang thuc hien` (DEFAULT) |
+| `trangthai` | `Dang thuc hien` (DEFAULT), `Da tat toan`, `Qua han` |
 
 ### 9.11 lichtrano
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
-| `trangthai` | `Chua den han` (DEFAULT) |
+| `trangthai` | `Chua den han` (DEFAULT), `Da tra`, `Qua han`, `Tra mot phan` |
+| `trangthaixacnhan` | `Cho xac nhan` (DEFAULT), `Da xac nhan`, `Bi tu choi` |
 
 ### 9.12 vaitro
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
-| `ten_vai_tro` | `Admin`, `Ke toan`, `Can bo Quy`, `Nguoi dung` |
+| `tenvaitro` | `Admin`, `Ke toan`, `Can bo Quy`, `Nguoi dung`, `Ban Kiem Soat` |
 
 ### 9.13 nhataitro
 
@@ -1674,7 +2170,13 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 |-----|-----------------|
 | `trangthai` | `Cho duyet` (DEFAULT), `Da duyet`, `Tu choi` |
 
-### 9.17 tintuc
+### 9.17 thong_bao
+
+| Cột | Giá trị cho phép |
+|-----|-----------------|
+| `loaithongbao` | `thanhtoan`, `nhacno`, `hethong` |
+
+### 9.18 tintuc
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
@@ -1703,14 +2205,14 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 
 | Cột | Giá trị cho phép |
 |-----|-----------------|
-| `maloai` | `DT` (Dao tao), `NC` (Nghien cuu), `CTXH` (Cong dong xa hoi), `KHQT` (Hop tac quoc te), `Khac` |
+| `maloai` | `PHAT_TRIEN`, `HOC_BONG`, `NGHIEN_CUU`, `VAY_VON`, `KHOI_NGHIEP`, `HOAT_DONG_PHONG_TRAO`, `XA_HOI`, `CO_SO_VAT_CHAT`, `DAO_TAO` |
 
-### 9.22 Guest Staging
+### 9.22 Guest Tracking
 
 | Bảng | Cột | Giá trị cho phép |
 |------|-----|-----------------|
-| `guest_yeucauhotro` | `trang_thai_staging` | `CHO_XAC_MINH` (DEFAULT), `DA_CHUYEN`, `HET_HAN` |
-| `guest_khoantaitro` | `trang_thai_staging` | `CHO_XAC_MINH` (DEFAULT), `DA_CHUYEN`, `HET_HAN` |
+| `guest_tracking` | `loai` | `yeucauhotro`, `khoantaitro` |
+| `guest_tracking` | `trangthai` | `CHO_XAC_MINH` (DEFAULT), `DA_CHUYEN`, `HET_HAN` |
 
 ---
 

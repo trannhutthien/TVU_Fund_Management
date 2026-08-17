@@ -1,0 +1,601 @@
+.stepContent {
+  padding: 0;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a5276;
+  }
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.required {
+  color: #e74c3c;
+}
+
+.destinationSelector {
+  margin-bottom: 24px;
+}
+
+.destinationCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.destinationCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+
+  &:hover {
+    border-color: #1a5276;
+    background: #f8f9fa;
+  }
+}
+
+.selected {
+  border-color: #1a5276;
+  background: rgba(26, 82, 118, 0.05);
+}
+
+.cardIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #e8f4f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a5276;
+  flex-shrink: 0;
+}
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-size: 14px;
+    color: #1a5276;
+  }
+
+  span {
+    font-size: 12px;
+    color: #6c757d;
+  }
+}
+
+.fundSelector {
+  margin-bottom: 24px;
+}
+
+// ============================================
+// FILTER SECTION
+// ============================================
+.filterSection {
+  margin-bottom: 16px;
+}
+
+.searchWrapper {
+  margin-bottom: 12px;
+}
+
+.searchInputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  background: #f8f9ff;
+  border: 2px solid #e2e8f0;
+  padding: 0 14px 0 42px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a5276;
+  transition: all 0.25s ease;
+  outline: none;
+
+  &:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+  }
+
+  &:focus {
+    border-color: #1a5276;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.08);
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
+}
+
+.filtersRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #1a5276;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before {
+    content: '';
+    width: 3px;
+    height: 10px;
+    background: #f0a500;
+    border-radius: 2px;
+  }
+}
+
+.filterSelect {
+  width: 100%;
+  height: 42px;
+  padding: 0 32px 0 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #f8f9ff;
+  color: #1a5276;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231a5276' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+
+  &:hover {
+    border-color: #cbd5e1;
+    background-color: #f1f5f9;
+  }
+
+  &:focus {
+    border-color: #1a5276;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.08);
+  }
+}
+
+// ============================================
+// FUND LIST
+// ============================================
+.fundGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8f9ff;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
+.fundCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(26, 82, 118, 0.04);
+  }
+}
+
+.selectedFund {
+  background: rgba(26, 82, 118, 0.06) !important;
+  border-left: 3px solid #1a5276;
+
+  &:hover {
+    background: rgba(26, 82, 118, 0.08) !important;
+  }
+}
+
+.fundThumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.fundInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fundInfoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  strong {
+    font-size: 14px;
+    color: #1a5276;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.fundCheckIcon {
+  flex-shrink: 0;
+}
+
+.fundDesc {
+  font-size: 12px;
+  color: #6c757d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.fundBalance {
+  font-size: 12px;
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.loadingFunds {
+  text-align: center;
+  padding: 24px;
+  color: #6c757d;
+  font-size: 14px;
+  background: #f8f9ff;
+  border: 1px dashed #e2e8f0;
+  border-radius: 10px;
+}
+
+.emptyFunds {
+  text-align: center;
+  padding: 24px;
+  color: #adb5bd;
+  font-size: 14px;
+}
+
+.proposalFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #f8f9fa;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.select {
+  width: 100%;
+  padding: 20px 14px 8px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f8f9fa;
+  color: #212529;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+
+  &:focus {
+    border-color: #1a5276;
+    box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+  }
+}
+
+.dateInput {
+  width: 100%;
+  padding: 20px 14px 8px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #f8f9fa;
+  color: #212529;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: #1a5276;
+    box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+  }
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #f8f9fa;
+  color: #212529;
+
+  &:focus {
+    border-color: #1a5276;
+    box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+  }
+
+  &::placeholder {
+    color: #adb5bd;
+  }
+}
+
+.helperText {
+  font-size: 12px;
+  color: #6c757d;
+  margin: 0 0 8px;
+}
+
+.fileInput {
+  font-size: 13px;
+}
+
+.amountSection {
+  margin-bottom: 24px;
+}
+
+.quickAmounts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.quickAmountBtn {
+  padding: 8px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #1a5276;
+    color: #1a5276;
+  }
+}
+
+.selectedAmount {
+  border-color: #1a5276;
+  background: rgba(26, 82, 118, 0.05);
+  color: #1a5276;
+}
+
+.customAmount {
+  position: relative;
+
+  .currency {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+    pointer-events: none;
+  }
+}
+
+.errorText {
+  font-size: 12px;
+  color: #e74c3c;
+  margin-top: 4px;
+}
+
+// ============================================
+// BANK ACCOUNT SECTION
+// ============================================
+.bankAccountSection {
+  margin-bottom: 24px;
+}
+
+.bankAccountList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.bankAccountCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #1a5276;
+    background: #f8f9ff;
+  }
+}
+
+.selectedBank {
+  border-color: #1a5276;
+  background: rgba(26, 82, 118, 0.05);
+
+  &:hover {
+    background: rgba(26, 82, 118, 0.08);
+  }
+}
+
+.bankIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #e8f4f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a5276;
+  flex-shrink: 0;
+}
+
+.bankInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bankName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a5276;
+}
+
+.accountNumber {
+  font-size: 15px;
+  font-weight: 700;
+  color: #212529;
+  letter-spacing: 0.5px;
+}
+
+.accountHolder {
+  font-size: 13px;
+  color: #495057;
+}
+
+.branch {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.bankCheckIcon {
+  flex-shrink: 0;
+}

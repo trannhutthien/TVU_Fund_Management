@@ -31,7 +31,7 @@ const getPageKey = (pathname) => {
       'dashboard', 'users', 'xet_duyet', 'quy', 'nha_tai_tro', 'sinh_vien_noi_bat',
       'tin_tuc', 'bao_cao', 'khoan_tai_tro', 'giao_dich', 'lich_su_giao_dich', 'giai_ngan', 'chung_tu',
       'phe_duyet', 'roles', 'nhat_ky', 've_quy_phat_trien', 'cuu_sinh_vien',
-      'giam_sat', 'phan_bo', 'danhgia', 'nhan_su'
+      'giam_sat', 'phan_bo', 'du_toan', 'danhgia', 'nhan_su'
     ];
     
     if (validKeys.includes(key)) {
@@ -50,7 +50,7 @@ const getPageKey = (pathname) => {
 
   if (key === 'xet-duyet') return 'xet_duyet';
   if (key === 'nha-tai-tro') return 'nha_tai_tro';
-  if (key === 'sinh-vien-noi-bat') return 'sinh_vien_noi_bat';
+  // if (key === 'sinh-vien-noi-bat') return 'sinh_vien_noi_bat'; // REMOVED: Feature không còn sử dụng
   if (key === 'tin-tuc') return 'tin_tuc';
   if (key === 'bao-cao') return 'bao_cao';
   if (key === 'khoan-tai-tro') return 'khoan_tai_tro';

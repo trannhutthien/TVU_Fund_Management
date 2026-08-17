@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import {
@@ -8,6 +8,11 @@ import {
   HiOutlinePaperClip,
   HiOutlineDocumentText,
   HiOutlineTrash,
+  HiOutlineSparkles,
+  HiOutlineUser,
+  HiOutlineCalendarDays,
+  HiOutlineCurrencyDollar,
+  HiOutlineClock,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import { uploadService } from '@services/uploadService';
@@ -37,20 +42,35 @@ const NghiemThuFormModal = ({
   const [nhanXet, setNhanXet] = useState('');
   const [soQuyetDinh, setSoQuyetDinh] = useState('');
   const [fileBienBan, setFileBienBan] = useState('');
+  const [ngayNghiemThu, setNgayNghiemThu] = useState(() => new Date().toISOString().slice(0, 10));
   const [uploadingFile, setUploadingFile] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirming, setConfirming] = useState(false);
+
+  const generateSoQuyetDinh = useCallback(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const seq = String(Math.floor(Math.random() * 900) + 100).padStart(3, '0');
+    return `QĐ-${year}/NT-${seq}`;
+  }, []);
 
   // Pre-fill form for approve/edit modes
   useEffect(() => {
     if (inspectionData && (mode === 'approve' || mode === 'edit')) {
       setLoaiKiemTra(inspectionData.loaiKiemTra || 'Kiem tra tien do');
       setNhanXet(inspectionData.nhanXet || '');
-      setSoQuyetDinh(inspectionData.soQuyetDinh || '');
+      setSoQuyetDinh(inspectionData.soQuyetDinh || generateSoQuyetDinh());
       setFileBienBan(inspectionData.fileBienBan || '');
       setKetqua(''); // Admin selects fresh
     }
-  }, [inspectionData, mode]);
+  }, [inspectionData, mode, generateSoQuyetDinh]);
+
+  // Auto-generate soQuyetDinh when opening in create mode
+  useEffect(() => {
+    if (mode === 'create') {
+      setSoQuyetDinh(generateSoQuyetDinh());
+    }
+  }, [mode, generateSoQuyetDinh]);
 
   const isNghiemThuCuoiCung = loaiKiemTra === 'Nghiem thu cuoi cung';
   const isKhongDat = ketqua === 'Khong dat';
@@ -105,7 +125,11 @@ const NghiemThuFormModal = ({
     try {
       if (isCreateMode) {
         // ── TẠO MỚI ──
-        await nghiemThuService.createInspection(yeucauhotroId, loaiKiemTra);
+        await nghiemThuService.createInspection(yeucauhotroId, loaiKiemTra, {
+          soQuyetDinh: soQuyetDinh.trim() || undefined,
+          fileBienBan: fileBienBan || undefined,
+          nhanXet: nhanXet.trim() || undefined,
+        });
         toast.success(isNghiemThuCuoiCung
           ? 'Đã tạo nghiệm thu cuối cùng, chờ Admin duyệt'
           : 'Đã tạo kiểm tra tiến độ, chờ Admin duyệt'
@@ -117,6 +141,7 @@ const NghiemThuFormModal = ({
           nhanXet: nhanXet.trim(),
           soQuyetDinh: soQuyetDinh.trim() || undefined,
           fileBienBan: fileBienBan || undefined,
+          ngayNghiemThu,
         });
         const label = KET_QUA_OPTIONS.find(k => k.value === ketqua)?.label || ketqua;
         toast.success(`Đã duyệt: ${label}`);
@@ -133,6 +158,21 @@ const NghiemThuFormModal = ({
       onSuccess?.();
       onClose();
     } catch (err) {
+      // Kiem tra DB da thay doi chua (backend commit truoc khi loi)
+      if (isApproveMode && inspectionData?.nghiemthuId) {
+        try {
+          const checkRes = await nghiemThuService.getInspectionHistory(yeucauhotroId);
+          const item = checkRes?.data?.lichSuNghiemThu?.find(
+            (x) => x.nghiemthuId === inspectionData.nghiemthuId && x.ketqua !== 'Cho danh gia'
+          );
+          if (item) {
+            toast.success('Đã duyệt nghiệm thu');
+            onSuccess?.();
+            onClose();
+            return;
+          }
+        } catch { /* ignore re-fetch error */ }
+      }
       const msg = err?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại';
       toast.error(msg);
     } finally {
@@ -199,13 +239,45 @@ const NghiemThuFormModal = ({
             </fieldset>
           )}
 
-          {/* Hiển thị loại kiểm tra khi duyệt/sửa (read-only) */}
+          {/* Hiển thị thông tin đợt nghiệm thu khi duyệt/sửa */}
           {(isApproveMode || isEditMode) && (
-            <div className={styles.readonlyField}>
-              <span className={styles.readonlyLabel}>Loại kiểm tra:</span>
-              <span className={styles.readonlyValue}>
-                {isNghiemThuCuoiCung ? 'Nghiệm thu cuối cùng' : 'Kiểm tra tiến độ'}
-              </span>
+            <div className={styles.infoCard}>
+              <div className={styles.infoCardTitle}>Thông tin đợt nghiệm thu</div>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
+                  <HiOutlineClipboardDocumentCheck size={15} className={styles.infoItemIcon} />
+                  <span className={styles.infoItemLabel}>Loại kiểm tra:</span>
+                  <span className={styles.infoItemValue}>
+                    {isNghiemThuCuoiCung ? 'Nghiệm thu cuối cùng' : 'Kiểm tra tiến độ'}
+                  </span>
+                </div>
+                <div className={styles.infoItem}>
+                  <HiOutlineCurrencyDollar size={15} className={styles.infoItemIcon} />
+                  <span className={styles.infoItemLabel}>Đợt giải ngân:</span>
+                  <span className={styles.infoItemValue}>Đợt {inspectionData?.dotgiaingan || 1}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <HiOutlineClock size={15} className={styles.infoItemIcon} />
+                  <span className={styles.infoItemLabel}>Lần thứ:</span>
+                  <span className={styles.infoItemValue}>{inspectionData?.lanthu || 1}</span>
+                </div>
+                {inspectionData?.tenNguoiNghiemThu && (
+                  <div className={styles.infoItem}>
+                    <HiOutlineUser size={15} className={styles.infoItemIcon} />
+                    <span className={styles.infoItemLabel}>Người nghiệm thu:</span>
+                    <span className={styles.infoItemValue}>{inspectionData.tenNguoiNghiemThu}</span>
+                  </div>
+                )}
+                {inspectionData?.ngayTao && (
+                  <div className={styles.infoItem}>
+                    <HiOutlineCalendarDays size={15} className={styles.infoItemIcon} />
+                    <span className={styles.infoItemLabel}>Ngày tạo:</span>
+                    <span className={styles.infoItemValue}>
+                      {new Date(inspectionData.ngayTao).toLocaleDateString('vi-VN')}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -226,6 +298,19 @@ const NghiemThuFormModal = ({
                   </button>
                 ))}
               </div>
+            </fieldset>
+          )}
+
+          {/* Ngày nghiệm thu — chỉ khi duyệt */}
+          {isApproveMode && (
+            <fieldset className={styles.fieldset}>
+              <legend className={styles.legend}>Ngày nghiệm thu</legend>
+              <input
+                type="date"
+                className={styles.input}
+                value={ngayNghiemThu}
+                onChange={(e) => setNgayNghiemThu(e.target.value)}
+              />
             </fieldset>
           )}
 
@@ -254,14 +339,24 @@ const NghiemThuFormModal = ({
           {/* Số quyết định */}
           <fieldset className={styles.fieldset}>
             <legend className={styles.legend}>Số quyết định (tuỳ chọn)</legend>
-            <input
-              type="text"
-              className={styles.input}
-              value={soQuyetDinh}
-              onChange={(e) => setSoQuyetDinh(e.target.value)}
-              placeholder="Ví dụ: QD-2026/NT-001"
-              maxLength={100}
-            />
+            <div className={styles.genInputRow}>
+              <input
+                type="text"
+                className={`${styles.input} ${styles.genInput}`}
+                value={soQuyetDinh}
+                onChange={(e) => setSoQuyetDinh(e.target.value)}
+                placeholder="QĐ-2026/NT-001"
+                maxLength={100}
+              />
+              <button
+                type="button"
+                className={styles.genBtn}
+                onClick={() => setSoQuyetDinh(generateSoQuyetDinh())}
+                title="Tạo lại số quyết định"
+              >
+                <HiOutlineSparkles />
+              </button>
+            </div>
           </fieldset>
 
           {/* Tài liệu đính kèm */}

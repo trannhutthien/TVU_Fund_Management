@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { 
-  HiOutlineCheckCircle, 
-  HiOutlineBanknotes, 
+import {
+  HiOutlineCheckCircle,
+  HiOutlineBanknotes,
   HiOutlineHeart,
-  HiOutlineArchiveBox
+  HiChevronLeft,
+  HiChevronRight,
 } from 'react-icons/hi2';
-import Button from '@components/common/Button';
 import StatCard from '@components/common/Card/StatCard';
-import StudentShowcase from '@components/common/StudentShowcase';
 import statisticsService from '@services/statisticsService';
 import useAuthStore from '@stores/authStore';
 import { useSystemSettings } from '@hooks/useSystemSettings';
@@ -17,19 +15,42 @@ import { formatCurrencyShort } from '@utils/formatters';
 import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './HeroBanner.module.scss';
 
-/**
- * HeroBanner Component
- * 
- * Banner chính ở đầu trang Landing Page
- * Hiển thị thông điệp chính, CTA buttons, và hình ảnh minh họa
- * 
- * @param {function} onLoginClick - Callback khi click nút "Đăng nhập ngay"
- * @param {function} onRegisterClick - Callback khi click nút "Đăng ký ngay"
- */
-const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+const apiOrigin = () => {
+  const base = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5001/api';
+  return base.replace(/\/api\/?$/, '');
+};
+
+const resolveImageUrl = (src) => {
+  if (!src) return null;
+  if (src.startsWith('http') || src.startsWith('blob:')) return src;
+  return `${apiOrigin()}/${src}`;
+};
+
+const FALLBACK_SLIDE = { src: khuonVienImage, alt: 'Khuôn viên Đại học Trà Vinh' };
+
+const HeroBanner = ({
+  onLoginClick,
+  variant = 'default',
+  images = null,
+  showStats = true,
+  showLoginPrompt = true,
+}) => {
+  const isCompact = variant === 'compact';
+  const [currentSlide, setCurrentSlide] = useState(0);
   const { settings } = useSystemSettings();
+  const { isAuthenticated } = useAuthStore();
+
+  const slides = useMemo(() => {
+    const source = images || settings?.hero_banner_images;
+    if (Array.isArray(source) && source.length > 0) {
+      return source.map((img) => ({
+        src: resolveImageUrl(img.url || img.src),
+        alt: img.alt || 'Banner',
+      }));
+    }
+    return [FALLBACK_SLIDE];
+  }, [images, settings?.hero_banner_images]);
+
   const [stats, setStats] = useState({
     supportedRequests: 0,
     totalFundAmount: 0,
@@ -38,163 +59,173 @@ const HeroBanner = ({ onLoginClick, onRegisterClick }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  const showcaseStats = {
-    totalStudents: stats.supportedRequests,
-    totalAmount: stats.totalFundAmount,
-  };
-
-  // Fetch statistics from API
   useEffect(() => {
+    let isMounted = true;
     const fetchStats = async () => {
       try {
         setLoading(true);
         const data = await statisticsService.getPublicStats();
-        setStats({
-          supportedRequests: data.supportedRequests,
-          totalFundAmount: data.totalFundAmount,
-          totalDonors: data.totalDonors,
-          totalFunds: data.totalFunds || 0,
-        });
+        if (isMounted) {
+          setStats({
+            supportedRequests: data.supportedRequests,
+            totalFundAmount: data.totalFundAmount,
+            totalDonors: data.totalDonors,
+            totalFunds: data.totalFunds,
+          });
+        }
       } catch (error) {
         console.error('Error fetching statistics:', error);
-        // Fallback to default values
-        setStats({
-          supportedRequests: 0,
-          totalFundAmount: 0,
-          totalDonors: 0,
-          totalFunds: 0,
-        });
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-
     fetchStats();
+    return () => { isMounted = false; };
   }, []);
 
-  // Format number with thousand separators
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const goToSlide = useCallback((index) => {
+    setCurrentSlide(index);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  }, [slides.length]);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, [slides.length]);
+
   const formatNumber = (num) => {
     if (!num && num !== 0) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
-  const handleLoginClick = () => {
-    if (onLoginClick) {
-      onLoginClick();
-    } else {
-      navigate('/');
-    }
-  };
+  const bannerClass = isCompact ? styles.heroBannerCompact : styles.heroBanner;
 
   return (
-    <section className={styles.heroBanner}>
-      {/* Background Image */}
-      <div className={styles.backgroundImage}>
-        <img src={khuonVienImage} alt="Khuôn viên Đại học Trà Vinh" />
+    <section className={bannerClass}>
+      {/* Slideshow Background */}
+      <div className={styles.slidesContainer}>
+        {slides.map((slide, i) => (
+          <div
+            key={i}
+            className={`${styles.slide} ${i === currentSlide ? styles.slideActive : ''}`}
+            style={{ backgroundImage: `url(${slide.src})` }}
+            role="img"
+            aria-label={slide.alt}
+          />
+        ))}
         <div className={styles.overlay} />
       </div>
 
-      <div className={styles.container}>
-        {/* Main 2-column layout */}
-        <div className={styles.heroMain}>
-          {/* Left Content */}
-          <div className={styles.content}>
-            {/* Badge */}
-            <div className={styles.badge}>
-              <span className={styles.badgeIcon}>🎓</span>
-              <span className={styles.badgeText}>{settings?.hero_badge || 'Hỗ trợ sinh viên TVU'}</span>
-            </div>
+      {/* Arrow Navigation */}
+      {slides.length > 1 && (
+        <>
+          <button
+            type="button"
+            className={`${styles.arrowBtn} ${styles.arrowLeft}`}
+            onClick={prevSlide}
+            aria-label="Ảnh trước"
+          >
+            <HiChevronLeft size={28} />
+          </button>
+          <button
+            type="button"
+            className={`${styles.arrowBtn} ${styles.arrowRight}`}
+            onClick={nextSlide}
+            aria-label="Ảnh tiếp"
+          >
+            <HiChevronRight size={28} />
+          </button>
+        </>
+      )}
 
-            {/* Main Heading */}
-            <h1 className={styles.heading}>
-              {settings?.hero_title || 'Quỹ phát triển\nĐại học Trà Vinh'}
-            </h1>
-
-            {/* Description */}
-            <p className={styles.description}>
-              {settings?.hero_description || 'Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. Kết nối sinh viên với các cơ hội hỗ trợ tài chính, giúp các em yên tâm theo đuổi ước mơ học tập.'}
-            </p>
-
-            {/* CTA Buttons */}
-            <div className={styles.actions}>
-              {!isAuthenticated && (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleLoginClick}
-                >
-                  Đăng nhập ngay
-                </Button>
-              )}
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => navigate('/guidelines')}
-              >
-                Tìm hiểu thêm
-              </Button>
-            </div>
+      {/* Content Area: Dots + Stats */}
+      <div className={isCompact ? styles.contentAreaCompact : styles.contentArea}>
+        {/* Dot Indicators */}
+        {slides.length > 1 && (
+          <div className={styles.dotIndicators}>
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                className={`${styles.dot} ${i === currentSlide ? styles.dotActive : ''}`}
+                onClick={() => goToSlide(i)}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
           </div>
+        )}
 
-          {/* Right Image - Student Showcase */}
-          <StudentShowcase
-            stats={showcaseStats}
-            autoRotateInterval={5000}
-          />
-        </div>
+        {/* 3 Stat Cards */}
+        {showStats && (
+          <div className={isCompact ? styles.statsBarCompact : styles.statsBar}>
+            <StatCard
+              title={isCompact ? 'Tổng số quỹ' : (settings?.hero_stat_sinhvien || 'Sinh viên được hỗ trợ')}
+              value={isCompact ? formatNumber(stats.totalFunds) : formatNumber(stats.supportedRequests)}
+              icon={isCompact ? <HiOutlineBanknotes /> : <HiOutlineCheckCircle />}
+              iconBgColor="green"
+              subtitle={isCompact ? 'Đang hoạt động' : (settings?.hero_stat_sinhvien_sub || 'So với năm trước')}
+              loading={loading}
+              className={isCompact ? styles.statCardCompact : styles.statCard}
+            />
+            <StatCard
+              title={isCompact ? 'Đơn đã duyệt' : (settings?.hero_stat_giatri || 'Tổng giá trị hỗ trợ')}
+              value={isCompact ? formatNumber(stats.supportedRequests) : `${formatCurrencyShort(stats.totalFundAmount)} đ`}
+              icon={isCompact ? <HiOutlineCheckCircle /> : <HiOutlineBanknotes />}
+              iconBgColor="blue"
+              subtitle={isCompact ? 'Giải ngân thành công' : (settings?.hero_stat_giatri_sub || 'Tích lũy từ các quỹ')}
+              loading={loading}
+              className={isCompact ? styles.statCardCompact : styles.statCard}
+            />
+            <StatCard
+              title={isCompact ? 'Tổng giá trị' : (settings?.hero_stat_nhahaotam || 'Nhà hảo tâm')}
+              value={isCompact ? `${formatCurrencyShort(stats.totalFundAmount)} đ` : formatNumber(stats.totalDonors)}
+              icon={isCompact ? <HiOutlineHeart /> : <HiOutlineHeart />}
+              iconBgColor="red"
+              subtitle={isCompact ? 'Tất cả các quỹ' : (settings?.hero_stat_nhahaotam_sub || 'Đối tác đồng hành')}
+              loading={loading}
+              className={isCompact ? styles.statCardCompact : styles.statCard}
+            />
+          </div>
+        )}
 
-        {/* Bottom Stats Bar (merged from StatsSection) */}
-        <div className={styles.statsBar}>
-          <StatCard
-            title={settings?.hero_stat_sinhvien || 'Sinh viên được hỗ trợ'}
-            value={formatNumber(stats.supportedRequests)}
-            icon={<HiOutlineCheckCircle />}
-            iconBgColor="green"
-            subtitle={settings?.hero_stat_sinhvien_sub || 'So với năm trước'}
-            loading={loading}
-            className={styles.statCard}
-          />
-          <StatCard
-            title={settings?.hero_stat_giatri || 'Tổng giá trị hỗ trợ'}
-            value={`${formatCurrencyShort(stats.totalFundAmount)} đ`}
-            icon={<HiOutlineBanknotes />}
-            iconBgColor="blue"
-            subtitle={settings?.hero_stat_giatri_sub || 'Tích lũy từ các quỹ'}
-            loading={loading}
-            className={styles.statCard}
-          />
-          <StatCard
-            title={settings?.hero_stat_nhahaotam || 'Nhà hảo tâm'}
-            value={formatNumber(stats.totalDonors)}
-            icon={<HiOutlineHeart />}
-            iconBgColor="red"
-            subtitle={settings?.hero_stat_nhahaotam_sub || 'Đối tác đồng hành'}
-            loading={loading}
-            className={styles.statCard}
-          />
-          <StatCard
-            title={settings?.hero_stat_quy || 'Quỹ đang hoạt động'}
-            value={formatNumber(stats.totalFunds)}
-            icon={<HiOutlineArchiveBox />}
-            iconBgColor="purple"
-            trend="neutral"
-            subtitle={settings?.hero_stat_quy_sub || 'Đa dạng hình thức'}
-            loading={loading}
-            className={styles.statCard}
-          />
-        </div>
+        {/* Login Link for Guest Users */}
+        {showLoginPrompt && !isAuthenticated && onLoginClick && (
+          <div className={styles.loginPrompt}>
+            <button
+              type="button"
+              className={styles.loginLink}
+              onClick={onLoginClick}
+              aria-label="Mở form đăng nhập"
+            >
+              Đã có tài khoản? <span className={styles.loginLinkHighlight}>Đăng nhập ngay</span>
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* Background Decorations */}
-      <div className={styles.bgDecor1} />
-      <div className={styles.bgDecor2} />
     </section>
   );
 };
 
 HeroBanner.propTypes = {
   onLoginClick: PropTypes.func,
-  onRegisterClick: PropTypes.func,
+  variant: PropTypes.oneOf(['default', 'compact']),
+  images: PropTypes.arrayOf(PropTypes.shape({
+    url: PropTypes.string,
+    src: PropTypes.string,
+    alt: PropTypes.string,
+  })),
+  showStats: PropTypes.bool,
+  showLoginPrompt: PropTypes.bool,
 };
 
 export default HeroBanner;

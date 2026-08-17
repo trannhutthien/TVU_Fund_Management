@@ -20,9 +20,10 @@ const SEARCHABLE_ITEMS = [
   { label: 'Sinh viên nói gì', path: '/testimonials' },
   { label: 'Danh mục quỹ', path: '/funds' },
   { label: 'Lịch sử giao dịch', path: '/lich-su-giao-dich' },
+  { label: 'Thống kê thu chi', path: '/thong-ke-cong-khai' },
+  { label: 'Khoản tài trợ', path: '/khoan-tai-tro-cong-khai' },
   { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
   { label: 'Tra cứu đơn', path: '/track' },
-  { label: 'Tạo đơn đăng ký', path: '/apply' },
   { label: 'Về Quỹ phát triển', path: '/ve-quy-phat-trien' },
   { label: 'Hồ sơ cá nhân', path: '/profile' },
 ];
@@ -30,7 +31,7 @@ const SEARCHABLE_ITEMS = [
 /**
  * PublicHeader Component
  * 
- * Header cho trang public của hệ thống TVU Fund Management
+ * Header cho trang public của hệ thống Quỹ phát triển Đại học Trà Vinh
  * Gồm: Logo, Navigation Menu, Action Buttons (Đăng ký, Đăng nhập)
  * Responsive với hamburger menu trên mobile
  * 
@@ -198,6 +199,8 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
       children: [
         { label: 'Danh mục quỹ', path: '/funds' },
         { label: 'Lịch sử giao dịch công khai', path: '/lich-su-giao-dich' },
+        { label: 'Thống kê thu chi', path: '/thong-ke-cong-khai' },
+        { label: 'Khoản tài trợ', path: '/khoan-tai-tro-cong-khai' },
         { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
       ],
     },
@@ -216,7 +219,6 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
           : []),
       ],
     },
-    { label: 'TẠO ĐƠN', path: '/apply', highlight: true },
   ];
 
   const [permissions, setPermissions] = useState({});
@@ -281,6 +283,8 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
     '/profile': 'profile',
     '/track': 'track',
     '/lich-su-giao-dich': 'lich_su_giao_dich',
+    '/thong-ke-cong-khai': 'thong_ke_cong_khai',
+    '/khoan-tai-tro-cong-khai': 'khoan_tai_tro_cong_khai',
     '/ve-quy-phat-trien': 've_quy_phat_trien',
     '/alumni': 'cuu_sinh_vien',
   };
@@ -331,7 +335,7 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
           <div className={styles.logoSection} onClick={handleLogoClick}>
             <Logo size="md" variant="icon-only" theme="dark" />
             {checkPageAccess('landing_page') && (
-              <span className={styles.logoText}>{publicSettings.ten_he_thong || 'TVU Funds'}</span>
+              <span className={styles.logoText}>{publicSettings.ten_he_thong || 'Quỹ phát triển Đại học Trà Vinh'}</span>
             )}
           </div>
 
@@ -405,10 +409,8 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
                   </button>
                 )}
 
-                {isAuthenticated ? (
+                {isAuthenticated && (
                   <HeaderActions user={user} onLogout={handleLogout} size="sm" showNotifications={true} />
-                ) : (
-                  <Button variant="primary" size="md" onClick={handleLoginClick} className={styles.btnLogin}>Đăng nhập</Button>
                 )}
 
                 <button className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerOpen : ''}`} onClick={toggleMobileMenu} aria-label="Toggle menu">
@@ -477,10 +479,8 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
           <div className={styles.mobileDivider}></div>
 
           <div className={styles.mobileActions}>
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <HeaderActions user={user} onLogout={handleLogout} size="sm" showNotifications={true} />
-            ) : (
-              <Button variant="primary" size="md" onClick={handleLoginClick} className={styles.btnLogin}>Đăng nhập</Button>
             )}
           </div>
         </div>

@@ -19,7 +19,7 @@ export const getDonorWall = async (req, res) => {
         nt.nhataitro_id,
         nt.tennhataitro,
         nt.loainhataitro,
-        COALESCE(nt.logo, nd.avatar) AS avatar,
+        nd.avatar,
         nd.email,
         nd.sodienthoai,
         COALESCE(SUM(CASE 
@@ -32,7 +32,7 @@ export const getDonorWall = async (req, res) => {
        LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
        LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
        WHERE nt.trangthai = 'Hoat dong'
-       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo, nd.avatar, nd.email, nd.sodienthoai
+       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nd.avatar, nd.email, nd.sodienthoai
        HAVING tong_dong_gop > 0
        ORDER BY tong_dong_gop DESC`
     );
@@ -66,8 +66,6 @@ export const getDonorWall = async (req, res) => {
       id: donor.nhataitro_id,
       ten: donor.tennhataitro,
       loai: donor.loainhataitro,
-      email: donor.email,
-      phone: donor.sodienthoai,
       totalAmount: parseFloat(donor.tong_dong_gop),
       soQuyHoTro: donor.so_quy_ho_tro,
       cacQuyHoTro: fundsMap[donor.nhataitro_id] || [],
@@ -128,8 +126,6 @@ export const getStaffDonors = async (req, res) => {
       email: r.email,
       so_dien_thoai: r.sodienthoai,
       dia_chi: r.diachi,
-      website: r.website,
-      mota: r.mota,
       trangthai: r.trangthai,
       nguoidung_id: r.nguoidung_id,
       avatar: buildDonorAvatarUrl(r.avatar),
@@ -202,8 +198,6 @@ export const getDonorDetail = async (req, res) => {
         email: donor.email,
         so_dien_thoai: donor.sodienthoai,
         dia_chi: donor.diachi,
-        website: donor.website,
-        mota: donor.mota,
         trangthai: donor.trangthai,
         nguoidung_id: donor.nguoidung_id,
         avatar: buildDonorAvatarUrl(donor.avatar),
@@ -258,8 +252,6 @@ export const getPublicDonorDetail = async (req, res) => {
         ten_nha_tai_tro: donor.tennhataitro,
         loai: donor.loainhataitro,
         created_at: donor.ngaytao,
-        website: donor.website,
-        mota: donor.mota,
         avatar: buildDonorAvatarUrl(donor.avatar),
         trangthai: donor.trangthai,
         tong_da_dong_gop: Number(donor.tong_da_dong_gop) || 0,

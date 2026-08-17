@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { toast } from 'react-toastify';
-import { HiOutlineArrowDownTray } from 'react-icons/hi2';
 import api from '@services/api';
 import PublicHeader from '@components/layout/PublicHeader/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
@@ -59,7 +57,6 @@ const PublicLichSuGiaoDichPage = () => {
 
   const [quyOptions, setQuyOptions] = useState([]);
   const [selectedGiaoDich, setSelectedGiaoDich] = useState(null);
-  const [isExporting, setIsExporting] = useState(false);
 
   // ─── Debounce search ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -181,35 +178,6 @@ const PublicLichSuGiaoDichPage = () => {
     !!filterDateRange.to ||
     !!searchKeyword;
 
-  const handleExportExcel = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
-    try {
-      const response = await api.get('/transactions/public/export', {
-        params: filterParams,
-        responseType: 'blob',
-      });
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      link.setAttribute('download', `LichSuGiaoDich_CongKhai_${ts}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Đã xuất file Excel thành công');
-    } catch (err) {
-      console.error('Lỗi xuất Excel công khai:', err);
-      toast.error('Có lỗi khi xuất Excel');
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(totalCount / PAGE_SIZE)),
     [totalCount],
@@ -226,24 +194,6 @@ const PublicLichSuGiaoDichPage = () => {
               Minh bạch toàn bộ dòng tiền Thu - Chi của hệ thống TVU Fund
             </p>
           </div>
-          <button
-            type="button"
-            className={styles.exportBtn}
-            onClick={handleExportExcel}
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <>
-                <span className={styles.spinner} />
-                Đang xuất...
-              </>
-            ) : (
-              <>
-                <HiOutlineArrowDownTray size={16} />
-                Xuất Excel
-              </>
-            )}
-          </button>
         </div>
 
         <LichSuStatsSection data={statsData} isLoading={isLoadingStats} />

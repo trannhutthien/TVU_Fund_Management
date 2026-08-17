@@ -9,8 +9,8 @@ import {
   uploadAvatar,
   uploadFundMiddleware,
   uploadFund,
-  uploadStudentShowcaseMiddleware,
-  uploadStudentShowcase,
+  // uploadStudentShowcaseMiddleware, // REMOVED: Feature không còn sử dụng
+  // uploadStudentShowcase, // REMOVED: Feature không còn sử dụng
   uploadNewsMiddleware,
   uploadNews
 } from '../../controllers/uploads/uploadController.js';
@@ -42,8 +42,8 @@ router.post('/avatar', protect, uploadAvatarMiddleware, uploadAvatar);
 router.post('/fund', protect, uploadFundMiddleware, uploadFund);
 
 // POST /api/upload/student - Upload ảnh sinh viên nổi bật
-// Yêu cầu: Token hợp lệ, FormData với key 'file'
-router.post('/student', protect, uploadStudentShowcaseMiddleware, uploadStudentShowcase);
+// REMOVED: Feature không còn sử dụng
+// router.post('/student', protect, uploadStudentShowcaseMiddleware, uploadStudentShowcase);
 
 // POST /api/upload/news - Upload ảnh tin tức
 // Yêu cầu: Token hợp lệ, FormData với key 'file'

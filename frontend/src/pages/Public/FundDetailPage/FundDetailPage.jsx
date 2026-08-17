@@ -332,7 +332,7 @@ const FundDetailPage = () => {
 
   const handleSponsorClick = () => {
     if (!normalized) return;
-    navigate('/apply?role=sponsor', {
+    navigate('/dong-gop', {
       state: {
         quy_id: normalized.id,
         quyId: normalized.id,

@@ -67,7 +67,7 @@ export const register = async (req, res) => {
     } = req.body;
 
     // 1. Validate loại tài khoản
-    if (!loaiTaiKhoan || !['sinhvien', 'nhataitro', 'canbo'].includes(loaiTaiKhoan)) {
+    if (!loaiTaiKhoan || !['sinhvien', 'nhataitro', 'canbo', 'nhakhoahoc'].includes(loaiTaiKhoan)) {
       return res.status(400).json({
         success: false,
         message: "Loại tài khoản không hợp lệ",
@@ -82,11 +82,11 @@ export const register = async (req, res) => {
           message: "Vui lòng nhập đầy đủ thông tin: họ tên, MSSV, khoa, lớp, email, mật khẩu",
         });
       }
-    } else if (loaiTaiKhoan === 'canbo') {
-      if (!hoTen || !email || !password) {
+    } else if (loaiTaiKhoan === 'canbo' || loaiTaiKhoan === 'nhakhoahoc') {
+      if (!hoTen || !email || !password || !soDienThoai) {
         return res.status(400).json({
           success: false,
-          message: "Vui lòng nhập đầy đủ thông tin: họ tên, email, mật khẩu",
+          message: "Vui lòng nhập đầy đủ thông tin: họ tên, email, số điện thoại, mật khẩu",
         });
       }
     } else {
@@ -130,15 +130,15 @@ export const register = async (req, res) => {
 
     // 7. Chuẩn bị dữ liệu user
     const userData = {
-      hoTen: loaiTaiKhoan === 'sinhvien' ? hoTen.trim() : (loaiTaiKhoan === 'canbo' ? hoTen.trim() : tenToChuc.trim()),
-      maSoDinhDanh: loaiTaiKhoan === 'sinhvien' ? mssv.trim() : (loaiTaiKhoan === 'canbo' ? `CB${Date.now()}` : `NTT${Date.now()}`),
+      hoTen: loaiTaiKhoan === 'sinhvien' ? hoTen.trim() : (loaiTaiKhoan === 'canbo' || loaiTaiKhoan === 'nhakhoahoc' ? hoTen.trim() : tenToChuc.trim()),
+      maSoDinhDanh: loaiTaiKhoan === 'sinhvien' ? mssv.trim() : (loaiTaiKhoan === 'canbo' ? `CB${Date.now()}` : (loaiTaiKhoan === 'nhakhoahoc' ? `NKH${Date.now()}` : `NTT${Date.now()}`)),
       email: email.trim().toLowerCase(),
       matKhau: hashedPassword,
-      roleId: 4, // Vai trò "Người dùng"
-      loaiTaiKhoan: loaiTaiKhoan === 'sinhvien' ? 'SINH_VIEN' : (loaiTaiKhoan === 'canbo' ? 'CAN_BO' : 'NHA_TAI_TRO'),
-      tinhTrangCongTac: loaiTaiKhoan === 'canbo' ? (tinhTrangCongTac || 'Dang cong tac') : null,
-      donViCongTac: loaiTaiKhoan === 'canbo' ? (donViCongTac || null) : null,
-      khoaPhong: loaiTaiKhoan === 'sinhvien' ? khoaPhong.trim() : (loaiTaiKhoan === 'nhataitro' ? loaiNhaTaiTro || null : null),
+      roleId: loaiTaiKhoan === 'nhakhoahoc' ? 4 : 4, // Vai trò 4 cho tất cả (theo yêu cầu user)
+      loaiTaiKhoan: loaiTaiKhoan === 'sinhvien' ? 'SINH_VIEN' : (loaiTaiKhoan === 'canbo' ? 'CAN_BO' : (loaiTaiKhoan === 'nhakhoahoc' ? 'NHA_KHOA_HOC' : 'NHA_TAI_TRO')),
+      tinhTrangCongTac: (loaiTaiKhoan === 'canbo' || loaiTaiKhoan === 'nhakhoahoc') ? (tinhTrangCongTac || 'Dang cong tac') : null,
+      donViCongTac: (loaiTaiKhoan === 'canbo' || loaiTaiKhoan === 'nhakhoahoc') ? (donViCongTac || null) : null,
+      khoaPhong: loaiTaiKhoan === 'sinhvien' ? khoaPhong.trim() : null,
       lop: loaiTaiKhoan === 'sinhvien' ? lop.trim() : null,
       soDienThoai: soDienThoai || null,
       trangThai: 'HOAT_DONG',
@@ -153,9 +153,9 @@ export const register = async (req, res) => {
     if (loaiTaiKhoan === 'nhataitro') {
       try {
         const donorData = {
-          userId: userId,
+          nguoiDungId: userId,
           tenNhaTaiTro: tenToChuc.trim(),
-          loai: loaiNhaTaiTro || 'Ca nhan', // 'Ca nhan' hoặc 'To chuc'
+          loaiNhaTaiTro: loaiNhaTaiTro || 'Ca nhan',
         };
         
         await DonorModel.createDonor(donorData);
@@ -181,7 +181,7 @@ export const register = async (req, res) => {
       hanh_dong: "DANG_KY_TAI_KHOAN",
       loai_doi_tuong: "nguoidung",
       doi_tuong_id: userId,
-      mo_ta: `Đăng ký tài khoản ${loaiTaiKhoan === "nhataitro" ? "nhà tài trợ" : "sinh viên"} thành công`,
+      mo_ta: `Đăng ký tài khoản ${loaiTaiKhoan === "nhataitro" ? "nhà tài trợ" : (loaiTaiKhoan === "nhakhoahoc" ? "nhà khoa học" : (loaiTaiKhoan === "canbo" ? "cán bộ" : "sinh viên"))} thành công`,
       du_lieu_moi: {
         nguoidung_id: newUser.nguoidung_id,
         hoten: newUser.hoten,
@@ -304,11 +304,20 @@ export const login = async (req, res) => {
         hoTen: user.hoten,
         email: email,
         avatar: buildUserAvatarUrl(user.avatar), // ✅ Build full URL
+        soDienThoai: user.sodienthoai || null,
+        diaChi: user.diachi || null,
+        ngaySinh: user.ngaysinh || null,
+        gioiTinh: user.gioitinh || null,
         vaiTro: user.vaitro_id,
         tenVaiTro: user.tenvaitro || null,
         loaiTaiKhoan: user.loaitaikhoan || null,
+        khoaPhong: user.khoaphong || null,
+        lop: user.lop || null,
+        tinhTrangCongTac: user.tinhtrangcongtac || null,
+        donViCongTac: user.donvicongtac || null,
+        trangThai: user.trangthai,
         createdAt: user.ngaytao || null,
-        hasPassword: true,
+        hasPassword: !!user.matkhau,
       },
     });
   } catch (error) {
@@ -342,9 +351,11 @@ export const getMe = async (req, res) => {
         hoTen: user.hoten,
         email: user.email,
         avatar: buildUserAvatarUrl(user.avatar), // ✅ Build full URL
-        soDienThoai: user.sodienthoai || null,
-        diaChi: user.diachi || null,
-        vaiTro: user.vaitro_id,
+      soDienThoai: user.sodienthoai || null,
+      diaChi: user.diachi || null,
+      ngaySinh: user.ngaysinh || null,
+      gioiTinh: user.gioitinh || null,
+      vaiTro: user.vaitro_id,
         tenVaiTro: user.tenvaitro || null,
         loaiTaiKhoan: user.loaitaikhoan || null,
         khoaPhong: user.khoaphong || null,
@@ -573,15 +584,14 @@ export const forgotPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     await NguoiDungModel.updatePassword(user.nguoidung_id, hashedPassword);
 
-    // 5. Trả về kết quả thành công trước (fire-and-forget email)
+    // 5. Gửi email nền trước, rồi trả kết quả (fire-and-forget)
+    sendPasswordResetEmail(email, user.hoten, newPassword).catch((err) => {
+      console.error("[ForgotPassword] Gửi email thất bại:", err.message);
+    });
+
     return res.status(200).json({
       success: true,
       message: "Mật khẩu mới đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.",
-    });
-
-    // 6. Gửi email nền (không block response)
-    sendPasswordResetEmail(email, user.hoten, newPassword).catch((err) => {
-      console.error("[ForgotPassword] Gửi email thất bại:", err.message);
     });
   } catch (error) {
     console.error("Lỗi forgotPassword:", error);

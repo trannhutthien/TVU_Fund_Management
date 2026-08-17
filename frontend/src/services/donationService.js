@@ -21,6 +21,21 @@ export const createPublicDonation = async (donationData) => {
 };
 
 /**
+ * Tạo đề xuất chương trình công khai (không cần đăng nhập)
+ * @param {Object} proposalData - Thông tin đề xuất + info khách vãng lai
+ * @returns {Promise} Response từ server
+ */
+export const createPublicProposal = async (proposalData) => {
+  try {
+    const response = await api.post('/donations/public/propose-program', proposalData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating public proposal:', error);
+    throw error.response?.data || { message: 'Lỗi khi tạo đề xuất chương trình' };
+  }
+};
+
+/**
  * Tạo donation cho user đã đăng nhập
  * @param {Object} donationData - Thông tin donation
  * @returns {Promise} Response từ server

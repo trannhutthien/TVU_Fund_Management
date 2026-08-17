@@ -46,7 +46,47 @@ const RESULT_OPTIONS = [
   { value: 'Tu choi', label: 'Từ chối' },
 ];
 
-const PROCESSED_STATUSES = 'Cho duyet cap 2,Cho duyet cap 3,Cho giai ngan,Da giai ngan,Tu choi cap 1,Tu choi cap 2,Tu choi cap 3,Tu choi';
+const ALL_STATUSES = [
+  'Cho duyet cap 1',
+  'Da duyet cap 1',
+  'Tu choi cap 1',
+  'Cho duyet cap 2',
+  'Da duyet cap 2',
+  'Tu choi cap 2',
+  'Cho duyet cap 3',
+  'Da duyet cap 3',
+  'Tu choi cap 3',
+  'Cho giai ngan',
+  'Da giai ngan',
+  'Cho nghiem thu',
+  'Da nghiem thu',
+  'Nghiem thu khong dat',
+  'Tu choi',
+  'Cho giai ngan dot 1',
+  'Da giai ngan dot 1',
+  'Cho nghiem thu dot 1',
+  'Da nghiem thu dot 1',
+  'Cho giai ngan dot 2',
+  'Dang thu hoi no',
+  'Hoan thanh',
+];
+
+// Nhóm trạng thái "chờ xử lý" theo vai trò → các trạng thái còn lại sẽ hiện ở tab Đã xử lý
+const PENDING_BY_ROLE = {
+  1: ['Cho duyet cap 2'],
+  2: ['Cho duyet cap 3', 'Cho giai ngan', 'Cho giai ngan dot 1', 'Cho giai ngan dot 2'],
+  3: ['Cho duyet cap 1'],
+};
+
+const getProcessedStatuses = (role) => {
+  const excluded = PENDING_BY_ROLE[role] || PENDING_BY_ROLE[3];
+  return ALL_STATUSES.filter((s) => !excluded.includes(s)).join(',');
+};
+
+const getPendingStatus = (role) => {
+  const list = PENDING_BY_ROLE[role] || PENDING_BY_ROLE[3];
+  return list.join(',');
+};
 
 const INITIAL_FILTERS = {
   quy_id: null,
@@ -71,11 +111,30 @@ const daysSince = (value) => {
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 };
 
-const mapResultToStatusKey = (trangThai) => {
-  if (['Cho duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 1', 'Da duyet cap 2', 'Da duyet cap 3', 'Dang xu ly'].includes(trangThai)) return 'processing';
-  if (['Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3'].includes(trangThai)) return 'rejected';
-  if (trangThai === 'Da giai ngan' || trangThai === 'Hoan thanh') return 'approved';
-  return 'pending';
+const STATUS_CONFIG = {
+  'Cho duyet cap 1':      { label: 'Chờ duyệt cấp 1',       variant: 'warning' },
+  'Da duyet cap 1':       { label: 'Đã duyệt cấp 1',        variant: 'info' },
+  'Tu choi cap 1':        { label: 'Từ chối cấp 1',         variant: 'danger' },
+  'Cho duyet cap 2':      { label: 'Chờ duyệt cấp 2',       variant: 'warning' },
+  'Da duyet cap 2':       { label: 'Đã duyệt cấp 2',        variant: 'info' },
+  'Tu choi cap 2':        { label: 'Từ chối cấp 2',         variant: 'danger' },
+  'Cho duyet cap 3':      { label: 'Chờ duyệt cấp 3',       variant: 'warning' },
+  'Da duyet cap 3':       { label: 'Đã duyệt cấp 3',        variant: 'info' },
+  'Tu choi cap 3':        { label: 'Từ chối cấp 3',         variant: 'danger' },
+  'Dang xu ly':           { label: 'Đang xử lý',            variant: 'info' },
+  'Cho giai ngan':        { label: 'Chờ giải ngân',          variant: 'warning' },
+  'Da giai ngan':         { label: 'Đã giải ngân',           variant: 'success' },
+  'Cho nghiem thu':       { label: 'Chờ nghiệm thu',         variant: 'warning' },
+  'Da nghiem thu':        { label: 'Đã nghiệm thu',          variant: 'success' },
+  'Nghiem thu khong dat': { label: 'Nghiệm thu không đạt',   variant: 'danger' },
+  'Tu choi':              { label: 'Từ chối',                variant: 'danger' },
+  'Cho giai ngan dot 1':  { label: 'Chờ giải ngân đợt 1',    variant: 'warning' },
+  'Da giai ngan dot 1':   { label: 'Đã giải ngân đợt 1',     variant: 'success' },
+  'Cho nghiem thu dot 1': { label: 'Chờ nghiệm thu đợt 1',   variant: 'warning' },
+  'Da nghiem thu dot 1':  { label: 'Đã nghiệm thu đợt 1',    variant: 'success' },
+  'Cho giai ngan dot 2':  { label: 'Chờ giải ngân đợt 2',    variant: 'warning' },
+  'Dang thu hoi no':      { label: 'Đang thu hồi nợ',        variant: 'info' },
+  'Hoan thanh':           { label: 'Hoàn thành',              variant: 'success' },
 };
 
 const matchesKeyword = (item, kw) => {
@@ -89,7 +148,7 @@ const matchesKeyword = (item, kw) => {
   return ten.includes(k) || mssv.includes(k) || id.includes(k) || tieuDe.includes(k);
 };
 
-const XetDuyetPage = ({ isAdmin = false }) => {
+const XetDuyetPage = ({ userRole = 3 }) => {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('pending');
@@ -138,34 +197,56 @@ const XetDuyetPage = ({ isAdmin = false }) => {
     };
   }, [keywordInput]);
 
-  const processedStatuses = useMemo(() => {
-    if (isAdmin) {
-      return 'Cho duyet cap 3,Cho giai ngan,Da giai ngan,Tu choi cap 2,Tu choi cap 3,Tu choi';
-    } else {
-      return 'Cho duyet cap 2,Cho duyet cap 3,Cho giai ngan,Da giai ngan,Tu choi cap 1,Tu choi cap 2,Tu choi cap 3,Tu choi';
-    }
-  }, [isAdmin]);
+  const processedStatuses = useMemo(() => getProcessedStatuses(userRole), [userRole]);
 
   const resultOptions = useMemo(() => {
-    if (isAdmin) {
+    if (userRole === 1) {
       return [
+        { value: '', label: 'Tất cả' },
         { value: 'Cho duyet cap 3', label: 'Đã duyệt (Chờ cấp 3)' },
-        { value: 'Tu choi cap 2', label: 'Từ chối (Cấp 2)' },
-      ];
-    } else {
-      return [
-        { value: 'Cho duyet cap 2', label: 'Đã duyệt (Chờ cấp 2)' },
-        { value: 'Tu choi cap 1', label: 'Từ chối (Cấp 1)' },
+        { value: 'Cho giai ngan dot 1,Cho giai ngan dot 2,Cho giai ngan', label: 'Chờ giải ngân' },
+        { value: 'Da giai ngan,Da giai ngan dot 1', label: 'Đã giải ngân' },
+        { value: 'Tu choi cap 1,Tu choi cap 2,Tu choi cap 3,Tu choi', label: 'Từ chối' },
+        { value: 'Cho nghiem thu,Cho nghiem thu dot 1', label: 'Chờ nghiệm thu' },
+        { value: 'Da nghiem thu,Da nghiem thu dot 1', label: 'Đã nghiệm thu' },
+        { value: 'Nghiem thu khong dat', label: 'Nghiệm thu không đạt' },
+        { value: 'Dang thu hoi no', label: 'Đang thu hồi nợ' },
+        { value: 'Hoan thanh', label: 'Hoàn thành' },
       ];
     }
-  }, [isAdmin]);
+    if (userRole === 2) {
+      return [
+        { value: '', label: 'Tất cả' },
+        { value: 'Cho duyet cap 3', label: 'Đã duyệt (Chờ cấp 3)' },
+        { value: 'Cho giai ngan dot 1,Cho giai ngan dot 2,Cho giai ngan', label: 'Chờ giải ngân' },
+        { value: 'Da giai ngan,Da giai ngan dot 1', label: 'Đã giải ngân' },
+        { value: 'Tu choi cap 1,Tu choi cap 2,Tu choi cap 3,Tu choi', label: 'Từ chối' },
+        { value: 'Cho nghiem thu,Cho nghiem thu dot 1', label: 'Chờ nghiệm thu' },
+        { value: 'Da nghiem thu,Da nghiem thu dot 1', label: 'Đã nghiệm thu' },
+        { value: 'Nghiem thu khong dat', label: 'Nghiệm thu không đạt' },
+        { value: 'Dang thu hoi no', label: 'Đang thu hồi nợ' },
+        { value: 'Hoan thanh', label: 'Hoàn thành' },
+      ];
+    }
+    return [
+      { value: '', label: 'Tất cả' },
+      { value: 'Cho duyet cap 2', label: 'Đã duyệt (Chờ cấp 2)' },
+      { value: 'Cho duyet cap 3', label: 'Đã duyệt (Chờ cấp 3)' },
+      { value: 'Cho giai ngan dot 1,Cho giai ngan dot 2,Cho giai ngan', label: 'Chờ giải ngân' },
+      { value: 'Da giai ngan,Da giai ngan dot 1', label: 'Đã giải ngân' },
+      { value: 'Tu choi cap 1,Tu choi cap 2,Tu choi cap 3,Tu choi', label: 'Từ chối' },
+      { value: 'Nghiem thu khong dat', label: 'Nghiệm thu không đạt' },
+      { value: 'Dang thu hoi no', label: 'Đang thu hồi nợ' },
+      { value: 'Hoan thanh', label: 'Hoàn thành' },
+    ];
+  }, [userRole]);
 
   const trangThaiParam = useMemo(() => {
     if (activeTab === 'pending') {
-      return isAdmin ? 'Cho duyet cap 2' : 'Cho duyet cap 1';
+      return getPendingStatus(userRole);
     }
     return filterResult || processedStatuses;
-  }, [activeTab, filterResult, isAdmin, processedStatuses]);
+  }, [activeTab, filterResult, userRole, processedStatuses]);
 
   const isSearching = !!filters.keyword.trim();
 
@@ -203,10 +284,10 @@ const XetDuyetPage = ({ isAdmin = false }) => {
 
   useEffect(() => {
     let mounted = true;
-    const statusToCount = isAdmin ? 'Cho duyet cap 2' : 'Cho duyet cap 1';
+    const pendingCountStatus = getPendingStatus(userRole);
     
     applicationService
-      .getAll({ page: 1, limit: 1, trangThai: statusToCount })
+      .getAll({ page: 1, limit: 1, trangThai: pendingCountStatus })
       .then((res) => {
         if (!mounted) return;
         setPendingCount(res?.pagination?.totalRecords ?? 0);
@@ -217,7 +298,7 @@ const XetDuyetPage = ({ isAdmin = false }) => {
     return () => {
       mounted = false;
     };
-  }, [activeTab, isAdmin]);
+  }, [activeTab, userRole]);
 
   const sortedData = useMemo(() => {
     if (!isSearching) return data;
@@ -270,6 +351,10 @@ const XetDuyetPage = ({ isAdmin = false }) => {
   };
 
   const handleOpenDetail = (requestId) => {
+    if (userRole === 2) {
+      navigate(`/ke-toan/giai-ngan/${requestId}`);
+      return;
+    }
     navigate(`/xet-duyet/${requestId}`);
   };
 
@@ -289,13 +374,17 @@ const XetDuyetPage = ({ isAdmin = false }) => {
             Trang chủ
           </Link>
           <span className={styles.crumbSep}>/</span>
-          <span>Xét duyệt hồ sơ</span>
+          <span>{userRole === 2 ? 'Xét duyệt & giải ngân hồ sơ' : 'Xét duyệt hồ sơ'}</span>
         </div>
 
         <header className={styles.header}>
-          <h1 className={styles.title}>Xét duyệt hồ sơ</h1>
+          <h1 className={styles.title}>
+            {userRole === 2 ? 'Xét duyệt & giải ngân hồ sơ' : 'Xét duyệt hồ sơ'}
+          </h1>
           <p className={styles.subtitle}>
-            Xem xét và xử lý các đơn xin hỗ trợ từ sinh viên
+            {userRole === 2
+              ? 'Xem xét, phê duyệt và giải ngân các đơn xin hỗ trợ'
+              : 'Xem xét và xử lý các đơn xin hỗ trợ từ sinh viên'}
           </p>
         </header>
 
@@ -490,7 +579,10 @@ const XetDuyetPage = ({ isAdmin = false }) => {
                     {showStatusColumn && (
                       <div className={`${styles.cell} ${styles.colStatus}`}>
                         <StatusBadge
-                          status={mapResultToStatusKey(item.trangThai)}
+                          status="pending"
+                          label={STATUS_CONFIG[item.trangThai]?.label || item.trangThai}
+                          variant={STATUS_CONFIG[item.trangThai]?.variant || 'default'}
+                          showIcon={false}
                           size="sm"
                         />
                       </div>
@@ -502,7 +594,7 @@ const XetDuyetPage = ({ isAdmin = false }) => {
                         leftIcon={<HiOutlineEye />}
                         onClick={() => handleOpenDetail(item.requestId)}
                       >
-                        Xem &amp; Duyệt
+                        {userRole === 2 ? 'Xem & Xử lý' : 'Xem & Duyệt'}
                       </Button>
                     </div>
                   </div>
@@ -548,7 +640,7 @@ const XetDuyetPage = ({ isAdmin = false }) => {
 };
 
 XetDuyetPage.propTypes = {
-  isAdmin: PropTypes.bool,
+  userRole: PropTypes.oneOf([1, 2, 3]),
 };
 
 export default XetDuyetPage;

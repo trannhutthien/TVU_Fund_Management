@@ -31,15 +31,19 @@ const StudentProfile = ({ user, onLogout }) => {
     diemTinNhiem: null,
   });
 
+  const vaitro = user?.vaiTro || user?.vai_tro || user?.vaitro_id;
   const userType = user?.loai_tai_khoan || user?.loaiTaiKhoan || user?.loai_nguoi_dung;
-  const isSinhVien = userType === 'SINH_VIEN';
+  
+  // Hiển thị sections cho vai trò 4 (SINH_VIEN, CAN_BO, NHA_KHOA_HOC)
+  // Loại trừ NHA_TAI_TRO (họ dùng DonorProfile riêng)
+  const canViewSections = vaitro === 4 && userType !== 'NHA_TAI_TRO';
 
   useEffect(() => {
-    if (isSinhVien) {
+    if (canViewSections) {
       fetchBankAccounts();
       fetchApplicationOverview();
     }
-  }, [isSinhVien]);
+  }, [canViewSections]);
 
   const fetchBankAccounts = async () => {
     try {
@@ -172,7 +176,7 @@ const StudentProfile = ({ user, onLogout }) => {
           />
         </div>
 
-        {isSinhVien && (
+        {canViewSections && (
           <>
             <BankAccountSection
               bankAccounts={bankAccounts}

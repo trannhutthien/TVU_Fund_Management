@@ -23,6 +23,7 @@ import {
   HiOutlineArrowRightOnRectangle,
   HiOutlineClipboardDocumentList,
   HiOutlineUserGroup,
+  HiOutlineLightBulb,
 } from 'react-icons/hi2';
 import useAuthStore from '@stores/authStore';
 import Logo from '@components/common/Logo';
@@ -69,17 +70,20 @@ const NAV_CONFIG = [
       { label: 'Lịch sử phê duyệt', path: '/admin/phe-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [1] },
       { label: 'Danh sách Quỹ', path: '/admin/quy', icon: HiOutlineBuildingLibrary, roles: [1] },
       { label: 'Trích lập Ngân sách', path: '/admin/phan-bo', icon: HiOutlineBanknotes, roles: [1] },
+      { label: 'Dự toán hàng năm', path: '/admin/du-toan', icon: HiOutlineBanknotes, roles: [1] },
+      { label: 'Đề xuất chương trình', path: '/admin/de-xuat-chuong-trinh', icon: HiOutlineLightBulb, roles: [1] },
+      { label: 'Duyệt đề xuất', path: '/admin/de-xuat', icon: HiOutlineClipboardDocumentList, roles: [1], badgeKey: 'duyetDeXuat' },
       { label: 'Nhà tài trợ', path: '/admin/nha-tai-tro', icon: HiOutlineHandRaised, roles: [1] },
-      { label: 'Khoản tài trợ', path: '/admin/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [1] },
+      { label: 'Khoản tài trợ', path: '/admin/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [1], badgeKey: 'khoanTaiTro' },
       { label: 'Lịch sử giao dịch', path: '/admin/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [1] },
-      { label: 'Đối soát chứng từ', path: '/admin/chung-tu', icon: HiOutlineDocumentText, roles: [1] },
+      { label: 'Đối soát chứng từ', path: '/admin/chung-tu', icon: HiOutlineDocumentText, roles: [1], badgeKey: 'doiSoatChungTu' },
     ]
   },
   {
     group: 'NỘI DUNG TRANG CHỦ',
     roles: [1],
     items: [
-      { label: 'Sinh viên nổi bật', path: '/admin/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [1] },
+      // { label: 'Sinh viên nổi bật', path: '/admin/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [1] }, // REMOVED: Feature không còn sử dụng
       { label: 'Cảm nhận sinh viên', path: '/admin/danhgia', icon: HiOutlineChatBubbleLeftRight, roles: [1] },
       { label: 'Tin tức & Sự kiện', path: '/admin/tin-tuc', icon: HiOutlineMegaphone, roles: [1] },
       { label: 'Tạo bài viết', path: '/admin/tintuc/tao', icon: HiOutlinePencilSquare, roles: [1] },
@@ -96,7 +100,7 @@ const NAV_CONFIG = [
     group: 'GIÁM SÁT',
     roles: [1],
     items: [
-      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [1] },
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [1], badgeKey: 'nghiemThuCongNo' },
     ]
   },
 
@@ -112,10 +116,12 @@ const NAV_CONFIG = [
     group: 'NGHIỆP VỤ',
     roles: [2],
     items: [
-      { label: 'Giải ngân hồ sơ', path: '/ke-toan/giai-ngan', icon: HiOutlineBanknotes, roles: [2], badgeKey: 'pendingCount' },
+      { label: 'Xét duyệt & giải ngân hồ sơ', path: '/ke-toan/xet-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [2], badgeKey: 'pendingCount' },
       { label: 'Trích lập Ngân sách', path: '/ke-toan/phan-bo', icon: HiOutlineBanknotes, roles: [2] },
+      { label: 'Dự toán hàng năm', path: '/ke-toan/du-toan', icon: HiOutlineBanknotes, roles: [2] },
+      { label: 'Duyệt đề xuất', path: '/ke-toan/de-xuat', icon: HiOutlineClipboardDocumentList, roles: [2], badgeKey: 'duyetDeXuat' },
       { label: 'Lịch sử giao dịch', path: '/ke-toan/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [2] },
-      { label: 'Khoản tài trợ', path: '/ke-toan/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [2] },
+      { label: 'Khoản tài trợ', path: '/ke-toan/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [2], badgeKey: 'khoanTaiTro' },
     ]
   },
   {
@@ -130,7 +136,7 @@ const NAV_CONFIG = [
     group: 'GIÁM SÁT',
     roles: [2],
     items: [
-      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [2] },
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [2], badgeKey: 'nghiemThuCongNo' },
     ]
   },
 
@@ -149,6 +155,9 @@ const NAV_CONFIG = [
       { label: 'Xét duyệt hồ sơ', path: '/can-bo/xet-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [3], badgeKey: 'pendingCount' },
       { label: 'Danh sách Quỹ', path: '/can-bo/quy', icon: HiOutlineBuildingLibrary, roles: [3] },
       { label: 'Trích lập Ngân sách', path: '/can-bo/phan-bo', icon: HiOutlineBanknotes, roles: [3] },
+      { label: 'Dự toán hàng năm', path: '/can-bo/du-toan', icon: HiOutlineBanknotes, roles: [3] },
+      { label: 'Đề xuất chương trình', path: '/can-bo/de-xuat-chuong-trinh', icon: HiOutlineLightBulb, roles: [3] },
+      { label: 'Duyệt đề xuất', path: '/can-bo/de-xuat', icon: HiOutlineClipboardDocumentList, roles: [3], badgeKey: 'duyetDeXuat' },
       { label: 'Nhà tài trợ', path: '/can-bo/nha-tai-tro', icon: HiOutlineHandRaised, roles: [3] },
     ]
   },
@@ -163,7 +172,7 @@ const NAV_CONFIG = [
     group: 'NỘI DUNG TRANG CHỦ',
     roles: [3],
     items: [
-      { label: 'Sinh viên nổi bật', path: '/can-bo/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [3] },
+      // { label: 'Sinh viên nổi bật', path: '/can-bo/sinh-vien-noi-bat', icon: HiOutlineStar, roles: [3] }, // REMOVED: Feature không còn sử dụng
       { label: 'Cảm nhận sinh viên', path: '/can-bo/danhgia', icon: HiOutlineChatBubbleLeftRight, roles: [3] },
       { label: 'Tin tức & Sự kiện', path: '/can-bo/tin-tuc', icon: HiOutlineMegaphone, roles: [3] },
       { label: 'Tạo bài viết', path: '/can-bo/tintuc/tao', icon: HiOutlinePencilSquare, roles: [3] },
@@ -180,7 +189,7 @@ const NAV_CONFIG = [
     group: 'GIÁM SÁT',
     roles: [3],
     items: [
-      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [3] },
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [3], badgeKey: 'nghiemThuCongNo' },
     ]
   },
 
@@ -197,10 +206,10 @@ const NAV_CONFIG = [
     roles: [5],
     items: [
       { label: 'Danh sách Quỹ', path: '/kiem-soat/quy', icon: HiOutlineBuildingLibrary, roles: [5] },
-      { label: 'Phê duyệt', path: '/kiem-soat/phe-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [5] },
+      { label: 'Phê duyệt', path: '/kiem-soat/phe-duyet', icon: HiOutlineClipboardDocumentCheck, roles: [5], badgeKey: 'pendingCount' },
       { label: 'Khoản tài trợ', path: '/kiem-soat/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [5] },
       { label: 'Giao dịch', path: '/kiem-soat/giao-dich', icon: HiOutlineArrowsRightLeft, roles: [5] },
-      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [5] },
+      { label: 'Nghiệm thu & Công nợ', path: '/giam-sat', icon: HiOutlineClipboardDocumentCheck, roles: [5], badgeKey: 'nghiemThuCongNo' },
     ]
   },
   {
@@ -218,7 +227,13 @@ const NAV_CONFIG = [
 const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCollapse }) => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuthStore();
-  const [pendingCount, setPendingCount] = useState(0);
+  const [badgeCounts, setBadgeCounts] = useState({
+    pendingCount: 0,
+    nghiemThuCongNo: 0,
+    khoanTaiTro: 0,
+    doiSoatChungTu: 0,
+    duyetDeXuat: 0,
+  });
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState({});
@@ -278,7 +293,7 @@ const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCo
       try {
         const res = await api.get('/statistics/pending-count');
         if (res.data?.success) {
-          setPendingCount(res.data.data.pendingCount);
+          setBadgeCounts(res.data.data);
         }
       } catch (err) {
         console.error('Error fetching pending count:', err);
@@ -307,7 +322,7 @@ const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCo
     let key = segments[segments.length - 1];
     if (key === 'xet-duyet') key = 'xet_duyet';
     if (key === 'nha-tai-tro') key = 'nha_tai_tro';
-    if (key === 'sinh-vien-noi-bat') key = 'sinh_vien_noi_bat';
+    // if (key === 'sinh-vien-noi-bat') key = 'sinh_vien_noi_bat'; // REMOVED: Feature không còn sử dụng
     if (key === 'danhgia') key = 'danhgia';
     if (key === 'tin-tuc') key = 'tin_tuc';
     if (key === 'bao-cao') key = 'bao_cao';
@@ -318,7 +333,10 @@ const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCo
     if (key === 'phe-duyet') key = 'phe_duyet';
     if (key === 'nhat-ky') key = 'nhat_ky';
     if (key === 'phan-bo') key = 'phan_bo';
+    if (key === 'du-toan') key = 'du_toan';
     if (key === 'giam-sat') key = 'giam_sat';
+    if (key === 'de-xuat-chuong-trinh') key = 'de_xuat_chuong_trinh';
+    if (key === 'de-xuat') key = 'duyet_de_xuat';
 
     const perm = permissions[key];
     if (!perm) return true;
@@ -461,7 +479,8 @@ const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCo
             {/* Nav Items */}
             {group.items.map((item) => {
               const Icon = item.icon;
-              const showBadge = item.badgeKey && pendingCount > 0;
+              const badgeValue = item.badgeKey ? (badgeCounts[item.badgeKey] || 0) : 0;
+              const showBadge = badgeValue > 0;
 
               return (
                 <NavLink
@@ -476,7 +495,7 @@ const StaffSidebar = ({ isOpen = false, onClose, isCollapsed = false, onToggleCo
                   <Icon className={styles.navIcon} />
                   {!isCollapsed && <span className={styles.navLabel}>{item.label}</span>}
                   {showBadge && (
-                    <span className={styles.badge}>{pendingCount}</span>
+                    <span className={styles.badge}>{badgeValue}</span>
                   )}
                 </NavLink>
               );

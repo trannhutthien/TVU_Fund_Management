@@ -1,0 +1,142 @@
+.donationFormSection {
+  padding: 80px 0;
+  background: #f8f9fa;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #c0392b;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a5276;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #6c757d;
+  margin: 0;
+}
+
+.formCard {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 32px;
+
+  @media (max-width: 600px) {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+}
+
+.stepContainer {
+  min-height: 400px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.actionsRight {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.prevBtn,
+.nextBtn,
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.prevBtn {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+
+  &:hover {
+    background: #e9ecef;
+  }
+}
+
+.nextBtn {
+  background: #1a5276;
+  color: #fff;
+
+  &:hover {
+    background: #154360;
+  }
+}
+
+.submitBtn {
+  background: #27ae60;
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: #219a52;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.submitError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+  margin-bottom: 20px;
+}

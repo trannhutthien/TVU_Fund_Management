@@ -8,7 +8,7 @@ import { buildUserAvatarUrl } from "../../utils/helpers/imageHelper.js";
 const settingsPath = path.join(process.cwd(), "config/system_settings.json");
 
 const DEFAULT_SETTINGS = {
-  ten_he_thong: "TVU Fund Management",
+  ten_he_thong: "Quỹ phát triển Đại học Trà Vinh",
   don_vi_quan_ly: "Phòng Công tác Sinh viên - Trường Đại học Trà Vinh",
   email_lien_he: "TVU@tvu.edu.vn",
   email_ho_tro: "phongctsv@tvu.edu.vn",
@@ -36,7 +36,7 @@ const DEFAULT_SETTINGS = {
   // ─── HERO BANNER ─────────────────────────────────────────────
   hero_badge: "Hỗ trợ sinh viên TVU",
   hero_title: "Quỹ phát triển Đại học Trà Vinh",
-  hero_description: "Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. Kết nối sinh viên với các cơ hội hỗ trợ tài chính, giúp các em yên tâm theo đuổi ước mơ học tập.",
+  hero_description: "Quỹ Phát triển Đại học Trà Vinh — nền tảng số hóa minh bạch cho mọi nguồn lực hỗ trợ sinh viên.",
   hero_stat_sinhvien: "Sinh viên được hỗ trợ",
   hero_stat_sinhvien_sub: "So với năm trước",
   hero_stat_giatri: "Tổng giá trị hỗ trợ",
@@ -45,6 +45,7 @@ const DEFAULT_SETTINGS = {
   hero_stat_nhahaotam_sub: "Đối tác đồng hành",
   hero_stat_quy: "Quỹ đang hoạt động",
   hero_stat_quy_sub: "Đa dạng hình thức",
+  hero_banner_images: [],
 
   // ─── COMBINED PROCESS SECTION ────────────────────────────────
   process_label: "QUY TRÌNH ĐƠN GIẢN",
@@ -138,6 +139,7 @@ const getPublicSettingsPayload = (settings = {}) => {
     hero_stat_nhahaotam_sub: cfg.hero_stat_nhahaotam_sub,
     hero_stat_quy: cfg.hero_stat_quy,
     hero_stat_quy_sub: cfg.hero_stat_quy_sub,
+    hero_banner_images: cfg.hero_banner_images || [],
     // Process
     process_label: cfg.process_label,
     process_title: cfg.process_title,
@@ -172,6 +174,9 @@ const getPublicSettingsPayload = (settings = {}) => {
     guidelines_contact_phone: cfg.guidelines_contact_phone,
     guidelines_contact_email: cfg.guidelines_contact_email,
     guidelines_contact_address: cfg.guidelines_contact_address,
+    // Tài chính - cần cho trang xét duyệt
+    laisuatnganhangthamchieu: cfg.laisuatnganhangthamchieu,
+    tyleLaiPhatToiDa: cfg.tyleLaiPhatToiDa,
   };
 };
 

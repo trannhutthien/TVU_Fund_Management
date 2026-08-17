@@ -1,14 +1,16 @@
 import api from './api'
 
 const nghiemThuService = {
-  createInspection: async (yeucauhotroId, loaiKiemTra) => {
-    const response = await api.post('/nghiem-thu', { yeucauhotroId, loaiKiemTra })
+  createInspection: async (yeucauhotroId, loaiKiemTra, { soQuyetDinh, fileBienBan, nhanXet } = {}) => {
+    const response = await api.post('/nghiem-thu', {
+      yeucauhotroId, loaiKiemTra, soQuyetDinh, fileBienBan, nhanXet
+    })
     return response.data
   },
 
-  updateResult: async (id, { ketqua, nhanXet, soQuyetDinh, fileBienBan }) => {
+  updateResult: async (id, { ketqua, nhanXet, soQuyetDinh, fileBienBan, ngayNghiemThu }) => {
     const response = await api.put(`/nghiem-thu/${id}`, {
-      ketqua, nhanXet, soQuyetDinh, fileBienBan
+      ketqua, nhanXet, soQuyetDinh, fileBienBan, ngayNghiemThu
     })
     return response.data
   },

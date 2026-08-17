@@ -60,7 +60,9 @@ const RequestInfoCard = ({
 
         <div className={styles.body}>
           {/* Tiêu đề */}
-          <div className={styles.title}>{tieuDe || '—'}</div>
+          {tieuDe && tieuDe !== moTa && (
+            <div className={styles.title}>{tieuDe}</div>
+          )}
 
           {/* Badge loại hỗ trợ + Đợt giải ngân */}
           {(loaiHoTro || dotDuyet) && (

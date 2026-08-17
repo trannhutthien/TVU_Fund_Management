@@ -20,6 +20,9 @@ import {
   HiOutlineBuildingLibrary,
   HiOutlineHeart,
   HiOutlineExclamationTriangle,
+  HiOutlineHandRaised,
+  HiOutlineGift,
+  HiOutlineArrowPath,
 } from 'react-icons/hi2';
 import PublicHeader from '@components/layout/PublicHeader/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
@@ -205,7 +208,7 @@ const AboutFundPage = () => {
             <div className={styles.heroActions}>
               <Button 
                 variant="primary" 
-                onClick={() => navigate('/apply')}
+                onClick={() => navigate('/dong-gop')}
                 className={styles.heroBtn}
               >
                 Tiếp nhận tài trợ
@@ -376,28 +379,28 @@ const AboutFundPage = () => {
                   <div className={styles.dieuLeCardBody}>
                       <div className={styles.nguonVangGrid}>
                       <div className={styles.nguonVangItem}>
-                        <span className={styles.nguonVangIcon}>🤝</span>
+                        <HiOutlineHandRaised className={styles.nguonVangIcon} />
                         <div>
                           <strong>Đóng góp ban đầu</strong>
                           <p>Của các sáng lập viên</p>
                         </div>
                       </div>
                       <div className={styles.nguonVangItem}>
-                        <span className={styles.nguonVangIcon}>🎁</span>
+                        <HiOutlineGift className={styles.nguonVangIcon} />
                         <div>
                           <strong>Tài trợ, hiến tặng</strong>
                           <p>Từ tổ chức, doanh nghiệp và cá nhân trong và ngoài nước</p>
                         </div>
                       </div>
                       <div className={styles.nguonVangItem}>
-                        <span className={styles.nguonVangIcon}>🏦</span>
+                        <HiOutlineBuildingLibrary className={styles.nguonVangIcon} />
                         <div>
                           <strong>Lãi tiền gửi</strong>
                           <p>Và các hoạt động phát triển vốn hợp pháp</p>
                         </div>
                       </div>
                       <div className={styles.nguonVangItem}>
-                        <span className={styles.nguonVangIcon}>♻️</span>
+                        <HiOutlineArrowPath className={styles.nguonVangIcon} />
                         <div>
                           <strong>Nguồn thu hồi</strong>
                           <p>Từ các dự án được hỗ trợ</p>

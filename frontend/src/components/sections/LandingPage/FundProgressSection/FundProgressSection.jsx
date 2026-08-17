@@ -261,15 +261,36 @@ const FundProgressSection = () => {
     // Sort rounds by thutu
     const sorted = [...disbursementRounds].sort((a, b) => (a.thutu || 0) - (b.thutu || 0));
 
+    // Xac dinh dot hien tai
+    const getCurrentRoundIndex = () => {
+      for (let i = 0; i < sorted.length; i++) {
+        const round = sorted[i];
+        const hasActualDate = round.ngayThucTe && round.trangThai === 'hoanthanh';
+        if (hasActualDate) continue;
+        const roundDate = new Date(round.ngayDuKien);
+        if (roundDate <= today) return i;
+      }
+      for (let i = 0; i < sorted.length; i++) {
+        const round = sorted[i];
+        const hasActualDate = round.ngayThucTe && round.trangThai === 'hoanthanh';
+        if (hasActualDate) continue;
+        const roundDate = new Date(round.ngayDuKien);
+        if (roundDate > today) return i;
+      }
+      return -1;
+    };
+    const currentRoundIndex = getCurrentRoundIndex();
+
     // Step 0: Mở đơn — use fund start date or earliest round date
     const moDonDate = startDate || sorted[0]?.ngayDuKien;
     const moDonStatus = moDonDate ? (new Date(moDonDate) <= today ? 'completed' : 'upcoming') : 'pending';
 
-    // Step 1..n: Đợt 1, Đợt 2, ... from rounds
+    // Step 1..n: Dot 1, Dot 2, ... from rounds
     const roundSteps = sorted.map((round, i) => {
       const hasActualDate = round.ngayThucTe && round.trangThai === 'hoanthanh';
       const isCompleted = hasActualDate;
       const isUpcoming = round.ngayDuKien && new Date(round.ngayDuKien) > today;
+      const isCurrent = i === currentRoundIndex && !isCompleted;
 
       return {
         key: round.dotId,
@@ -277,7 +298,8 @@ const FundProgressSection = () => {
         desc: round.moTa || round.tenDot || `Đợt giải ngân ${i + 1}`,
         status: isCompleted ? 'completed' : isUpcoming ? 'upcoming' : 'pending',
         date: isCompleted ? round.ngayThucTe : round.ngayDuKien,
-        expected: !isCompleted
+        expected: !isCompleted,
+        isCurrent
       };
     });
 
@@ -298,7 +320,7 @@ const FundProgressSection = () => {
   const handleDonateClick = (fund) => {
     if (!fund?.id) return;
 
-    navigate(`/apply?role=donor&fundId=${fund.id}`, {
+    navigate(`/dong-gop?fundId=${fund.id}`, {
       state: {
         quy_id: fund.id,
         quyId: fund.id,
@@ -502,7 +524,8 @@ const FundProgressSection = () => {
                       key={ms.key}
                       className={`${styles.timelineStep} ${
                         ms.status === 'completed' ? styles.stepCompleted :
-                        ms.status === 'upcoming' ? styles.stepUpcoming : styles.stepPending
+                        ms.status === 'upcoming' ? styles.stepUpcoming :
+                        ms.isCurrent ? styles.stepCurrent : styles.stepPending
                       }`}
                     >
                       {/* Connector line */}
@@ -516,6 +539,8 @@ const FundProgressSection = () => {
                       <div className={styles.stepNode}>
                         {ms.status === 'completed' ? (
                           <div className={styles.stepCheck}><HiCheck /></div>
+                        ) : ms.isCurrent ? (
+                          <div className={styles.stepPulse} />
                         ) : (
                           <div className={styles.stepDot} />
                         )}
@@ -523,7 +548,7 @@ const FundProgressSection = () => {
 
                       {/* Step content */}
                       <div className={styles.stepContent}>
-                        <span className={styles.stepLabel}>{ms.label}</span>
+                        <span className={`${styles.stepLabel} ${ms.isCurrent ? styles.labelCurrent : ''}`}>{ms.label}</span>
                         {ms.status === 'completed' && ms.date && (
                           <span className={styles.stepDate}>
                             {formatDateShort(ms.date)}

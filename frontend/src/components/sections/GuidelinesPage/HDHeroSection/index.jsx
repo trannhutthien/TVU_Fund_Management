@@ -28,7 +28,7 @@ const HDHeroSection = ({ searchKeyword, setSearchKeyword }) => {
         <div className={styles.label}>TRUNG TÂM HỖ TRỢ</div>
         <h1 className={styles.title}>Hướng dẫn & Quy định</h1>
         <p className={styles.description}>
-          Tìm hiểu cách sử dụng hệ thống TVU Fund Management — từ đăng ký đến nhận hỗ trợ một cách dễ dàng.
+          Tìm hiểu cách sử dụng hệ thống Quỹ phát triển Đại học Trà Vinh — từ đăng ký đến nhận hỗ trợ một cách dễ dàng.
         </p>
         
         <div className={styles.searchBox}>

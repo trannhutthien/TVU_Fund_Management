@@ -34,69 +34,269 @@
 }
 
 // ============================================
-// FIELD GROUP + LABEL
+// FILTER SECTION - Layout giống FundsPage
 // ============================================
-.fieldGroup {
-  margin-bottom: 16px;
+.filterSection {
+  margin-bottom: 20px;
 }
 
-.fieldGroupAnimated {
+// Search Bar
+.searchWrapper {
   margin-bottom: 16px;
-  animation: fadeInDown 0.2s ease-out;
+
+  :global(.input-container) {
+    margin-bottom: 0;
+  }
+
+  :global(.input-field) {
+    width: 100%;
+    height: 48px;
+    border-radius: 10px;
+    background: #f8f9ff;
+    border: 2px solid #e2e8f0;
+    padding: 0 16px 0 44px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-primary, #1a2f5e);
+    transition: all 0.25s ease;
+
+    &:hover {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+    }
+
+    &:focus {
+      border-color: var(--color-primary, #1a2f5e);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(26, 47, 94, 0.08);
+    }
+
+    &::placeholder {
+      color: #94a3b8;
+      font-weight: 400;
+    }
+  }
+
+  :global(.input-icon-left) {
+    left: 14px;
+    color: #94a3b8;
+    width: 20px;
+    height: 20px;
+  }
 }
 
-.fieldLabel {
-  font-size: 13px;
-  font-weight: 600;
+// Filters Row - 3 columns
+.filtersRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: start;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.filterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterLabel {
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
   color: var(--color-primary, #1a2f5e);
-  margin-bottom: 8px;
+  padding-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before {
+    content: '';
+    width: 3px;
+    height: 10px;
+    background: var(--color-gold, #f0a500);
+    border-radius: 2px;
+  }
 }
 
-.dropdown {
-  width: 100%;
+.filterDropdown,
+.sortDropdown {
+  :global(.dropdown-trigger button) {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #f8f9ff;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    color: var(--color-primary, #1a2f5e);
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+    }
+
+    &:focus,
+    &:active {
+      border-color: var(--color-primary, #1a2f5e);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(26, 47, 94, 0.08);
+    }
+  }
+
+  :global(.dropdown-content) {
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    overflow: hidden;
+    z-index: 200;
+  }
+
+  :global(.dropdown-item) {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    color: var(--color-primary, #1a2f5e);
+
+    &:hover {
+      background: rgba(26, 47, 94, 0.06);
+    }
+  }
+}
+
+// ============================================
+// FUND LIST SECTION
+// ============================================
+.fundListSection {
+  margin-bottom: 20px;
 }
 
 .loadingHint,
 .emptyHint {
-  margin-top: 6px;
-  font-size: 13px;
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
   color: #94a3b8;
+  background: #f8f9ff;
+  border-radius: 8px;
+  border: 1px dashed #e2e8f0;
 }
 
 .emptyHint {
   color: #f59e0b;
 }
 
+.fundList {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8f9ff;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
 // ============================================
-// FUND OPTION trong dropdown
+// FUND ITEM - Card selectable
 // ============================================
-.fundOption {
+.fundItem {
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: rgba(26, 47, 94, 0.04);
+  }
+}
+
+.fundItemSelected {
+  background: rgba(26, 47, 94, 0.06) !important;
+  border-left: 3px solid var(--color-primary, #1a2f5e);
+
+  &:hover {
+    background: rgba(26, 47, 94, 0.08) !important;
+  }
+}
+
+.fundItemContent {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fundItemHeader {
+  display: flex;
   align-items: center;
-  width: 100%;
+  justify-content: space-between;
   gap: 8px;
 }
 
-.fundOptionName {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.fundItemName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary, #1a2f5e);
+  margin: 0;
+  line-height: 1.3;
 }
 
-.fundOptionBadge {
+.fundItemCheck {
+  font-size: 18px;
+  color: #10b981;
   flex-shrink: 0;
-  font-size: 12px;
+}
+
+.fundItemDesc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fundItemMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.fundItemBalance {
+  font-size: 13px;
   font-weight: 600;
-  color: var(--color-primary, #1a2f5e);
-  background: rgba(59, 111, 245, 0.08);
-  padding: 2px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
+  color: #10b981;
 }
 
 // ============================================
@@ -104,6 +304,9 @@
 // ============================================
 .detailAnimated {
   animation: fadeInSlideDown 0.25s ease-out;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #e2e8f0;
 }
 
 // ============================================
@@ -173,10 +376,6 @@
   font-size: 16px;
   color: var(--color-primary, #1a2f5e);
   flex-shrink: 0;
-}
-
-.infoEmoji {
-  font-size: 14px;
 }
 
 .infoValue {
@@ -271,17 +470,6 @@
 // ============================================
 // ANIMATIONS
 // ============================================
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes fadeInSlideDown {
   from {
     opacity: 0;
@@ -293,79 +481,73 @@
   }
 }
 
-// ============================================
-// RESPONSIVE
-// ============================================
-@media (max-width: 640px) {
-  .card {
-    padding: 20px 16px;
+@keyframes fadeInBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
   }
-
-  .infoGrid {
-    grid-template-columns: 1fr;
+  60% {
+    transform: translateY(2px) scale(1.02);
   }
-
-  .sectionTitle span {
-    font-size: 16px;
-  }
-}
-
-
-// ============================================
-// LOADING BANK INFO
-// ============================================
-.loadingBankInfo {
-  margin-top: 20px;
-  padding: 20px;
-  text-align: center;
-  background: #f8fafc;
-  border: 2px dashed #cbd5e0;
-  border-radius: 12px;
-  color: var(--color-text-secondary);
-  font-size: 0.95rem;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
+  100% {
     opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
+    transform: translateY(0) scale(1);
   }
 }
 
-// Badge cho dropdown option và detail
-.fundOptionRight {
-  display: flex;
+// ============================================
+// NHÓM QUỸ BADGE
+// ============================================
+.nhomQuyBadge {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  border: 2px solid;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  animation: fadeInBounce 0.4s ease-out;
+}
+
+.nhomQuyIcon {
+  font-size: 22px;
   flex-shrink: 0;
 }
 
-.typeBadge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
+.nhomQuyText {
   letter-spacing: 0.3px;
-  white-space: nowrap;
 }
 
-.badgeParent {
+.badgeGrant {
+  background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.badgeRecoverable {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
   color: #2563eb;
-  background: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-color: #2563eb;
 }
 
-.badgeChild {
-  color: #7c3aed;
-  background: rgba(124, 58, 237, 0.08);
-  border: 1px solid rgba(124, 58, 237, 0.15);
+.badgeLoan {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+  border-color: #d97706;
 }
 
-// Thông tin quỹ mẹ ở phần tóm tắt
+.badgeDefault {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+
+// ============================================
+// PARENT FUND INFO
+// ============================================
 .parentFundInfo {
   margin-top: 10px;
   padding: 8px 12px;
@@ -389,99 +571,26 @@
 }
 
 // ============================================
-// HÌNH THỨC QUYÊN GÓP (PARENT / CUSTOM CARDS)
+// RESPONSIVE
 // ============================================
-.targetSelection {
-  margin-bottom: 24px;
-  animation: fadeInDown 0.2s ease-out;
-}
-
-.targetCards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-.targetCard {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  &:hover {
-    border-color: #cbd5e1;
-    background: #f1f5f9;
-  }
-}
-
-.targetCardActive {
-  border-color: var(--color-primary, #1a2f5e);
-  background: rgba(26, 47, 94, 0.02);
-  box-shadow: 0 4px 12px rgba(26, 47, 94, 0.06);
-
-  &:hover {
-    border-color: var(--color-primary, #1a2f5e);
-    background: rgba(26, 47, 94, 0.02);
-  }
-}
-
-.targetCardHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.targetRadio {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid #cbd5e1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease-in-out;
-  flex-shrink: 0;
-
-  &::after {
-    content: '';
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: transparent;
-    transition: all 0.2s ease-in-out;
-  }
-}
-
-.targetRadioActive {
-  border-color: var(--color-primary, #1a2f5e);
-  
-  &::after {
-    background: var(--color-primary, #1a2f5e);
-  }
-}
-
-.targetTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-primary, #1a2f5e);
-}
-
-.targetDesc {
-  font-size: 13px;
-  color: #64748b;
-  line-height: 1.5;
-  margin: 0;
-}
-
 @media (max-width: 640px) {
-  .targetCards {
+  .card {
+    padding: 20px 16px;
+  }
+
+  .infoGrid {
     grid-template-columns: 1fr;
   }
-}
 
+  .sectionTitle span {
+    font-size: 16px;
+  }
+
+  .fundItem {
+    padding: 12px 14px;
+  }
+
+  .fundItemName {
+    font-size: 14px;
+  }
+}

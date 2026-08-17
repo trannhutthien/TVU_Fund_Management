@@ -1,11 +1,14 @@
 import express from "express";
-import { getFunds, createFund, getPublicFunds, updateFundStatus, getFundDetail, updateFund, getFundBankAccounts, getAvailableBalance } from "../../controllers/funds/fundController.js";
+import { getFunds, createFund, getPublicFunds, getFundCountByGroup, updateFundStatus, getFundDetail, updateFund, getFundBankAccounts, getAvailableBalance } from "../../controllers/funds/fundController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
 
 const router = express.Router();
 
 // ─── PUBLIC ROUTES (không cần authentication) ────────────────────────────────
+
+// GET /api/funds/count-by-group — Lấy số lượng quỹ theo từng loại
+router.get("/count-by-group", getFundCountByGroup);
 
 // GET /api/funds/public — Lấy danh sách quỹ công khai
 router.get("/public", getPublicFunds);

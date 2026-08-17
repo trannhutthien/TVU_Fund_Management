@@ -260,3 +260,97 @@
   margin-top: 1px;
   filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
 }
+
+// Custom input group for select dropdown
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
+.inputLabel {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-bottom: $space-1;
+
+  svg {
+    color: var(--color-primary);
+    opacity: 0.8;
+  }
+}
+
+.selectInput {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #0f172a;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
+  );
+  border: 2px solid rgba(203, 213, 225, 0.6);
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  // Shadow subtle
+  box-shadow: 
+    0 2px 8px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+  &:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 
+      0 4px 12px rgba(59, 130, 246, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 
+      0 0 0 4px rgba(59, 130, 246, 0.1),
+      0 4px 16px rgba(59, 130, 246, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background: rgba(241, 245, 249, 0.5);
+  }
+
+  // Custom arrow for dropdown
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231a2f5e' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 44px;
+}
+
+.inputValue {
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  background: linear-gradient(
+    135deg,
+    rgba(248, 250, 252, 0.8) 0%,
+    rgba(241, 245, 249, 0.6) 100%
+  );
+  border: 2px solid rgba(26, 47, 94, 0.12);
+  border-radius: 12px;
+  letter-spacing: 0.01em;
+  
+  box-shadow: 
+    0 2px 6px rgba(15, 23, 42, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}

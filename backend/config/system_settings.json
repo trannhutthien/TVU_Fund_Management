@@ -1,5 +1,5 @@
 {
-  "ten_he_thong": "TVU Fund Management",
+  "ten_he_thong": "Quỹ phát triển Đại học Trà Vinh",
   "don_vi_quan_ly": "Phòng Công tác Sinh viên - Trường Đại học Trà Vinh",
   "email_lien_he": "TVU@tvu.edu.vn",
   "email_ho_tro": "phongctsv@tvu.edu.vn",
@@ -27,11 +27,10 @@
     "DOC"
   ],
   "maintenanceMode": false,
-  "laisuatnganhangthamchieu": 2.6,
-  "tyleLaiPhatToiDa": 2,
+  "laisuatnganhangthamchieu": 2.3,
   "hero_badge": "Hỗ trợ sinh viên TVU",
   "hero_title": "Quỹ phát triển Đại học Trà Vinh",
-  "hero_description": "Hệ thống quản lý quỹ học bổng hiện đại, minh bạch và hiệu quả. Kết nối sinh viên với các cơ hội hỗ trợ tài chính, giúp các em yên tâm theo đuổi ước mơ học tập.",
+  "hero_description": "Quỹ Phát triển Đại học Trà Vinh — nền tảng số hóa minh bạch cho mọi nguồn lực hỗ trợ sinh viên.",
   "hero_stat_sinhvien": "Sinh viên được hỗ trợ",
   "hero_stat_sinhvien_sub": "So với năm trước",
   "hero_stat_giatri": "Tổng giá trị hỗ trợ",
@@ -40,6 +39,16 @@
   "hero_stat_nhahaotam_sub": "Đối tác đồng hành",
   "hero_stat_quy": "Quỹ đang hoạt động",
   "hero_stat_quy_sub": "Đa dạng hình thức",
+  "hero_banner_images": [
+    {
+      "url": "uploads/documents/triannhataitro_1786868178072_790872084.jpg",
+      "alt": "triannhataitro"
+    },
+    {
+      "url": "uploads/documents/Khu-1_1786868188736_40204503.jpg",
+      "alt": "Khu-1"
+    }
+  ],
   "process_label": "QUY TRÌNH ĐƠN GIẢN",
   "process_title": "Hai hành trình, một sứ mệnh chung",
   "process_subtitle": "Dù bạn là sinh viên cần hỗ trợ hay nhà tài trợ muốn đóng góp, chúng tôi đều có quy trình rõ ràng và minh bạch",
@@ -121,5 +130,6 @@
   "footer_social_desc": "Theo dõi chúng tôi để cập nhật thông tin học bổng và hỗ trợ sinh viên mới nhất.",
   "guidelines_contact_phone": "(0294) 3855 246",
   "guidelines_contact_email": "phongctsv@tvu.edu.vn",
-  "guidelines_contact_address": "126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh, Trà Vinh"
+  "guidelines_contact_address": "126 Nguyễn Thiện Thành, Khóm 4, Phường 5, TP. Trà Vinh, Trà Vinh",
+  "tyleLaiPhatToiDa": 2
 }

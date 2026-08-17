@@ -7,6 +7,7 @@ import {
   HiOutlineCheckCircle,
   HiOutlineInformationCircle,
   HiOutlineArrowsRightLeft,
+  HiOutlineLightBulb,
 } from 'react-icons/hi2';
 import CurrencyInput from '@components/common/CurrencyInput';
 import { LOAI_HO_TRO, LOAI_HO_TRO_OPTIONS } from '@constants/loaiHoTro';
@@ -88,14 +89,15 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
 
   const handleLoaiHoTroChange = useCallback((value) => {
     handleChange('loai_hotro', value);
-    if (value === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) {
-      handleChange('la_de_tai', true);
-    } else {
+    if (value === LOAI_HO_TRO.TAI_TRO_KHONG_HOAN_LAI) {
+      // Tài trợ không hoàn lại: Xóa flag đề tài và tổng kinh phí
+      handleChange('la_de_tai', false);
       handleChange('tong_kinh_phi_du_an', null);
-      if (value === LOAI_HO_TRO.CHO_VAY) {
-        handleChange('la_de_tai', false);
-      }
+    } else if (value === LOAI_HO_TRO.CHO_VAY) {
+      // Vay vốn: Xóa tổng kinh phí, giữ nguyên la_de_tai (để user chọn)
+      handleChange('tong_kinh_phi_du_an', null);
     }
+    // Tài trợ có thu hồi: Giữ nguyên la_de_tai và tong_kinh_phi_du_an (để user nhập)
   }, [handleChange]);
 
   const handleApplyAISuggestion = useCallback((newText) => {
@@ -154,7 +156,7 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
             className={styles.suggestion}
             onClick={() => handleChange('tieu_de', suggestTitle(selectedFund))}
           >
-            <span className={styles.suggestionIcon}>💡</span>
+            <HiOutlineLightBulb className={styles.suggestionIcon} />
             <span className={styles.suggestionLabel}>Gợi ý:</span>{' '}
             <span className={styles.suggestionText}>
               {suggestTitle(selectedFund)}
@@ -281,23 +283,23 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
         />
 
         {/* ── CHECKBOX ĐỀ TÀI/DỰ ÁN ─────────────────────────────────────── */}
-        <label className={`${styles.checkboxRow} ${loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI ? styles.checkboxDisabled : ''}`}>
-          <input
-            type="checkbox"
-            checked={loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI ? true : !!values?.la_de_tai}
-            disabled={loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI}
-            onChange={(e) => handleChange('la_de_tai', e.target.checked)}
-            className={styles.checkboxInput}
-          />
-          <span className={styles.checkboxLabel}>
-            Đơn này là đề tài/dự án nghiên cứu
-          </span>
-          <span className={styles.checkboxHint}>
-            {loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI 
-              ? '(Bắt buộc nghiệm thu đối với tài trợ có thu hồi)' 
-              : '(Cần nghiệm thu sau giải ngân theo Điều 15 Điều lệ)'}
-          </span>
-        </label>
+        {/* Chỉ hiển thị cho "Vay vốn" và "Tài trợ có thu hồi" */}
+        {(loai_hotro === LOAI_HO_TRO.CHO_VAY || loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI) && (
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={!!values?.la_de_tai}
+              onChange={(e) => handleChange('la_de_tai', e.target.checked)}
+              className={styles.checkboxInput}
+            />
+            <span className={styles.checkboxLabel}>
+              Đơn này là đề tài/dự án nghiên cứu
+            </span>
+            <span className={styles.checkboxHint}>
+              (Cần nghiệm thu sau giải ngân theo Điều 15 Điều lệ)
+            </span>
+          </label>
+        )}
       </div>
 
       {/* ── TỔNG KINH PHÍ DỰ ÁN (chỉ hiện khi "Có thu hồi") ────────────── */}

@@ -27,6 +27,18 @@ const STATUS_TO_BADGE = {
   'Cho xu ly': 'pending',
   'Hoan tien': 'cancelled',
 };
+
+const STATUS_LABEL = {
+  'Cho duyet': 'Chờ duyệt',
+  'Da duyet': 'Đã duyệt',
+  'Da nhan': 'Đã nhận',
+  'Tu choi': 'Từ chối',
+  'Dang xu ly': 'Đang xử lý',
+  'Thanh cong': 'Thành công',
+  'That bai': 'Thất bại',
+  'Cho xu ly': 'Chờ xử lý',
+  'Hoan tien': 'Hoàn tiền',
+};
 const formatDate = (v) => {
   if (!v) return '—';
   const d = new Date(v);
@@ -114,6 +126,7 @@ const RecentTransactionSection = ({ data, isLoading }) => {
                     <td>
                       <StatusBadge
                         status={STATUS_TO_BADGE[tx.trangThai] || 'pending'}
+                        label={STATUS_LABEL[tx.trangThai]}
                         size="sm"
                       />
                     </td>

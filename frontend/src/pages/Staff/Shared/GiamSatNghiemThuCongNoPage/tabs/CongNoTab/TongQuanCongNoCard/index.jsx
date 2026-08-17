@@ -6,7 +6,9 @@ import {
   HiOutlineBuildingOffice2,
   HiOutlineClock,
   HiOutlineReceiptPercent,
+  HiOutlineArrowPath,
 } from 'react-icons/hi2';
+import { StatCard } from '@components/common/Card';
 import { formatCurrency } from '@utils/formatters';
 import styles from './index.module.scss';
 
@@ -15,48 +17,49 @@ const CARDS = [
     key: 'tongDuNo',
     label: 'Tong du no toan he thong',
     icon: HiOutlineCurrencyDollar,
-    color: '#3b6ff5',
-    bg: 'rgba(59, 111, 245, 0.08)',
+    iconBgColor: 'blue',
     isCurrency: true,
   },
   {
     key: 'daThuHoi',
     label: 'Da thu hoi luy ke',
     icon: HiOutlineArrowTrendingUp,
-    color: '#16a34a',
-    bg: 'rgba(22, 163, 74, 0.08)',
+    iconBgColor: 'green',
     isCurrency: true,
   },
   {
     key: 'dangQuaHan',
     label: 'Gia tri dang qua han',
     icon: HiOutlineExclamationTriangle,
-    color: '#dc2626',
-    bg: 'rgba(220, 38, 38, 0.06)',
+    iconBgColor: 'red',
     isCurrency: true,
   },
   {
     key: 'soHoSoQuaHan',
     label: 'So ho so qua han',
     icon: HiOutlineBuildingOffice2,
-    color: '#d97706',
-    bg: 'rgba(217, 119, 6, 0.08)',
+    iconBgColor: 'yellow',
     isCurrency: false,
   },
   {
     key: 'choXacNhan',
-    label: 'Dang cho Ke toan xac nhan',
+    label: 'Dang cho xac nhan',
     icon: HiOutlineClock,
-    color: '#7c3aed',
-    bg: 'rgba(124, 58, 237, 0.08)',
+    iconBgColor: 'purple',
     isCurrency: false,
+  },
+  {
+    key: 'dangThuHoiNo',
+    label: 'Dang thu hoi no',
+    icon: HiOutlineArrowPath,
+    iconBgColor: 'yellow',
+    isCurrency: true,
   },
   {
     key: 'tongLaiPhat',
     label: 'Lai phat chua thu',
     icon: HiOutlineReceiptPercent,
-    color: '#dc2626',
-    bg: 'rgba(220, 38, 38, 0.06)',
+    iconBgColor: 'red',
     isCurrency: true,
   },
 ];
@@ -67,20 +70,16 @@ const TongQuanCongNoCard = ({ data }) => {
   return (
     <div className={styles.cardGrid}>
       {CARDS.map((card) => {
-        const Icon = card.icon;
         const value = data[card.key] ?? 0;
+        const displayValue = card.isCurrency ? formatCurrency(value) : value;
         return (
-          <div key={card.key} className={styles.statCard}>
-            <div className={styles.statIconWrap} style={{ background: card.bg }}>
-              <Icon size={20} style={{ color: card.color }} />
-            </div>
-            <div className={styles.statInfo}>
-              <span className={styles.statLabel}>{card.label}</span>
-              <span className={styles.statValue} style={{ color: card.color }}>
-                {card.isCurrency ? formatCurrency(value) : value}
-              </span>
-            </div>
-          </div>
+          <StatCard
+            key={card.key}
+            title={card.label}
+            value={displayValue}
+            icon={<card.icon size={28} />}
+            iconBgColor={card.iconBgColor}
+          />
         );
       })}
     </div>
@@ -94,6 +93,7 @@ TongQuanCongNoCard.propTypes = {
     dangQuaHan: PropTypes.number,
     soHoSoQuaHan: PropTypes.number,
     choXacNhan: PropTypes.number,
+    dangThuHoiNo: PropTypes.number,
     tongLaiPhat: PropTypes.number,
   }),
 };

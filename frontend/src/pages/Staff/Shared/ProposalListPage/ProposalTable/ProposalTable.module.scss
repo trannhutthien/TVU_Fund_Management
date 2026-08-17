@@ -1,0 +1,525 @@
+@import '@styles/variables.scss';
+@import '@styles/mixins.scss';
+
+.tableContainer {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+// Desktop Table
+.desktopTable {
+  display: block;
+  overflow-x: auto;
+
+  @include respond-below(sm) {
+    display: none;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+
+    th {
+      padding: 0.875rem 1rem;
+      text-align: left;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+
+      &:last-child {
+        text-align: right;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #f3f4f6;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: #f9fafb;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 1rem;
+      font-size: 0.875rem;
+      color: #1f2937;
+      vertical-align: middle;
+
+      &:last-child {
+        text-align: right;
+      }
+    }
+  }
+}
+
+// Table Cells
+.cellId {
+  font-weight: 600;
+  color: #3b82f6;
+  white-space: nowrap;
+}
+
+.cellName {
+  max-width: 300px;
+}
+
+.nameWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.name {
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.desc {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.cellFund {
+  color: #6b7280;
+  max-width: 200px;
+}
+
+.cellAmount {
+  font-weight: 600;
+  color: #059669;
+  white-space: nowrap;
+
+  .amountDetail {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #6b7280;
+    margin-top: 0.125rem;
+  }
+}
+
+.cellStatus {
+  white-space: nowrap;
+}
+
+.cellDate {
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.cellActions {
+  white-space: nowrap;
+}
+
+// Actions
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: white;
+  border: 1px solid;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.view {
+  border-color: #d1d5db;
+  color: #374151;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+}
+
+.approve {
+  border-color: #86efac;
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.05);
+
+  &:hover {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: #22c55e;
+  }
+}
+
+.reject {
+  border-color: #fca5a5;
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.05);
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+  }
+}
+
+.confirm {
+  border-color: #93c5fd;
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.05);
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+  }
+}
+
+.create {
+  border-color: #c4b5fd;
+  color: #7c3aed;
+  background: rgba(139, 92, 246, 0.05);
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: #8b5cf6;
+  }
+}
+
+// Mobile Cards
+.mobileCards {
+  display: none;
+
+  @include respond-below(sm) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+}
+
+.card {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.cardId {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.cardTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.cardDesc {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.cardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.cardInfoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cardInfoLabel {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.cardInfoValue {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: right;
+}
+
+.cardActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  .actionBtn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+}
+
+// Loading State
+.loadingContainer {
+  padding: 1.5rem;
+}
+
+.skeletonRow {
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.skeleton {
+  height: 4rem;
+  background: linear-gradient(
+    90deg,
+    #f3f4f6 25%,
+    #e5e7eb 50%,
+    #f3f4f6 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Empty State
+.emptyContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1.5rem;
+  gap: 1rem;
+}
+
+.emptyIcon {
+  width: 4rem;
+  height: 4rem;
+  color: #9ca3af;
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+// Dark mode
+@media (prefers-color-scheme: dark) {
+  .tableContainer {
+    background: #1f2937;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .table {
+    thead {
+      background: #374151;
+      border-bottom-color: #4b5563;
+
+      th {
+        color: #9ca3af;
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom-color: #374151;
+
+        &:hover {
+          background: #374151;
+        }
+      }
+
+      td {
+        color: #f3f4f6;
+      }
+    }
+  }
+
+  .name {
+    color: #f3f4f6;
+  }
+
+  .desc,
+  .cellFund,
+  .cellDate {
+    color: #9ca3af;
+  }
+
+  .amountDetail {
+    color: #9ca3af;
+  }
+
+  .card {
+    background: #1f2937;
+    border-color: #374151;
+
+    &:hover {
+      border-color: #4b5563;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .cardTitle {
+    color: #f3f4f6;
+  }
+
+  .cardDesc {
+    color: #9ca3af;
+  }
+
+  .cardInfo {
+    border-top-color: #374151;
+  }
+
+  .cardInfoLabel {
+    color: #9ca3af;
+  }
+
+  .cardInfoValue {
+    color: #f3f4f6;
+  }
+
+  .actionBtn {
+    background: #374151;
+    border-color: #4b5563;
+
+    &.view {
+      color: #f3f4f6;
+
+      &:hover {
+        background: #4b5563;
+        border-color: #6b7280;
+      }
+    }
+
+    &.approve {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.3);
+
+      &:hover {
+        background: rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.5);
+      }
+    }
+
+    &.reject {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.5);
+      }
+    }
+
+    &.confirm {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.3);
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.5);
+      }
+    }
+
+    &.create {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: rgba(139, 92, 246, 0.3);
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.5);
+      }
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #374151 25%,
+      #4b5563 50%,
+      #374151 75%
+    );
+    background-size: 200% 100%;
+  }
+
+  .emptyText {
+    color: #9ca3af;
+  }
+}

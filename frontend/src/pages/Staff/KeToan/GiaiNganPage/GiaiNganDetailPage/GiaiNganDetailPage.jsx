@@ -31,8 +31,14 @@ const mapStatusToBadge = (trangThai) => {
   switch (trangThai) {
     case 'Cho duyet cap 3':
     case 'Cho giai ngan':
+    case 'Cho giai ngan dot 1':
+    case 'Cho nghiem thu dot 1':
+    case 'Da nghiem thu dot 1':
+    case 'Cho giai ngan dot 2':
       return 'pending';
     case 'Da giai ngan':
+    case 'Da giai ngan dot 1':
+    case 'Hoan thanh':
       return 'approved';
     case 'Tu choi cap 3':
       return 'rejected';
@@ -42,6 +48,8 @@ const mapStatusToBadge = (trangThai) => {
       return 'completed';
     case 'Nghiem thu khong dat':
       return 'rejected';
+    case 'Dang thu hoi no':
+      return 'warning';
     default:
       return 'pending';
   }
@@ -173,11 +181,13 @@ const GiaiNganDetailPage = () => {
   }, [previewFile]);
 
   const canShowNghiemThu = data?.canNghiemThu &&
-    ['Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat'].includes(data?.trangThai);
+    ['Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat',
+     'Da giai ngan dot 1', 'Cho nghiem thu dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2',
+     'Dang thu hoi no'].includes(data?.trangThai);
   const canCreateNghiemThu = data?.canNghiemThu &&
-    ['Da giai ngan', 'Cho nghiem thu'].includes(data?.trangThai);
+    ['Da giai ngan', 'Cho nghiem thu', 'Da giai ngan dot 1', 'Cho nghiem thu dot 1'].includes(data?.trangThai);
   const isNghiemThuDone = data?.trangThai === 'Da nghiem thu';
-  const isNghiemThuFailed = data?.trangThai === 'Nghiem thu khong dat';
+  const isNghiemThuFailed = data?.trangThai === 'Nghiem thu khong dat' || data?.trangThai === 'Dang thu hoi no';
 
   // ── Handle disburse ──
   const handleDisburse = async (payload) => {
@@ -199,7 +209,7 @@ const GiaiNganDetailPage = () => {
     try {
       await api.put(`/applications/${request_id}/reject`, payload);
       toast.error('Đã từ chối hồ sơ');
-      navigate('/ke-toan/giai-ngan');
+      navigate('/ke-toan/xet-duyet');
     } catch (err) {
       const msg = err?.response?.data?.message || 'Không thể từ chối hồ sơ';
       toast.error(msg);
@@ -236,8 +246,8 @@ const GiaiNganDetailPage = () => {
       <div className={styles.inner}>
         {/* ── Breadcrumb ── */}
         <div className={styles.breadcrumb}>
-          <Link to="/ke-toan/giai-ngan" className={styles.crumbLink}>
-            Giải ngân hồ sơ
+          <Link to="/ke-toan/xet-duyet" className={styles.crumbLink}>
+            Xét duyệt &amp; giải ngân hồ sơ
           </Link>
           <span className={styles.crumbSep}>/</span>
           <span>Chi tiết đơn #{request_id}</span>
@@ -252,7 +262,7 @@ const GiaiNganDetailPage = () => {
           <Button
             variant="ghost"
             leftIcon={<HiOutlineArrowLeft />}
-            onClick={() => navigate('/ke-toan/giai-ngan')}
+            onClick={() => navigate('/ke-toan/xet-duyet')}
           >
             Quay lại danh sách
           </Button>
@@ -293,6 +303,13 @@ const GiaiNganDetailPage = () => {
           <div className={`${styles.banner} ${styles.bannerDanger}`}>
             <HiOutlineExclamationTriangle className={styles.bannerIcon} />
             <span>Nghiệm thu không đạt — đơn không thể giải ngân thêm.</span>
+          </div>
+        )}
+
+        {data.trangThai === 'Dang thu hoi no' && (
+          <div className={`${styles.banner} ${styles.bannerWarning}`}>
+            <HiOutlineExclamationTriangle className={styles.bannerIcon} />
+            <span>Đang thu hồi nợ — chờ người dùng nộp tiền hoàn lại.</span>
           </div>
         )}
 
@@ -386,6 +403,35 @@ const GiaiNganDetailPage = () => {
                       {formatCurrency(data.hopdongvayvon.sotienvon)}
                     </span>
                   </div>
+                  {/* Hien thi 2 dot giai ngan */}
+                  {data.hopdongvayvon.sotien_dot1 && (
+                    <div className={styles.contractGrid2 || styles.contractGrid3} style={{ marginBottom: '12px' }}>
+                      <div className={styles.contractField}>
+                        <span className={styles.contractFieldIcon}>1️⃣</span>
+                        <div>
+                          <span className={styles.contractFieldLabel}>Đợt 1 (50%)</span>
+                          <span className={styles.contractFieldValue}>{formatCurrency(data.hopdongvayvon.sotien_dot1)}</span>
+                          {data.hopdongvayvon.ngay_giai_ngan_dot1 && (
+                            <span className={styles.contractFieldValue} style={{ display: 'block', fontSize: '12px', color: '#6b7280' }}>
+                              Đã giải ngân: {new Date(data.hopdongvayvon.ngay_giai_ngan_dot1).toLocaleDateString('vi-VN')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className={styles.contractField}>
+                        <span className={styles.contractFieldIcon}>2️⃣</span>
+                        <div>
+                          <span className={styles.contractFieldLabel}>Đợt 2 (50%)</span>
+                          <span className={styles.contractFieldValue}>{formatCurrency(data.hopdongvayvon.sotien_dot2)}</span>
+                          {data.hopdongvayvon.ngay_giai_ngan_dot2 && (
+                            <span className={styles.contractFieldValue} style={{ display: 'block', fontSize: '12px', color: '#6b7280' }}>
+                              Đã giải ngân: {new Date(data.hopdongvayvon.ngay_giai_ngan_dot2).toLocaleDateString('vi-VN')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className={styles.contractGrid3}>
                     <div className={styles.contractField}>
                       <span className={styles.contractFieldIcon}>💰</span>

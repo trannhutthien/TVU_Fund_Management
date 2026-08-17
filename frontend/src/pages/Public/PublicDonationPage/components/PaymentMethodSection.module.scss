@@ -1,0 +1,267 @@
+.section {
+  margin-bottom: 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  svg {
+    color: #1a5276;
+    flex-shrink: 0;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a5276;
+  }
+}
+
+// ============================================
+// PAYMENT OPTIONS
+// ============================================
+.paymentOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.paymentOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+
+  &:hover {
+    border-color: #1a5276;
+    background: #f8f9fa;
+  }
+}
+
+.selected {
+  border-color: #1a5276;
+  background: rgba(26, 82, 118, 0.04);
+  box-shadow: 0 2px 8px rgba(26, 82, 118, 0.1);
+}
+
+.paymentIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #e8f4f8;
+  color: #1a5276;
+  flex-shrink: 0;
+}
+
+.selected .paymentIcon {
+  background: #1a5276;
+  color: #fff;
+}
+
+.paymentLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.selected .paymentLabel {
+  color: #1a5276;
+}
+
+// ============================================
+// DETAILS PANEL
+// ============================================
+.detailsPanel {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+  animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Alert Info
+.alertInfo {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #e8f4f8;
+  border-left: 3px solid #1a5276;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 12px;
+
+  svg {
+    flex-shrink: 0;
+    color: #1a5276;
+    margin-top: 1px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: #1a5276;
+    line-height: 1.6;
+  }
+
+  strong { color: #1a5276; }
+}
+
+.alertWarning {
+  padding: 12px 14px;
+  background: #fff3cd;
+  border-left: 3px solid #f0a500;
+  border-radius: 0 8px 8px 0;
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    color: #856404;
+    line-height: 1.6;
+  }
+}
+
+// ============================================
+// BANK CARD
+// ============================================
+.bankCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.bankHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f8f9ff;
+  border-bottom: 1px solid #e2e8f0;
+
+  svg { color: #1a5276; }
+
+  span {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a5276;
+  }
+}
+
+.bankBody {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bankRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+.bankLabel {
+  font-weight: 500;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.bankValue {
+  font-weight: 600;
+  color: #212529;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copyBtn {
+  padding: 3px 8px;
+  border: 1px solid #1a5276;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1a5276;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: #1a5276;
+    color: #fff;
+  }
+}
+
+// ============================================
+// CASH INFO
+// ============================================
+.cashInfo {
+  padding: 14px;
+  background: #f8f9ff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+
+  h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a5276;
+  }
+}
+
+.cashList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #495057;
+    line-height: 1.5;
+  }
+
+  strong { color: #212529; }
+}
+
+.cashDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1a5276;
+  flex-shrink: 0;
+  margin-top: 6px;
+}

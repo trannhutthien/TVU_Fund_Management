@@ -2,12 +2,12 @@
 
 .fundGridSection {
   background: transparent;
-  padding: $space-12 0; // 48px
+  padding: $space-4 0 $space-12; // Giảm padding top, giữ padding bottom
   width: 100%;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px; // Tăng max-width để hiển thị nhiều hơn
   margin: 0 auto;
   padding: 0 $space-4;
 }
@@ -17,8 +17,12 @@
 // ============================================
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $space-6; // 24px
+  grid-template-columns: repeat(4, 1fr); // Tăng từ 3 lên 4 cột
+  gap: $space-5; // Giảm gap từ 24px xuống 20px
+
+  @media (max-width: 1280px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 
   @media (max-width: 1023px) {
     grid-template-columns: repeat(2, 1fr);
@@ -72,7 +76,7 @@
 // Khối 1: Ảnh bìa
 .cardImage {
   position: relative;
-  height: 180px;
+  height: 160px; // Giảm từ 180px xuống 160px
   width: 100%;
   overflow: hidden;
 
@@ -114,7 +118,7 @@
 
 // Khối 2: Nội dung
 .cardContent {
-  padding: 20px;
+  padding: 16px; // Giảm từ 20px xuống 16px
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -396,7 +400,7 @@
 // ============================================
 @media (max-width: 768px) {
   .fundGridSection {
-    padding: $space-10 0;
+    padding: $space-3 0 $space-10;
   }
 
   .cardContent {
@@ -419,7 +423,7 @@
 
 @media (max-width: 480px) {
   .fundGridSection {
-    padding: $space-8 0;
+    padding: $space-3 0 $space-8;
   }
 
   .grid {

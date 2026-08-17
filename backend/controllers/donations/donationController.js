@@ -8,8 +8,77 @@ import { buildDonorAvatarUrl } from "../../utils/helpers/imageHelper.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ─── GET /api/donations (CHO KẾ TOÁN/ADMIN/CÁN BỘ) ─────────────────────────────
+// ─── GET /api/donations/public (PUBLIC — KHÔNG CẦN TOKEN) ──────────────────────
+// Chỉ trả về khoản tài trợ đã duyệt/đã nhận, KHÔNG expose email/phone
 // ═══════════════════════════════════════════════════════════════════════════════
+export const listPublicDonations = async (req, res) => {
+  try {
+    const {
+      keyword = '',
+      quy_id = '',
+      loai_ntt = '',
+      tu_ngay = '',
+      den_ngay = '',
+      nam = '',
+      page = 1,
+      page_size = 15,
+    } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(page_size, 10) || 15));
+
+    let effectiveTuNgay = String(tu_ngay).trim();
+    let effectiveDenNgay = String(den_ngay).trim();
+    if (nam && !effectiveTuNgay && !effectiveDenNgay) {
+      effectiveTuNgay = `${nam}-01-01`;
+      effectiveDenNgay = `${nam}-12-31`;
+    }
+
+    const { rows, total } = await DonationModel.listDonations({
+      keyword: String(keyword).trim(),
+      quy_id: String(quy_id).trim(),
+      loai_ntt: String(loai_ntt).trim(),
+      trang_thai: '', // Lấy tất cả, filter ở bước 2
+      tu_ngay: effectiveTuNgay,
+      den_ngay: effectiveDenNgay,
+      page: pageNum,
+      page_size: pageSize * 3, // Lấy nhiều hơn vì sẽ filter further
+    });
+
+    // Chỉ giữ khoản đã duyệt/đã nhận
+    const approvedRows = rows.filter(r => r.trangthai === 'Da duyet' || r.trangthai === 'Da nhan');
+    const sliced = approvedRows.slice(0, pageSize);
+
+    const data = sliced.map((r) => ({
+      id: r.khoantaitro_id,
+      tenNhaTaiTro: r.tennhataitro,
+      loaiNhaTaiTro: r.loainhataitro,
+      soTien: parseFloat(r.sotien) || 0,
+      hinhThuc: r.hinhthuc,
+      ngayQuyenGop: r.ngaytaitro,
+      tenQuy: r.tenquy,
+      ghiChu: r.ghichu,
+      logo: buildDonorAvatarUrl(r.logo),
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách khoản tài trợ công khai thành công",
+      data,
+      pagination: {
+        currentPage: pageNum,
+        totalRecords: approvedRows.length,
+        limit: pageSize,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi listPublicDonations:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server, vui lòng thử lại sau",
+    });
+  }
+};
 // Query: keyword, quy_id, loai_ntt, trang_thai, tu_ngay, den_ngay, page, page_size
 export const listDonations = async (req, res) => {
   try {
@@ -302,10 +371,9 @@ export const createStaffDonation = async (req, res) => {
         // Tạo mới nhataitro với link tới nguoidung
         const [donorInsert] = await connection.query(
           `INSERT INTO nhataitro (
-            nguoidung_id, tennhataitro, loainhataitro, 
-            email, sodienthoai, diachi, trangthai
-          ) VALUES (?, ?, ?, ?, ?, ?, 'Hoat dong')`,
-          [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, soDienThoai, diaChi]
+            nguoidung_id, tennhataitro, loainhataitro, trangthai
+          ) VALUES (?, ?, ?, 'Hoat dong')`,
+          [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro]
         );
         resolvedNhaTaiTroId = donorInsert.insertId;
       } else {
@@ -413,7 +481,12 @@ export const createPublicDonation = async (req, res) => {
       soDienThoai,
       soTien,
       quyId,
-      ghiChu
+      ghiChu,
+      hinhThuc,
+      loaiNhaTaiTro,
+      toChuc,
+      diaChi,
+      taiKhoanNganHangId
     } = req.body;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -486,13 +559,27 @@ export const createPublicDonation = async (req, res) => {
     // - Nếu cả 2 thành công → Commit
     
     // 3.1. Chuẩn bị dữ liệu
+    // Map hinhThuc từ frontend sang giá trị hợp lệ trong DB
+    const hinhThucMap = {
+      'Truc tuyen': 'Chuyen khoan',
+      'Chuyen khoan': 'Chuyen khoan',
+      'Tien mat': 'Tien mat',
+      'Quoc te': 'Khac'
+    };
+    const hinhThucDB = hinhThucMap[hinhThuc] || 'Chuyen khoan';
+
     const donationData = {
       ten: ten.trim(),
       email: email.trim().toLowerCase(),
       soDienThoai: soDienThoai.trim(),
       soTien: parseFloat(soTien),
       quyId: quyId,
-      ghiChu: ghiChu ? ghiChu.trim() : null
+      ghiChu: ghiChu ? ghiChu.trim() : null,
+      hinhThuc: hinhThucDB,
+      loaiNhaTaiTro: loaiNhaTaiTro || 'Ca nhan',
+      toChuc: toChuc ? toChuc.trim() : null,
+      diaChi: diaChi ? diaChi.trim() : null,
+      taiKhoanNganHangId: taiKhoanNganHangId || null
     };
 
     // 3.2. Gọi Model để xử lý transaction

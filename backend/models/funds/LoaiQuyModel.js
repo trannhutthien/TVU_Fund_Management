@@ -6,11 +6,10 @@ const getAllLoaiQuy = async () => {
     `SELECT 
       loaiquy_id AS id, 
       maloai AS ma_loai, 
-      tenloai AS ten_loai, 
-      nhom,
+      tenloai AS ten_loai,
       ngaytao AS ngay_tao 
      FROM loaiquy 
-     ORDER BY nhom, ngaytao DESC`
+     ORDER BY ngaytao DESC`
   );
   return rows;
 };
@@ -34,14 +33,9 @@ const createLoaiQuy = async (maLoai, tenLoai) => {
 };
 
 // Lấy danh sách nhóm loại quỹ (distinct groups)
+// NOTE: Cột 'nhom' không tồn tại trong schema hiện tại, trả về mảng rỗng
 const getLoaiQuyGroups = async () => {
-  const [rows] = await pool.query(
-    `SELECT DISTINCT nhom 
-     FROM loaiquy 
-     WHERE nhom IS NOT NULL 
-     ORDER BY nhom`
-  );
-  return rows.map(r => r.nhom);
+  return [];
 };
 
 export default {

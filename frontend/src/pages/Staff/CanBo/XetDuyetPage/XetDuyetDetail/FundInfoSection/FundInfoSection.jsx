@@ -8,6 +8,10 @@ import {
   HiOutlineCurrencyDollar,
   HiOutlineShieldCheck,
   HiOutlineClock,
+  HiOutlineGift,
+  HiOutlineArrowPath,
+  HiOutlineDocumentText,
+  HiOutlineInformationCircle,
 } from 'react-icons/hi2';
 import { formatCurrency } from '@utils/formatters';
 import styles from './FundInfoSection.module.scss';
@@ -39,13 +43,43 @@ const FundInfoSection = ({ fund }) => {
     ngayBatDau,
     hanNopDon,
     trangThai,
+    loaiquy,
   } = fund;
+
+  // Lấy nhóm quỹ từ object loaiquy
+  const nhomLoaiQuy = loaiquy?.nhom || null;
 
   const is_active = trangThai === 'Hoat dong';
   const hasMucTieu = soTienMucTieu > 0;
   const hasSoDu = soDu > 0;
   const hasHoTroToiDa = soTienHoTroToiDa > 0;
   const hasDates = ngayBatDau || hanNopDon;
+
+  // Format label nhóm quỹ
+  const formatNhomQuy = (nhom) => {
+    const mapping = {
+      'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
+      'Tai tro co thu hoi': 'Tài trợ có thu hồi',
+      'Cho vay': 'Cho vay'
+    };
+    return mapping[nhom] || nhom;
+  };
+
+  // Get badge style theo nhóm quỹ
+  const getNhomQuyBadgeClass = (nhom) => {
+    if (nhom === 'Tai tro khong hoan lai') return styles.badgeGrant;
+    if (nhom === 'Tai tro co thu hoi') return styles.badgeRecoverable;
+    if (nhom === 'Cho vay') return styles.badgeLoan;
+    return styles.badgeDefault;
+  };
+
+  // Get icon theo nhóm quỹ
+  const getNhomQuyIcon = (nhom) => {
+    if (nhom === 'Tai tro khong hoan lai') return HiOutlineGift;
+    if (nhom === 'Tai tro co thu hoi') return HiOutlineArrowPath;
+    if (nhom === 'Cho vay') return HiOutlineDocumentText;
+    return HiOutlineInformationCircle;
+  };
 
   return (
     <section className={styles.card}>
@@ -80,6 +114,17 @@ const FundInfoSection = ({ fund }) => {
       {/* ── Body ── */}
       {expanded && (
         <div className={styles.body}>
+          {/* Badge nhóm quỹ - Nổi bật */}
+          {nhomLoaiQuy && (
+            <div className={`${styles.nhomQuyBadge} ${getNhomQuyBadgeClass(nhomLoaiQuy)}`}>
+              {(() => {
+                const IconComponent = getNhomQuyIcon(nhomLoaiQuy);
+                return <IconComponent className={styles.nhomQuyIcon} />;
+              })()}
+              <span className={styles.nhomQuyText}>{formatNhomQuy(nhomLoaiQuy)}</span>
+            </div>
+          )}
+
           {/* Stats row */}
           <div className={styles.statsRow}>
             {hasMucTieu && (
@@ -178,6 +223,12 @@ FundInfoSection.propTypes = {
     ngayBatDau: PropTypes.string,
     hanNopDon: PropTypes.string,
     trangThai: PropTypes.string,
+    loaiquy: PropTypes.shape({
+      loaiQuyId: PropTypes.number,
+      maLoai: PropTypes.string,
+      tenLoai: PropTypes.string,
+      nhom: PropTypes.string,
+    }),
   }),
 };
 

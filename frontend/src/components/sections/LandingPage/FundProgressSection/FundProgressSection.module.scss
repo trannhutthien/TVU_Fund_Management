@@ -638,6 +638,29 @@
   border-color: #cbd5e1;
 }
 
+// Current step (dang trien khai)
+.stepCurrent .stepNode {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+}
+
+.stepPulse {
+  width: 10px;
+  height: 10px;
+  background: #2563eb;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.labelCurrent {
+  color: #2563eb !important;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.15); }
+}
+
 .stepDot {
   width: 6px;
   height: 6px;

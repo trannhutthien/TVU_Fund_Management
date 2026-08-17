@@ -8,17 +8,18 @@ import {
   updateDoiSoatStatus,
   getTransactionByApplication,
   uploadProof,
+  getPublicTransactions,
+  getPublicTransactionById,
 } from "../../controllers/transactions/transactionController.js";
 import { protect } from "../../middleware/authMiddleware.js";
 import { authorizeRoles } from "../../middleware/rolesMiddleware.js";
 
 const router = express.Router();
 
-// ─── PUBLIC TRANSACTION ROUTES (Không cần đăng nhập) ─────────────────────────
-router.get("/public", getAllTransactions);
+// ─── PUBLIC TRANSACTION ROUTES (Không cần đăng nhập, đã sanitize) ──────────────
+router.get("/public", getPublicTransactions);
 router.get("/public/summary", getTransactionsSummary);
-router.get("/public/export", exportTransactions);
-router.get("/public/:id", getTransactionById);
+router.get("/public/:id", getPublicTransactionById);
 
 // ─── PROTECTED TRANSACTION ROUTES (Yêu cầu đăng nhập + phân quyền) ───────────
 

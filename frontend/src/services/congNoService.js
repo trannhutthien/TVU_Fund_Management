@@ -8,6 +8,7 @@ const congNoService = {
   confirmPayment: (lichtranoId, data) => api.put(`/cong-no/xac-nhan/${lichtranoId}`, data),
   rejectPayment: (lichtranoId, data) => api.put(`/cong-no/tu-choi/${lichtranoId}`, data),
   sendReminder: (lichtranoId) => api.post(`/cong-no/nhac-no/${lichtranoId}`),
+  getNghiemThuTongQuan: () => api.get('/cong-no/nghiem-thu/tong-quan'),
   getNghiemThuList: (params) => api.get('/cong-no/nghiem-thu', { params }),
 };
 

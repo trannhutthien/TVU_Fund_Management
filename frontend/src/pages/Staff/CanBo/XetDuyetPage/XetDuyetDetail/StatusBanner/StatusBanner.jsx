@@ -24,6 +24,12 @@ const STATUS_CONFIG = {
   'Tu choi cap 2':       { label: 'Bị từ chối cấp 2',      bg: 'danger',   icon: HiOutlineXCircle },
   'Tu choi cap 3':       { label: 'Bị từ chối cấp 3',      bg: 'danger',   icon: HiOutlineXCircle },
   'Nghiem thu khong dat':{ label: 'Nghiệm thu không đạt',   bg: 'danger',   icon: HiOutlineExclamationTriangle },
+  'Dang thu hoi no':      { label: 'Đang thu hồi nợ',       bg: 'warning',  icon: HiOutlineExclamationTriangle },
+  'Cho giai ngan dot 1':{ label: 'Chờ giải ngân đợt 1',    bg: 'info',     icon: HiOutlineInformationCircle },
+  'Da giai ngan dot 1': { label: 'Đã giải ngân đợt 1',     bg: 'success',  icon: HiOutlineCheckCircle },
+  'Cho nghiem thu dot 1':{ label: 'Chờ nghiệm thu đợt 1',  bg: 'info',     icon: HiOutlineInformationCircle },
+  'Da nghiem thu dot 1': { label: 'Đã nghiệm thu đợt 1',   bg: 'success',  icon: HiOutlineCheckCircle },
+  'Cho giai ngan dot 2':{ label: 'Chờ giải ngân đợt 2',    bg: 'info',     icon: HiOutlineInformationCircle },
 };
 
 const StatusBanner = ({ trangThai, maDon, tenQuy, dotDuyet, warnings = [] }) => {

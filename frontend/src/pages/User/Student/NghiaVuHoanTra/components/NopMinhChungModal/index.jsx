@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadOutlined, CloseOutlined, FileImageOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { UploadOutlined, CloseOutlined, FileImageOutlined, PaperClipOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { formatCurrency } from '@utils/formatters';
 import { uploadService } from '@services/uploadService';
 import styles from './index.module.scss';
@@ -7,7 +7,13 @@ import styles from './index.module.scss';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
-const NopMinhChungModal = ({ isOpen, kyData, onSubmit, onClose, submitting }) => {
+const formatAccountNumber = (num) => {
+  if (!num) return '';
+  return String(num).replace(/(.{4})/g, '$1 ').trim();
+};
+
+const NopMinhChungModal = ({ isOpen, kyData, bankInfo, onSubmit, onClose, submitting }) => {
+  const [soTien, setSoTien] = useState('');
   const [file, setFile] = useState(null);
   const [ghiChu, setGhiChu] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -56,6 +62,11 @@ const NopMinhChungModal = ({ isOpen, kyData, onSubmit, onClose, submitting }) =>
   };
 
   const handleSubmit = async () => {
+    const soTienNum = parseFloat(soTien);
+    if (isNaN(soTienNum) || soTienNum <= 0) {
+      setError('Vui lòng nhập số tiền hợp lệ.');
+      return;
+    }
     if (!file) {
       setError('Vui lòng chọn file minh chứng.');
       return;
@@ -68,8 +79,9 @@ const NopMinhChungModal = ({ isOpen, kyData, onSubmit, onClose, submitting }) =>
       const uploadRes = await uploadService.uploadFile(file);
       const fileUrl = uploadRes?.data?.filePath || uploadRes?.filePath || uploadRes?.data?.url || uploadRes?.url;
 
-      await onSubmit(kyData.lichtranoId, { minhchungtrano: fileUrl, ghiChu: ghiChu || undefined });
+      await onSubmit(kyData.lichtranoId, { soTien: soTienNum, minhchungtrano: fileUrl, ghiChu: ghiChu || undefined });
 
+      setSoTien('');
       setFile(null);
       setGhiChu('');
     } catch (err) {
@@ -81,6 +93,7 @@ const NopMinhChungModal = ({ isOpen, kyData, onSubmit, onClose, submitting }) =>
   };
 
   const handleClose = () => {
+    setSoTien('');
     setFile(null);
     setGhiChu('');
     setError(null);
@@ -114,6 +127,58 @@ const NopMinhChungModal = ({ isOpen, kyData, onSubmit, onClose, submitting }) =>
                 ? new Date(kyData.ngaydenhan).toLocaleDateString('vi-VN')
                 : '—'}
             </span>
+          </div>
+
+          {/* Thong tin tai khoan ngan hang */}
+          {bankInfo && (bankInfo.soTaiKhoan || bankInfo.so_tai_khoan) && (
+            <div className={styles.bankInfoBox}>
+              <div className={styles.bankInfoTitle}>
+                <CreditCardOutlined /> Thông tin chuyển khoản
+              </div>
+              <div className={styles.bankInfoGrid}>
+                <div className={styles.bankInfoRow}>
+                  <span className={styles.bankInfoLabel}>Ngân hàng</span>
+                  <span className={styles.bankInfoValue}>{bankInfo.nganHang || bankInfo.ngan_hang || '—'}</span>
+                </div>
+                {bankInfo.chiNhanh || bankInfo.chi_nhanh ? (
+                  <div className={styles.bankInfoRow}>
+                    <span className={styles.bankInfoLabel}>Chi nhánh</span>
+                    <span className={styles.bankInfoValue}>{bankInfo.chiNhanh || bankInfo.chi_nhanh}</span>
+                  </div>
+                ) : null}
+                <div className={styles.bankInfoRow}>
+                  <span className={styles.bankInfoLabel}>Số tài khoản</span>
+                  <span className={styles.bankInfoValue}>{formatAccountNumber(bankInfo.soTaiKhoan || bankInfo.so_tai_khoan)}</span>
+                </div>
+                <div className={styles.bankInfoRow}>
+                  <span className={styles.bankInfoLabel}>Chủ tài khoản</span>
+                  <span className={styles.bankInfoValue}>{bankInfo.chuTaiKhoan || bankInfo.chu_tai_khoan || '—'}</span>
+                </div>
+              </div>
+              {kyData.tenQuy && (
+                <div className={styles.transferContentBox}>
+                  <span className={styles.bankInfoLabel}>Nội dung chuyển khoản:</span>
+                  <span className={styles.transferContent}>TRA NO {kyData.tenQuy} KY {kyData.kythu}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* So tien nop */}
+          <div className={styles.fieldWrap}>
+            <label className={styles.label}>Số tiền nộp *</label>
+            <div className={styles.inputWithUnit}>
+              <input
+                type="number"
+                className={styles.input}
+                value={soTien}
+                onChange={(e) => { setSoTien(e.target.value); setError(null); }}
+                placeholder="Nhập số tiền"
+                min={1}
+                step={1000}
+              />
+              <span className={styles.unit}>VND</span>
+            </div>
           </div>
 
           {/* Upload area */}
@@ -188,7 +253,7 @@ const NopMinhChungModal = ({ isOpen, kyData, onSubmit, onClose, submitting }) =>
           <button
             className={styles.submitBtn}
             onClick={handleSubmit}
-            disabled={submitting || uploading || !file}
+            disabled={submitting || uploading || !file || !soTien}
           >
             {uploading ? 'Đang tải lên...' : submitting ? 'Đang gửi...' : 'Gửi xác nhận'}
           </button>

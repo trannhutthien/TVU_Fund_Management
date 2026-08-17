@@ -13,7 +13,7 @@ const checkFundNameExists = async (tenQuy) => {
 const createFund = async (fundData) => {
   const {
     tenQuy,
-    loaiQuy, // string 'DT', 'NC', etc. (mã loại quỹ)
+    loaiQuy,
     moTa,
     hinhAnh,
     soTienMucTieu,
@@ -28,7 +28,8 @@ const createFund = async (fundData) => {
     loaiDieuHanh,
     quyChaId,
     soDotGiaiNgan,
-    dotGiaiNgan
+    dotGiaiNgan,
+    loaiHoTro
   } = fundData;
 
   const connection = await pool.getConnection();
@@ -37,23 +38,36 @@ const createFund = async (fundData) => {
 
     const parseSoDu = soDu ? parseFloat(soDu) : 0.00;
 
-    // 1. Nếu là Mục chi con, khóa Quỹ mẹ để kiểm tra và trừ số dư khởi tạo.
-    if (loaiDieuHanh === 'Tap trung - Muc chi') {
+    // 1. Nếu là quỹ con (cấp 2 hoặc 3), validate và trừ số dư từ quỹ cha
+    if (loaiDieuHanh !== 'Tap trung - Be chung') {
       if (!quyChaId) {
         throw new Error('CHILD_FUND_PARENT_REQUIRED');
       }
 
       const [parentRows] = await connection.query(
-        `SELECT sodu, tenquy, loaidieuhanh FROM quy WHERE quy_id = ? FOR UPDATE`,
+        `SELECT sodu, tenquy, loaidieuhanh, capdo FROM quy WHERE quy_id = ? FOR UPDATE`,
         [quyChaId]
       );
       const parent = parentRows[0];
       if (!parent) {
         throw new Error('PARENT_FUND_NOT_FOUND');
       }
-      if (parent.loaidieuhanh !== 'Tap trung - Be chung') {
-        throw new Error('INVALID_PARENT_FUND_TYPE');
+      
+      // Validate cấp độ: Quỹ con phải có capdo = capdo_cha + 1
+      const expectedCapdo = parent.capdo + 1;
+      let actualCapdo;
+      if (loaiDieuHanh === 'Tap trung - Thanh phan') {
+        actualCapdo = 2;
+      } else if (loaiDieuHanh === 'Tap trung - Muc chi') {
+        actualCapdo = 3;
+      } else {
+        actualCapdo = 1; // Mặc định
       }
+      
+      if (actualCapdo !== expectedCapdo) {
+        throw new Error(`INVALID_FUND_LEVEL: Quỹ cha cấp ${parent.capdo} chỉ có thể có quỹ con cấp ${expectedCapdo}`);
+      }
+      
       if (parseSoDu > 0 && parseFloat(parent.sodu) < parseSoDu) {
         throw new Error('INSUFFICIENT_PARENT_FUND_BALANCE');
       }
@@ -83,15 +97,16 @@ const createFund = async (fundData) => {
         nguoitao_id,
         trangthai,
         loaidieuhanh,
-        quy_cha_id
+        quy_cha_id,
+        loaihotro
       ) VALUES (
         ?,
         (SELECT loaiquy_id FROM loaiquy WHERE maloai = ? LIMIT 1),
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )`,
       [
         tenQuy,
-        loaiQuy, // mã loại quỹ (DT, NC, ...)
+        loaiQuy,
         moTa || null,
         hinhAnh || null,
         soTienMucTieu || null,
@@ -104,7 +119,8 @@ const createFund = async (fundData) => {
         nguoiTao || null,
         trangThai || 'Dang hoat dong',
         loaiDieuHanh || 'Tap trung - Be chung',
-        quyChaId || null
+        quyChaId || null,
+        loaiHoTro || 'Tai tro khong hoan lai'
       ]
     );
 
@@ -204,7 +220,6 @@ const getFundById = async (quyId) => {
       lq.loaiquy_id,
       lq.maloai AS loai_quy,
       lq.tenloai AS ten_loai_quy,
-      lq.nhom AS nhom_loai_quy,
       q.mota AS mo_ta,
       q.hinhanh AS hinh_anh,
       q.sotienmuctieu AS so_tien_muc_tieu,
@@ -221,7 +236,9 @@ const getFundById = async (quyId) => {
       q.ngaycapnhat AS ngay_cap_nhat,
       q.trangthai AS trang_thai,
       q.loaidieuhanh AS loai_dieu_hanh,
+      q.capdo,
       q.quy_cha_id,
+      q.loaihotro,
       qp.tenquy AS ten_quy_cha
      FROM quy q
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
@@ -246,7 +263,7 @@ const checkFundNameExistsForOther = async (tenQuy, quyId) => {
 const updateFund = async (quyId, fundData) => {
   const {
     tenQuy,
-    loaiQuy, // string 'DT', 'NC', etc.
+    loaiQuy,
     moTa,
     hinhAnh,
     soTienMucTieu,
@@ -257,7 +274,8 @@ const updateFund = async (quyId, fundData) => {
     soDu,
     trangThai,
     loaiDieuHanh,
-    quyChaId
+    quyChaId,
+    loaiHoTro
   } = fundData;
 
   const [result] = await pool.execute(
@@ -275,6 +293,7 @@ const updateFund = async (quyId, fundData) => {
          trangthai = ?,
          loaidieuhanh = ?,
          quy_cha_id = ?,
+         loaihotro = ?,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE quy_id = ?`,
     [
@@ -291,6 +310,7 @@ const updateFund = async (quyId, fundData) => {
       trangThai,
       loaiDieuHanh || 'Tap trung - Be chung',
       quyChaId || null,
+      loaiHoTro || 'Tai tro khong hoan lai',
       quyId
     ]
   );
@@ -306,7 +326,6 @@ const getAllFunds = async () => {
       lq.loaiquy_id,
       lq.maloai AS loai_quy,
       lq.tenloai AS ten_loai_quy,
-      lq.nhom AS nhom_loai_quy,
       q.mota AS mo_ta,
       q.hinhanh AS hinh_anh,
       q.sotienmuctieu AS so_tien_muc_tieu,
@@ -323,7 +342,9 @@ const getAllFunds = async () => {
       q.ngaycapnhat AS ngay_cap_nhat,
       q.trangthai AS trang_thai,
       q.loaidieuhanh AS loai_dieu_hanh,
+      q.capdo,
       q.quy_cha_id,
+      q.loaihotro,
       qp.tenquy AS ten_quy_cha,
       COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) as so_don_da_nop,
       CASE 
@@ -335,7 +356,7 @@ const getAllFunds = async () => {
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
      LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
      LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
-     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, lq.nhom, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
+     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, q.loaihotro, qp.tenquy
      ORDER BY q.ngaytao DESC`
   );
   return rows;
@@ -351,7 +372,6 @@ const getPublicFunds = async () => {
         lq.loaiquy_id,
         lq.maloai AS loai_quy,
         lq.tenloai AS ten_loai_quy,
-        lq.nhom AS nhom_loai_quy,
         q.mota AS mo_ta,
         q.hinhanh AS hinh_anh,
         q.sotienmuctieu AS so_tien_muc_tieu,
@@ -365,7 +385,9 @@ const getPublicFunds = async () => {
         q.ngayketthuc AS han_nop_don,
         q.sodu AS so_du,
         q.loaidieuhanh AS loai_dieu_hanh,
+        q.capdo,
         q.quy_cha_id,
+        q.loaihotro,
         qp.tenquy AS ten_quy_cha,
         -- Tính số dư thực tế (trừ đi các khoản đang chờ giải ngân)
         (q.sodu - COALESCE(SUM(CASE WHEN yc.trangthai = 'Cho giai ngan' THEN yc.sotiendenghi ELSE 0 END), 0)) as so_du_thuc_te,
@@ -381,24 +403,86 @@ const getPublicFunds = async () => {
           THEN ROUND((COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) / q.soluonghotrotoida) * 100, 0)
           ELSE 0
         END as phan_tram_da_nhan,
-        -- Đếm số quỹ con đang hoạt động (cho quỹ mẹ - Bể chung)
-        -- Chỉ đếm quỹ con có loaidieuhanh = 'Tap trung - Muc chi'
+        -- Đếm số quỹ con đang hoạt động (cho quỹ mẹ/quỹ thành phần)
+        -- Đếm tất cả quỹ con trực tiếp (bất kể loại điều hành)
         (SELECT COUNT(*) 
          FROM quy qc 
          WHERE qc.quy_cha_id = q.quy_id 
-         AND qc.loaidieuhanh = 'Tap trung - Muc chi'
          AND qc.trangthai = 'Dang hoat dong') as so_quy_con_hoat_dong
        FROM quy q
        LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
        LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
        LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
        WHERE q.trangthai IN ('Dang hoat dong', 'Tam dung')
-       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, lq.nhom, q.ngaytao, q.loaidieuhanh, q.quy_cha_id, qp.tenquy
+       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, q.loaihotro, qp.tenquy
        ORDER BY q.ngaytao DESC`
     );
     return rows;
   } catch (error) {
     console.error('Error in getPublicFunds:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get public funds filtered by level (capdo) and status
+ * For donation form: fetch funds by level with hierarchical organization
+ * 
+ * @param {number|null} capDo - Fund level: 1 (Quỹ Mẹ), 2 (Quỹ Thành phần), 3 (Chương trình)
+ * @param {string} trangThai - Status filter (default: 'Dang hoat dong')
+ * @returns {Object} { level1, level2, level3 } - Organized by level
+ */
+const getPublicFundsByLevel = async (capDo = null, trangThai = 'Dang hoat dong') => {
+  try {
+    let whereClause = `q.trangthai = ?`;
+    const params = [trangThai];
+    
+    if (capDo !== null) {
+      whereClause += ` AND q.capdo = ?`;
+      params.push(capDo);
+    }
+    
+    const [rows] = await pool.query(
+      `SELECT 
+        q.quy_id,
+        q.tenquy,
+        q.capdo,
+        q.quy_cha_id,
+        q.mota,
+        q.sodu,
+        q.trangthai,
+        q.loaihotro,
+        lq.loaiquy_id,
+        lq.maloai,
+        lq.tenloai,
+        qp.tenquy AS ten_quy_cha
+       FROM quy q
+       LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+       LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
+       WHERE ${whereClause}
+       ORDER BY q.capdo, q.ngaytao DESC`,
+      params
+    );
+    
+    // Organize by level
+    const level1 = rows.filter(f => f.capdo === 1);
+    const level2 = rows.filter(f => f.capdo === 2);
+    const level3 = rows.filter(f => f.capdo === 3);
+    
+    // Organize level 3 under level 2 hierarchically
+    const level2WithPrograms = level2.map(fund => ({
+      ...fund,
+      programs: level3.filter(p => p.quy_cha_id === fund.quy_id)
+    }));
+    
+    return {
+      level1,
+      level2: level2WithPrograms,
+      level3,
+      all: rows
+    };
+  } catch (error) {
+    console.error('Error in getPublicFundsByLevel:', error);
     throw error;
   }
 };
@@ -445,7 +529,7 @@ const getReceivedDonationsByFundId = async (quyId) => {
       kt.ghichu,
       ntt.tennhataitro,
       ntt.loainhataitro,
-      COALESCE(ntt.logo, nd.avatar) AS logo
+      nd.avatar AS logo
      FROM khoantaitro kt
      INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
      LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
@@ -486,6 +570,7 @@ export default {
   getFundById,
   getAllFunds,
   getPublicFunds,
+  getPublicFundsByLevel, // New method for donation form
   updateFundStatus,
   checkFundNameExistsForOther,
   updateFund,

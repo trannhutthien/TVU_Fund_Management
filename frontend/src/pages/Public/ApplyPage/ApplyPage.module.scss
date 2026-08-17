@@ -1014,3 +1014,91 @@
     }
   }
 }
+
+// ============================================
+// LOGIN PROMPT FOR GUEST USERS
+// ============================================
+.loginPrompt {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.loginAlertBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(59, 111, 245, 0.08);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(59, 111, 245, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 12px rgba(59, 111, 245, 0.08);
+}
+
+.loginAlertIcon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.loginAlertContent {
+  flex: 1;
+}
+
+.loginAlertText {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+  text-align: left;
+}
+
+.loginPromptLink {
+  background: none;
+  border: none;
+  color: var(--color-gold);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: all 0.25s ease;
+  border-radius: 4px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  
+  &:hover {
+    text-decoration-color: var(--color-gold);
+    background: rgba(240, 165, 0, 0.1);
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 768px) {
+  .loginPrompt {
+    margin-bottom: 16px;
+  }
+
+  .loginAlertBox {
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+
+  .loginAlertText {
+    font-size: 13px;
+  }
+
+  .loginPromptLink {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+}

@@ -10,8 +10,8 @@ import {
   isInRange,
 } from './utils';
 
-const APPROVED_STATES = ['Da duyet', 'Da giai ngan', 'Dang xu ly'];
-const DISBURSED_STATES = ['Da giai ngan', 'Da duyet'];
+const APPROVED_STATES = ['Da duyet', 'Da giai ngan', 'Da giai ngan dot 1', 'Dang xu ly'];
+const DISBURSED_STATES = ['Da giai ngan', 'Da giai ngan dot 1', 'Da duyet'];
 
 const useBaoCaoData = (period, customRange) => {
   const [loading, setLoading] = useState(true);

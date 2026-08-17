@@ -1,0 +1,186 @@
+.stepContent {
+  padding: 0;
+}
+
+.successHeader {
+  text-align: center;
+  margin-bottom: 24px;
+
+  h3 {
+    margin: 12px 0 8px;
+    font-size: 20px;
+    color: #27ae60;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: #6c757d;
+  }
+}
+
+.successIcon {
+  display: flex;
+  justify-content: center;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.resultInfo {
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #f8f9fa;
+  margin-bottom: 20px;
+}
+
+.resultItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  span {
+    font-size: 14px;
+    color: #6c757d;
+  }
+
+  strong {
+    font-size: 14px;
+    color: #212529;
+  }
+}
+
+.amount {
+  color: #e74c3c;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.pendingBadge {
+  background: #fff3cd;
+  color: #856404;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bankSection {
+  margin-bottom: 24px;
+
+  h4 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a5276;
+  }
+}
+
+.bankCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bankCard {
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.bankHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+
+  strong {
+    font-size: 15px;
+    color: #1a5276;
+  }
+}
+
+.bankDetail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+
+  > span:first-child {
+    font-size: 13px;
+    color: #6c757d;
+  }
+
+  > span:last-child,
+  > code {
+    font-size: 14px;
+    color: #212529;
+    font-weight: 500;
+  }
+
+  code {
+    background: #f8f9fa;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+  }
+}
+
+.copyRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copyBtn {
+  padding: 2px 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 11px;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f8f9fa;
+    color: #1a5276;
+  }
+}
+
+.actions {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.newDonationBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #1a5276;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #154360;
+  }
+}

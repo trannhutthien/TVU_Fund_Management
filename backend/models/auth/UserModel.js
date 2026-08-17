@@ -10,19 +10,19 @@ const checkEmailExists = async (email) => {
 };
 
 // Helper to find or create donvihoc_id
-const getOrCreateDonViHocId = async (tenKhoa, lop) => {
+const getOrCreateDonViHocId = async (tenKhoa) => {
   if (!tenKhoa) return null;
   const [rows] = await pool.query(
-    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? AND (lop = ? OR (lop IS NULL AND ? IS NULL)) LIMIT 1",
-    [tenKhoa, lop || null, lop || null]
+    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? LIMIT 1",
+    [tenKhoa]
   );
   if (rows.length > 0) {
     return rows[0].donvihoc_id;
   }
-  const madonvi = `DV${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const madonvi = `TVU-${Date.now()}`;
   const [result] = await pool.query(
-    "INSERT INTO donvihoc (madonvi, tenkhoa, lop, trangthai) VALUES (?, ?, ?, 'Hoat dong')",
-    [madonvi, tenKhoa, lop || null]
+    "INSERT INTO donvihoc (madonvi, tenkhoa, trangthai) VALUES (?, ?, 'Hoat dong')",
+    [madonvi, tenKhoa]
   );
   return result.insertId;
 };
@@ -34,7 +34,7 @@ const createUser = async (userData) => {
     khoaphong, lop, soDienThoai, diaChi, loaiTaiKhoan, avatar 
   } = userData;
 
-  const donvihoc_id = await getOrCreateDonViHocId(khoaphong, lop);
+  const donvihoc_id = await getOrCreateDonViHocId(khoaphong);
   
   const dbStatus = trangThai === 'HOAT_DONG' ? 'Hoat dong' : (trangThai === 'KHOA' ? 'Khoa' : (trangThai === 'CHO_DUYET' ? 'Cho duyet' : (trangThai || 'Hoat dong')));
   const dbLoaiTaiKhoan = toDbAccountType(loaiTaiKhoan);
@@ -42,8 +42,8 @@ const createUser = async (userData) => {
   const [result] = await pool.query(
     `INSERT INTO nguoidung (
       masodinhdanh, hoten, email, matkhau, vaitro_id, trangthai, 
-      donvihoc_id, sodienthoai, diachi, loaitaikhoan, avatar
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      donvihoc_id, lop, sodienthoai, diachi, loaitaikhoan, avatar
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       maSoDinhDanh, 
       hoTen, 
@@ -52,6 +52,7 @@ const createUser = async (userData) => {
       roleId, 
       dbStatus, 
       donvihoc_id,
+      lop || null,
       soDienThoai || null,
       diaChi || null,
       dbLoaiTaiKhoan || null,
@@ -67,7 +68,7 @@ const getUserById = async (userId) => {
   const [rows] = await pool.query(
     `SELECT n.nguoidung_id, n.masodinhdanh, n.hoten, n.email, n.avatar, n.sodienthoai, n.diachi,
             n.vaitro_id, n.loaitaikhoan,       dv.tenkhoa AS khoaphong,
-      dv.lop,
+      n.lop,
       n.trangthai, n.ngaytao
      FROM nguoidung n
      LEFT JOIN donvihoc dv ON n.donvihoc_id = dv.donvihoc_id
@@ -235,7 +236,7 @@ const getUserList = async ({
       n.vaitro_id,
       n.loaitaikhoan,
       dv.tenkhoa AS khoaphong,
-      dv.lop,
+      n.lop,
       n.trangthai,
       n.ngaytao,
       v.tenvaitro,
@@ -369,6 +370,10 @@ const updateUserInfo = async (userId, data) => {
   const khoaPhongVal = data.khoaphong !== undefined ? data.khoaphong : data.khoa_phong;
   const lopVal = data.lop;
   const avatarVal = data.avatar;
+  const ngaysinhVal = data.ngaysinh;
+  const gioitinhVal = data.gioitinh;
+  const tinhtrangcongtacVal = data.tinhtrangcongtac;
+  const donvicongtacVal = data.donvicongtac;
 
   const sets = [];
   const params = [];
@@ -389,27 +394,34 @@ const updateUserInfo = async (userId, data) => {
     sets.push("diachi = ?");
     params.push(diaChiVal || null);
   }
-  if (khoaPhongVal !== undefined || lopVal !== undefined) {
-    const currentDonvi = await pool.query("SELECT donvihoc_id FROM nguoidung WHERE nguoidung_id = ?", [userId]);
-    const currentDonviId = currentDonvi[0]?.[0]?.donvihoc_id;
-    let currentKhoa = null;
-    let currentLop = null;
-    if (currentDonviId) {
-      const [dvRows] = await pool.query("SELECT tenkhoa, lop FROM donvihoc WHERE donvihoc_id = ?", [currentDonviId]);
-      if (dvRows.length > 0) {
-        currentKhoa = dvRows[0].tenkhoa;
-        currentLop = dvRows[0].lop;
-      }
-    }
-    const newKhoa = khoaPhongVal !== undefined ? (khoaPhongVal || null) : currentKhoa;
-    const newLop = lopVal !== undefined ? (lopVal || null) : currentLop;
-    const donvihoc_id = await getOrCreateDonViHocId(newKhoa, newLop);
+  if (khoaPhongVal !== undefined) {
+    const donvihoc_id = await getOrCreateDonViHocId(khoaPhongVal);
     sets.push("donvihoc_id = ?");
     params.push(donvihoc_id);
+  }
+  if (lopVal !== undefined) {
+    sets.push("lop = ?");
+    params.push(lopVal || null);
   }
   if (avatarVal !== undefined) {
     sets.push("avatar = ?");
     params.push(avatarVal || null);
+  }
+  if (ngaysinhVal !== undefined) {
+    sets.push("ngaysinh = ?");
+    params.push(ngaysinhVal || null);
+  }
+  if (gioitinhVal !== undefined) {
+    sets.push("gioitinh = ?");
+    params.push(gioitinhVal || null);
+  }
+  if (tinhtrangcongtacVal !== undefined) {
+    sets.push("tinhtrangcongtac = ?");
+    params.push(tinhtrangcongtacVal || null);
+  }
+  if (donvicongtacVal !== undefined) {
+    sets.push("donvicongtac = ?");
+    params.push(donvicongtacVal || null);
   }
 
   if (!sets.length) return { affectedRows: 0 };

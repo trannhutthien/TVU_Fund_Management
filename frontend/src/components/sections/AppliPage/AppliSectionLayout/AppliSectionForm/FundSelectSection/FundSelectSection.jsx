@@ -1,17 +1,27 @@
 import { memo, useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
-  HiOutlineBuildingLibrary, 
+  HiOutlineBuildingLibrary,
   HiOutlineInformationCircle,
   HiOutlineCurrencyDollar,
   HiOutlineCalendarDays,
   HiOutlineBanknotes,
-  HiOutlineUsers
+  HiOutlineUsers,
+  HiOutlineGift,
+  HiOutlineArrowPath,
+  HiOutlineDocumentText,
+  HiOutlineMagnifyingGlass,
+  HiOutlineSquare3Stack3D,
+  HiOutlineRocketLaunch,
+  HiOutlineCheck,
 } from 'react-icons/hi2';
-import Dropdown from '@components/common/Dropdown/Dropdown';
+import Input from '@components/common/Input';
+import Dropdown from '@components/common/Dropdown';
 import fundService from '@services/fundService';
 import { formatCurrency } from '@utils/formatters';
 import styles from './FundSelectSection.module.scss';
+
+const ALL_VALUE = '__all__';
 
 const formatVND = (amount) => {
   if (amount == null) return '—';
@@ -45,12 +55,18 @@ const normalizeSelectedFund = (fund) => {
 };
 
 const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextButton }) => {
-  const [selectedLoaiQuy, setSelectedLoaiQuy] = useState(null);
   const [selectedFundId, setSelectedFundId] = useState(null);
-  const [allFunds, setAllFunds] = useState([]); // Tất cả quỹ từ database
-  const [loaiQuyOptions, setLoaiQuyOptions] = useState([]); // Danh sách loại quỹ động
+  const [allFunds, setAllFunds] = useState([]);
+  const [loaiQuyData, setLoaiQuyData] = useState([]);
   const [fundDetail, setFundDetail] = useState(null);
   const [loadingFunds, setLoadingFunds] = useState(false);
+
+  // Filter states
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [activeLoaiQuy, setActiveLoaiQuy] = useState(null);
+  const [activeTrangThai, setActiveTrangThai] = useState(null);
+  const [sortValue, setSortValue] = useState('newest');
+
   const selectedFundKey = selectedFund?.quyId ?? selectedFund?.quy_id ?? selectedFund?.id ?? null;
   const normalizedSelectedFund = useMemo(
     () => normalizeSelectedFund(selectedFund),
@@ -70,67 +86,58 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     ]
   );
 
-  const fundList = useMemo(() => {
-    if (!selectedLoaiQuy) return [];
-
-    const filtered = allFunds.filter((fund) => {
-      const isMatchLoai = fund.loaiQuy === selectedLoaiQuy;
+  // Filtered fund list
+  const filteredFunds = useMemo(() => {
+    let result = allFunds.filter((fund) => {
       const isActive = fund.trangThai === 'Dang hoat dong';
       const isNotBeChung = isDonor || fund.loaiDieuHanh !== 'Tap trung - Be chung';
-
-      return isMatchLoai && isActive && isNotBeChung;
+      return isActive && isNotBeChung;
     });
 
-    if (
-      normalizedSelectedFund?.quyId &&
-      normalizedSelectedFund.loaiQuy === selectedLoaiQuy &&
-      !filtered.some((fund) => fund.quyId === normalizedSelectedFund.quyId)
-    ) {
-      return [normalizedSelectedFund, ...filtered];
+    // Filter by loại quỹ
+    if (activeLoaiQuy) {
+      result = result.filter((fund) => fund.loaiQuy === activeLoaiQuy);
     }
 
-    return filtered;
-  }, [
-    allFunds,
-    selectedLoaiQuy,
-    normalizedSelectedFund?.quyId,
-    normalizedSelectedFund?.tenQuy,
-    normalizedSelectedFund?.loaiQuy,
-    normalizedSelectedFund?.trangThai,
-    isDonor,
-  ]);
+    // Filter by search keyword
+    if (searchKeyword.trim()) {
+      const keyword = searchKeyword.toLowerCase().trim();
+      result = result.filter((fund) => {
+        const name = (fund.tenQuy || '').toLowerCase();
+        const description = (fund.moTa || fund.dieuKienTomTat || '').toLowerCase();
+        return name.includes(keyword) || description.includes(keyword);
+      });
+    }
 
-  // Lấy tất cả quỹ và loại quỹ từ database khi component mount
+    // Sort
+    result = [...result].sort((a, b) => {
+      if (sortValue === 'newest') return (b.ngayTao || '').localeCompare(a.ngayTao || '');
+      if (sortValue === 'oldest') return (a.ngayTao || '').localeCompare(b.ngayTao || '');
+      if (sortValue === 'highest') return (b.soDu || 0) - (a.soDu || 0);
+      if (sortValue === 'name') return (a.tenQuy || '').localeCompare(b.tenQuy || '');
+      return 0;
+    });
+
+    return result;
+  }, [allFunds, activeLoaiQuy, searchKeyword, sortValue, isDonor]);
+
+  // Fetch all funds and types
   useEffect(() => {
     const fetchAllFundsAndTypes = async () => {
       setLoadingFunds(true);
       try {
-        // Lấy danh sách quỹ
         const responseFunds = await fundService.getPublicFunds();
         const funds = responseFunds.funds || [];
         setAllFunds(funds);
 
-        // Lấy danh sách loại quỹ từ bảng loaiquy
         const responseTypes = await fundService.getAllLoaiQuy();
         if (responseTypes.success && responseTypes.data) {
-          const typeOptions = responseTypes.data.map(item => ({
-            value: item.maLoai,
-            label: item.tenLoai
-          }));
-          setLoaiQuyOptions(typeOptions);
-        } else {
-          // Fallback: Tạo danh sách loại quỹ động từ dữ liệu thực nếu API lỗi
-          const uniqueTypes = [...new Set(funds.map(f => f.loaiQuy))].filter(Boolean);
-          const typeOptions = uniqueTypes.map(type => ({
-            value: type,
-            label: formatLoaiQuyLabel(type)
-          }));
-          setLoaiQuyOptions(typeOptions);
+          setLoaiQuyData(responseTypes.data);
         }
       } catch (error) {
         console.error('Lỗi tải danh sách quỹ/loại quỹ:', error);
         setAllFunds([]);
-        setLoaiQuyOptions([]);
+        setLoaiQuyData([]);
       } finally {
         setLoadingFunds(false);
       }
@@ -139,74 +146,65 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     fetchAllFundsAndTypes();
   }, []);
 
+  // Sync selectedFund from parent
   useEffect(() => {
     if (!normalizedSelectedFund?.quyId) return;
+    setSelectedFundId(normalizedSelectedFund.quyId);
+  }, [normalizedSelectedFund?.quyId]);
 
-    const matchedFund = allFunds.find((fund) => fund.quyId === normalizedSelectedFund.quyId) || normalizedSelectedFund;
-    if (!matchedFund.loaiQuy) return;
-
-    setSelectedLoaiQuy((currentLoaiQuy) => (
-      currentLoaiQuy === matchedFund.loaiQuy ? currentLoaiQuy : matchedFund.loaiQuy
-    ));
-    setSelectedFundId((currentFundId) => (
-      currentFundId === matchedFund.quyId ? currentFundId : matchedFund.quyId
-    ));
-  }, [
-    normalizedSelectedFund?.quyId,
-    normalizedSelectedFund?.loaiQuy,
-    allFunds
-  ]);
-
-  // Format label cho loại quỹ
-  const formatLoaiQuyLabel = (loaiQuy) => {
-    const mapping = {
-      'Tu thien': 'Từ thiện',
-      'Hoc bong': 'Học bổng',
-      'Y te': 'Y tế',
-      'Moi truong': 'Môi trường',
-      'Khac': 'Khác'
-    };
-    return mapping[loaiQuy] || loaiQuy;
-  };
-
+  // Update fundDetail when selectedFundId changes
   useEffect(() => {
-    if (!selectedLoaiQuy || !selectedFundId) return;
-
-    const shouldKeepSelectedFund = fundList.some((fund) => fund.quyId === Number(selectedFundId));
-    if (shouldKeepSelectedFund) return;
-
-    setSelectedFundId(null);
-    setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
-    if (Number(selectedFundKey) === Number(selectedFundId)) {
-      onFundSelect?.(null);
-    }
-  }, [selectedLoaiQuy, selectedFundId, fundList, selectedFundKey, onFundSelect]);
-
-  useEffect(() => {
-    if (!selectedFundId || fundList.length === 0) {
-      setFundDetail((currentDetail) => (currentDetail ? null : currentDetail));
+    if (!selectedFundId || filteredFunds.length === 0) {
+      setFundDetail(null);
       return;
     }
 
-    const detail = fundList.find((f) => f.quyId === Number(selectedFundId));
-    setFundDetail((currentDetail) => (
-      currentDetail?.quyId === detail?.quyId ? currentDetail : detail || null
-    ));
-
-    if ((detail?.quyId || null) !== (Number(selectedFundKey) || null)) {
-      onFundSelect?.(detail || null);
+    const detail = filteredFunds.find((f) => f.quyId === Number(selectedFundId));
+    if (detail) {
+      setFundDetail((prev) => (prev?.quyId === detail.quyId ? prev : detail));
+    } else {
+      // Fund might not be in filtered list, try from allFunds
+      const detailFromAll = allFunds.find((f) => f.quyId === Number(selectedFundId));
+      if (detailFromAll) {
+        setFundDetail((prev) => (prev?.quyId === detailFromAll.quyId ? prev : detailFromAll));
+      }
     }
+  }, [selectedFundId, filteredFunds, allFunds]);
 
-  }, [selectedFundId, fundList, onFundSelect, selectedFundKey]);
+  // Notify parent on fund select
+  useEffect(() => {
+    if (fundDetail?.quyId !== Number(selectedFundKey)) {
+      onFundSelect?.(fundDetail || null);
+    }
+  }, [fundDetail, selectedFundKey, onFundSelect]);
 
-  const fundOptions = fundList.map((f) => ({
-    value: f.quyId,
-    label: f.tenQuy,
-    description: formatVND(f.soDu),
-    loaiDieuHanh: f.loaiDieuHanh,
-    tenQuyCha: f.tenQuyCha,
-  }));
+  // Filter options
+  const loaiQuyOptions = useMemo(() => [
+    { value: ALL_VALUE, label: 'Tất cả loại quỹ' },
+    ...loaiQuyData.map((item) => ({
+      value: item.maLoai || item.ma_loai,
+      label: item.tenLoai || item.ten_loai,
+    })),
+  ], [loaiQuyData]);
 
+  const trangThaiOptions = [
+    { value: ALL_VALUE, label: 'Tất cả trạng thái' },
+    { value: 'Dang hoat dong', label: 'Đang hoạt động' },
+    { value: 'Tam dung', label: 'Tạm dừng' },
+  ];
+
+  const sortOptions = [
+    { value: 'newest', label: 'Mới nhất' },
+    { value: 'oldest', label: 'Cũ nhất' },
+    { value: 'highest', label: 'Số dư cao nhất' },
+    { value: 'name', label: 'Tên A→Z' },
+  ];
+
+  const handleFundClick = (fund) => {
+    setSelectedFundId(fund.quyId);
+  };
+
+  // Detail section data
   const soDu = fundDetail?.soDu;
   const hanNopDon = fundDetail?.hanNopDon;
   const soLuongChiTieu = fundDetail?.soLuongChiTieu;
@@ -227,6 +225,36 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
   const soTienToiThieu = fundDetail?.soTienToiThieu;
   const soTienToiDa = fundDetail?.soTienToiDa;
 
+  const nhomQuy = fundDetail?.loaiQuy ? loaiQuyData.find(item => item.maLoai === fundDetail.loaiQuy)?.nhom : null;
+
+  const formatNhomQuy = (nhom) => {
+    const mapping = {
+      'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
+      'Tai tro co thu hoi': 'Tài trợ có thu hồi',
+      'Cho vay': 'Cho vay'
+    };
+    return mapping[nhom] || nhom;
+  };
+
+  const getNhomQuyBadgeClass = (nhom) => {
+    if (nhom === 'Tai tro khong hoan lai') return styles.badgeGrant;
+    if (nhom === 'Tai tro co thu hoi') return styles.badgeRecoverable;
+    if (nhom === 'Cho vay') return styles.badgeLoan;
+    return styles.badgeDefault;
+  };
+
+  const getNhomQuyIcon = (nhom) => {
+    if (nhom === 'Tai tro khong hoan lai') return HiOutlineGift;
+    if (nhom === 'Tai tro co thu hoi') return HiOutlineArrowPath;
+    if (nhom === 'Cho vay') return HiOutlineDocumentText;
+    return HiOutlineInformationCircle;
+  };
+
+  const formatLoaiQuyLabel = (loaiQuy) => {
+    const found = loaiQuyData.find(item => item.maLoai === loaiQuy);
+    return found?.tenLoai || loaiQuy;
+  };
+
   return (
     <div className={styles.card}>
       <div className={styles.sectionTitle}>
@@ -236,65 +264,111 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
         </span>
       </div>
 
-      <div className={styles.fieldGroup}>
-        <div className={styles.fieldLabel}>Loại quỹ</div>
-        <Dropdown
-          options={loaiQuyOptions}
-          value={selectedLoaiQuy}
-          onChange={(val) => setSelectedLoaiQuy(val)}
-          placeholder="-- Chọn loại quỹ --"
-          disabled={loadingFunds || loaiQuyOptions.length === 0}
-          className={styles.dropdown}
-        />
-        {loadingFunds && (
+      {/* Search + Filter Layout - Giống FundsPage */}
+      <div className={styles.filterSection}>
+        {/* Search Bar */}
+        <div className={styles.searchWrapper}>
+          <Input
+            type="text"
+            placeholder="Tìm theo tên quỹ, mô tả..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            leftIcon={<HiOutlineMagnifyingGlass size={20} />}
+            className={styles.searchInput}
+          />
+        </div>
+
+        {/* Filters Row */}
+        <div className={styles.filtersRow}>
+          <div className={styles.filterItem}>
+            <label className={styles.filterLabel}>Loại quỹ</label>
+            <Dropdown
+              options={loaiQuyOptions}
+              value={activeLoaiQuy || ALL_VALUE}
+              onChange={(val) => setActiveLoaiQuy(val === ALL_VALUE ? null : val)}
+              placeholder="Tất cả loại quỹ"
+              size="medium"
+              className={styles.filterDropdown}
+            />
+          </div>
+
+          <div className={styles.filterItem}>
+            <label className={styles.filterLabel}>Trạng thái</label>
+            <Dropdown
+              options={trangThaiOptions}
+              value={activeTrangThai || ALL_VALUE}
+              onChange={(val) => setActiveTrangThai(val === ALL_VALUE ? null : val)}
+              placeholder="Tất cả trạng thái"
+              size="medium"
+              className={styles.filterDropdown}
+            />
+          </div>
+
+          <div className={styles.filterItem}>
+            <label className={styles.filterLabel}>Sắp xếp</label>
+            <Dropdown
+              options={sortOptions}
+              value={sortValue}
+              onChange={(val) => setSortValue(val)}
+              placeholder="Chọn cách sắp xếp"
+              size="medium"
+              className={styles.sortDropdown}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Fund List */}
+      <div className={styles.fundListSection}>
+        {loadingFunds ? (
           <div className={styles.loadingHint}>Đang tải danh sách quỹ...</div>
+        ) : filteredFunds.length === 0 ? (
+          <div className={styles.emptyHint}>Không tìm thấy quỹ nào phù hợp</div>
+        ) : (
+          <div className={styles.fundList}>
+            {filteredFunds.map((fund) => (
+              <div
+                key={fund.quyId}
+                className={`${styles.fundItem} ${selectedFundId === fund.quyId ? styles.fundItemSelected : ''}`}
+                onClick={() => handleFundClick(fund)}
+              >
+                <div className={styles.fundItemContent}>
+                  <div className={styles.fundItemHeader}>
+                    <h4 className={styles.fundItemName}>{fund.tenQuy}</h4>
+                    {selectedFundId === fund.quyId && (
+                      <HiOutlineCheck className={styles.fundItemCheck} />
+                    )}
+                  </div>
+                  <p className={styles.fundItemDesc}>
+                    {fund.dieuKienTomTat || fund.moTa || 'Chưa có mô tả'}
+                  </p>
+                  <div className={styles.fundItemMeta}>
+                    <span className={styles.fundItemBalance}>
+                      Số dư: {formatVND(fund.soDu)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {selectedLoaiQuy && (
-        <div className={styles.fieldGroupAnimated}>
-          <div className={styles.fieldLabel}>Tên quỹ</div>
-          <Dropdown
-            options={fundOptions}
-            value={selectedFundId}
-            onChange={(val) => setSelectedFundId(val)}
-            placeholder={
-              isDonor
-                ? '-- Chọn quỹ bạn muốn quyên góp --'
-                : '-- Chọn quỹ bạn muốn đăng ký --'
-            }
-            disabled={loadingFunds || fundList.length === 0}
-            className={styles.dropdown}
-            renderOption={(option) => (
-              <div className={styles.fundOption}>
-                <span className={styles.fundOptionName}>{option.label}</span>
-                <div className={styles.fundOptionRight}>
-                  {isDonor && (
-                    <span className={`${styles.typeBadge} ${option.loaiDieuHanh === 'Tap trung - Be chung' ? styles.badgeParent : styles.badgeChild}`}>
-                      {option.loaiDieuHanh === 'Tap trung - Be chung' ? 'Bể lớn' : 'Mục chi con'}
-                    </span>
-                  )}
-                  <span className={styles.fundOptionBadge}>
-                    {option.description}
-                  </span>
-                </div>
-              </div>
-            )}
-          />
-          {loadingFunds && (
-            <div className={styles.loadingHint}>Đang tải danh sách quỹ...</div>
-          )}
-          {!loadingFunds && fundList.length === 0 && (
-            <div className={styles.emptyHint}>
-              Không có quỹ nào thuộc loại này đang hoạt động
-            </div>
-          )}
-        </div>
-      )}
-
+      {/* Fund Detail - Hiển thị khi đã chọn quỹ */}
       {fundDetail && (
         <div className={styles.detailAnimated}>
-          {/* Tóm tắt điều kiện - Hiển thị cho cả 2 */}
+          {/* Badge nhóm quỹ */}
+          {nhomQuy && (
+            <div className={`${styles.nhomQuyBadge} ${getNhomQuyBadgeClass(nhomQuy)}`}>
+              {(() => {
+                const IconComponent = getNhomQuyIcon(nhomQuy);
+                return <IconComponent className={styles.nhomQuyIcon} />;
+              })()}
+              <span className={styles.nhomQuyText}>{formatNhomQuy(nhomQuy)}</span>
+            </div>
+          )}
+
+          {/* Tóm tắt điều kiện */}
           <div className={styles.conditionCard}>
             <div className={styles.conditionHeader}>
               <HiOutlineInformationCircle className={styles.conditionIcon} />
@@ -304,7 +378,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
             </div>
             <p className={styles.conditionText}>
               {fundDetail.dieuKienTomTat ||
-                (isDonor 
+                (isDonor
                   ? 'Cảm ơn bạn đã quan tâm đến quỹ này. Mọi đóng góp của bạn sẽ được sử dụng đúng mục đích.'
                   : 'Chưa có thông tin điều kiện cho quỹ này.'
                 )}
@@ -317,24 +391,21 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
             )}
           </div>
 
-          {/* Info Grid - Khác nhau cho Donor và Student */}
+          {/* Info Grid */}
           {isDonor ? (
-            // Nhà tài trợ: Hiển thị thông tin tổng quan về quỹ
             <div className={styles.infoGrid}>
               <div className={styles.infoCell}>
                 <div className={styles.infoLabel}>
                   <HiOutlineBanknotes className={styles.infoIcon} /> Số dư quỹ hiện tại
                 </div>
-                <div className={styles.infoValue}>
-                  {formatVND(soDu)}
-                </div>
+                <div className={styles.infoValue}>{formatVND(soDu)}</div>
               </div>
 
               <div className={styles.infoCell}>
                 <div className={styles.infoLabel}>
-                  <HiOutlineUsers className={styles.infoIcon} /> 
-                  {fundDetail.loaiDieuHanh === 'Tap trung - Be chung' 
-                    ? 'Số quỹ con đang hoạt động' 
+                  <HiOutlineUsers className={styles.infoIcon} />
+                  {fundDetail.loaiDieuHanh === 'Tap trung - Be chung'
+                    ? 'Số quỹ con đang hoạt động'
                     : 'Số người đã nhận hỗ trợ'}
                 </div>
                 <div className={styles.infoValue}>
@@ -348,22 +419,17 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
                 <div className={styles.infoLabel}>
                   <HiOutlineCurrencyDollar className={styles.infoIcon} /> Loại quỹ
                 </div>
-                <div className={styles.infoValue}>
-                  {formatLoaiQuyLabel(fundDetail.loaiQuy)}
-                </div>
+                <div className={styles.infoValue}>{formatLoaiQuyLabel(fundDetail.loaiQuy)}</div>
               </div>
 
               <div className={styles.infoCell}>
                 <div className={styles.infoLabel}>
                   <HiOutlineInformationCircle className={styles.infoIcon} /> Trạng thái
                 </div>
-                <div className={`${styles.infoValue} ${styles.valueSuccess}`}>
-                  Đang hoạt động
-                </div>
+                <div className={`${styles.infoValue} ${styles.valueSuccess}`}>Đang hoạt động</div>
               </div>
             </div>
           ) : (
-            // Sinh viên: Hiển thị thông tin điều kiện hỗ trợ
             <div className={styles.infoGrid}>
               <div className={styles.infoCell}>
                 <div className={styles.infoLabel}>
@@ -385,9 +451,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
                   <HiOutlineCalendarDays className={styles.infoIcon} /> Hạn nộp đơn
                 </div>
                 <div
-                  className={`${styles.infoValue} ${
-                    isDeadlineSoon ? styles.valueDanger : ''
-                  } ${isDeadlinePassed ? styles.valueDanger : ''}`}
+                  className={`${styles.infoValue} ${isDeadlineSoon ? styles.valueDanger : ''} ${isDeadlinePassed ? styles.valueDanger : ''}`}
                 >
                   {isDeadlineSoon && '⚠️ '}
                   {isDeadlinePassed ? 'Đã hết hạn' : formatDate(hanNopDon)}
@@ -398,9 +462,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
                 <div className={styles.infoLabel}>
                   <HiOutlineBanknotes className={styles.infoIcon} /> Số dư quỹ
                 </div>
-                <div
-                  className={`${styles.infoValue} ${isSoDuLow ? styles.valueDanger : ''}`}
-                >
+                <div className={`${styles.infoValue} ${isSoDuLow ? styles.valueDanger : ''}`}>
                   {isSoDuLow && '⚠️ '}
                   {formatVND(soDu)}
                 </div>
@@ -410,9 +472,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
                 <div className={styles.infoLabel}>
                   <HiOutlineUsers className={styles.infoIcon} /> Số suất còn lại
                 </div>
-                <div
-                  className={`${styles.infoValue} ${isNearlyFull ? styles.valueWarning : ''}`}
-                >
+                <div className={`${styles.infoValue} ${isNearlyFull ? styles.valueWarning : ''}`}>
                   {soLuongChiTieu == null
                     ? 'Không giới hạn suất'
                     : `${soLuongChiTieu - soDonDaNop} / ${soLuongChiTieu} suất`}
@@ -422,14 +482,12 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
             </div>
           )}
 
-          {/* Progress bar - Chỉ hiển thị cho sinh viên */}
+          {/* Progress bar */}
           {!isDonor && soLuongChiTieu != null && (
             <div className={styles.progressSection}>
               <div className={styles.progressLabel}>
                 <span>Tỷ lệ đã nhận</span>
-                <span className={styles.progressPercent}>
-                  {phanTramDaNhan ?? 0}%
-                </span>
+                <span className={styles.progressPercent}>{phanTramDaNhan ?? 0}%</span>
               </div>
               <div className={styles.progressBar}>
                 <div
@@ -440,14 +498,14 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
             </div>
           )}
 
-          {/* Unlimited badge - Chỉ hiển thị cho sinh viên */}
+          {/* Unlimited badge */}
           {!isDonor && soLuongChiTieu == null && (
             <div className={styles.unlimitedBadge}>
               Không giới hạn suất — có thể nộp đơn tự do
             </div>
           )}
 
-          {/* Donor encouragement message */}
+          {/* Donor encouragement */}
           {isDonor && (
             <div className={styles.donorMessage}>
               💝 Mọi đóng góp của bạn đều có ý nghĩa và sẽ giúp đỡ những sinh viên có hoàn cảnh khó khăn

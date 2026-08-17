@@ -27,12 +27,6 @@ const createDonor = async (donorData) => {
     nguoiDungId,
     tenNhaTaiTro,
     loaiNhaTaiTro,
-    email,
-    soDienThoai,
-    diaChi,
-    website,
-    moTa,
-    logo
   } = donorData;
 
   const [result] = await pool.execute(
@@ -40,24 +34,13 @@ const createDonor = async (donorData) => {
       nguoidung_id,
       tennhataitro,
       loainhataitro,
-      email,
-      sodienthoai,
-      diachi,
-      website,
-      mota,
-      logo,
       trangthai
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Hoat dong')`,
+    ) VALUES (?, ?, ?, ?)`,
     [
       nguoiDungId || null,
       tenNhaTaiTro,
       loaiNhaTaiTro || 'Ca nhan',
-      email || null,
-      soDienThoai || null,
-      diaChi || null,
-      website || null,
-      moTa || null,
-      logo || null
+      'Hoat dong'
     ]
   );
 
@@ -75,20 +58,14 @@ const getDonorById = async (nhaTaiTroId) => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
-      COALESCE(nt.email, nd.email) AS email,
-      COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
-      COALESCE(nt.diachi, nd.diachi) AS diachi,
-      nt.website,
-      nt.mota,
-      nt.logo,
+      nd.email,
+      nd.sodienthoai,
+      nd.diachi,
       nt.trangthai,
       nt.ngaytao,
       nt.ngaycapnhat,
       nd.hoten,
-      nd.email as nd_email,
-      nd.sodienthoai as nd_sodienthoai,
-      nd.diachi as nd_diachi,
-      COALESCE(nt.logo, nd.avatar) AS avatar
+      nd.avatar
      FROM nhataitro nt
      LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      WHERE nt.nhataitro_id = ?
@@ -109,16 +86,13 @@ const getAllDonors = async () => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
-      COALESCE(nt.email, nd.email) AS email,
-      COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
-      COALESCE(nt.diachi, nd.diachi) AS diachi,
-      nt.website,
-      nt.mota,
-      nt.logo,
+      nd.email,
+      nd.sodienthoai,
+      nd.diachi,
       nt.trangthai,
       nt.ngaytao,
       nd.hoten,
-      COALESCE(nt.logo, nd.avatar) AS avatar
+      nd.avatar
      FROM nhataitro nt
      LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      WHERE nt.trangthai = 'Hoat dong'
@@ -137,7 +111,7 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
 
   if (keyword) {
     conditions.push(
-      `(nt.tennhataitro LIKE ? OR COALESCE(nt.email, nd.email) LIKE ? OR COALESCE(nt.sodienthoai, nd.sodienthoai) LIKE ? OR nd.hoten LIKE ?)`
+      `(nt.tennhataitro LIKE ? OR nd.email LIKE ? OR nd.sodienthoai LIKE ? OR nd.hoten LIKE ?)`
     );
     const like = `%${keyword}%`;
     params.push(like, like, like, like);
@@ -191,17 +165,15 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
         nt.nhataitro_id,
         nt.tennhataitro,
         nt.loainhataitro,
-        COALESCE(nt.email, nd.email) AS email,
-        COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
-        COALESCE(nt.diachi, nd.diachi) AS diachi,
-        nt.website,
-        nt.mota,
+        nd.email,
+        nd.sodienthoai,
+        nd.diachi,
+        nd.mota,
         nt.trangthai,
         nt.nguoidung_id,
-        nt.logo,
         nt.ngaytao,
         nd.hoten,
-        COALESCE(nt.logo, nd.avatar) AS avatar,
+        nd.avatar,
         COALESCE(SUM(CASE WHEN kt.trangthai = 'Da nhan' THEN kt.sotien ELSE 0 END), 0) AS tong_da_dong_gop,
         COUNT(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN 1 END) AS so_khoan,
         MAX(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN kt.ngaytaitro END) AS lan_cuoi
@@ -230,16 +202,13 @@ const getDonorWithStats = async (nhaTaiTroId) => {
         nt.nguoidung_id,
         nt.tennhataitro,
         nt.loainhataitro,
-        COALESCE(nt.email, nd.email) AS email,
-        COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
-        COALESCE(nt.diachi, nd.diachi) AS diachi,
-        nt.website,
-        nt.mota,
-        nt.logo,
+        nd.email,
+        nd.sodienthoai,
+        nd.diachi,
         nt.trangthai,
         nt.ngaytao,
         nd.hoten,
-        COALESCE(nt.logo, nd.avatar) AS avatar,
+        nd.avatar,
         COALESCE(SUM(CASE WHEN kt.trangthai = 'Da nhan' THEN kt.sotien ELSE 0 END), 0) AS tong_da_dong_gop,
         COUNT(kt.khoantaitro_id) AS so_khoan,
         MAX(kt.ngaytaitro) AS lan_cuoi
@@ -322,12 +291,6 @@ const updateDonor = async (nhaTaiTroId, donorData) => {
   const {
     tenNhaTaiTro,
     loaiNhaTaiTro,
-    email,
-    soDienThoai,
-    diaChi,
-    website,
-    moTa,
-    logo,
     trangThai
   } = donorData;
 
@@ -335,24 +298,12 @@ const updateDonor = async (nhaTaiTroId, donorData) => {
     `UPDATE nhataitro 
      SET tennhataitro = ?, 
          loainhataitro = ?, 
-         email = ?, 
-         sodienthoai = ?, 
-         diachi = ?, 
-         website = ?, 
-         mota = ?, 
-         logo = ?, 
          trangthai = ?,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE nhataitro_id = ?`,
     [
       tenNhaTaiTro,
       loaiNhaTaiTro,
-      email || null,
-      soDienThoai || null,
-      diaChi || null,
-      website || null,
-      moTa || null,
-      logo || null,
       trangThai || 'Hoat dong',
       nhaTaiTroId
     ]
@@ -390,17 +341,14 @@ const getDonorByNguoiDungId = async (nguoiDungId) => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
-      COALESCE(nt.email, nd.email) AS email,
-      COALESCE(nt.sodienthoai, nd.sodienthoai) AS sodienthoai,
-      COALESCE(nt.diachi, nd.diachi) AS diachi,
-      nt.website,
-      nt.mota,
-      nt.logo,
-      nt.trangthai,
+        nd.email,
+        nd.sodienthoai,
+        nd.diachi,
+        nt.trangthai,
       nt.ngaytao,
       nt.ngaycapnhat,
       nd.hoten,
-      COALESCE(nt.logo, nd.avatar) AS avatar
+      nd.avatar
      FROM nhataitro nt
      INNER JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      WHERE nt.nguoidung_id = ?

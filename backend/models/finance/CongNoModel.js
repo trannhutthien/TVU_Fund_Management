@@ -8,7 +8,7 @@ const CongNoModel = {
       FROM dieukhoanthuhoi dkh
       INNER JOIN yeucauhotro yc ON dkh.yeucauhotro_id = yc.yeucauhotro_id
       WHERE dkh.trangthai != 'Da thu het'
-        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')
+        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu', 'Da giai ngan dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2', 'Dang thu hoi no', 'Nghiem thu khong dat')
     `);
 
     // Cong no cho vay — SUM con lai tu lichtrano chua tra het (bao gom lai phat)
@@ -24,14 +24,14 @@ const CongNoModel = {
       INNER JOIN hopdongvayvon hd ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
       INNER JOIN yeucauhotro yc ON hd.yeucauhotro_id = yc.yeucauhotro_id
       WHERE hd.trangthai IN ('Dang thuc hien', 'Qua han')
-        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')
+        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu', 'Da giai ngan dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2')
     `);
 
-    // 2. Da thu hoi luy ke — SUM giaodich loai 'Thu hoi no'
+    // 2. Da thu hoi luy ke — SUM giaodich loai 'Thu hoi no' hoac 'Thu hoi von'
     const [[daThu]] = await pool.query(`
       SELECT COALESCE(SUM(gd.sotien), 0) AS daThuHoi
       FROM giaodich gd
-      WHERE gd.loaigiaodich = 'Thu hoi no'
+      WHERE gd.loaigiaodich IN ('Thu hoi no', 'Thu hoi von')
         AND gd.trangthai = 'Thanh cong'
     `);
 
@@ -71,12 +71,22 @@ const CongNoModel = {
       WHERE lt.sotienlaiphat > 0
     `);
 
+    // 7. Dang thu hoi no — tong tien chua xac nhan tu dieukhoanthuhoi
+    const [[dangThuHoiNo]] = await pool.query(`
+      SELECT COALESCE(SUM(dkh.mucthuhoi - dkh.sotiendadathu), 0) AS dangThuHoiNo
+      FROM dieukhoanthuhoi dkh
+      INNER JOIN yeucauhotro yc ON dkh.yeucauhotro_id = yc.yeucauhotro_id
+      WHERE dkh.trangthai = 'Dang thu'
+        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu', 'Dang thu hoi no', 'Nghiem thu khong dat')
+    `);
+
     return {
       tongDuNo: Number(duNo.tongDuNo) + Number(duNoVay.tongDuNoVay),
       daThuHoi: Number(daThu.daThuHoi),
       dangQuaHan: Number(quaHanVay.tienQuaHan),
       soHoSoQuaHan: Number(soHSQuaHan.soHoSo),
       choXacNhan: Number(choXacNhan.soKy),
+      dangThuHoiNo: Number(dangThuHoiNo.dangThuHoiNo),
       tongLaiPhat: Number(tongLaiPhat.tongLaiPhat),
     };
   },
@@ -88,7 +98,7 @@ const CongNoModel = {
     // Base conditions on hopdongvayvon + yeucauhotro
     const baseConditions = [
       "hd.trangthai IN ('Dang thuc hien', 'Qua han')",
-      "yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')"
+      "yc.trangthai IN ('Da giai ngan', 'Da nghiem thu', 'Da giai ngan dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2', 'Dang thu hoi no', 'Nghiem thu khong dat')"
     ];
 
     if (loaiHotro) {
@@ -151,7 +161,7 @@ const CongNoModel = {
         hd.trangthai AS hd_trangthai,
         yc.yeucauhotro_id,
         yc.loaihotro,
-        yc.lydo AS tieuDe,
+        yc.tieu_de AS tieuDe,
         yc.tongkinhphidudan,
         nd.hoten AS nguoi_nhan_ten,
         nd.email AS nguoi_nhan_email,
@@ -242,7 +252,7 @@ const CongNoModel = {
       SELECT
         hd.*,
         yc.loaihotro,
-        yc.lydo AS tieuDe,
+        yc.tieu_de AS tieuDe,
         yc.tongkinhphidudan,
         nd.hoten AS nguoi_nhan_ten,
         nd.email AS nguoi_nhan_email,
@@ -269,12 +279,32 @@ const CongNoModel = {
     return { hopdong, lichTraNo };
   },
 
+  async getNghiemThuTongQuan() {
+    const [[row]] = await pool.query(`
+      SELECT
+        COUNT(*) AS tongDon,
+        SUM(CASE WHEN yc.trangthai IN ('Cho nghiem thu', 'Cho nghiem thu dot 1', 'Cho giai ngan dot 2') THEN 1 ELSE 0 END) AS dangCho,
+        SUM(CASE WHEN yc.trangthai IN ('Da nghiem thu', 'Da nghiem thu dot 1') THEN 1 ELSE 0 END) AS dat,
+        SUM(CASE WHEN yc.trangthai = 'Nghiem thu khong dat' OR yc.trangthai = 'Dang thu hoi no' THEN 1 ELSE 0 END) AS khongDat
+      FROM yeucauhotro yc
+      WHERE yc.canghiemthu = 1
+        AND yc.trangthai IN ('Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat',
+          'Da giai ngan dot 1', 'Cho nghiem thu dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2', 'Dang thu hoi no')
+    `);
+    return {
+      tongDon: Number(row.tongDon),
+      dangCho: Number(row.dangCho),
+      dat: Number(row.dat),
+      khongDat: Number(row.khongDat),
+    };
+  },
+
   async getNghiemThuList({ trangthaiNT = '', loaiKiemTra = '', quyId = '', search = '', fromDate = '', toDate = '', page = 1, limit = 20 }) {
     const conditions = [];
     const params = [];
 
     conditions.push('yc.canghiemthu = 1');
-    conditions.push("yc.trangthai IN ('Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat')");
+    conditions.push("yc.trangthai IN ('Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat', 'Da giai ngan dot 1', 'Cho nghiem thu dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2', 'Dang thu hoi no')");
 
     if (trangthaiNT) {
       conditions.push('yc.trangthai = ?');
@@ -283,6 +313,10 @@ const CongNoModel = {
     if (quyId) {
       conditions.push('yc.quy_id = ?');
       params.push(parseInt(quyId));
+    }
+    if (loaiKiemTra) {
+      conditions.push('EXISTS (SELECT 1 FROM nghiemthu nt WHERE nt.yeucauhotro_id = yc.yeucauhotro_id AND nt.loaikiemtra = ? ORDER BY nt.nghiemthu_id DESC LIMIT 1)');
+      params.push(loaiKiemTra);
     }
     if (search) {
       conditions.push('(nd.hoten LIKE ? OR yc.lydo LIKE ? OR nd.masodinhdanh LIKE ?)');
@@ -314,7 +348,7 @@ const CongNoModel = {
     const dataQuery = `
       SELECT
         yc.yeucauhotro_id,
-        yc.lydo AS tieuDe,
+        yc.tieu_de AS tieuDe,
         yc.trangthai,
         yc.loaihotro,
         yc.sotiendenghi,
@@ -336,19 +370,24 @@ const CongNoModel = {
       FROM yeucauhotro yc
       INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
       INNER JOIN quy q ON yc.quy_id = q.quy_id
-      LEFT JOIN nghiemthu nt ON nt.yeucauhotro_id = yc.yeucauhotro_id
-        AND nt.ngaynghiemthu = (
-          SELECT MAX(nt2.ngaynghiemthu) FROM nghiemthu nt2 
-          WHERE nt2.yeucauhotro_id = yc.yeucauhotro_id
-        )
+      LEFT JOIN nghiemthu nt ON nt.nghiemthu_id = (
+        SELECT nt2.nghiemthu_id FROM nghiemthu nt2
+        WHERE nt2.yeucauhotro_id = yc.yeucauhotro_id
+        ORDER BY nt2.ngaynghiemthu DESC, nt2.nghiemthu_id DESC
+        LIMIT 1
+      )
       ${whereClause}
       ORDER BY
         CASE yc.trangthai
           WHEN 'Cho nghiem thu' THEN 0
-          WHEN 'Da giai ngan' THEN 1
-          WHEN 'Nghiem thu khong dat' THEN 2
-          WHEN 'Da nghiem thu' THEN 3
-          ELSE 4
+          WHEN 'Cho nghiem thu dot 1' THEN 1
+          WHEN 'Cho giai ngan dot 2' THEN 2
+          WHEN 'Da giai ngan' THEN 3
+          WHEN 'Da giai ngan dot 1' THEN 4
+          WHEN 'Nghiem thu khong dat' THEN 5
+          WHEN 'Da nghiem thu' THEN 6
+          WHEN 'Da nghiem thu dot 1' THEN 7
+          ELSE 8
         END,
         yc.ngaynop DESC
       LIMIT ? OFFSET ?

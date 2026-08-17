@@ -297,7 +297,12 @@
 
 .colCode { width: 100px; }
 .colName { flex: 1; }
-.colMssv { width: 120px; }
+.colMssv { 
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .colTopic {
   flex: 1.5;
   white-space: nowrap;

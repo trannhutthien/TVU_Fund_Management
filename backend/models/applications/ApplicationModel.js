@@ -24,6 +24,7 @@ const createApplication = async (applicationData) => {
   const {
     nguoiDungId,
     quyId,
+    tieuDe,
     lyDo,
     soTienDeNghi,
     taiLieuDinhKem,
@@ -39,6 +40,7 @@ const createApplication = async (applicationData) => {
     `INSERT INTO yeucauhotro (
       nguoidung_id,
       quy_id,
+      tieu_de,
       dot_id,
       lydo,
       sotiendenghi,
@@ -46,7 +48,6 @@ const createApplication = async (applicationData) => {
       trangthai,
       loaihotro,
       canghiemthu,
-      laidetac,
       tongkinhphidudan,
       danhnghia,
       tendaidien
@@ -54,6 +55,7 @@ const createApplication = async (applicationData) => {
     [
       nguoiDungId,
       quyId,
+      tieuDe || null,
       dotId || null,
       lyDo,
       soTienDeNghi,
@@ -61,7 +63,6 @@ const createApplication = async (applicationData) => {
       'Cho duyet cap 1',
       loaiHoTro || 'Tai tro khong hoan lai',
       determineCangNghiemThu(loaiHoTro, laDeTai),
-      laDeTai || 0,
       tongKinhPhiDuAn || null,
       danhNghia || null,
       tenDaiDien || null
@@ -76,7 +77,6 @@ const createApplication = async (applicationData) => {
     soTienDeNghi,
     loaiHoTro: loaiHoTro || 'Tai tro khong hoan lai',
     canghiemthu: determineCangNghiemThu(loaiHoTro, laDeTai),
-    laDeTai: laDeTai || 0,
     tongKinhPhiDuAn: tongKinhPhiDuAn || null,
     danhNghia: danhNghia || null,
     tenDaiDien: tenDaiDien || null,
@@ -95,6 +95,7 @@ const getApplicationById = async (yeucauhotroId) => {
       yc.nguoidung_id,
       yc.quy_id,
       yc.dot_id,
+      yc.tieu_de,
       yc.lydo,
       yc.sotiendenghi,
       yc.tailieudinhkem,
@@ -104,7 +105,6 @@ const getApplicationById = async (yeucauhotroId) => {
       yc.tongkinhphidudan,
       yc.danhnghia,
       yc.tendaidien,
-      yc.laidetac,
       yc.ghichu,
       yc.ngaynop,
       yc.ngaycapnhat,
@@ -117,7 +117,7 @@ const getApplicationById = async (yeucauhotroId) => {
       v.tenvaitro as nguoi_nop_vaitro,
       nd.loaitaikhoan as nguoi_nop_loaitaikhoan,
       dh.tenkhoa as nguoi_nop_khoa,
-      dh.lop as nguoi_nop_lop,
+      nd.lop as nguoi_nop_lop,
       q.tenquy,
       q.loaiquy_id,
       q.sodu as quy_so_du,
@@ -130,6 +130,11 @@ const getApplicationById = async (yeucauhotroId) => {
       dkh.filehopdong as dkh_filehopdong,
       hd.hopdongvayvon_id,
       hd.sotienvon as hd_sotienvon,
+      hd.sotien_dot1 as hd_sotien_dot1,
+      hd.sotien_dot2 as hd_sotien_dot2,
+      hd.ngay_giai_ngan_dot1 as hd_ngay_giai_ngan_dot1,
+      hd.ngay_giai_ngan_dot2 as hd_ngay_giai_ngan_dot2,
+      hd.lan_nghiem_thu_dat as hd_lan_nghiem_thu_dat,
       hd.laisuatphantram as hd_laisuatphantram,
       hd.ngaykyhopdong as hd_ngaykyhopdong,
       hd.kyhandothang as hd_kyhandothang,
@@ -168,6 +173,11 @@ const getApplicationById = async (yeucauhotroId) => {
   row.hopdongvayvon = row.hopdongvayvon_id ? {
     hopdongvayvon_id: row.hopdongvayvon_id,
     sotienvon: row.hd_sotienvon,
+    sotien_dot1: row.hd_sotien_dot1,
+    sotien_dot2: row.hd_sotien_dot2,
+    ngay_giai_ngan_dot1: row.hd_ngay_giai_ngan_dot1,
+    ngay_giai_ngan_dot2: row.hd_ngay_giai_ngan_dot2,
+    lan_nghiem_thu_dat: row.hd_lan_nghiem_thu_dat,
     laisuatphantram: row.hd_laisuatphantram,
     ngaykyhopdong: row.hd_ngaykyhopdong,
     kyhandothang: row.hd_kyhandothang,
@@ -197,6 +207,7 @@ const getApplicationsByUser = async (nguoiDungId, limit = 20, offset = 0) => {
     `SELECT 
       yc.yeucauhotro_id,
       yc.quy_id,
+      yc.tieu_de,
       yc.lydo,
       yc.sotiendenghi,
       yc.trangthai,
@@ -276,6 +287,7 @@ const getAllApplications = async (filters, limit, offset) => {
       yc.nguoidung_id,
       yc.quy_id,
       yc.dot_id,
+      yc.tieu_de,
       yc.lydo,
       yc.sotiendenghi,
       yc.trangthai,
@@ -292,7 +304,7 @@ const getAllApplications = async (filters, limit, offset) => {
       v.tenvaitro as nguoi_nop_vaitro,
       nd.loaitaikhoan as nguoi_nop_loaitaikhoan,
       dh.tenkhoa as nguoi_nop_khoa,
-      dh.lop as nguoi_nop_lop,
+      nd.lop as nguoi_nop_lop,
       q.tenquy,
       q.loaiquy_id,
       q.sodu as quy_so_du,
@@ -335,48 +347,15 @@ const updateApplicationStatus = async (yeucauhotroId, trangThai, connection = nu
   );
 
   // TỰ ĐỘNG THÊM SINH VIÊN NỔI BẬT KHI ĐÃ GIẢI NGÂN THÀNH CÔNG
-  if (trangThai === 'Da giai ngan') {
-    try {
-      // 1. Lấy thông tin nguoidung_id từ yeucauhotro và nguoidung
-      const [appRows] = await executor.execute(
-        `SELECT yc.nguoidung_id 
-         FROM yeucauhotro yc
-         WHERE yc.yeucauhotro_id = ?`,
-        [yeucauhotroId]
-      );
-
-      if (appRows.length > 0) {
-        const { nguoidung_id } = appRows[0];
-
-        // 2. Kiểm tra xem sinh viên này đã có trong sinhviennoibat chưa
-        const [existing] = await executor.execute(
-          `SELECT sinhviennoibat_id FROM sinhviennoibat WHERE nguoidung_id = ? LIMIT 1`,
-          [nguoidung_id]
-        );
-
-        if (existing.length === 0) {
-          // 3. Tự động thêm vào sinhviennoibat
-          const namHocHienTai = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
-          await executor.execute(
-            `INSERT INTO sinhviennoibat (
-              nguoidung_id,
-              namhoc,
-              thanhtich,
-              trangthai
-            ) VALUES (?, ?, ?, 'Hien thi')`,
-            [
-              nguoidung_id,
-              namHocHienTai,
-              'Nhận hỗ trợ từ TVU Fund và đạt thành tích tốt trong học tập.'
-            ]
-          );
-        }
-      }
-    } catch (err) {
-      console.error("Lỗi khi tự động thêm sinh viên nổi bật:", err);
-      // Bắt lỗi để không phá vỡ transaction chính của việc giải ngân đơn
-    }
-  }
+  // REMOVED: Tự động thêm sinh viên nổi bật - Feature không còn sử dụng
+  // if (trangThai === 'Da giai ngan') {
+  //   try {
+  //     const [appRows] = await executor.execute(...);
+  //     // Code đã bị xóa
+  //   } catch (err) {
+  //     console.error("Lỗi khi tự động thêm sinh viên nổi bật:", err);
+  //   }
+  // }
 
   return true;
 };

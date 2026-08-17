@@ -87,7 +87,7 @@ const approveRequest = async (id, nguoiDuyetId) => {
 
     // 2. Khóa dòng và kiểm tra số dư quỹ nguồn (Bể chung)
     const [qnRows] = await connection.query(
-      `SELECT sodu, tenquy FROM quy WHERE quy_id = ? FOR UPDATE`,
+      `SELECT sodu, tenquy, capdo FROM quy WHERE quy_id = ? FOR UPDATE`,
       [quy_nguon_id]
     );
     const qn = qnRows[0];
@@ -100,27 +100,32 @@ const approveRequest = async (id, nguoiDuyetId) => {
 
     // 3. Khóa dòng quỹ đích (Mục chi)
     const [qdRows] = await connection.query(
-      `SELECT sodu, tenquy FROM quy WHERE quy_id = ? FOR UPDATE`,
+      `SELECT sodu, tenquy, capdo FROM quy WHERE quy_id = ? FOR UPDATE`,
       [quy_dich_id]
     );
     const qd = qdRows[0];
     if (!qd) {
       throw new Error('DESTINATION_FUND_NOT_FOUND');
     }
+    
+    // 4. Validate cấp độ: Quỹ đích phải có capdo = capdo_nguon + 1
+    if (qd.capdo !== qn.capdo + 1) {
+      throw new Error(`INVALID_ALLOCATION_LEVEL: Quỹ đích (cấp ${qd.capdo}) phải có cấp độ = cấp nguồn (${qn.capdo}) + 1`);
+    }
 
-    // 4. Trừ tiền quỹ nguồn
+    // 5. Trừ tiền quỹ nguồn
     await connection.execute(
       `UPDATE quy SET sodu = sodu - ?, ngaycapnhat = CURRENT_TIMESTAMP WHERE quy_id = ?`,
       [sotien, quy_nguon_id]
     );
 
-    // 5. Cộng tiền quỹ đích
+    // 6. Cộng tiền quỹ đích
     await connection.execute(
       `UPDATE quy SET sodu = sodu + ?, ngaycapnhat = CURRENT_TIMESTAMP WHERE quy_id = ?`,
       [sotien, quy_dich_id]
     );
 
-    // 6. Cập nhật trạng thái đề xuất trích lập
+    // 7. Cập nhật trạng thái đề xuất trích lập
     await connection.execute(
       `UPDATE phanbongansach 
        SET trangthai = 'Da duyet',
@@ -186,7 +191,7 @@ const rollbackRequest = async (id, nguoiDuyetId) => {
 
     const { quy_nguon_id, quy_dich_id, sotien } = pb;
 
-    // 2. Khóa dòng và kiểm tra số dư quỹ đích (Mục chi con) xem còn đủ tiền để hoàn lại không
+    // 2. Khóa dòng quỹ đích (Mục chi con) và lấy số dư hiện tại
     const [qdRows] = await connection.query(
       `SELECT sodu, tenquy FROM quy WHERE quy_id = ? FOR UPDATE`,
       [quy_dich_id]
@@ -195,8 +200,15 @@ const rollbackRequest = async (id, nguoiDuyetId) => {
     if (!qd) {
       throw new Error('DESTINATION_FUND_NOT_FOUND');
     }
-    if (parseFloat(qd.sodu) < parseFloat(sotien)) {
-      throw new Error('INSUFFICIENT_DESTINATION_FUND_BALANCE_FOR_ROLLBACK');
+
+    // Tính số tiền thu hồi thực tế = MIN(số dư hiện tại, số tiền đã trích ban đầu)
+    const soDuHienTai = parseFloat(qd.sodu);
+    const soTienTrichBanDau = parseFloat(sotien);
+    const soTienThuHoiThucTe = Math.min(soDuHienTai, soTienTrichBanDau);
+
+    // Nếu số dư = 0 thì không có gì để thu hồi
+    if (soTienThuHoiThucTe <= 0) {
+      throw new Error('NO_BALANCE_TO_ROLLBACK');
     }
 
     // 3. Khóa dòng quỹ nguồn (Bể chung)
@@ -209,26 +221,27 @@ const rollbackRequest = async (id, nguoiDuyetId) => {
       throw new Error('SOURCE_FUND_NOT_FOUND');
     }
 
-    // 4. Trừ tiền ở quỹ đích (Mục chi)
+    // 4. Trừ tiền ở quỹ đích (Mục chi) - chỉ trừ số tiền thu hồi thực tế
     await connection.execute(
       `UPDATE quy SET sodu = sodu - ?, ngaycapnhat = CURRENT_TIMESTAMP WHERE quy_id = ?`,
-      [sotien, quy_dich_id]
+      [soTienThuHoiThucTe, quy_dich_id]
     );
 
     // 5. Cộng trả lại tiền cho quỹ nguồn (Bể chung)
     await connection.execute(
       `UPDATE quy SET sodu = sodu + ?, ngaycapnhat = CURRENT_TIMESTAMP WHERE quy_id = ?`,
-      [sotien, quy_nguon_id]
+      [soTienThuHoiThucTe, quy_nguon_id]
     );
 
-    // 6. Cập nhật trạng thái phân bổ thành 'Da thu hoi'
+    // 6. Cập nhật trạng thái phân bổ thành 'Da thu hoi' và ghi nhận số tiền thu hồi thực tế
     await connection.execute(
       `UPDATE phanbongansach 
        SET trangthai = 'Da thu hoi',
            nguoi_duyet_id = ?,
-           ngayduyet = CURRENT_TIMESTAMP
+           ngayduyet = CURRENT_TIMESTAMP,
+           ghichu = CONCAT(COALESCE(ghichu, ''), '\n[Thu hồi]: Đã thu hồi ', ?, ' VNĐ từ tổng số ', ?, ' VNĐ đã trích. Số dư Mục chi con còn lại: ', ?, ' VNĐ.')
        WHERE phanbongansach_id = ?`,
-      [nguoiDuyetId, id]
+      [nguoiDuyetId, soTienThuHoiThucTe, soTienTrichBanDau, soDuHienTai - soTienThuHoiThucTe, id]
     );
 
     await connection.commit();
@@ -236,7 +249,10 @@ const rollbackRequest = async (id, nguoiDuyetId) => {
       success: true,
       quyNguonId: quy_nguon_id,
       quyDichId: quy_dich_id,
-      soTien: sotien
+      soTienTrichBanDau: soTienTrichBanDau,
+      soTienThuHoiThucTe: soTienThuHoiThucTe,
+      soDuConLai: soDuHienTai - soTienThuHoiThucTe,
+      isThuHoiDayDu: soTienThuHoiThucTe === soTienTrichBanDau
     };
   } catch (error) {
     await connection.rollback();

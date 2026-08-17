@@ -303,6 +303,10 @@ export const updateUserInfo = async (req, res) => {
       khoa_phong,
       lop,
       avatar,
+      ngaysinh,
+      gioitinh,
+      tinhtrangcongtac,
+      donvicongtac,
       ten_nha_tai_tro,
       loai_ntt,
     } = req.body || {};
@@ -336,6 +340,10 @@ export const updateUserInfo = async (req, res) => {
       khoa_phong: khoa_phong?.trim(),
       lop: lop?.trim(),
       avatar,
+      ngaysinh: ngaysinh || null,
+      gioitinh: gioitinh || null,
+      tinhtrangcongtac: tinhtrangcongtac?.trim() || null,
+      donvicongtac: donvicongtac?.trim() || null,
     });
 
     // Nếu là NHA_TAI_TRO và có gửi info riêng → update bảng nhataitro
@@ -376,6 +384,10 @@ export const updateUserInfo = async (req, res) => {
         avatar: buildUserAvatarUrl(updated.avatar),
         so_dien_thoai: updated.sodienthoai,
         dia_chi: updated.diachi,
+        ngaysinh: updated.ngaysinh,
+        gioitinh: updated.gioitinh,
+        tinhtrangcongtac: updated.tinhtrangcongtac,
+        donvicongtac: updated.donvicongtac,
         role_id: updated.vaitro_id,
         ten_vai_tro: updated.tenvaitro,
         loai_tai_khoan: updated.loaitaikhoan,

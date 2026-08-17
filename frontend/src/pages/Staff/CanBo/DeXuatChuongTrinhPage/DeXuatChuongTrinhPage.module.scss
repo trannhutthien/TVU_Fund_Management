@@ -1,0 +1,266 @@
+.container {
+  padding: 24px;
+  background: #f8fafc;
+  min-height: calc(100vh - 64px);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+// ── Header ──────────────────────────────────
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+.mainActionBtn {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  
+  &:hover {
+    background: #7c3aed !important;
+    border-color: #7c3aed !important;
+  }
+}
+
+// ── Stat Cards ──────────────────────────────
+.statCards {
+  margin-bottom: 24px;
+}
+
+.statCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(30, 41, 59, 0.03);
+  border: 1px solid #f1f5f9;
+  background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(30, 41, 59, 0.06);
+  }
+}
+
+// ── Filter Bar ──────────────────────────────
+.filterBar {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.02);
+  margin-bottom: 16px;
+}
+
+.filterSelect {
+  width: 100%;
+}
+
+// ── Table Card ──────────────────────────────
+.tableCard {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(30, 41, 59, 0.02);
+  background: #fff;
+  overflow: hidden;
+  
+  :global {
+    .ant-card-body {
+      padding: 0;
+    }
+
+    .ant-table-thead > tr > th {
+      background: #faf5ff;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 16px;
+    }
+
+    .ant-table-tbody > tr > td {
+      padding: 12px 16px;
+      vertical-align: top;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #faf5ff !important;
+    }
+
+    .ant-table-cell-row-hover {
+      background: #faf5ff !important;
+    }
+
+    .ant-table-cell-fix-right {
+      background: #fff !important;
+      box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .ant-table-tbody > tr:hover > .ant-table-cell-fix-right {
+      background: #faf5ff !important;
+    }
+
+    .ant-table-pagination {
+      margin: 12px 0 0 !important;
+      padding: 0 16px;
+    }
+  }
+}
+
+// ── Program Info Display ────────────────────
+.programInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.programName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.fundInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fundName {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.fundTypeTag {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #8b5cf6;
+  letter-spacing: 0.5px;
+}
+
+.programDesc {
+  font-size: 11px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+// ── Budget Display ──────────────────────────
+.budgetInfo {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.totalBudget {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+// ── Proposer Info ───────────────────────────
+.proposerInfo {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  
+  strong {
+    color: #1e293b;
+  }
+}
+
+// ── Time Info ───────────────────────────────
+.timeInfo {
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+// ── Table Actions Style ─────────────────────
+.approveBtn {
+  background: #10b981;
+  border-color: #10b981;
+  
+  &:hover {
+    background: #059669 !important;
+    border-color: #059669 !important;
+  }
+}
+
+.approvedInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.onlyView {
+  font-size: 12.5px;
+  color: #d97706;
+  font-weight: 500;
+}
+
+.noAction {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+// ── Responsive ──────────────────────────────
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mainActionBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

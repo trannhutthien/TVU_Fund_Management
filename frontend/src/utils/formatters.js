@@ -155,9 +155,10 @@ export const mapFundStatusToBadge = (trangThai) => {
  */
 export const mapApplicationStatusToBadge = (trangThai) => {
   if (!trangThai) return 'pending'
-  if (trangThai.includes('Da duyet') || trangThai === 'Da giai ngan' || trangThai === 'Da nghiem thu') return 'approved'
+  if (trangThai === 'Da giai ngan' || trangThai === 'Da nghiem thu' || trangThai === 'Da giai ngan dot 1' || trangThai === 'Da nghiem thu dot 1' || trangThai === 'Hoan thanh') return 'approved'
   if (trangThai.includes('Tu choi')) return 'rejected'
-  if (trangThai.includes('Nghiem thu khong dat')) return 'rejected'
+  if (trangThai === 'Nghiem thu khong dat') return 'rejected'
+  if (trangThai === 'Dang thu hoi no') return 'warning'
   return 'processing'
 }
 

@@ -649,21 +649,40 @@ const QuyListPage = ({ isAdmin = false }) => {
                     )}
 
                     {/* Disbursement Round Progress */}
-                    {fundRounds[fund.quyId]?.length > 0 && (
+                    {fundRounds[fund.quyId]?.length > 0 && (() => {
+                      const rounds = [...fundRounds[fund.quyId]].sort((a, b) => (a.thutu || 0) - (b.thutu || 0));
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+
+                      let currentIdx = -1;
+                      for (let i = 0; i < rounds.length; i++) {
+                        const r = rounds[i];
+                        if (r.ngayThucTe && r.trangThai === 'hoanthanh') continue;
+                        if (r.ngayDuKien && new Date(r.ngayDuKien) <= today) { currentIdx = i; break; }
+                      }
+                      if (currentIdx === -1) {
+                        for (let i = 0; i < rounds.length; i++) {
+                          const r = rounds[i];
+                          if (r.ngayThucTe && r.trangThai === 'hoanthanh') continue;
+                          if (r.ngayDuKien && new Date(r.ngayDuKien) > today) { currentIdx = i; break; }
+                        }
+                      }
+
+                      return (
                       <div className={styles.roundsBlock}>
                         <div className={styles.roundsLabel}>Tiến độ giải ngân</div>
                         <div className={styles.roundsTimeline}>
-                          {fundRounds[fund.quyId].map((round, idx) => (
+                          {rounds.map((round, idx) => (
                             <div
                               key={round.dotId}
                               className={`${styles.roundItem} ${
                                 round.trangThai === 'hoanthanh' ? styles.roundCompleted :
-                                round.trangThai === 'dangchodutien' ? styles.roundActive : ''
+                                idx === currentIdx ? styles.roundCurrent : ''
                               }`}
                             >
-                              <div className={styles.roundDot} />
+                              <div className={`${styles.roundDot} ${idx === currentIdx ? styles.roundDotCurrent : ''}`} />
                               <div className={styles.roundInfo}>
-                                <span className={styles.roundName}>{round.tenDot || `Đợt ${round.thutu}`}</span>
+                                <span className={`${styles.roundName} ${idx === currentIdx ? styles.roundNameCurrent : ''}`}>{round.tenDot || `Đợt ${round.thutu}`}</span>
                                 <span className={styles.roundDate}>
                                   {round.ngayThucTe
                                     ? formatDate(round.ngayThucTe)
@@ -677,7 +696,8 @@ const QuyListPage = ({ isAdmin = false }) => {
                           ))}
                         </div>
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               );

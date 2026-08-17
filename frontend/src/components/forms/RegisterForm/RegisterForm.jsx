@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import PropTypes from 'prop-types';
@@ -11,11 +11,13 @@ import {
   HiOutlineBuildingOffice,
   HiOutlinePhone,
   HiOutlineChevronDown,
-  HiOutlineBriefcase
+  HiOutlineBriefcase,
+  HiOutlineBeaker
 } from 'react-icons/hi2';
 import Logo from '@components/common/Logo';
 import Button from '@components/common/Button';
 import CloseButton from '@components/common/CloseButton';
+import api from '@services/api';
 import { authService } from '@services/authService';
 import useAuthStore from '@stores/authStore';
 import './RegisterForm.scss';
@@ -30,7 +32,7 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
   const navigate = useNavigate();
   const { login: loginStore } = useAuthStore();
   
-  // Tab state: 'sinhvien' | 'nhataitro' | 'canbo'
+  // Tab state: 'sinhvien' | 'nhataitro' | 'canbo' | 'nhakhoahoc'
   const [activeTab, setActiveTab] = useState('sinhvien');
   
   // Loading state
@@ -45,6 +47,19 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
     email: '',
     password: ''
   });
+
+  // Danh sách Khoa từ donvihoc CSDL
+  const [khoaOptions, setKhoaOptions] = useState([]);
+
+  useEffect(() => {
+    api.get('/users/faculties')
+      .then((res) => {
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          setKhoaOptions(res.data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
   
   // Form state cho Nhà tài trợ
   const [sponsorForm, setSponsorForm] = useState({
@@ -59,9 +74,20 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
   const [staffForm, setStaffForm] = useState({
     hoTen: '',
     email: '',
+    soDienThoai: '',
     password: '',
     donViCongTac: '',
     tinhTrangCongTac: 'Dang cong tac'
+  });
+
+  // Form state cho Nhà khoa học
+  const [scientistForm, setScientistForm] = useState({
+    hoTen: '',
+    email: '',
+    soDienThoai: '',
+    donViCongTac: '',
+    tinhTrangCongTac: 'Dang cong tac',
+    password: ''
   });
   
   // Error state
@@ -96,6 +122,14 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
   // Handle input change - Cán bộ
   const handleStaffChange = (field) => (e) => {
     setStaffForm(prev => ({ ...prev, [field]: e.target.value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Handle input change - Nhà khoa học
+  const handleScientistChange = (field) => (e) => {
+    setScientistForm(prev => ({ ...prev, [field]: e.target.value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -187,6 +221,12 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
       newErrors.email = 'Email không hợp lệ';
     }
 
+    if (!staffForm.soDienThoai.trim()) {
+      newErrors.soDienThoai = 'Vui lòng nhập số điện thoại';
+    } else if (!/^[0-9]{10,11}$/.test(staffForm.soDienThoai)) {
+      newErrors.soDienThoai = 'Số điện thoại không hợp lệ';
+    }
+
     if (!staffForm.password) {
       newErrors.password = 'Vui lòng nhập mật khẩu';
     } else if (staffForm.password.length < 8) {
@@ -201,6 +241,40 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Validate Nhà khoa học form
+  const validateScientistForm = () => {
+    const newErrors = {};
+
+    if (!scientistForm.hoTen.trim()) {
+      newErrors.hoTen = 'Vui lòng nhập họ và tên';
+    }
+
+    if (!scientistForm.email.trim()) {
+      newErrors.email = 'Vui lòng nhập email';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(scientistForm.email)) {
+      newErrors.email = 'Email không hợp lệ';
+    }
+
+    if (!scientistForm.soDienThoai.trim()) {
+      newErrors.soDienThoai = 'Vui lòng nhập số điện thoại';
+    } else if (!/^[0-9]{10,11}$/.test(scientistForm.soDienThoai)) {
+      newErrors.soDienThoai = 'Số điện thoại không hợp lệ';
+    }
+
+    if (!scientistForm.donViCongTac.trim()) {
+      newErrors.donViCongTac = 'Vui lòng nhập đơn vị công tác';
+    }
+
+    if (!scientistForm.password) {
+      newErrors.password = 'Vui lòng nhập mật khẩu';
+    } else if (scientistForm.password.length < 8) {
+      newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   // Handle submit
   const handleSubmit = async () => {
     // Validate based on active tab
@@ -209,6 +283,8 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
       isValid = validateStudentForm();
     } else if (activeTab === 'nhataitro') {
       isValid = validateSponsorForm();
+    } else if (activeTab === 'nhakhoahoc') {
+      isValid = validateScientistForm();
     } else {
       isValid = validateStaffForm();
     }
@@ -239,10 +315,21 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
           password: sponsorForm.password,
           loaiTaiKhoan: 'nhataitro'
         };
+      } else if (activeTab === 'nhakhoahoc') {
+        data = {
+          hoTen: scientistForm.hoTen,
+          email: scientistForm.email,
+          soDienThoai: scientistForm.soDienThoai,
+          password: scientistForm.password,
+          donViCongTac: scientistForm.donViCongTac,
+          tinhTrangCongTac: scientistForm.tinhTrangCongTac,
+          loaiTaiKhoan: 'nhakhoahoc'
+        };
       } else {
         data = {
           hoTen: staffForm.hoTen,
           email: staffForm.email,
+          soDienThoai: staffForm.soDienThoai,
           password: staffForm.password,
           donViCongTac: staffForm.donViCongTac,
           tinhTrangCongTac: staffForm.tinhTrangCongTac,
@@ -338,6 +425,13 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
           >
             Cán bộ
           </button>
+          <button
+            type="button"
+            className={`register-form-tab ${activeTab === 'nhakhoahoc' ? 'register-form-tab-active' : ''}`}
+            onClick={() => handleTabChange('nhakhoahoc')}
+          >
+            Nhà khoa học
+          </button>
         </div>
 
         {/* Form Sinh viên */}
@@ -378,16 +472,20 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
             {/* Khoa + Lớp */}
             <div className="register-form-field-row">
               <div className="register-form-field">
-                <label className="register-form-label">KHOA</label>
+                <label className="register-form-label">KHOA / TRƯỜNG</label>
                 <div className={`register-form-input-wrapper ${errors.khoa ? 'register-form-input-error' : ''}`}>
-                  <HiOutlineAcademicCap className="register-form-icon-left" />
-                  <input
-                    type="text"
+                  <HiOutlineBuildingOffice className="register-form-icon-left" />
+                  <select
                     className="register-form-input"
-                    placeholder="Khoa CNTT"
                     value={studentForm.khoa}
                     onChange={handleStudentChange('khoa')}
-                  />
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <option value="">-- Chọn khoa/trường --</option>
+                    {khoaOptions.map((k) => (
+                      <option key={k} value={k}>{k}</option>
+                    ))}
+                  </select>
                 </div>
                 {errors.khoa && <span className="register-form-error-text">{errors.khoa}</span>}
               </div>
@@ -604,6 +702,22 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
               )}
             </div>
 
+            {/* Số điện thoại */}
+            <div className="register-form-field">
+              <label className="register-form-label">SỐ ĐIỆN THOẠI</label>
+              <div className={`register-form-input-wrapper ${errors.soDienThoai ? 'register-form-input-error' : ''}`}>
+                <HiOutlinePhone className="register-form-icon-left" />
+                <input
+                  type="tel"
+                  className="register-form-input"
+                  placeholder="Số điện thoại liên hệ..."
+                  value={staffForm.soDienThoai}
+                  onChange={handleStaffChange('soDienThoai')}
+                />
+              </div>
+              {errors.soDienThoai && <span className="register-form-error-text">{errors.soDienThoai}</span>}
+            </div>
+
             {/* Đơn vị công tác */}
             <div className="register-form-field">
               <label className="register-form-label">ĐƠN VỊ CÔNG TÁC</label>
@@ -647,6 +761,127 @@ const RegisterForm = ({ onSuccess, onClose, onSwitchToLogin }) => {
                   placeholder="Tối thiểu 8 ký tự..."
                   value={staffForm.password}
                   onChange={handleStaffChange('password')}
+                />
+                <button
+                  type="button"
+                  className="register-form-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {errors.password && <span className="register-form-error-text">{errors.password}</span>}
+            </div>
+          </div>
+        )}
+
+        {/* Form Nhà khoa học */}
+        {activeTab === 'nhakhoahoc' && (
+          <div className="register-form">
+            {/* Họ và tên */}
+            <div className="register-form-field">
+              <label className="register-form-label">HỌ VÀ TÊN</label>
+              <div className={`register-form-input-wrapper ${errors.hoTen ? 'register-form-input-error' : ''}`}>
+                <HiOutlineUser className="register-form-icon-left" />
+                <input
+                  type="text"
+                  className="register-form-input"
+                  placeholder="Nhập đầy đủ họ và tên..."
+                  value={scientistForm.hoTen}
+                  onChange={handleScientistChange('hoTen')}
+                />
+              </div>
+              {errors.hoTen && <span className="register-form-error-text">{errors.hoTen}</span>}
+            </div>
+
+            {/* Email */}
+            <div className="register-form-field">
+              <label className="register-form-label">EMAIL</label>
+              <div className={`register-form-input-wrapper ${errors.email ? 'register-form-input-error' : ''}`}>
+                <HiOutlineEnvelope className="register-form-icon-left" />
+                <input
+                  type="email"
+                  className="register-form-input"
+                  placeholder="Email công việc hoặc email cá nhân..."
+                  value={scientistForm.email}
+                  onChange={handleScientistChange('email')}
+                />
+              </div>
+              {errors.email && <span className="register-form-error-text">{errors.email}</span>}
+              {!errors.email && scientistForm.email && !validateTVUEmail(scientistForm.email) && (
+                <span className="register-form-hint-text">💡 Khuyến nghị dùng email TVU để xác thực nhanh hơn</span>
+              )}
+            </div>
+
+            {/* Số điện thoại */}
+            <div className="register-form-field">
+              <label className="register-form-label">SỐ ĐIỆN THOẠI</label>
+              <div className={`register-form-input-wrapper ${errors.soDienThoai ? 'register-form-input-error' : ''}`}>
+                <HiOutlinePhone className="register-form-icon-left" />
+                <input
+                  type="tel"
+                  className="register-form-input"
+                  placeholder="Số điện thoại liên hệ..."
+                  value={scientistForm.soDienThoai}
+                  onChange={handleScientistChange('soDienThoai')}
+                />
+              </div>
+              {errors.soDienThoai && <span className="register-form-error-text">{errors.soDienThoai}</span>}
+            </div>
+
+            {/* Đơn vị công tác */}
+            <div className="register-form-field">
+              <label className="register-form-label">ĐƠN VỊ CÔNG TÁC / NGHIÊN CỨU</label>
+              <div className={`register-form-input-wrapper ${errors.donViCongTac ? 'register-form-input-error' : ''}`}>
+                <HiOutlineBeaker className="register-form-icon-left" />
+                <input
+                  type="text"
+                  className="register-form-input"
+                  placeholder="Viện/Trung tâm nghiên cứu/Phòng thí nghiệm..."
+                  value={scientistForm.donViCongTac}
+                  onChange={handleScientistChange('donViCongTac')}
+                />
+              </div>
+              {errors.donViCongTac && <span className="register-form-error-text">{errors.donViCongTac}</span>}
+            </div>
+
+            {/* Tình trạng công tác */}
+            <div className="register-form-field">
+              <label className="register-form-label">TÌNH TRẠNG CÔNG TÁC</label>
+              <div className="register-form-input-wrapper register-form-select-wrapper">
+                <select
+                  className="register-form-select"
+                  value={scientistForm.tinhTrangCongTac}
+                  onChange={handleScientistChange('tinhTrangCongTac')}
+                >
+                  <option value="Dang cong tac">Đang công tác</option>
+                  <option value="Da nghi huu">Đã nghỉ hưu</option>
+                </select>
+                <HiOutlineChevronDown className="register-form-select-icon" />
+              </div>
+            </div>
+
+            {/* Mật khẩu */}
+            <div className="register-form-field">
+              <label className="register-form-label">MẬT KHẨU</label>
+              <div className={`register-form-input-wrapper ${errors.password ? 'register-form-input-error' : ''}`}>
+                <HiOutlineLockClosed className="register-form-icon-left" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="register-form-input register-form-input-password"
+                  placeholder="Tối thiểu 8 ký tự..."
+                  value={scientistForm.password}
+                  onChange={handleScientistChange('password')}
                 />
                 <button
                   type="button"

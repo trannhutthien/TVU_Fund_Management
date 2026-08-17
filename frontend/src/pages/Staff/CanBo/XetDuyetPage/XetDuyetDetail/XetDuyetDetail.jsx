@@ -39,17 +39,25 @@ const mapStatusToBadge = (trangThai) => {
       return 'pending';
     case 'Dang xu ly':
     case 'Cho giai ngan':
+    case 'Cho giai ngan dot 1':
+    case 'Cho nghiem thu':
+    case 'Cho nghiem thu dot 1':
+    case 'Da nghiem thu dot 1':
+    case 'Cho giai ngan dot 2':
       return 'processing';
     case 'Da giai ngan':
+    case 'Da giai ngan dot 1':
     case 'Da nghiem thu':
+    case 'Da nghiem thu dot 1':
     case 'Hoan thanh':
-      return 'approved';
+      return 'completed';
     case 'Tu choi':
     case 'Tu choi cap 1':
     case 'Tu choi cap 2':
     case 'Tu choi cap 3':
     case 'Nghiem thu khong dat':
-      return 'rejected';
+    case 'Dang thu hoi no':
+      return 'warning';
     default:
       return 'pending';
   }
@@ -126,6 +134,13 @@ const XetDuyetDetail = () => {
   const isKeToan = userRole === 2;
   const isGiaoVu = userRole === 3;
 
+  // Kế toán xử lý đơn tại trang Giải ngân (đã gộp) → điều hướng sang trang chi tiết giải ngân
+  useEffect(() => {
+    if (isKeToan && request_id) {
+      navigate(`/ke-toan/giai-ngan/${request_id}`, { replace: true });
+    }
+  }, [isKeToan, request_id, navigate]);
+
   useEffect(() => {
     if (isAdmin && data?.loaiHotro === 'Tai tro co thu hoi' && !soQuyetDinh) {
       setSoQuyetDinh(generateSoQuyetDinh());
@@ -182,7 +197,7 @@ const XetDuyetDetail = () => {
   useEffect(() => {
     let mounted = true;
     api
-      .get('/system/settings')
+      .get('/system/settings/public')
       .then((res) => {
         if (mounted) {
           const rate = res.data?.settings?.laisuatnganhangthamchieu ?? res.data?.laisuatnganhangthamchieu;
@@ -223,7 +238,11 @@ const XetDuyetDetail = () => {
       status === 'Tu choi cap 2' ||
       status === 'Tu choi cap 3' ||
       status === 'Da giai ngan' ||
-      status === 'Hoan thanh'
+      status === 'Hoan thanh' ||
+      status === 'Dang thu hoi no' ||
+      status === 'Nghiem thu khong dat' ||
+      status === 'Da nghiem thu' ||
+      status === 'Da nghiem thu dot 1'
     ) {
       return true;
     }
@@ -243,11 +262,13 @@ const XetDuyetDetail = () => {
   const khongDuSoDu = balanceData?.khongDuSoDu || false;
 
   const canShowNghiemThu = data?.canNghiemThu &&
-    ['Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat'].includes(data?.trangThai);
+    ['Da giai ngan', 'Cho nghiem thu', 'Da nghiem thu', 'Nghiem thu khong dat',
+     'Da giai ngan dot 1', 'Cho nghiem thu dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2',
+     'Dang thu hoi no'].includes(data?.trangThai);
   const canCreateNghiemThu = data?.canNghiemThu &&
-    ['Da giai ngan', 'Cho nghiem thu'].includes(data?.trangThai);
+    ['Da giai ngan', 'Cho nghiem thu', 'Da giai ngan dot 1', 'Cho nghiem thu dot 1'].includes(data?.trangThai);
   const isNghiemThuDone = data?.trangThai === 'Da nghiem thu';
-  const isNghiemThuFailed = data?.trangThai === 'Nghiem thu khong dat';
+  const isNghiemThuFailed = data?.trangThai === 'Nghiem thu khong dat' || data?.trangThai === 'Dang thu hoi no';
 
   const handleGhiChuChange = (value) => {
     if (value.length > 500) return;
@@ -267,7 +288,7 @@ const XetDuyetDetail = () => {
         ghiChu,
       });
       toast.error('Đã từ chối hồ sơ');
-      const redirectPath = isAdmin ? '/admin/xet-duyet' : '/can-bo/xet-duyet';
+      const redirectPath = isAdmin ? '/admin/xet-duyet' : (isKeToan ? '/ke-toan/xet-duyet' : '/can-bo/xet-duyet');
       navigate(redirectPath);
     } catch (err) {
       const msg =
@@ -360,8 +381,7 @@ const XetDuyetDetail = () => {
           payload = { ketqua: 'Duyet', ghiChu };
         }
       } else if (isKeToan) {
-        toast.info('Vui lòng sử dụng trang Giải ngân để xử lý đơn này');
-        navigate('/ke-toan/giai-ngan');
+        navigate(`/ke-toan/giai-ngan/${request_id}`);
         return;
       } else {
         toast.error('Bạn không có quyền duyệt đơn này');
@@ -372,6 +392,17 @@ const XetDuyetDetail = () => {
       toast.success(successMessage);
       navigate(redirectPath);
     } catch (err) {
+      // Khi backend đã commit DB nhưng response bị timeout/mất → kiểm tra lại status
+      try {
+        const checkRes = await api.get(`/applications/${request_id}`);
+        const newStatus = checkRes.data?.data?.trangThai;
+        if (newStatus && newStatus !== data?.trangThai) {
+          toast.success('Đã duyệt đơn thành công');
+          navigate(redirectPath);
+          return;
+        }
+      } catch {}
+
       const msg =
         err?.response?.data?.message ||
         'Không thể chuyển duyệt, vui lòng thử lại';
@@ -413,7 +444,7 @@ const XetDuyetDetail = () => {
       <div className={styles.inner}>
         {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
-          <Link to={isAdmin ? '/admin/xet-duyet' : '/can-bo/xet-duyet'} className={styles.crumbLink}>
+          <Link to={isAdmin ? '/admin/xet-duyet' : (isKeToan ? '/ke-toan/xet-duyet' : '/can-bo/xet-duyet')} className={styles.crumbLink}>
             Xét duyệt hồ sơ
           </Link>
           <span className={styles.crumbSep}>/</span>
@@ -493,7 +524,7 @@ const XetDuyetDetail = () => {
                   <NghiemThuTimeline history={nghiemThuHistory} />
                 )}
 
-                {canCreateNghiemThu && (isAdmin || isGiaoVu) && (
+                {canCreateNghiemThu && isGiaoVu && (
                   <Button
                     variant="primary"
                     leftIcon={<HiOutlineClipboardDocumentCheck />}
@@ -728,6 +759,18 @@ const XetDuyetDetail = () => {
                     <span className={styles.contractLabel}>Số tiền vay</span>
                     <span className={styles.contractValue}>{formatCurrency(data.hopdongvayvon.sotienvon)}</span>
                   </div>
+                  {data.hopdongvayvon.sotien_dot1 && (
+                    <>
+                      <div className={styles.contractItem}>
+                        <span className={styles.contractLabel}>Đợt 1 (50%)</span>
+                        <span className={styles.contractValue}>{formatCurrency(data.hopdongvayvon.sotien_dot1)}</span>
+                      </div>
+                      <div className={styles.contractItem}>
+                        <span className={styles.contractLabel}>Đợt 2 (50%)</span>
+                        <span className={styles.contractValue}>{formatCurrency(data.hopdongvayvon.sotien_dot2)}</span>
+                      </div>
+                    </>
+                  )}
                   <div className={styles.contractItem}>
                     <span className={styles.contractLabel}>Lãi suất</span>
                     <span className={styles.contractValue}>{data.hopdongvayvon.laisuatphantram}%/năm</span>
@@ -748,6 +791,18 @@ const XetDuyetDetail = () => {
                     <span className={styles.contractLabel}>Trạng thái HĐ</span>
                     <span className={styles.contractValue}>{data.hopdongvayvon.trangthai}</span>
                   </div>
+                  {data.hopdongvayvon.ngay_giai_ngan_dot1 && (
+                    <div className={styles.contractItem}>
+                      <span className={styles.contractLabel}>Ngày GN đợt 1</span>
+                      <span className={styles.contractValue}>{new Date(data.hopdongvayvon.ngay_giai_ngan_dot1).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                  )}
+                  {data.hopdongvayvon.ngay_giai_ngan_dot2 && (
+                    <div className={styles.contractItem}>
+                      <span className={styles.contractLabel}>Ngày GN đợt 2</span>
+                      <span className={styles.contractValue}>{new Date(data.hopdongvayvon.ngay_giai_ngan_dot2).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                  )}
                   {data.hopdongvayvon.filehopdong && (
                     <div className={styles.contractItem}>
                       <span className={styles.contractLabel}>File hợp đồng</span>

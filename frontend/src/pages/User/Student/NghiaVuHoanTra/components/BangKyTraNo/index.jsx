@@ -28,18 +28,12 @@ const STATUS_CONFIG = {
   'Chua den han': { label: 'Chưa đến hạn', icon: ClockCircleOutlined, className: styles.statusUpcoming, dotClass: styles.dotUpcoming },
 };
 
-const BangKyTraNo = ({ kyTraNoList, loaiHotro, onSubmitProof, onRevokeProof }) => {
+const BangKyTraNo = ({ kyTraNoList, loaiHotro, tenQuy, onSubmitProof, onRevokeProof }) => {
   if (!kyTraNoList || kyTraNoList.length === 0) return null;
 
   const getShowSubmit = (ky) => {
-    const confirmable = ['Cho xac nhan', 'Bi tu choi', null, undefined];
-    const showable = ['Qua han', 'Chua den han', 'Tra mot phan'];
-    if (!confirmable.includes(ky.trangthaixacnhan)) return false;
-    if (!showable.includes(ky.trangThaiKy)) return false;
     if (ky.trangThaiKy === 'Da tra') return false;
-    if (isOverdue(ky.ngaydenhan)) return true;
-    if (isNearDue(ky.ngaydenhan)) return true;
-    return false;
+    return true;
   };
 
   const getShowRevoke = (ky) => {
@@ -139,7 +133,7 @@ const BangKyTraNo = ({ kyTraNoList, loaiHotro, onSubmitProof, onRevokeProof }) =
                     {showSubmit && (
                       <button
                         className={styles.submitBtn}
-                        onClick={() => onSubmitProof(ky)}
+                        onClick={() => onSubmitProof({ ...ky, tenQuy })}
                       >
                         <UploadOutlined /> Nộp minh chứng
                       </button>

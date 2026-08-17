@@ -105,6 +105,11 @@ const InspectionTimeline = ({ history, userRole, userId, onApprove, onEdit, onDe
                   onClick={() => toggleExpand(item.nghiemthuId || idx)}
                 >
                   <span className={styles.lanLabel}>Lần {item.lanthu}</span>
+                  {item.dotgiaingan > 1 && (
+                    <span className={styles.loaiTag} style={{ background: '#dbeafe', color: '#1d4ed8' }}>
+                      Đợt {item.dotgiaingan}
+                    </span>
+                  )}
                   <span className={`${styles.loaiTag} ${isFinal ? styles.loaiTagFinal : ''}`}>
                     {LOAI_KIEM_TRA_LABEL[item.loaiKiemTra] || item.loaiKiemTra}
                   </span>

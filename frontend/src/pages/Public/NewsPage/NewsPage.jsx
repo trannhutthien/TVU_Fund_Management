@@ -402,7 +402,7 @@ const NewsPage = () => {
               variant="primary"
               size="lg"
               className={styles.sponsorBtn}
-              onClick={() => navigate('/apply')}
+              onClick={() => navigate('/dong-gop')}
             >
               Tiếp nhận tài trợ
               <HiOutlineHeart className={styles.sponsorBtnIcon} />

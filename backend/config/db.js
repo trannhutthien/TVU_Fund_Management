@@ -45,10 +45,8 @@ const pool = mysql.createPool({
   queueLimit: 0,
   timezone: "+07:00",
   connectTimeout: 30000,
-  acquireTimeout: 30000,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 5000,
-  maxReconnects: 5,
+  keepAliveInitialDelay: 10000,
 });
 
 // Kiểm tra kết nối khi server khởi động

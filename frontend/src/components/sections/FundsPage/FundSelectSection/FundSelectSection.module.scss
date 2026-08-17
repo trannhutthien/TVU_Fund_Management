@@ -3,119 +3,293 @@
 .fundSelectSection {
   background: transparent;
   backdrop-filter: none;
-  padding: $space-6 $space-4;
+  padding: 0 $space-4 $space-6;
   width: 100%;
-  border-bottom: none;
+  position: relative;
+  z-index: 100; // Cao hơn cards
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: $space-4;
 }
 
 // ============================================
-// Thanh tìm kiếm + Sắp xếp
+// Modern Two-Row Layout
+// Hàng 1: Search bar centered với max-width
+// Hàng 2: 4 filters đều nhau
 // ============================================
 .searchRow {
   display: flex;
-  gap: $space-3;
+  flex-direction: column;
+  gap: $space-4;
   width: 100%;
-  align-items: flex-start;
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: $space-3;
-  }
+  align-items: center; // Căn giữa
 }
 
+// ============================================
+// Search Bar - Max Width 800px, Centered
+// ============================================
 .searchWrapper {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
+  max-width: 800px;
+  position: relative;
+  margin: 0 auto;
 
   :global(.input-container) {
     margin-bottom: 0;
   }
 
   :global(.input-field) {
-    border-radius: $radius-md;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: $space-3 $space-4 $space-3 $space-10;
+    width: 100%;
+    height: 56px;
+    border-radius: $radius-xl;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    padding: 0 $space-6 0 56px; // Space for icon
     font-size: $text-base;
+    font-weight: 500;
+    color: $text-heading;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 1);
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
 
     &:focus {
       border-color: var(--color-primary, $color-primary);
-      box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
-      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 0 4px rgba(59, 111, 245, 0.15), 0 8px 24px rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 1);
+      transform: translateY(-1px);
     }
 
     &::placeholder {
-      color: $text-muted;
+      color: #94a3b8;
+      font-weight: 400;
     }
   }
 
   :global(.input-icon-left) {
-    color: $text-secondary;
+    left: 18px;
+    color: var(--color-primary, $color-primary);
+    width: 24px;
+    height: 24px;
   }
 }
 
-.sortWrapper {
-  width: 200px;
-  flex-shrink: 0;
+// ============================================
+// Filters Row - Full Width, 4 Equal Columns
+// ============================================
+.filtersRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-3;
+  align-items: start;
+  width: 100%; // Full width cho filters
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-3;
+  }
 
   @media (max-width: 640px) {
-    width: 100%;
-  }
-}
-
-.sortDropdown {
-  :global(.dropdown) {
-    width: 100%;
+    grid-template-columns: 1fr;
+    gap: $space-3;
   }
 }
 
 // ============================================
-// 3 Dropdown lọc theo nhóm (nhom)
+// Filter Item - Vertical Layout với Label
 // ============================================
-.nhomRow {
+.filterItem {
   display: flex;
-  gap: 12px;
-  justify-content: center;
-  width: 100%;
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 8px;
-  }
+  flex-direction: column;
+  gap: $space-2;
 }
 
-.nhomDropdownWrapper {
+.filterLabel {
+  font-size: $text-xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  padding-left: $space-1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
+  gap: 6px;
 
-  @media (max-width: 640px) {
-    flex-direction: row;
+  &::before {
+    content: '';
+    width: 3px;
+    height: 12px;
+    background: var(--color-gold, $color-gold);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(240, 165, 0, 0.4);
   }
 }
 
-.nhomIcon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.nhomDropdown {
-  flex: 1;
-  min-width: 0;
+.filterDropdown,
+.sortDropdown {
+  position: relative;
+  z-index: $z-dropdown; // 200
 
   :global(.dropdown) {
     width: 100%;
   }
+
+  :global(.dropdown-trigger) {
+    position: relative;
+    z-index: 1;
+  }
+
+  :global(.dropdown-trigger button) {
+    width: 100%;
+    height: 48px;
+    padding: 0 $space-4;
+    font-size: $text-sm;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: $radius-lg;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.25s ease;
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    color: $text-heading;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.75);
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+      transform: translateY(-1px);
+    }
+
+    &:focus,
+    &:active {
+      border-color: var(--color-primary, $color-primary);
+      background: rgba(255, 255, 255, 0.75);
+      box-shadow: 0 0 0 3px rgba(59, 111, 245, 0.12), 0 4px 16px rgba(0, 0, 0, 0.14);
+    }
+  }
+
+  :global(.dropdown-content) {
+    position: absolute;
+    z-index: $z-dropdown; // 200
+    margin-top: $space-2;
+    border-radius: $radius-lg;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    background: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+  }
+
+  :global(.dropdown-item) {
+    padding: $space-3 $space-4;
+    font-size: $text-sm;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: $text-heading;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+
+    &:hover {
+      background: rgba(59, 111, 245, 0.18);
+      color: var(--color-primary, $color-primary);
+      backdrop-filter: blur(10px);
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+    }
+  }
+}
+
+// ============================================
+// Responsive Adjustments
+// ============================================
+@media (max-width: 1024px) {
+  .fundSelectSection {
+    padding: 0 $space-3 $space-5;
+  }
+
+  .searchRow {
+    gap: $space-3;
+  }
+
+  :global(.input-field) {
+    height: 52px !important;
+    font-size: $text-sm !important;
+  }
+
+  .filterDropdown :global(.dropdown-trigger button),
+  .sortDropdown :global(.dropdown-trigger button) {
+    height: 46px;
+  }
+}
+
+@media (max-width: 640px) {
+  .fundSelectSection {
+    padding: 0 $space-3 $space-4;
+  }
+
+  .searchRow {
+    gap: $space-3;
+  }
+
+  :global(.input-field) {
+    height: 50px !important;
+    padding: 0 $space-4 0 50px !important;
+  }
+
+  :global(.input-icon-left) {
+    left: 16px !important;
+  }
+
+  .filterLabel {
+    font-size: 10px;
+  }
+
+  .filterDropdown :global(.dropdown-trigger button),
+  .sortDropdown :global(.dropdown-trigger button) {
+    height: 44px;
+    padding: 0 $space-3;
+  }
+}
+
+// ============================================
+// Animation on mount
+// ============================================
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchWrapper {
+  animation: slideUp 0.4s ease-out;
+}
+
+.filterItem {
+  animation: slideUp 0.4s ease-out;
+  animation-fill-mode: both;
+
+  &:nth-child(1) { animation-delay: 0.05s; }
+  &:nth-child(2) { animation-delay: 0.1s; }
+  &:nth-child(3) { animation-delay: 0.15s; }
+  &:nth-child(4) { animation-delay: 0.2s; }
 }
 
 // ============================================

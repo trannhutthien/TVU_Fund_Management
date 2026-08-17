@@ -312,12 +312,14 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose, isPublic = false }) => {
                   {STATUS_LABEL[tx.trangThai] || tx.trangThai}
                 </div>
               </div>
-              <div className={styles.metaItem}>
-                <div className={styles.metaLabel}>Người duyệt</div>
-                <div className={styles.metaValue}>
-                  {tx.nguoiTao?.hoTen || '—'}
+              {!isPublic && (
+                <div className={styles.metaItem}>
+                  <div className={styles.metaLabel}>Người duyệt</div>
+                  <div className={styles.metaValue}>
+                    {tx.nguoiTao?.hoTen || '—'}
+                  </div>
                 </div>
-              </div>
+              )}
               <div className={styles.metaItem}>
                 <div className={styles.metaLabel}>Ngày duyệt</div>
                 <div className={styles.metaValue}>
@@ -333,15 +335,18 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose, isPublic = false }) => {
             </div>
           </section>
 
-          {/* Khối C.2 — Lịch sử phê duyệt */}
-          <section className={styles.block}>
-            <div className={styles.blockLabel}>LỊCH SỬ PHÊ DUYỆT</div>
-            {renderPheDuyetTimeline()}
-          </section>
+          {/* Khối C.2 — Lịch sử phê duyệt (ẩn khi công khai) */}
+          {!isPublic && (
+            <section className={styles.block}>
+              <div className={styles.blockLabel}>LỊCH SỬ PHÊ DUYỆT</div>
+              {renderPheDuyetTimeline()}
+            </section>
+          )}
 
-          {/* Khối D — Minh chứng */}
-          <section className={styles.block}>
-            <div className={styles.blockLabel}>MINH CHỨNG CHUYỂN KHOẢN</div>
+          {/* Khối D — Minh chứng (ẩn khi công khai) */}
+          {!isPublic && (
+            <section className={styles.block}>
+              <div className={styles.blockLabel}>MINH CHỨNG CHUYỂN KHOẢN</div>
 
             {!minhChungUrl ? (
               <div className={styles.proofEmpty}>
@@ -393,6 +398,7 @@ const GiaoDichDetailDrawer = ({ giaoDich, onClose, isPublic = false }) => {
               </a>
             )}
           </section>
+          )}
         </div>
 
         {/* Footer */}

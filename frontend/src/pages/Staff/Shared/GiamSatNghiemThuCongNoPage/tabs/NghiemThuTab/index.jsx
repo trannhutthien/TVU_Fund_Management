@@ -2,36 +2,55 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
-import { HiOutlineMagnifyingGlass, HiOutlineFunnel, HiOutlineEye } from 'react-icons/hi2';
+import {
+  HiOutlineMagnifyingGlass,
+  HiOutlineFunnel,
+  HiOutlineEye,
+  HiOutlineClipboardDocumentCheck,
+  HiOutlineClock,
+  HiOutlineCheckCircle,
+  HiOutlineXCircle,
+} from 'react-icons/hi2';
+import { StatCard } from '@components/common/Card';
 import congNoService from '@services/congNoService';
 import styles from './index.module.scss';
 
 const TRANG_THAI_OPTIONS = [
-  { value: '', label: 'Tat ca' },
-  { value: 'Da giai ngan', label: 'Chua nghiem thu' },
-  { value: 'Cho nghiem thu', label: 'Dang cho' },
-  { value: 'Da nghiem thu', label: 'Dat' },
-  { value: 'Nghiem thu khong dat', label: 'Khong dat' },
+  { value: '', label: 'Tất cả' },
+  { value: 'Da giai ngan', label: 'Chưa nghiệm thu' },
+  { value: 'Cho nghiem thu', label: 'Đang chờ' },
+  { value: 'Da nghiem thu', label: 'Đạt' },
+  { value: 'Nghiem thu khong dat', label: 'Không đạt' },
+  { value: 'Dang thu hoi no', label: 'Đang thu hồi nợ' },
+  { value: 'Da giai ngan dot 1', label: 'Chưa nghiệm thu đợt 1' },
+  { value: 'Cho nghiem thu dot 1', label: 'Đang chờ đợt 1' },
+  { value: 'Da nghiem thu dot 1', label: 'Đạt đợt 1' },
+  { value: 'Cho giai ngan dot 2', label: 'Chờ giải ngân đợt 2' },
 ];
 
 const LOAI_KIEM_TRA_OPTIONS = [
-  { value: '', label: 'Tat ca' },
-  { value: 'Kiem tra tien do', label: 'Kiem tra tien do' },
-  { value: 'Nghiem thu cuoi cung', label: 'Nghiem thu cuoi cung' },
+  { value: '', label: 'Tất cả' },
+  { value: 'Kiem tra tien do', label: 'Kiểm tra tiến độ' },
+  { value: 'Nghiem thu cuoi cung', label: 'Nghiệm thu cuối cùng' },
 ];
 
 const KET_QUA_MAP = {
-  'Cho danh gia': { label: 'Cho danh gia', color: '#94a3b8' },
-  'Dat': { label: 'Dat', color: '#16a34a' },
-  'Dat co dieu chinh': { label: 'Dat co dieu chinh', color: '#2563eb' },
-  'Khong dat': { label: 'Khong dat', color: '#dc2626' },
+  'Cho danh gia': { label: 'Chờ đánh giá', color: '#94a3b8' },
+  'Dat': { label: 'Đạt', color: '#16a34a' },
+  'Dat co dieu chinh': { label: 'Đạt có điều chỉnh', color: '#2563eb' },
+  'Khong dat': { label: 'Không đạt', color: '#dc2626' },
 };
 
 const TRANG_THAI_MAP = {
-  'Da giai ngan': 'Chua nghiem thu',
-  'Cho nghiem thu': 'Dang cho',
-  'Da nghiem thu': 'Dat',
-  'Nghiem thu khong dat': 'Khong dat',
+  'Da giai ngan': 'Chưa nghiệm thu',
+  'Cho nghiem thu': 'Đang chờ',
+  'Da nghiem thu': 'Đạt',
+  'Nghiem thu khong dat': 'Không đạt',
+  'Dang thu hoi no': 'Đang thu hồi nợ',
+  'Da giai ngan dot 1': 'Chưa nghiệm thu đợt 1',
+  'Cho nghiem thu dot 1': 'Đang chờ đợt 1',
+  'Da nghiem thu dot 1': 'Đạt đợt 1',
+  'Cho giai ngan dot 2': 'Chờ giải ngân đợt 2',
 };
 
 const NghiemThuTab = ({ userRole }) => {
@@ -41,9 +60,28 @@ const NghiemThuTab = ({ userRole }) => {
   const [filters, setFilters] = useState({ trangthaiNT: '', loaiKiemTra: '', quyId: '', search: '' });
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0 });
 
+  const [tongQuan, setTongQuan] = useState(null);
+  const [loadingTongQuan, setLoadingTongQuan] = useState(true);
+
   const isKeToan = userRole === 2;
   const isBKS = userRole === 5;
   const canThaoTac = !isKeToan && !isBKS;
+
+  useEffect(() => {
+    let mounted = true;
+    setLoadingTongQuan(true);
+    congNoService.getNghiemThuTongQuan()
+      .then((res) => {
+        if (mounted) setTongQuan(res.data?.data || null);
+      })
+      .catch(() => {
+        if (mounted) toast.error('Khong tai duoc tong quan nghiem thu');
+      })
+      .finally(() => {
+        if (mounted) setLoadingTongQuan(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
@@ -64,8 +102,32 @@ const NghiemThuTab = ({ userRole }) => {
     navigate(`/giam-sat/nghiem-thu/${item.yeucauhotro_id}`);
   };
 
+  const SUMMARY_CARDS = tongQuan ? [
+    { key: 'tongDon', label: 'Tong don nghiem thu', icon: HiOutlineClipboardDocumentCheck, iconBgColor: 'blue', value: tongQuan.tongDon },
+    { key: 'dangCho', label: 'Dang cho nghiem thu', icon: HiOutlineClock, iconBgColor: 'yellow', value: tongQuan.dangCho },
+    { key: 'dat', label: 'Da dat nghiem thu', icon: HiOutlineCheckCircle, iconBgColor: 'green', value: tongQuan.dat },
+    { key: 'khongDat', label: 'Khong dat', icon: HiOutlineXCircle, iconBgColor: 'red', value: tongQuan.khongDat },
+  ] : [];
+
   return (
     <div className={styles.tabContent}>
+      {/* Summary cards */}
+      {loadingTongQuan ? (
+        <div className={styles.loadingBox}>Dang tai tong quan...</div>
+      ) : tongQuan && (
+        <div className={styles.summaryGrid}>
+          {SUMMARY_CARDS.map((card) => (
+            <StatCard
+              key={card.key}
+              title={card.label}
+              value={card.value}
+              icon={<card.icon size={28} />}
+              iconBgColor={card.iconBgColor}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Filters */}
       <div className={styles.filterBar}>
         <div className={styles.filterGroup}>

@@ -14,11 +14,11 @@ const router = express.Router();
 
 // ─── PROTECTED ROUTES (Yêu cầu Authentication) ───────────────────────────────
 
-// POST /api/nghiem-thu — Tạo lượt kiểm tra/nghiệm thu mới (Cán bộ, Admin)
-router.post("/", protect, authorizeRoles(1, 3), createInspection);
+// POST /api/nghiem-thu — Tạo lượt kiểm tra/nghiệm thu mới (Chỉ Cán bộ Quỹ)
+router.post("/", protect, authorizeRoles(3), createInspection);
 
-// PUT /api/nghiem-thu/:id — Cập nhật KẾT QUẢ nghiệm thu (Admin duyệt)
-router.put("/:id", protect, authorizeRoles(1, 3), updateResult);
+// PUT /api/nghiem-thu/:id — Cập nhật KẾT QUẢ nghiệm thu (Chỉ Admin duyệt)
+router.put("/:id", protect, authorizeRoles(1), updateResult);
 
 // PUT /api/nghiem-thu/:id/edit — Sửa thông tin nghiệm thu chưa duyệt (Cán bộ/Admin)
 router.put("/:id/edit", protect, authorizeRoles(1, 3), updateInspection);

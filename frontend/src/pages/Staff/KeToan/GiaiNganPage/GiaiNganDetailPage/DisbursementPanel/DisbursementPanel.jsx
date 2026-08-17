@@ -34,13 +34,26 @@ const DisbursementPanel = ({
 
   const trangThai = data?.trangThai;
   const soTien = Number(data?.soTienYeuCau || 0);
-  const isEnough = fundBalance !== null && Number(fundBalance) >= soTien;
-  const remainingAfter = fundBalance !== null ? Number(fundBalance) - soTien : null;
 
-  const canDisburse = trangThai === 'Cho duyet cap 3' || trangThai === 'Cho giai ngan';
+  // Tinh so tien giai ngan theo dot
+  let soTienGiaiNgan = soTien;
+  let dotGiaiNgan = 0;
+  if (trangThai === 'Cho giai ngan dot 1') {
+    soTienGiaiNgan = Number(data?.hopdongvayvon?.sotien_dot1 || soTien * 0.5);
+    dotGiaiNgan = 1;
+  } else if (trangThai === 'Cho giai ngan dot 2') {
+    soTienGiaiNgan = Number(data?.hopdongvayvon?.sotien_dot2 || soTien * 0.5);
+    dotGiaiNgan = 2;
+  }
+
+  const isEnough = fundBalance !== null && Number(fundBalance) >= soTienGiaiNgan;
+  const remainingAfter = fundBalance !== null ? Number(fundBalance) - soTienGiaiNgan : null;
+
+  const canDisburse = trangThai === 'Cho duyet cap 3' || trangThai === 'Cho giai ngan' || trangThai === 'Cho giai ngan dot 1' || trangThai === 'Cho giai ngan dot 2';
   const isDisbursed = trangThai === 'Da giai ngan';
   const isRejected = trangThai === 'Tu choi cap 3';
-  const isWaitingNghiemThu = trangThai === 'Cho nghiem thu' || trangThai === 'Da nghiem thu' || trangThai === 'Nghiem thu khong dat';
+  const isWaitingNghiemThu = trangThai === 'Cho nghiem thu' || trangThai === 'Da nghiem thu' || trangThai === 'Nghiem thu khong dat'
+    || trangThai === 'Cho nghiem thu dot 1' || trangThai === 'Da nghiem thu dot 1' || trangThai === 'Da giai ngan dot 1' || trangThai === 'Cho giai ngan dot 2';
 
   const handleDisburse = async () => {
     if (!isEnough) {
@@ -96,7 +109,7 @@ const DisbursementPanel = ({
         {/* ── Highlighted amount ── */}
         <div className={styles.highlightAmount}>
           <span className={styles.highlightLabel}>Số tiền giải ngân</span>
-          <span className={styles.highlightValue}>{formatCurrency(soTien)}</span>
+          <span className={styles.highlightValue}>{formatCurrency(soTienGiaiNgan)}</span>
         </div>
 
         {/* ── Fund balance grid ── */}
@@ -127,7 +140,7 @@ const DisbursementPanel = ({
               <>
                 <HiOutlineExclamationTriangle className={styles.checkIcon} />
                 <span>
-                  Quỹ thiếu <strong>{formatCurrency(soTien - Number(fundBalance))}</strong> —
+                  Quỹ thiếu <strong>{formatCurrency(soTienGiaiNgan - Number(fundBalance))}</strong> —
                   chưa thể giải ngân
                 </span>
               </>
@@ -190,7 +203,7 @@ const DisbursementPanel = ({
                 disabled={submitting || !isEnough}
                 loading={submitting}
               >
-                Xác nhận giải ngân
+                {dotGiaiNgan > 0 ? `Xác nhận giải ngân đợt ${dotGiaiNgan}` : 'Xác nhận giải ngân'}
               </Button>
             </div>
           </>
@@ -254,9 +267,14 @@ const DisbursementPanel = ({
           <div className={styles.resultBox}>
             <div className={styles.resultRow}>
               <span className={styles.resultLabel}>Trạng thái</span>
-              <span className={`${styles.badge} ${styles.badgeBlue}`}>
+              <span className={`${styles.badge} ${(trangThai === 'Nghiem thu khong dat' || trangThai === 'Dang thu hoi no') ? styles.badgeRed : styles.badgeBlue}`}>
                 {trangThai === 'Da nghiem thu' ? 'Đã nghiệm thu' :
                  trangThai === 'Nghiem thu khong dat' ? 'Nghiệm thu không đạt' :
+                 trangThai === 'Dang thu hoi no' ? 'Đang thu hồi nợ' :
+                 trangThai === 'Cho nghiem thu dot 1' ? 'Chờ nghiệm thu đợt 1' :
+                 trangThai === 'Da nghiem thu dot 1' ? 'Đã nghiệm thu đợt 1' :
+                 trangThai === 'Da giai ngan dot 1' ? 'Đã giải ngân đợt 1' :
+                 trangThai === 'Cho giai ngan dot 2' ? 'Chờ giải ngân đợt 2' :
                  'Chờ nghiệm thu'}
               </span>
             </div>

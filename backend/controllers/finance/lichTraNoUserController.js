@@ -22,6 +22,7 @@ export const getMyRepayments = async (req, res) => {
         yc.lydo          AS tieuDe,
         yc.trangthai     AS trangThaiDon,
         (SELECT g.ngaygiaodich FROM giaodich g WHERE g.yeucauhotro_id = yc.yeucauhotro_id AND g.loaigiaodich = 'Chi' LIMIT 1) AS ngayGiaiNgan,
+        (SELECT IFNULL(SUM(g.sotien), 0) FROM giaodich g WHERE g.yeucauhotro_id = yc.yeucauhotro_id AND g.loaigiaodich = 'Chi') AS tongDaGiaiNgan,
         q.tenquy,
         q.quy_id,
         hd.hopdongvayvon_id,
@@ -48,12 +49,12 @@ export const getMyRepayments = async (req, res) => {
       INNER JOIN lichtrano lt ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
       WHERE yc.nguoidung_id = ?
         AND yc.loaihotro = 'Cho vay'
-        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')
+        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu', 'Cho nghiem thu', 'Da giai ngan dot 1', 'Cho nghiem thu dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2')
       ORDER BY yc.yeucauhotro_id DESC, lt.kythu ASC`,
       [nguoidungId]
     );
 
-    // ── 2. Lấy danh sách đơn tài trợ có thu hồi ──────────────────────────────
+    // ── 2. Lấy danh sách đơn tài trợ có thu hồi + don vay Dang thu hoi no ──
     const [thuHoiRows] = await pool.query(
       `SELECT
         yc.yeucauhotro_id,
@@ -63,6 +64,7 @@ export const getMyRepayments = async (req, res) => {
         (SELECT g.ngaygiaodich FROM giaodich g WHERE g.yeucauhotro_id = yc.yeucauhotro_id AND g.loaigiaodich = 'Chi' LIMIT 1) AS ngayGiaiNgan,
         q.tenquy,
         q.quy_id,
+        hd.hopdongvayvon_id, hd.sotienvon, hd.laisuatphantram, hd.kyhandothang, hd.ngaydaohan, hd.trangthai AS trangThaiHopDong,
         dkh.dieukhoanthuhoi_id,
         dkh.mucthuhoi,
         dkh.laisuat,
@@ -74,9 +76,10 @@ export const getMyRepayments = async (req, res) => {
       FROM yeucauhotro yc
       INNER JOIN quy q ON yc.quy_id = q.quy_id
       INNER JOIN dieukhoanthuhoi dkh ON dkh.yeucauhotro_id = yc.yeucauhotro_id
+      LEFT JOIN hopdongvayvon hd ON yc.yeucauhotro_id = hd.yeucauhotro_id
       WHERE yc.nguoidung_id = ?
-        AND yc.loaihotro = 'Tai tro co thu hoi'
-        AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu')
+        AND ((yc.loaihotro = 'Tai tro co thu hoi' AND yc.trangthai IN ('Da giai ngan', 'Da nghiem thu', 'Cho giai ngan', 'Dang thu hoi no'))
+             OR (yc.loaihotro = 'Cho vay' AND yc.trangthai = 'Dang thu hoi no'))
       ORDER BY yc.yeucauhotro_id DESC`,
       [nguoidungId]
     );
@@ -97,6 +100,7 @@ export const getMyRepayments = async (req, res) => {
           hopDong: {
             hopdongvayvonId: row.hopdongvayvon_id,
             sotienvon: Number(row.sotienvon),
+            tongDaGiaiNgan: Number(row.tongDaGiaiNgan || 0),
             laisuatphantram: Number(row.laisuatphantram || 0),
             kyhandothang: row.kyhandothang,
             ngaydaohan: row.ngaydaohan,
@@ -122,27 +126,59 @@ export const getMyRepayments = async (req, res) => {
       });
     }
 
-    // ── 4. Map đơn tài trợ thu hồi ────────────────────────────────────────────
-    const thuHoiList = thuHoiRows.map(row => ({
-      yeucauhotroId: row.yeucauhotro_id,
-      loaihotro: row.loaihotro,
-      tieuDe: row.tieuDe,
-      trangThaiDon: row.trangThaiDon,
-      ngayGiaiNgan: row.ngayGiaiNgan,
-      tenquy: row.tenquy,
-      quyId: row.quy_id,
-      dieuKhoan: {
-        dieukhoanthuhoiId: row.dieukhoanthuhoi_id,
-        mucthuhoi: Number(row.mucthuhoi),
-        laisuat: row.laisuat ? Number(row.laisuat) : null,
-        thoihanhoantra_thang: row.thoihanhoantra_thang,
-        soquyetdinh_hopdong: row.soquyetdinh_hopdong,
-        trangThaiThuHoi: row.trangThaiThuHoi,
-        ngaybatdauthuhoi: row.ngaybatdauthuhoi,
-        sotiendadathu: Number(row.sotiendadathu || 0),
-        conLai: Number(row.mucthuhoi) - Number(row.sotiendadathu || 0),
-      },
-    }));
+    // ── 4. Map đơn tài trợ thu hồi + lay lich su nop tien ──────────────────
+    const thuHoiList = [];
+    for (const row of thuHoiRows) {
+      // Lay lich su nop tien
+      const [lnpRows] = await pool.query(
+        `SELECT lnp.*, nguoidung.hoten AS nguoiDuyetTen
+         FROM thuhoilannop lnp
+         LEFT JOIN nguoidung ON lnp.nguoiduyet_id = nguoidung.nguoidung_id
+         WHERE lnp.dieukhoanthuhoi_id = ?
+         ORDER BY lnp.ngaytao ASC`,
+        [row.dieukhoanthuhoi_id]
+      );
+
+      thuHoiList.push({
+        yeucauhotroId: row.yeucauhotro_id,
+        loaihotro: row.loaihotro,
+        tieuDe: row.tieuDe,
+        trangThaiDon: row.trangThaiDon,
+        ngayGiaiNgan: row.ngayGiaiNgan,
+        tenquy: row.tenquy,
+        quyId: row.quy_id,
+        hopDong: row.sotienvon ? {
+          hopdongvayvonId: row.hopdongvayvon_id,
+          sotienvon: Number(row.sotienvon),
+          laisuatphantram: Number(row.laisuatphantram || 0),
+          kyhandothang: row.kyhandothang,
+          ngaydaohan: row.ngaydaohan,
+          trangThaiHopDong: row.trangThaiHopDong,
+        } : null,
+        dieuKhoan: {
+          dieukhoanthuhoiId: row.dieukhoanthuhoi_id,
+          mucthuhoi: Number(row.mucthuhoi),
+          laisuat: row.laisuat ? Number(row.laisuat) : null,
+          thoihanhoantra_thang: row.thoihanhoantra_thang,
+          soquyetdinh_hopdong: row.soquyetdinh_hopdong,
+          trangThaiThuHoi: row.trangThaiThuHoi,
+          ngaybatdauthuhoi: row.ngaybatdauthuhoi,
+          sotiendadathu: Number(row.sotiendadathu || 0),
+          conLai: Number(row.mucthuhoi) - Number(row.sotiendadathu || 0),
+        },
+        lichSuNopTien: lnpRows.map(lnp => ({
+          lan_nop_id: lnp.lan_nop_id,
+          sotien: Number(lnp.sotien),
+          minhchungtrano: lnp.minhchungtrano,
+          ghichu: lnp.ghichu,
+          trangthaixacnhan: lnp.trangthaixacnhan,
+          ghichuxacnhan: lnp.ghichuxacnhan,
+          nguoiDuyetTen: lnp.nguoiDuyetTen,
+          ngayxacnhan: lnp.ngayxacnhan,
+          ngaytao: lnp.ngaytao,
+        })),
+      });
+    }
 
     // ── 5. Tính tổng quan ─────────────────────────────────────────────────────
     let tongNhan = 0;
@@ -152,7 +188,7 @@ export const getMyRepayments = async (req, res) => {
 
     // Cho vay
     for (const don of Object.values(vayMap)) {
-      tongNhan += don.hopDong.sotienvon;
+      tongNhan += don.hopDong.tongDaGiaiNgan;
       for (const ky of don.lichTra) {
         if (ky.trangThaiKy === 'Da tra') {
           daHoanTra += ky.sotienthuctra || ky.tongPhaiTra;
@@ -208,7 +244,12 @@ export const submitProof = async (req, res) => {
 
     const { lichtranoId } = req.params;
     const nguoidungId = req.user.id;
-    const { minhchungtrano, ghiChu } = req.body;
+    const { soTien, minhchungtrano, ghiChu } = req.body;
+
+    if (!soTien || soTien <= 0) {
+      await connection.rollback();
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập số tiền hợp lệ.' });
+    }
 
     if (!minhchungtrano) {
       await connection.rollback();
@@ -250,20 +291,22 @@ export const submitProof = async (req, res) => {
       `UPDATE lichtrano
        SET minhchungtrano = ?,
            ghichuxacnhan = ?,
+           sotienthuctra = ?,
+           ngaythuctra = CURDATE(),
            trangthaixacnhan = 'Cho xac nhan',
            ngaycapnhat = NOW()
        WHERE lichtrano_id = ?`,
-      [minhchungtrano, ghiChu || null, lichtranoId]
+      [minhchungtrano, ghiChu || null, soTien, lichtranoId]
     );
 
-    await logSystemActivity({
-      nguoidungId,
-      hanhDong: 'NOP_MINH_CHUNG_TRA_NO',
-      loaiDoiTuong: 'lichtrano',
-      doiTuongId: parseInt(lichtranoId),
+    await logSystemActivity(req, {
+      nguoidung_id: nguoidungId,
+      hanhdong: 'NOP_MINH_CHUNG_TRA_NO',
+      loaidoituong: 'lichtrano',
+      doituong_id: parseInt(lichtranoId),
       dulieucu: { trangthaixacnhan: lichtrano.trangthaixacnhan, minhchungtrano: lichtrano.minhchungtrano },
       dulieumoi: { trangthaixacnhan: 'Cho xac nhan', minhchungtrano },
-    }, connection);
+    });
 
     await connection.commit();
 
@@ -334,14 +377,14 @@ export const revokeProof = async (req, res) => {
       [lichtranoId]
     );
 
-    await logSystemActivity({
-      nguoidungId,
-      hanhDong: 'HUY_MINH_CHUNG_TRA_NO',
-      loaiDoiTuong: 'lichtrano',
-      doiTuongId: parseInt(lichtranoId),
+    await logSystemActivity(req, {
+      nguoidung_id: nguoidungId,
+      hanhdong: 'HUY_MINH_CHUNG_TRA_NO',
+      loaidoituong: 'lichtrano',
+      doituong_id: parseInt(lichtranoId),
       dulieucu: { minhchungtrano: lichtrano.minhchungtrano },
       dulieumoi: { minhchungtrano: null },
-    }, connection);
+    });
 
     await connection.commit();
 

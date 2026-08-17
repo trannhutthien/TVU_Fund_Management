@@ -53,7 +53,7 @@ const NghiemThuDetailPage = () => {
     navigate('/giam-sat');
   };
 
-  const canCreate = userRole === 1 || userRole === 3;
+  const canCreate = userRole === 3;
   const isAdmin = userRole === 1;
 
   // Tính số đợt nghiệm thu chờ duyệt (tất cả loại, ketqua = 'Cho danh gia')

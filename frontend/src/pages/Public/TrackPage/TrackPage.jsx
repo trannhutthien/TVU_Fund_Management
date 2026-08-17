@@ -64,10 +64,20 @@ const TrackPage = () => {
       'Da duyet cap 3': 'CHO_GIAI_NGAN',
       'Tu choi cap 3': 'TU_CHOI',
       'Cho giai ngan': 'CHO_GIAI_NGAN',
+      'Cho giai ngan dot 1': 'CHO_GIAI_NGAN',
+      'Cho giai ngan dot 2': 'CHO_GIAI_NGAN',
       'Da giai ngan': 'DA_GIAI_NGAN',
+      'Da giai ngan dot 1': 'DA_GIAI_NGAN',
       'Tu choi': 'TU_CHOI',
       'Cho duyet': 'CHO_DUYET',
       'Dang xu ly': 'DANG_XU_LY',
+      'Cho nghiem thu': 'DANG_XU_LY',
+      'Cho nghiem thu dot 1': 'DANG_XU_LY',
+      'Da nghiem thu': 'DA_GIAI_NGAN',
+      'Da nghiem thu dot 1': 'DA_GIAI_NGAN',
+      'Nghiem thu khong dat': 'TU_CHOI',
+      'Dang thu hoi no': 'TU_CHOI',
+      'Hoan thanh': 'DA_GIAI_NGAN',
     };
     return statusMap[status] || 'CHO_DUYET';
   };
@@ -145,10 +155,18 @@ const TrackPage = () => {
 
     try {
       setOtpLoading(true);
+      // Thu lay otpToken tu localStorage (neu nop don tren cung thiet bi)
+      let otpToken = null;
+      try {
+        otpToken = localStorage.getItem(`guest_otp_${uuid}`);
+      } catch (e) { /* ignore */ }
+
       const payload = {
         email: data.email,
         otpCode: otpCode.trim(),
-        type: data.type
+        type: data.type,
+        trackingUuid: uuid,
+        ...(otpToken ? { otpToken } : {})
       };
 
       const response = await guestService.verifyOtp(payload);

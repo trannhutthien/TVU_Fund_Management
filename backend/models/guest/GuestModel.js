@@ -1,67 +1,25 @@
 import pool from "../../config/db.js";
 
-const toApplicationRow = (data) => ({
-  guest_hoten: data.guest_hoten ?? data.guestHoTen,
-  guest_email: data.guest_email ?? data.guestEmail,
-  guest_sodienthoai: data.guest_sodienthoai ?? data.guestSoDienThoai ?? null,
-  vaitro: data.vaitro ?? 'sinh_vien',
-  guest_mssv: data.guest_mssv ?? data.guestMssv ?? null,
-  guest_khoa: data.guest_khoa ?? data.guestKhoa ?? null,
-  guest_lop: data.guest_lop ?? data.guestLop ?? null,
-  guest_sotaikhoan: data.guest_sotaikhoan ?? data.guestSoTaiKhoan ?? null,
-  guest_nganhang: data.guest_nganhang ?? data.guestNganHang ?? null,
-  guest_chutaikhoan: data.guest_chutaikhoan ?? data.guestChuTaiKhoan ?? null,
-  quy_id: data.quy_id ?? data.quyId,
-  lydo: data.lydo ?? data.lyDo,
-  sotiendenghi: data.sotiendenghi ?? data.soTienDeNghi,
-  tailieudinhkem: data.tailieudinhkem ?? data.taiLieuDinhKem ?? null,
-  loai_hotro: data.loai_hotro ?? data.loaiHoTro ?? 'Tai tro khong hoan lai',
-  tong_kinh_phi_du_an: data.tong_kinh_phi_du_an ?? data.tongKinhPhiDuAn ?? null,
-  tracking_uuid: data.tracking_uuid ?? data.trackingUuid,
-});
-
-const toDonationRow = (data) => ({
-  guest_hoten: data.guest_hoten ?? data.guestHoTen,
-  guest_email: data.guest_email ?? data.guestEmail,
-  guest_sodienthoai: data.guest_sodienthoai ?? data.guestSoDienThoai ?? null,
-  guest_tochuc: data.guest_tochuc ?? data.guestToChuc ?? null,
-  guest_diachi: data.guest_diachi ?? data.guestDiaChi ?? null,
-  loaiNhaTaiTro: data.loaiNhaTaiTro ?? 'Ca nhan',
-  masothue: data.masothue ?? null,
-  linhVucHopTac: data.linhVucHopTac ?? null,
-  nguoiLienHe: data.nguoiLienHe ?? null,
-  chucDanh: data.chucDanh ?? null,
-  quy_id: data.quy_id ?? data.quyId,
-  sotien: data.sotien ?? data.soTien,
-  hinhthuc: data.hinhthuc ?? data.hinhThuc ?? "Chuyen khoan",
-  magiaodich: data.magiaodich ?? data.maGiaoDich ?? null,
-  ngaytaitro: data.ngaytaitro ?? data.ngayTaiTro ?? new Date(),
-  chungtu: data.chungtu ?? data.chungTu ?? null,
-  ghichu: data.ghichu ?? data.ghiChu ?? null,
-  tracking_uuid: data.tracking_uuid ?? data.trackingUuid,
-});
-
-const ensureApplicationDonViHocId = async (connection, tenKhoa, lop) => {
+// ── Helper: Tao donvihoc ─────────────────────────────────────────────────────
+const ensureApplicationDonViHocId = async (connection, tenKhoa) => {
   if (!tenKhoa) return null;
 
   const [dvRows] = await connection.query(
-    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? AND (lop = ? OR (lop IS NULL AND ? IS NULL)) LIMIT 1",
-    [tenKhoa, lop || null, lop || null]
+    "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? LIMIT 1",
+    [tenKhoa]
   );
 
-  if (dvRows.length > 0) {
-    return dvRows[0].donvihoc_id;
-  }
+  if (dvRows.length > 0) return dvRows[0].donvihoc_id;
 
-  const madonvi = `DV${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const madonvi = `TVU-${Date.now()}`;
   const [dvInsert] = await connection.query(
-    "INSERT INTO donvihoc (madonvi, tenkhoa, lop, trangthai) VALUES (?, ?, ?, 'Hoat dong')",
-    [madonvi, tenKhoa, lop || null]
+    "INSERT INTO donvihoc (madonvi, tenkhoa, trangthai) VALUES (?, ?, 'Hoat dong')",
+    [madonvi, tenKhoa]
   );
-
   return dvInsert.insertId;
 };
 
+// ── Helper: Tao nguoi dung (ho tro) ──────────────────────────────────────────
 const ROLE_TO_LOAITAIKHOAN = {
   'sinh_vien': 'Sinh vien',
   'can_bo_truong': 'Can bo',
@@ -74,31 +32,26 @@ const ensureApplicationUser = async (connection, app, email, plainPassword) => {
     "SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1",
     [email]
   );
-
-  if (users.length > 0) {
-    return users[0].nguoidung_id;
-  }
+  if (users.length > 0) return users[0].nguoidung_id;
 
   const bcrypt = await import("bcryptjs");
   const hashedPassword = await bcrypt.default.hash(plainPassword, 10);
   const maSoDinhDanh = app.guest_mssv || `SV${Date.now()}`;
-  const donvihocId = await ensureApplicationDonViHocId(connection, app.guest_khoa, app.guest_lop);
+  const donvihocId = await ensureApplicationDonViHocId(connection, app.guest_khoa);
   const loaitaikhoan = ROLE_TO_LOAITAIKHOAN[app.vaitro] || 'Sinh vien';
 
   const [userInsert] = await connection.query(
     `INSERT INTO nguoidung (
-      email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, donvihoc_id, trangthai
-    ) VALUES (?, ?, ?, ?, ?, 4, ?, ?, 'Hoat dong')`,
-    [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, loaitaikhoan, donvihocId]
+      email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, donvihoc_id, lop, trangthai
+    ) VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?, 'Hoat dong')`,
+    [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, loaitaikhoan, donvihocId, app.guest_lop || null]
   );
-
   return userInsert.insertId;
 };
 
+// ── Helper: Upsert tai khoan ngan hang ───────────────────────────────────────
 const upsertApplicationBankAccount = async (connection, nguoiDungId, app) => {
-  if (!app.guest_sotaikhoan || !app.guest_nganhang || !app.guest_chutaikhoan) {
-    return null;
-  }
+  if (!app.guest_sotaikhoan || !app.guest_nganhang || !app.guest_chutaikhoan) return null;
 
   const soTaiKhoan = String(app.guest_sotaikhoan).trim();
   const nganHang = String(app.guest_nganhang).trim();
@@ -112,9 +65,7 @@ const upsertApplicationBankAccount = async (connection, nguoiDungId, app) => {
 
   if (existingAccountId) {
     await connection.query(
-      `UPDATE taikhoannganhang
-       SET sotaikhoan = ?, nganhang = ?, chutaikhoan = ?
-       WHERE taikhoannganhang_id = ?`,
+      `UPDATE taikhoannganhang SET sotaikhoan = ?, nganhang = ?, chutaikhoan = ? WHERE taikhoannganhang_id = ?`,
       [soTaiKhoan, nganHang, chuTaiKhoan, existingAccountId]
     );
     return existingAccountId;
@@ -126,17 +77,15 @@ const upsertApplicationBankAccount = async (connection, nguoiDungId, app) => {
     [soTaiKhoan, nganHang, chuTaiKhoan]
   );
   const bankAccountId = bankInsert.insertId;
-
   await connection.query(
     "UPDATE nguoidung SET taikhoannganhang_id = ? WHERE nguoidung_id = ?",
     [bankAccountId, nguoiDungId]
   );
-
   return bankAccountId;
 };
 
+// ── Helper: Tao yeucauhotro + pheduyet ───────────────────────────────────────
 const createMainApplicationRecords = async (connection, app, nguoiDungId) => {
-  // Tự động gán dot_id dựa trên ngày nộp đơn
   const today = new Date().toISOString().split('T')[0];
   const [dotRows] = await connection.query(
     `SELECT dot_id FROM dotgiaingan 
@@ -149,35 +98,37 @@ const createMainApplicationRecords = async (connection, app, nguoiDungId) => {
   );
   const dotId = dotRows[0]?.dot_id || null;
 
+  const tieuDe = app.tieu_de || (app.lydo ? app.lydo.substring(0, 200) : null);
+
   const [appInsert] = await connection.query(
     `INSERT INTO yeucauhotro (
-      nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, laidetac, tongkinhphidudan
-    ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?, ?)`,
-    [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', (app.loai_hotro === 'Cho vay' || app.loai_hotro === 'Tai tro co thu hoi' || app.laDeTai === 1) ? 1 : 0, app.laDeTai || 0, app.tong_kinh_phi_du_an || null]
+      nguoidung_id, quy_id, tieu_de, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, tongkinhphidudan
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?)`,
+    [
+      nguoiDungId, app.quy_id, tieuDe, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem,
+      app.loai_hotro || 'Tai tro khong hoan lai',
+      (app.loai_hotro === 'Cho vay' || app.loai_hotro === 'Tai tro co thu hoi' || app.laDeTai === 1) ? 1 : 0,
+      app.tong_kinh_phi_du_an || null
+    ]
   );
   const yeucauhotroId = appInsert.insertId;
 
   for (const cap of [1, 2, 3]) {
     await connection.execute(
-      `INSERT INTO pheduyet (
-        yeucauhotro_id, nguoiduyet_id, capduyet, ketqua
-      ) VALUES (?, NULL, ?, 'Cho duyet')`,
+      `INSERT INTO pheduyet (yeucauhotro_id, nguoiduyet_id, capduyet, ketqua) VALUES (?, NULL, ?, 'Cho duyet')`,
       [yeucauhotroId, cap]
     );
   }
-
   return yeucauhotroId;
 };
 
+// ── Helper: Tao nguoi dung (tai tro) ─────────────────────────────────────────
 const ensureDonationUser = async (connection, don, email, plainPassword, loaitaikhoan = 'Nha tai tro') => {
   const [users] = await connection.query(
     "SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1",
     [email]
   );
-
-  if (users.length > 0) {
-    return users[0].nguoidung_id;
-  }
+  if (users.length > 0) return users[0].nguoidung_id;
 
   const bcrypt = await import("bcryptjs");
   const hashedPassword = await bcrypt.default.hash(plainPassword, 10);
@@ -189,31 +140,28 @@ const ensureDonationUser = async (connection, don, email, plainPassword, loaitai
     ) VALUES (?, ?, ?, ?, ?, 4, ?, 'Hoat dong', ?)`,
     [email, hashedPassword, don.guest_hoten, maSoDinhDanh, don.guest_sodienthoai, loaitaikhoan, don.guest_diachi]
   );
-
   return userInsert.insertId;
 };
 
+// ── Helper: Tao nha tai tro ──────────────────────────────────────────────────
 const ensureDonorRecord = async (connection, don, email, nguoiDungId) => {
   const [donors] = await connection.query(
     "SELECT nhataitro_id FROM nhataitro WHERE nguoidung_id = ? LIMIT 1",
     [nguoiDungId]
   );
-
-  if (donors.length > 0) {
-    return donors[0].nhataitro_id;
-  }
+  if (donors.length > 0) return donors[0].nhataitro_id;
 
   const loaiNhaTaiTro = don.loaiNhaTaiTro || (don.guest_tochuc ? "To chuc" : "Ca nhan");
   const tenNhaTaiTro = don.guest_tochuc || don.guest_hoten;
   const [donorInsert] = await connection.query(
-    `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, diachi, masothue, linhVucHopTac, nguoiLienHe, chucDanh, trangthai)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Hoat dong')`,
-    [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, don.guest_sodienthoai, don.guest_diachi, don.masothue || null, don.linhVucHopTac || null, don.nguoiLienHe || null, don.chucDanh || null]
+    `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, trangthai)
+     VALUES (?, ?, ?, 'Hoat dong')`,
+    [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro]
   );
-
   return donorInsert.insertId;
 };
 
+// ── Helper: Tao khoan tai tro ────────────────────────────────────────────────
 const createMainDonationRecord = async (connection, don, nhaTaiTroId) => {
   const [donationInsert] = await connection.query(
     `INSERT INTO khoantaitro (
@@ -221,329 +169,99 @@ const createMainDonationRecord = async (connection, don, nhaTaiTroId) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Cho duyet', ?)`,
     [nhaTaiTroId, don.quy_id, don.sotien, don.hinhthuc, don.magiaodich, don.ngaytaitro, don.chungtu, don.ghichu]
   );
-
   return donationInsert.insertId;
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// GUEST_TRACKING — Bang duy nhat thay the 2 bang cu
+// ═══════════════════════════════════════════════════════════════════════════════
+
 /**
- * Tạo đơn yêu cầu hỗ trợ vãng lai (lưu vào bảng tạm)
+ * Luu thong tin tracking khi khach nop don (truoc OTP).
+ * @param {Object} data - { trackingUuid, hoten, email, loai, quyId, sotien, otpHash }
+ * @returns {string} tracking_uuid
  */
-const createGuestApplication = async (data) => {
-  const {
-    guestHoTen,
-    guestEmail,
-    guestSoDienThoai,
-    guestMssv,
-    guestKhoa,
-    guestLop,
-    guestSoTaiKhoan,
-    guestNganHang,
-    guestChuTaiKhoan,
-    quyId,
-    lyDo,
-    soTienDeNghi,
-    taiLieuDinhKem,
-    otpCode,
-    otpExpiresAt,
-    trackingUuid,
-  } = data;
-
-  const [result] = await pool.execute(
-    `INSERT INTO guest_yeucauhotro (
-      guest_hoten,
-      guest_email,
-      guest_sodienthoai,
-      guest_mssv,
-      guest_khoa,
-      guest_lop,
-      guest_sotaikhoan,
-      guest_nganhang,
-      guest_chutaikhoan,
-      quy_id,
-      lydo,
-      sotiendenghi,
-      tailieudinhkem,
-      otp_code,
-      otp_expires_at,
-      tracking_uuid,
-      trang_thai_staging
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CHO_XAC_MINH')`,
-    [
-      guestHoTen,
-      guestEmail,
-      guestSoDienThoai || null,
-      guestMssv || null,
-      guestKhoa || null,
-      guestLop || null,
-      guestSoTaiKhoan || null,
-      guestNganHang || null,
-      guestChuTaiKhoan || null,
-      quyId,
-      lyDo,
-      soTienDeNghi,
-      taiLieuDinhKem || null,
-      otpCode,
-      otpExpiresAt,
-      trackingUuid,
-    ]
+const createTracking = async ({ trackingUuid, hoten, email, loai, quyId, sotien, otpHash }) => {
+  await pool.execute(
+    `INSERT INTO guest_tracking (tracking_uuid, hoten, email, loai, quy_id, sotien, otp_hash, trangthai)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'CHO_XAC_MINH')`,
+    [trackingUuid, hoten, email, loai, quyId, sotien, otpHash || null]
   );
-
-  return result.insertId;
+  return trackingUuid;
 };
 
 /**
- * Tạo khoản quyên góp vãng lai (lưu vào bảng tạm)
+ * Tim tracking theo UUID va otp_hash (dung cho TrackPage OTP verification).
  */
-const createGuestDonation = async (data) => {
-  const {
-    guestHoTen,
-    guestEmail,
-    guestSoDienThoai,
-    guestToChuc,
-    guestDiaChi,
-    quyId,
-    soTien,
-    hinhThuc,
-    maGiaoDich,
-    ngayTaiTro,
-    chungTu,
-    ghiChu,
-    otpCode,
-    otpExpiresAt,
-    trackingUuid,
-    loaiNhaTaiTro,
-    masothue,
-    linhVucHopTac,
-    nguoiLienHe,
-    chucDanh,
-  } = data;
-
-  const [result] = await pool.execute(
-    `INSERT INTO guest_khoantaitro (
-      guest_hoten,
-      guest_email,
-      guest_sodienthoai,
-      guest_tochuc,
-      guest_diachi,
-      loaiNhaTaiTro,
-      masothue,
-      linhVucHopTac,
-      nguoiLienHe,
-      chucDanh,
-      quy_id,
-      sotien,
-      hinhthuc,
-      magiaodich,
-      ngaytaitro,
-      chungtu,
-      ghichu,
-      otp_code,
-      otp_expires_at,
-      tracking_uuid,
-      trang_thai_staging
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'CHO_XAC_MINH')`,
-    [
-      guestHoTen,
-      guestEmail,
-      guestSoDienThoai || null,
-      guestToChuc || null,
-      guestDiaChi || null,
-      loaiNhaTaiTro || 'Ca nhan',
-      masothue || null,
-      linhVucHopTac || null,
-      nguoiLienHe || null,
-      chucDanh || null,
-      quyId,
-      soTien,
-      hinhThuc || "Chuyen khoan",
-      maGiaoDich || null,
-      ngayTaiTro || new Date(),
-      chungTu || null,
-      ghiChu || null,
-      otpCode,
-      otpExpiresAt,
-      trackingUuid,
-    ]
-  );
-
-  return result.insertId;
-};
-
-/**
- * Tìm đơn yêu cầu hỗ trợ theo email và mã OTP đang chờ xác minh
- */
-const findApplicationByEmailAndOtp = async (email, otpCode) => {
+const findByTrackingUuidAndOtpHash = async (trackingUuid, otpHash) => {
   const [rows] = await pool.query(
-    `SELECT * FROM guest_yeucauhotro 
-     WHERE guest_email = ? AND otp_code = ? AND trang_thai_staging = 'CHO_XAC_MINH'
-     ORDER BY ngaytao DESC LIMIT 1`,
-    [email, otpCode]
+    `SELECT * FROM guest_tracking 
+     WHERE tracking_uuid = ? AND otp_hash = ? AND trangthai = 'CHO_XAC_MINH'
+     LIMIT 1`,
+    [trackingUuid, otpHash]
   );
   return rows[0] || null;
 };
 
 /**
- * Tìm đơn tài trợ theo email và mã OTP đang chờ xác minh
+ * Chuyen doi don ho tro: tao nguoidung + yeucauhotro + pheduyet, cap nhat guest_tracking.
+ * Du lieu lay tu otpToken (stateless).
  */
-const findDonationByEmailAndOtp = async (email, otpCode) => {
-  const [rows] = await pool.query(
-    `SELECT * FROM guest_khoantaitro 
-     WHERE guest_email = ? AND otp_code = ? AND trang_thai_staging = 'CHO_XAC_MINH'
-     ORDER BY ngaytao DESC LIMIT 1`,
-    [email, otpCode]
-  );
-  return rows[0] || null;
-};
-
-/**
- * Xác minh OTP và di chuyển đơn xin hỗ trợ sang bảng chính (Sử dụng Transaction)
- */
-const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword, loaitaikhoan = 'Sinh vien') => {
+const verifyAndMigrateApplication = async (applicationData, plainPassword) => {
   const connection = await pool.getConnection();
-
   try {
     await connection.beginTransaction();
 
-    // 1. Tìm bản ghi ở guest_yeucauhotro
-    const [apps] = await connection.query(
-      `SELECT * FROM guest_yeucauhotro 
-       WHERE guest_email = ? AND otp_code = ? AND trang_thai_staging = 'CHO_XAC_MINH'
-       LIMIT 1 FOR UPDATE`,
-      [email, otpCode]
+    const app = applicationData;
+    const email = (app.guestEmail || '').trim().toLowerCase();
+
+    // 1. Kiem tra tracking da duoc verify chua
+    const [existing] = await connection.query(
+      "SELECT tracking_uuid FROM guest_tracking WHERE tracking_uuid = ? AND trangthai != 'CHO_XAC_MINH' LIMIT 1",
+      [app.trackingUuid]
     );
+    if (existing.length > 0) throw new Error("OTP_ALREADY_VERIFIED");
 
-    if (apps.length === 0) {
-      throw new Error("OTP_INVALID_OR_NOT_FOUND");
-    }
+    // 2. Tao nguoi dung
+    const nguoiDungId = await ensureApplicationUser(connection, {
+      guest_hoten: app.guestHoTen,
+      guest_email: email,
+      guest_sodienthoai: app.guestSoDienThoai,
+      guest_mssv: app.guestMssv,
+      guest_khoa: app.guestKhoa,
+      guest_lop: app.guestLop,
+      vaitro: app.vaitro,
+    }, email, plainPassword);
 
-    const app = apps[0];
+    // 3. Tao tai khoan ngan hang
+    await upsertApplicationBankAccount(connection, nguoiDungId, {
+      guest_sotaikhoan: app.guestSoTaiKhoan,
+      guest_nganhang: app.guestNganHang,
+      guest_chutaikhoan: app.guestChuTaiKhoan,
+    });
 
-    // Kiểm tra OTP hết hạn
-    if (new Date() > new Date(app.otp_expires_at)) {
-      await connection.query(
-        `UPDATE guest_yeucauhotro SET trang_thai_staging = 'HET_HAN' WHERE guest_yeucauhotro_id = ?`,
-        [app.guest_yeucauhotro_id]
-      );
-      await connection.commit();
-      throw new Error("OTP_EXPIRED");
-    }
+    // 4. Tao yeucauhotro + pheduyet
+    const yeucauhotroId = await createMainApplicationRecords(connection, {
+      quy_id: app.quyId,
+      tieu_de: app.tieuDe,
+      lydo: app.lyDo,
+      sotiendenghi: app.soTienDeNghi,
+      tailieudinhkem: app.taiLieuDinhKem,
+      loai_hotro: app.loaiHoTro,
+      laDeTai: app.laDeTai,
+      tong_kinh_phi_du_an: app.tongKinhPhiDuAn,
+    }, nguoiDungId);
 
-    // 2. Tìm hoặc tạo tài khoản nguoidung
-    const [users] = await connection.query(
-      `SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1`,
-      [email]
-    );
-
-    let nguoiDungId;
-
-    if (users.length > 0) {
-      nguoiDungId = users[0].nguoidung_id;
-    } else {
-      // Hash mật khẩu
-      const bcrypt = await import("bcryptjs");
-      const hashedPassword = await bcrypt.default.hash(plainPassword, 10);
-      const maSoDinhDanh = app.guest_mssv || `SV${Date.now()}`;
-
-      // Tìm hoặc tạo donvihoc_id (Khoa)
-      let donvihoc_id = null;
-      if (app.guest_khoa) {
-        const [dvRows] = await connection.query(
-          "SELECT donvihoc_id FROM donvihoc WHERE tenkhoa = ? LIMIT 1",
-          [app.guest_khoa]
-        );
-        if (dvRows.length > 0) {
-          donvihoc_id = dvRows[0].donvihoc_id;
-        } else {
-          const madonvi = `DV${Date.now()}${Math.floor(Math.random() * 1000)}`;
-          const [dvInsert] = await connection.query(
-            "INSERT INTO donvihoc (madonvi, tenkhoa, trangthai) VALUES (?, ?, 'Hoat dong')",
-            [madonvi, app.guest_khoa]
-          );
-          donvihoc_id = dvInsert.insertId;
-        }
-      }
-
-      // Tạo người dùng vai trò Sinh viên (vaitro_id = 4), loaitaikhoan từ cột vaitro
-      const resolvedLoaitaikhoan = ROLE_TO_LOAITAIKHOAN[app.vaitro] || loaitaikhoan;
-      const [userInsert] = await connection.query(
-        `INSERT INTO nguoidung (
-          email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, donvihoc_id, trangthai
-        ) VALUES (?, ?, ?, ?, ?, 4, ?, ?, 'Hoat dong')`,
-        [email, hashedPassword, app.guest_hoten, maSoDinhDanh, app.guest_sodienthoai, resolvedLoaitaikhoan, donvihoc_id]
-      );
-      nguoiDungId = userInsert.insertId;
-
-      // Lưu tài khoản ngân hàng nhận tiền
-      if (app.guest_sotaikhoan && app.guest_nganhang && app.guest_chutaikhoan) {
-        const [bankInsert] = await connection.query(
-          `INSERT INTO taikhoannganhang (sotaikhoan, nganhang, chutaikhoan, trangthai) 
-           VALUES (?, ?, ?, 'Hoat dong')`,
-          [app.guest_sotaikhoan, app.guest_nganhang, app.guest_chutaikhoan]
-        );
-        const bankAccountId = bankInsert.insertId;
-
-        // Cập nhật tài khoản ngân hàng liên kết vào user
-        await connection.query(
-          `UPDATE nguoidung SET taikhoannganhang_id = ? WHERE nguoidung_id = ?`,
-          [bankAccountId, nguoiDungId]
-        );
-      }
-    }
-
-    // 3. Migrate đơn sang yeucauhotro chính
-    await upsertApplicationBankAccount(connection, nguoiDungId, app);
-
-    // Tự động gán dot_id dựa trên ngày nộp đơn
-    const today = new Date().toISOString().split('T')[0];
-    const [dotRows] = await connection.query(
-      `SELECT dot_id FROM dotgiaingan 
-       WHERE quy_id = ? 
-         AND trangthai IN ('chuatoi', 'dangchodutien')
-         AND (ngaybatdau IS NULL OR ngaybatdau <= ?)
-         AND (ngayketthuc IS NULL OR ngayketthuc >= ?)
-       ORDER BY thutu ASC LIMIT 1`,
-      [app.quy_id, today, today]
-    );
-    const dotId = dotRows[0]?.dot_id || null;
-
-    const [appInsert] = await connection.query(
-      `INSERT INTO yeucauhotro (
-        nguoidung_id, quy_id, dot_id, lydo, sotiendenghi, tailieudinhkem, trangthai, loaihotro, canghiemthu, laidetac, tongkinhphidudan
-      ) VALUES (?, ?, ?, ?, ?, ?, 'Cho duyet cap 1', ?, ?, ?, ?)`,
-      [nguoiDungId, app.quy_id, dotId, app.lydo, app.sotiendenghi, app.tailieudinhkem, app.loai_hotro || 'Tai tro khong hoan lai', (app.loai_hotro === 'Cho vay' || app.loai_hotro === 'Tai tro co thu hoi' || app.laDeTai === 1) ? 1 : 0, app.laDeTai || 0, app.tong_kinh_phi_du_an || null]
-    );
-    const yeucauhotroId = appInsert.insertId;
-
-    // 4. Tạo lịch sử phê duyệt 3 cấp
-    const capDoDuyet = [1, 2, 3];
-    for (const cap of capDoDuyet) {
-      await connection.execute(
-        `INSERT INTO pheduyet (
-          yeucauhotro_id, nguoiduyet_id, capduyet, ketqua
-        ) VALUES (?, NULL, ?, 'Cho duyet')`,
-        [yeucauhotroId, cap]
-      );
-    }
-
-    // 5. Cập nhật trạng thái bảng tạm
+    // 5. Cap nhat guest_tracking
     await connection.query(
-      `UPDATE guest_yeucauhotro 
-       SET trang_thai_staging = 'DA_CHUYEN',
-           is_email_verified = 1,
-           yeucauhotro_id_ref = ?,
-           nguoidung_id_ref = ?
-       WHERE guest_yeucauhotro_id = ?`,
-      [yeucauhotroId, nguoiDungId, app.guest_yeucauhotro_id]
+      `UPDATE guest_tracking 
+       SET trangthai = 'DA_CHUYEN', doituong_id = ?, nguoidung_id = ?
+       WHERE tracking_uuid = ?`,
+      [yeucauhotroId, nguoiDungId, app.trackingUuid]
     );
 
     await connection.commit();
-
-    return {
-      success: true,
-      yeucauhotroId,
-      nguoiDungId,
-      trackingUuid: app.tracking_uuid,
-    };
+    return { success: true, yeucauhotroId, nguoiDungId, trackingUuid: app.trackingUuid };
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -553,299 +271,62 @@ const verifyOTPAndMigrateApplication = async (email, otpCode, plainPassword, loa
 };
 
 /**
- * Xác minh OTP và di chuyển đơn quyên góp sang bảng chính (Sử dụng Transaction)
+ * Chuyen doi don tai tro: tao nguoidung + nhataitro + khoantaitro, cap nhat guest_tracking.
  */
-const verifyOTPAndCreateApplication = async (applicationData, plainPassword) => {
+const verifyAndMigrateDonation = async (donationData, plainPassword) => {
   const connection = await pool.getConnection();
-
   try {
     await connection.beginTransaction();
 
-    const app = toApplicationRow(applicationData);
-    const email = app.guest_email;
+    const don = donationData;
+    const email = (don.guestEmail || '').trim().toLowerCase();
 
-    const [existingRows] = await connection.query(
-      "SELECT guest_yeucauhotro_id FROM guest_yeucauhotro WHERE tracking_uuid = ? LIMIT 1 FOR UPDATE",
-      [app.tracking_uuid]
+    // 1. Kiem tra da verify chua
+    const [existing] = await connection.query(
+      "SELECT tracking_uuid FROM guest_tracking WHERE tracking_uuid = ? AND trangthai != 'CHO_XAC_MINH' LIMIT 1",
+      [don.trackingUuid]
     );
+    if (existing.length > 0) throw new Error("OTP_ALREADY_VERIFIED");
 
-    if (existingRows.length > 0) {
-      throw new Error("OTP_ALREADY_VERIFIED");
-    }
+    // 2. Tao nguoi dung
+    const nguoiDungId = await ensureDonationUser(connection, {
+      guest_hoten: don.guestHoTen,
+      guest_sodienthoai: don.guestSoDienThoai,
+      guest_tochuc: don.guestToChuc,
+      guest_diachi: don.guestDiaChi,
+      loaiNhaTaiTro: don.loaiNhaTaiTro,
+    }, email, plainPassword, 'Nha tai tro');
 
-    const [guestInsert] = await connection.query(
-      `INSERT INTO guest_yeucauhotro (
-        guest_hoten,
-        guest_email,
-        guest_sodienthoai,
-        vaitro,
-        guest_mssv,
-        guest_khoa,
-        guest_lop,
-        guest_sotaikhoan,
-        guest_nganhang,
-        guest_chutaikhoan,
-        quy_id,
-        lydo,
-        sotiendenghi,
-        loaihotro,
-        tongkinhphidudan,
-        tailieudinhkem,
-        otp_code,
-        otp_expires_at,
-        tracking_uuid,
-        trang_thai_staging,
-        is_email_verified
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
-      [
-        app.guest_hoten,
-        app.guest_email,
-        app.guest_sodienthoai,
-        app.vaitro,
-        app.guest_mssv,
-        app.guest_khoa,
-        app.guest_lop,
-        app.guest_sotaikhoan,
-        app.guest_nganhang,
-        app.guest_chutaikhoan,
-        app.quy_id,
-        app.lydo,
-        app.sotiendenghi,
-        app.loai_hotro,
-        app.tong_kinh_phi_du_an,
-        app.tailieudinhkem,
-        app.tracking_uuid,
-      ]
-    );
+    // 3. Tao nha tai tro
+    const nhaTaiTroId = await ensureDonorRecord(connection, {
+      guest_hoten: don.guestHoTen,
+      guest_tochuc: don.guestToChuc,
+      guest_sodienthoai: don.guestSoDienThoai,
+      guest_diachi: don.guestDiaChi,
+      loaiNhaTaiTro: don.loaiNhaTaiTro,
+    }, email, nguoiDungId);
 
-    const nguoiDungId = await ensureApplicationUser(connection, app, email, plainPassword);
-    await upsertApplicationBankAccount(connection, nguoiDungId, app);
-    const yeucauhotroId = await createMainApplicationRecords(connection, app, nguoiDungId);
+    // 4. Tao khoan tai tro
+    const khoanTaiTroId = await createMainDonationRecord(connection, {
+      quy_id: don.quyId,
+      sotien: don.soTien,
+      hinhthuc: don.hinhThuc,
+      magiaodich: don.maGiaoDich,
+      ngaytaitro: don.ngayTaiTro,
+      chungtu: don.chungTu,
+      ghichu: don.ghiChu,
+    }, nhaTaiTroId);
 
+    // 5. Cap nhat guest_tracking
     await connection.query(
-      `UPDATE guest_yeucauhotro
-       SET yeucauhotro_id_ref = ?,
-           nguoidung_id_ref = ?
-       WHERE guest_yeucauhotro_id = ?`,
-      [yeucauhotroId, nguoiDungId, guestInsert.insertId]
+      `UPDATE guest_tracking 
+       SET trangthai = 'DA_CHUYEN', doituong_id = ?, nguoidung_id = ?
+       WHERE tracking_uuid = ?`,
+      [khoanTaiTroId, nguoiDungId, don.trackingUuid]
     );
 
     await connection.commit();
-
-    return {
-      success: true,
-      yeucauhotroId,
-      nguoiDungId,
-      trackingUuid: app.tracking_uuid,
-    };
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
-};
-
-const verifyOTPAndCreateDonation = async (donationData, plainPassword) => {
-  const connection = await pool.getConnection();
-
-  try {
-    await connection.beginTransaction();
-
-    const don = toDonationRow(donationData);
-    const email = don.guest_email;
-
-    const [existingRows] = await connection.query(
-      "SELECT guest_khoantaitro_id FROM guest_khoantaitro WHERE tracking_uuid = ? LIMIT 1 FOR UPDATE",
-      [don.tracking_uuid]
-    );
-
-    if (existingRows.length > 0) {
-      throw new Error("OTP_ALREADY_VERIFIED");
-    }
-
-    const [guestInsert] = await connection.query(
-      `INSERT INTO guest_khoantaitro (
-        guest_hoten,
-        guest_email,
-        guest_sodienthoai,
-        guest_tochuc,
-        guest_diachi,
-        loaiNhaTaiTro,
-        masothue,
-        linhVucHopTac,
-        nguoiLienHe,
-        chucDanh,
-        quy_id,
-        sotien,
-        hinhthuc,
-        magiaodich,
-        ngaytaitro,
-        chungtu,
-        ghichu,
-        otp_code,
-        otp_expires_at,
-        tracking_uuid,
-        trang_thai_staging,
-        is_email_verified
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, 'DA_CHUYEN', 1)`,
-      [
-        don.guest_hoten,
-        don.guest_email,
-        don.guest_sodienthoai,
-        don.guest_tochuc,
-        don.guest_diachi,
-        don.loaiNhaTaiTro || 'Ca nhan',
-        don.masothue,
-        don.linhVucHopTac,
-        don.nguoiLienHe,
-        don.chucDanh,
-        don.quy_id,
-        don.sotien,
-        don.hinhthuc,
-        don.magiaodich,
-        don.ngaytaitro,
-        don.chungtu,
-        don.ghichu,
-        don.tracking_uuid,
-      ]
-    );
-
-    const nguoiDungId = await ensureDonationUser(connection, don, email, plainPassword);
-    const nhaTaiTroId = await ensureDonorRecord(connection, don, email, nguoiDungId);
-    const khoanTaiTroId = await createMainDonationRecord(connection, don, nhaTaiTroId);
-
-    await connection.query(
-      `UPDATE guest_khoantaitro
-       SET khoantaitro_id_ref = ?,
-           nhataitro_id_ref = ?
-       WHERE guest_khoantaitro_id = ?`,
-      [khoanTaiTroId, nhaTaiTroId, guestInsert.insertId]
-    );
-
-    await connection.commit();
-
-    return {
-      success: true,
-      khoanTaiTroId,
-      nhaTaiTroId,
-      nguoiDungId,
-      trackingUuid: don.tracking_uuid,
-    };
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
-};
-
-const verifyOTPAndMigrateDonation = async (email, otpCode, plainPassword, loaitaikhoan = 'Nha tai tro') => {
-  const connection = await pool.getConnection();
-
-  try {
-    await connection.beginTransaction();
-
-    // 1. Tìm bản ghi ở guest_khoantaitro
-    const [donations] = await connection.query(
-      `SELECT * FROM guest_khoantaitro 
-       WHERE guest_email = ? AND otp_code = ? AND trang_thai_staging = 'CHO_XAC_MINH'
-       LIMIT 1 FOR UPDATE`,
-      [email, otpCode]
-    );
-
-    if (donations.length === 0) {
-      throw new Error("OTP_INVALID_OR_NOT_FOUND");
-    }
-
-    const don = donations[0];
-
-    // Kiểm tra OTP hết hạn
-    if (new Date() > new Date(don.otp_expires_at)) {
-      await connection.query(
-        `UPDATE guest_khoantaitro SET trang_thai_staging = 'HET_HAN' WHERE guest_khoantaitro_id = ?`,
-        [don.guest_khoantaitro_id]
-      );
-      await connection.commit();
-      throw new Error("OTP_EXPIRED");
-    }
-
-    // 2. Tìm hoặc tạo tài khoản nguoidung
-    const [users] = await connection.query(
-      `SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1`,
-      [email]
-    );
-
-    let nguoiDungId;
-
-    if (users.length > 0) {
-      nguoiDungId = users[0].nguoidung_id;
-    } else {
-      // Hash mật khẩu
-      const bcrypt = await import("bcryptjs");
-      const hashedPassword = await bcrypt.default.hash(plainPassword, 10);
-      const maSoDinhDanh = `GG${Date.now()}`;
-
-      // Tạo người dùng vai trò Nhà tài trợ / Thường (vaitro_id = 4)
-      const [userInsert] = await connection.query(
-        `INSERT INTO nguoidung (
-          email, matkhau, hoten, masodinhdanh, sodienthoai, vaitro_id, loaitaikhoan, trangthai, diachi
-        ) VALUES (?, ?, ?, ?, ?, 4, ?, 'Hoat dong', ?)`,
-        [email, hashedPassword, don.guest_hoten, maSoDinhDanh, don.guest_sodienthoai, loaitaikhoan, don.guest_diachi]
-      );
-      nguoiDungId = userInsert.insertId;
-    }
-
-    // 3. Tìm hoặc tạo record nhataitro tương ứng
-    const [donors] = await connection.query(
-      `SELECT nhataitro_id FROM nhataitro WHERE nguoidung_id = ? LIMIT 1`,
-      [nguoiDungId]
-    );
-
-    let nhaTaiTroId;
-
-    if (donors.length > 0) {
-      nhaTaiTroId = donors[0].nhataitro_id;
-    } else {
-      const loaiNhaTaiTro = don.loaiNhaTaiTro || (don.guest_tochuc ? "To chuc" : "Ca nhan");
-      const tenNhaTaiTro = don.guest_tochuc || don.guest_hoten;
-      const [donorInsert] = await connection.query(
-        `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, diachi, masothue, linhVucHopTac, nguoiLienHe, chucDanh, trangthai) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Hoat dong')`,
-        [nguoiDungId, tenNhaTaiTro, loaiNhaTaiTro, email, don.guest_sodienthoai, don.guest_diachi, don.masothue || null, don.linhVucHopTac || null, don.nguoiLienHe || null, don.chucDanh || null]
-      );
-      nhaTaiTroId = donorInsert.insertId;
-    }
-
-    // 4. Migrate khoản tài trợ sang khoantaitro chính
-    const [donationInsert] = await connection.query(
-      `INSERT INTO khoantaitro (
-        nhataitro_id, quy_id, sotien, hinhthuc, magiaodich, ngaytaitro, chungtu, trangthai, ghichu
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Cho duyet', ?)`,
-      [nhaTaiTroId, don.quy_id, don.sotien, don.hinhthuc, don.magiaodich, don.ngaytaitro, don.chungtu, don.ghichu]
-    );
-    const khoanTaiTroId = donationInsert.insertId;
-
-    // 5. Cập nhật trạng thái bảng tạm guest_khoantaitro
-    await connection.query(
-      `UPDATE guest_khoantaitro 
-       SET trang_thai_staging = 'DA_CHUYEN',
-           is_email_verified = 1,
-           khoantaitro_id_ref = ?,
-           nhataitro_id_ref = ?
-       WHERE guest_khoantaitro_id = ?`,
-      [khoanTaiTroId, nhaTaiTroId, don.guest_khoantaitro_id]
-    );
-
-    await connection.commit();
-
-    return {
-      success: true,
-      khoanTaiTroId,
-      nhaTaiTroId,
-      nguoiDungId,
-      trackingUuid: don.tracking_uuid,
-    };
+    return { success: true, khoanTaiTroId, nhaTaiTroId, nguoiDungId, trackingUuid: don.trackingUuid };
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -855,92 +336,61 @@ const verifyOTPAndMigrateDonation = async (email, otpCode, plainPassword, loaita
 };
 
 /**
- * Tra cứu trạng thái đơn theo UUID
+ * Tra cuu trang thai don theo UUID.
+ * Tra ve du lieu giong hieu ung truoc de khong pha frontend.
  */
 const trackStatusByUuid = async (uuid) => {
-  // Thử tìm trong bảng guest_yeucauhotro trước
-  const [appRows] = await pool.query(
+  const [rows] = await pool.query(
     `SELECT 
-      g.guest_yeucauhotro_id,
-      g.guest_hoten,
-      g.guest_email,
-      g.quy_id,
-      g.sotiendenghi,
-      g.trang_thai_staging,
-      g.yeucauhotro_id_ref,
-      g.ngaytao,
+      gt.tracking_uuid,
+      gt.hoten,
+      gt.email,
+      gt.loai,
+      gt.quy_id,
+      gt.sotien,
+      gt.doituong_id,
+      gt.nguoidung_id,
+      gt.trangthai,
+      gt.ngaytao,
       q.tenquy,
-      yc.trangthai as real_status,
-      yc.ghichu as real_ghichu
-     FROM guest_yeucauhotro g
-     INNER JOIN quy q ON g.quy_id = q.quy_id
-     LEFT JOIN yeucauhotro yc ON g.yeucauhotro_id_ref = yc.yeucauhotro_id
-     WHERE g.tracking_uuid = ? LIMIT 1`,
+      CASE 
+        WHEN gt.loai = 'yeucauhotro' AND gt.doituong_id IS NOT NULL THEN yc.trangthai
+        WHEN gt.loai = 'khoantaitro' AND gt.doituong_id IS NOT NULL THEN kt.trangthai
+        ELSE NULL 
+      END AS real_status,
+      CASE 
+        WHEN gt.loai = 'yeucauhotro' AND gt.doituong_id IS NOT NULL THEN yc.ghichu
+        WHEN gt.loai = 'khoantaitro' AND gt.doituong_id IS NOT NULL THEN kt.ghichu
+        ELSE NULL 
+      END AS real_ghichu
+     FROM guest_tracking gt
+     INNER JOIN quy q ON gt.quy_id = q.quy_id
+     LEFT JOIN yeucauhotro yc ON gt.loai = 'yeucauhotro' AND gt.doituong_id = yc.yeucauhotro_id
+     LEFT JOIN khoantaitro kt ON gt.loai = 'khoantaitro' AND gt.doituong_id = kt.khoantaitro_id
+     WHERE gt.tracking_uuid = ? LIMIT 1`,
     [uuid]
   );
 
-  if (appRows.length > 0) {
-    const data = appRows[0];
-    return {
-      type: "application",
-      name: data.guest_hoten,
-      email: data.guest_email,
-      fundName: data.tenquy,
-      amount: parseFloat(data.sotiendenghi),
-      stagingStatus: data.trang_thai_staging,
-      realStatus: data.real_status || "CHO_XAC_MINH",
-      note: data.real_ghichu || "",
-      createdAt: data.ngaytao,
-    };
-  }
+  if (rows.length === 0) return null;
 
-  // Thử tìm trong bảng guest_khoantaitro
-  const [donorRows] = await pool.query(
-    `SELECT 
-      g.guest_khoantaitro_id,
-      g.guest_hoten,
-      g.guest_email,
-      g.quy_id,
-      g.sotien,
-      g.trang_thai_staging,
-      g.khoantaitro_id_ref,
-      g.ngaytao,
-      q.tenquy,
-      kt.trangthai as real_status,
-      kt.ghichu as real_ghichu
-     FROM guest_khoantaitro g
-     INNER JOIN quy q ON g.quy_id = q.quy_id
-     LEFT JOIN khoantaitro kt ON g.khoantaitro_id_ref = kt.khoantaitro_id
-     WHERE g.tracking_uuid = ? LIMIT 1`,
-    [uuid]
-  );
-
-  if (donorRows.length > 0) {
-    const data = donorRows[0];
-    return {
-      type: "donation",
-      name: data.guest_hoten,
-      email: data.guest_email,
-      fundName: data.tenquy,
-      amount: parseFloat(data.sotien),
-      stagingStatus: data.trang_thai_staging,
-      realStatus: data.real_status || "CHO_XAC_MINH",
-      note: data.real_ghichu || "",
-      createdAt: data.ngaytao,
-    };
-  }
-
-  return null;
+  const data = rows[0];
+  return {
+    type: data.loai === 'yeucauhotro' ? 'application' : 'donation',
+    name: data.hoten,
+    email: data.email,
+    fundName: data.tenquy,
+    amount: parseFloat(data.sotien),
+    stagingStatus: data.trangthai,
+    realStatus: data.real_status || "CHO_XAC_MINH",
+    note: data.real_ghichu || "",
+    createdAt: data.ngaytao,
+  };
 };
 
 export default {
-  createGuestApplication,
-  createGuestDonation,
-  findApplicationByEmailAndOtp,
-  findDonationByEmailAndOtp,
-  verifyOTPAndCreateApplication,
-  verifyOTPAndCreateDonation,
-  verifyOTPAndMigrateApplication,
-  verifyOTPAndMigrateDonation,
+  createTracking,
+  findByTrackingUuidAndOtpHash,
+  verifyAndMigrateApplication,
+  verifyAndMigrateDonation,
   trackStatusByUuid,
 };

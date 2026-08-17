@@ -345,3 +345,44 @@
     font-size: 24px;
   }
 }
+
+// ── LOGIN LINK ──────────────────────────────
+.loginLink {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px;
+  transition: all 0.25s ease;
+  border-radius: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  
+  &:hover {
+    color: var(--color-primary);
+    background: rgba(26, 47, 94, 0.04);
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+  
+  @media (max-width: 768px) {
+    display: block;
+    text-align: center;
+  }
+}
+
+.loginLinkHighlight {
+  color: var(--color-gold);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.25s ease;
+  
+  .loginLink:hover & {
+    text-decoration-color: var(--color-gold);
+  }
+}

@@ -9,32 +9,32 @@ const VALID_KET_QUA = ['Cho danh gia', 'Dat', 'Dat co dieu chinh', 'Khong dat'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HÀM: createInspection
-// MỤC ĐÍCH: Tạo mới một lượt kiểm tra / nghiệm thu
+// MỤC ĐÍCH: Tạo mới một lượt kiểm tra / nghiệm thu (ho tro dotgiaingan)
 // ─────────────────────────────────────────────────────────────────────────────
-const createInspection = async (data) => {
-  const { yeucauhotroId, loaiKiemTra, nguoiNghiemThuId } = data;
+const createInspection = async (data, connection = null) => {
+  const { yeucauhotroId, loaiKiemTra, nguoiNghiemThuId, dotgiaingan = 1, soQuyetDinh, fileBienBan, nhanXet } = data;
+  const executor = connection || pool;
 
   if (!VALID_LOAI_KIEM_TRA.includes(loaiKiemTra)) {
     throw new Error(`Loai kiem tra khong hop le. Chi chap nhan: ${VALID_LOAI_KIEM_TRA.join(', ')}`);
   }
 
-  // Tự tính lần thứ (MAX + 1)
-  const [[{ maxLan }]] = await pool.query(
-    `SELECT COALESCE(MAX(lanthu), 0) AS maxLan FROM nghiemthu WHERE yeucauhotro_id = ?`,
-    [yeucauhotroId]
+  // Tinh lanthu — chi dem trong cung 1 dot giai ngan
+  const [[{ maxLan }]] = await executor.query(
+    `SELECT COALESCE(MAX(lanthu), 0) AS maxLan FROM nghiemthu WHERE yeucauhotro_id = ? AND dotgiaingan = ?`,
+    [yeucauhotroId, dotgiaingan]
   );
   const lanthu = maxLan + 1;
 
-  const [result] = await pool.execute(
+  const [result] = await executor.execute(
     `INSERT INTO nghiemthu (
-      yeucauhotro_id,
-      lanthu,
-      loaikiemtra,
-      ketqua,
-      nguoinghiemthu_id,
-      ngaytao
-    ) VALUES (?, ?, ?, 'Cho danh gia', ?, NOW())`,
-    [yeucauhotroId, lanthu, loaiKiemTra, nguoiNghiemThuId]
+      yeucauhotro_id, lanthu, loaikiemtra, ketqua, nguoinghiemthu_id, dotgiaingan,
+      soquyetdinh, filebienban, nhanxet, ngaytao
+    ) VALUES (?, ?, ?, 'Cho danh gia', ?, ?, ?, ?, ?, NOW())`,
+    [
+      yeucauhotroId, lanthu, loaiKiemTra, nguoiNghiemThuId, dotgiaingan,
+      soQuyetDinh || null, fileBienBan || null, nhanXet || null
+    ]
   );
 
   return {
@@ -42,7 +42,11 @@ const createInspection = async (data) => {
     yeucauhotroId,
     lanthu,
     loaiKiemTra,
-    ketqua: 'Cho danh gia'
+    dotgiaingan,
+    ketqua: 'Cho danh gia',
+    soQuyetDinh: soQuyetDinh || null,
+    fileBienBan: fileBienBan || null,
+    nhanXet: nhanXet || null,
   };
 };
 
@@ -96,6 +100,7 @@ const getById = async (nghiemthuId) => {
       nt.nguoinghiemthu_id,
       nt.nhanxet,
       nt.ngaynghiemthu,
+      nt.dotgiaingan,
       nt.ngaytao,
       nd.hoten AS nguoi_nghiem_thu_ten
      FROM nghiemthu nt
@@ -112,8 +117,9 @@ const getById = async (nghiemthuId) => {
 // HÀM: getByApplicationId
 // MỤC ĐÍCH: Lấy tất cả lượt nghiệm thu của 1 đơn xin hỗ trợ
 // ─────────────────────────────────────────────────────────────────────────────
-const getByApplicationId = async (yeucauhotroId) => {
-  const [rows] = await pool.query(
+const getByApplicationId = async (yeucauhotroId, connection = null) => {
+  const executor = connection || pool;
+  const [rows] = await executor.query(
     `SELECT 
       nt.nghiemthu_id,
       nt.yeucauhotro_id,
@@ -125,12 +131,13 @@ const getByApplicationId = async (yeucauhotroId) => {
       nt.nguoinghiemthu_id,
       nt.nhanxet,
       nt.ngaynghiemthu,
+      nt.dotgiaingan,
       nt.ngaytao,
       nd.hoten AS nguoi_nghiem_thu_ten
      FROM nghiemthu nt
      LEFT JOIN nguoidung nd ON nt.nguoinghiemthu_id = nd.nguoidung_id
      WHERE nt.yeucauhotro_id = ?
-     ORDER BY nt.lanthu ASC`,
+     ORDER BY nt.dotgiaingan ASC, nt.lanthu ASC`,
     [yeucauhotroId]
   );
 
@@ -143,8 +150,10 @@ const getByApplicationId = async (yeucauhotroId) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const checkEligibility = async (yeucauhotroId) => {
   const [rows] = await pool.query(
-    `SELECT yc.trangthai, yc.canghiemthu, yc.loaihotro
+    `SELECT yc.trangthai, yc.canghiemthu, yc.loaihotro,
+            hd.lan_nghiem_thu_dat
      FROM yeucauhotro yc
+     LEFT JOIN hopdongvayvon hd ON yc.yeucauhotro_id = hd.yeucauhotro_id
      WHERE yc.yeucauhotro_id = ?
      LIMIT 1`,
     [yeucauhotroId]
@@ -164,6 +173,7 @@ const getDetailByApplicationId = async (yeucauhotroId) => {
       yc.trangthai,
       yc.loaihotro,
       yc.canghiemthu,
+      yc.tieu_de,
       yc.lydo,
       yc.sotiendenghi,
       yc.tongkinhphidudan,
@@ -189,13 +199,38 @@ const getDetailByApplicationId = async (yeucauhotroId) => {
   const tongLan = lichSu.length;
   const lanGanNhat = tongLan > 0 ? lichSu[tongLan - 1] : null;
 
-  const trangThaiChoPhep = ['Da giai ngan', 'Cho nghiem thu'];
+  // Trang thai cho phep tao nghiem thu — ke ca 2 pha
+  const trangThaiChoPhep = [
+    'Da giai ngan', 'Cho nghiem thu',
+    'Da giai ngan dot 1', 'Cho nghiem thu dot 1',
+    'Cho giai ngan dot 2'
+  ];
+
+  // Xac dinh dot giai ngan hien tai
+  // Khoan vay da giai ngan dot 2 (status 'Da giai ngan') → dang o dot 2
+  let dotHienTai = 1;
+  if (don.trangthai === 'Cho nghiem thu dot 1' || don.trangthai === 'Da giai ngan dot 1') {
+    dotHienTai = 1;
+  } else if (don.trangthai === 'Cho giai ngan dot 2') {
+    dotHienTai = 2;
+  } else if (don.trangthai === 'Da giai ngan' && don.loaihotro === 'Cho vay') {
+    dotHienTai = 2;
+  }
+
+  // Dem so luot nghiem thu dat trong dot hien tai (chi dem nghiem thu cuoi cung)
+  const lanTrongDot = lichSu.filter(nt => (nt.dotgiaingan || 1) === dotHienTai);
+  const lanCuoiCungTrongDot = lanTrongDot.filter(nt => nt.loaikiemtra === 'Nghiem thu cuoi cung');
+  const soDat = lanCuoiCungTrongDot.filter(nt => nt.ketqua === 'Dat' || nt.ketqua === 'Dat co dieu chinh').length;
+  // Dot 1 can toi thieu 2/3 lan "Nghiem thu cuoi cung" dat; dot 2 chi can 1 lan
+  const soDatToiThieu = dotHienTai === 2 ? 1 : 2;
+  const canTiepTuc = soDat < soDatToiThieu && lanCuoiCungTrongDot.length < 3 && don.trangthai !== 'Cho giai ngan dot 2';
 
   return {
     yeucauhotroId: don.yeucauhotro_id,
     trangthai: don.trangthai,
     loaihotro: don.loaihotro,
     canghiemthu: don.canghiemthu,
+    tieu_de: don.tieu_de || don.lydo || '',
     lydo: don.lydo,
     sotiendenghi: don.sotiendenghi,
     tongkinhphidudan: don.tongkinhphidudan,
@@ -215,7 +250,10 @@ const getDetailByApplicationId = async (yeucauhotroId) => {
       lanGanNhat: lanGanNhat?.lanthu || null,
       ketQuaGanNhat: lanGanNhat?.ketqua || null,
       ngayGanNhat: lanGanNhat?.ngaynghiemthu || null,
-      coTheTaoMoi: don.canghiemthu === 1 && trangThaiChoPhep.includes(don.trangthai),
+      dotgiaingan: dotHienTai,
+      soLanDat: soDat,
+      canTiepTuc,
+      coTheTaoMoi: don.canghiemthu === 1 && trangThaiChoPhep.includes(don.trangthai) && canTiepTuc,
     },
     lichSuNghiemThu: lichSu.map(nt => ({
       nghiemthuId: nt.nghiemthu_id,
@@ -228,9 +266,26 @@ const getDetailByApplicationId = async (yeucauhotroId) => {
       tenNguoiNghiemThu: nt.nguoi_nghiem_thu_ten,
       nhanXet: nt.nhanxet,
       ngayNghiemThu: nt.ngaynghiemthu,
+      dotgiaingan: nt.dotgiaingan || 1,
       ngayTao: nt.ngaytao,
     })),
   };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: countApprovedByDot
+// MỤC ĐÍCH: Dem so luot nghiem thu cuoi cung dat trong 1 dot giai ngan
+// ─────────────────────────────────────────────────────────────────────────────
+const countApprovedByDot = async (yeucauhotroId, dotgiaingan = 1, connection = null) => {
+  const executor = connection || pool;
+  const [[{ soLuot }]] = await executor.query(
+    `SELECT COUNT(*) AS soLuot FROM nghiemthu
+     WHERE yeucauhotro_id = ? AND dotgiaingan = ?
+     AND loaikiemtra = 'Nghiem thu cuoi cung'
+     AND ketqua IN ('Dat', 'Dat co dieu chinh')`,
+    [yeucauhotroId, dotgiaingan]
+  );
+  return soLuot;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -252,5 +307,6 @@ export default {
   getByApplicationId,
   checkEligibility,
   getDetailByApplicationId,
+  countApprovedByDot,
   deleteById,
 };

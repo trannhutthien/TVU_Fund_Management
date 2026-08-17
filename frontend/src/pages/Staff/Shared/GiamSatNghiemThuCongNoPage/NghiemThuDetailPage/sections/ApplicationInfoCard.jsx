@@ -13,6 +13,11 @@ const TRANG_THAI_MAP = {
   'Cho nghiem thu': { label: 'Chờ nghiệm thu', className: 'badgeYellow' },
   'Da nghiem thu': { label: 'Đã nghiệm thu', className: 'badgeGreen' },
   'Nghiem thu khong dat': { label: 'Không đạt', className: 'badgeRed' },
+  'Dang thu hoi no': { label: 'Đang thu hồi nợ', className: 'badgeYellow' },
+  'Da giai ngan dot 1': { label: 'Đã giải ngân đợt 1', className: 'badgeBlue' },
+  'Cho nghiem thu dot 1': { label: 'Chờ nghiệm thu đợt 1', className: 'badgeYellow' },
+  'Da nghiem thu dot 1': { label: 'Đã nghiệm thu đợt 1', className: 'badgeGreen' },
+  'Cho giai ngan dot 2': { label: 'Chờ giải ngân đợt 2', className: 'badgeBlue' },
 };
 
 const LOAI_HO_TRO_MAP = {
@@ -84,6 +89,13 @@ const ApplicationInfoCard = ({ data }) => {
           </div>
         </div>
       </div>
+
+      {data.tieu_de && (
+        <div className={styles.reasonBlock}>
+          <span className={styles.fieldLabel}>Tiêu đề đơn</span>
+          <p className={styles.reasonText} style={{ fontWeight: 600 }}>{data.tieu_de}</p>
+        </div>
+      )}
 
       {data.lydo && (
         <div className={styles.reasonBlock}>

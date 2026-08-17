@@ -39,10 +39,6 @@ const DonorInfoSection = memo(({
     guestDiaChi: '',
     ghiChu: '',
     loaiNhaTaiTro: 'Ca nhan',
-    masothue: '',
-    linhVucHopTac: '',
-    nguoiLienHe: '',
-    chucDanh: '',
     ...initialValues
   });
   const [touchedFields, setTouchedFields] = useState({});
@@ -61,10 +57,6 @@ const DonorInfoSection = memo(({
       guestDiaChi: '',
       ghiChu: '',
       loaiNhaTaiTro: 'Ca nhan',
-      masothue: '',
-      linhVucHopTac: '',
-      nguoiLienHe: '',
-      chucDanh: '',
       ...initialValues
     };
     setFields(nextValues);
@@ -202,45 +194,6 @@ const DonorInfoSection = memo(({
                 required
               />
             </div>
-            <div className={styles.inputGroup}>
-              <Input
-                type="text"
-                label="Mã số thuế"
-                placeholder="VD: 0123456789..."
-                value={fields.masothue}
-                onChange={(e) => handleLocalInputChange('masothue', e.target.value)}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <Input
-                type="text"
-                label="Lĩnh vực hoạt động"
-                placeholder="VD: Công nghệ, Giáo dục..."
-                value={fields.linhVucHopTac}
-                onChange={(e) => handleLocalInputChange('linhVucHopTac', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className={styles.guestFormRowThree}>
-            <div className={styles.inputGroup}>
-              <Input
-                type="text"
-                label="Người liên hệ"
-                placeholder="Tên người liên hệ..."
-                value={fields.nguoiLienHe}
-                onChange={(e) => handleLocalInputChange('nguoiLienHe', e.target.value)}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <Input
-                type="text"
-                label="Chức danh"
-                placeholder="VD: Giám đốc, Trưởng phòng..."
-                value={fields.chucDanh}
-                onChange={(e) => handleLocalInputChange('chucDanh', e.target.value)}
-              />
-            </div>
-            <div className={styles.inputGroup} />
           </div>
         </>
       )}
@@ -272,10 +225,6 @@ DonorInfoSection.propTypes = {
     guestDiaChi: PropTypes.string,
     ghiChu: PropTypes.string,
     loaiNhaTaiTro: PropTypes.string,
-    masothue: PropTypes.string,
-    linhVucHopTac: PropTypes.string,
-    nguoiLienHe: PropTypes.string,
-    chucDanh: PropTypes.string,
   }).isRequired,
   onFieldsChange: PropTypes.func.isRequired,
   onValidityChange: PropTypes.func.isRequired,

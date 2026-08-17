@@ -1,0 +1,70 @@
+.stepContent {
+  padding: 0;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a5276;
+  }
+}
+
+.reviewGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.reviewSection {
+  padding: 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #f8f9fa;
+
+  h4 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a5276;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9ecef;
+  }
+}
+
+.reviewItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+  }
+}
+
+.reviewLabel {
+  font-size: 13px;
+  color: #6c757d;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.reviewValue {
+  font-size: 14px;
+  color: #212529;
+  font-weight: 500;
+  text-align: right;
+  word-break: break-word;
+}
+
+.amount {
+  color: #e74c3c;
+  font-size: 18px;
+  font-weight: 700;
+}

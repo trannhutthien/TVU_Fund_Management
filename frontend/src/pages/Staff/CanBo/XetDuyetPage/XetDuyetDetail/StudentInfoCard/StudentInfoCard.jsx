@@ -8,6 +8,7 @@ import {
   HiOutlineCalendarDays,
   HiOutlineUserCircle,
   HiOutlineUserGroup,
+  HiOutlineMapPin,
 } from 'react-icons/hi2';
 import userService from '@services/userService';
 import styles from './StudentInfoCard.module.scss';
@@ -98,6 +99,24 @@ const StudentInfoCard = ({ userId, fallback }) => {
             <HiOutlinePhone size={14} className={styles.fieldIcon} />
             <a href={`tel:${user.soDienThoai || user.sodienthoai}`} className={styles.fieldLink}>{user.soDienThoai || user.sodienthoai || '—'}</a>
           </div>
+          {(user.ngaySinh || user.ngaysinh) && (
+            <div className={styles.field}>
+              <HiOutlineCalendarDays size={14} className={styles.fieldIcon} />
+              <span className={styles.fieldValue}>{user.ngaySinh || user.ngaysinh}</span>
+            </div>
+          )}
+          {(user.gioiTinh || user.gioitinh) && (
+            <div className={styles.field}>
+              <HiOutlineUserCircle size={14} className={styles.fieldIcon} />
+              <span className={styles.fieldValue}>{user.gioiTinh || user.gioitinh}</span>
+            </div>
+          )}
+          {(user.diaChi || user.diachi) && (
+            <div className={styles.field}>
+              <HiOutlineMapPin size={14} className={styles.fieldIcon} />
+              <span className={styles.fieldValue}>{user.diaChi || user.diachi}</span>
+            </div>
+          )}
         </div>
 
         {/* Cột phải */}

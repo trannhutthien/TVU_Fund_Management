@@ -56,13 +56,6 @@ const CurrencyInput = ({
       // Strip non-digits
       let newRaw = oldRaw.replace(/[^0-9]/g, '');
 
-      // Enforce min/max
-      if (newRaw) {
-        const num = Number(newRaw);
-        if (min !== undefined && num < min) newRaw = String(min);
-        if (max !== undefined && num > max) newRaw = String(max);
-      }
-
       // Count dots before cursor in old value
       const oldFormatted = formatDisplay(oldRaw);
       const dotsBeforeCursorOld = (oldFormatted.slice(0, cursorPos).match(/\./g) || []).length;
@@ -91,15 +84,16 @@ const CurrencyInput = ({
         }
       });
     },
-    [onChange, min, max]
+    [onChange]
   );
 
   const handleBlur = useCallback(() => {
-    // Enforce min on blur
-    if (min !== undefined && value && Number(value) < min) {
-      onChange(String(min));
-    }
-  }, [value, onChange, min]);
+    if (!value) return;
+    let num = Number(value);
+    if (min !== undefined && num < min) num = min;
+    if (max !== undefined && num > max) num = max;
+    onChange(String(num));
+  }, [value, onChange, min, max]);
 
   const displayValue = formatDisplay(String(value || ''));
 

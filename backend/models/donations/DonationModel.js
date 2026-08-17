@@ -7,6 +7,93 @@ import pool from "../../config/db.js";
 // Khoản tài trợ chỉ có các trạng thái: Cho duyet, Da duyet, Da nhan, Tu choi
 
 // ─────────────────────────────────────────────────────────────────────────────
+// HÀM: createOrGetDonor (Helper - Transaction-safe)
+// MỤC ĐÍCH: Tạo hoặc lấy nhà tài trợ dựa trên email
+// ─────────────────────────────────────────────────────────────────────────────
+const createOrGetDonor = async (connection, donorInfo) => {
+  const { ten, email, soDienThoai, loaiNhaTaiTro, toChuc, diaChi } = donorInfo;
+  
+  // Ten hien thi: ưu tiên toChuc nếu là tổ chức, nếu không lấy ten
+  const tenHienThi = (loaiNhaTaiTro !== 'Ca nhan' && toChuc) ? toChuc : ten;
+  const loaiNhaTaiTroDB = loaiNhaTaiTro || 'Ca nhan';
+  
+  // Kiểm tra email đã tồn tại trong nguoidung chưa
+  const [existingUsers] = await connection.query(
+    `SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1`,
+    [email]
+  );
+
+  let nhaTaiTroId;
+
+  if (existingUsers.length > 0) {
+    const nguoiDungId = existingUsers[0].nguoidung_id;
+
+    // Cập nhật diaChi nếu có
+    if (diaChi) {
+      await connection.query(
+        `UPDATE nguoidung SET diachi = ? WHERE nguoidung_id = ?`,
+        [diaChi, nguoiDungId]
+      );
+    }
+
+    // Kiểm tra xem đã có record nhataitro tương ứng chưa
+    const [existingDonors] = await connection.query(
+      `SELECT nhataitro_id FROM nhataitro WHERE nguoidung_id = ? LIMIT 1`,
+      [nguoiDungId]
+    );
+
+    if (existingDonors.length > 0) {
+      nhaTaiTroId = existingDonors[0].nhataitro_id;
+      // Cập nhật loaiNhaTaiTro nếu khác
+      await connection.query(
+        `UPDATE nhataitro SET loainhataitro = ? WHERE nhataitro_id = ?`,
+        [loaiNhaTaiTroDB, nhaTaiTroId]
+      );
+    } else {
+      // Tự động tạo record nhataitro nếu chưa có
+      const [insertDonorResult] = await connection.query(
+        `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, trangthai) 
+         VALUES (?, ?, ?, 'Hoat dong')`,
+        [nguoiDungId, tenHienThi, loaiNhaTaiTroDB]
+      );
+      nhaTaiTroId = insertDonorResult.insertId;
+    }
+  } else {
+    // Tạo user mới trong nguoidung
+    const maSoDinhDanh = `PUB_${Date.now()}`;
+    const defaultHash = "$2a$10$wK1Gv5vM2.H4xN.9dZc.4O1.Ule12Lg0eL2iU3aE8cO8dGz1vN3j.";
+
+    const [insertUserResult] = await connection.query(
+      `INSERT INTO nguoidung (
+        masodinhdanh, 
+        hoten, 
+        email, 
+        matkhau, 
+        sodienthoai,
+        diachi,
+        vaitro_id, 
+        loaitaikhoan,
+        trangthai
+      ) VALUES (?, ?, ?, ?, ?, ?, 4, 'Nha tai tro', 'Hoat dong')`,
+      [maSoDinhDanh, ten, email, defaultHash, soDienThoai, diaChi || null]
+    );
+
+    const newNguoiDungId = insertUserResult.insertId;
+
+    // Tạo record nhataitro tương ứng
+    const [insertDonorResult] = await connection.query(
+      `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, trangthai) 
+       VALUES (?, ?, ?, 'Hoat dong')`,
+      [newNguoiDungId, tenHienThi, loaiNhaTaiTroDB]
+    );
+
+    nhaTaiTroId = insertDonorResult.insertId;
+  }
+  
+  return { nhaTaiTroId };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HÀM: createPublicDonation
 // MỤC ĐÍCH: Tạo donation public với DATABASE TRANSACTION
 // ─────────────────────────────────────────────────────────────────────────────
@@ -16,65 +103,10 @@ const createPublicDonation = async (donationData) => {
   try {
     await connection.beginTransaction();
 
-    const { ten, email, soDienThoai, soTien, quyId, ghiChu, hinhThuc, maGiaoDich } = donationData;
+    const { ten, email, soDienThoai, soTien, quyId, ghiChu, hinhThuc, loaiNhaTaiTro, toChuc, diaChi, taiKhoanNganHangId } = donationData;
 
-    // Kiểm tra email đã tồn tại trong nguoidung chưa
-    const [existingUsers] = await connection.query(
-      `SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1`,
-      [email]
-    );
-
-    let nhaTaiTroId;
-
-    if (existingUsers.length > 0) {
-      const nguoiDungId = existingUsers[0].nguoidung_id;
-
-      // Kiểm tra xem đã có record nhataitro tương ứng chưa
-      const [existingDonors] = await connection.query(
-        `SELECT nhataitro_id FROM nhataitro WHERE nguoidung_id = ? LIMIT 1`,
-        [nguoiDungId]
-      );
-
-      if (existingDonors.length > 0) {
-        nhaTaiTroId = existingDonors[0].nhataitro_id;
-      } else {
-        // Tự động tạo record nhataitro nếu chưa có
-        const [insertDonorResult] = await connection.query(
-          `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, trangthai) 
-           VALUES (?, ?, 'Ca nhan', ?, ?, 'Hoat dong')`,
-          [nguoiDungId, ten, email, soDienThoai]
-        );
-        nhaTaiTroId = insertDonorResult.insertId;
-      }
-    } else {
-      // Tạo user mới trong nguoidung
-      const maSoDinhDanh = `PUB_${Date.now()}`;
-      const defaultHash = "$2a$10$wK1Gv5vM2.H4xN.9dZc.4O1.Ule12Lg0eL2iU3aE8cO8dGz1vN3j.";
-
-      const [insertUserResult] = await connection.query(
-        `INSERT INTO nguoidung (
-          masodinhdanh, 
-          hoten, 
-          email, 
-          matkhau, 
-          sodienthoai,
-          vaitro_id, 
-          trangthai
-        ) VALUES (?, ?, ?, ?, ?, 4, 'Hoat dong')`,
-        [maSoDinhDanh, ten, email, defaultHash, soDienThoai]
-      );
-
-      const newNguoiDungId = insertUserResult.insertId;
-
-      // Tạo record nhataitro tương ứng
-      const [insertDonorResult] = await connection.query(
-        `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, email, sodienthoai, trangthai) 
-         VALUES (?, ?, 'Ca nhan', ?, ?, 'Hoat dong')`,
-        [newNguoiDungId, ten, email, soDienThoai]
-      );
-
-      nhaTaiTroId = insertDonorResult.insertId;
-    }
+    // Tạo hoặc lấy nhà tài trợ
+    const { nhaTaiTroId } = await createOrGetDonor(connection, { ten, email, soDienThoai, loaiNhaTaiTro, toChuc, diaChi });
 
     // Tạo khoản tài trợ trong bảng khoantaitro
     const [insertDonationResult] = await connection.query(
@@ -86,9 +118,10 @@ const createPublicDonation = async (donationData) => {
         magiaodich,
         ngaytaitro,
         trangthai,
-        ghichu
-      ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?)`,
-      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Chuyen khoan', maGiaoDich, ghiChu]
+        ghichu,
+        chungtu
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?)`,
+      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Chuyen khoan', null, ghiChu, taiKhoanNganHangId ? String(taiKhoanNganHangId) : null]
     );
 
     const khoanTaiTroId = insertDonationResult.insertId;
@@ -159,9 +192,9 @@ const getDonationById = async (khoanTaiTroId) => {
       kt.ngaycapnhat,
       ntt.tennhataitro,
       ntt.loainhataitro,
-      ntt.email as ntt_email,
-      ntt.sodienthoai as ntt_sodienthoai,
-      COALESCE(ntt.logo, nd.avatar) AS logo,
+      nd.email AS ntt_email,
+      nd.sodienthoai AS ntt_sodienthoai,
+      nd.avatar AS logo,
       q.tenquy,
       q.loaiquy_id,
       q.sodu as quy_so_du
@@ -228,9 +261,9 @@ const listDonations = async ({
         kt.ghichu,
         ntt.tennhataitro,
         ntt.loainhataitro,
-        COALESCE(ntt.logo, nd.avatar) AS logo,
-        ntt.email,
-        ntt.sodienthoai,
+        nd.avatar AS logo,
+        nd.email,
+        nd.sodienthoai,
         q.tenquy,
         q.loaiquy_id
      FROM khoantaitro kt
@@ -467,4 +500,5 @@ export default {
   rejectDonation,
   confirmDonation,
   getPheDuyetByKhoanTaiTro,
+  createOrGetDonor, // Export for reuse in ProposalModel
 };

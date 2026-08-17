@@ -11,30 +11,34 @@ import styles from './UserRoleSection.module.scss';
 const ROLES = [
   {
     key: 'sinh_vien',
-    label: 'Sinh viên',
+    label: 'Sinh vien',
     icon: HiOutlineAcademicCap,
-    description: 'Đang học tại trường',
+    description: 'Dang theo hoc tai truong',
+    detail: 'Ban dang tung ngay lon len cung mai truong nay',
     color: '#3b82f6',
   },
   {
     key: 'can_bo_truong',
-    label: 'Cán bộ trong trường',
+    label: 'Can bo giang vien',
     icon: HiOutlineBriefcase,
-    description: 'Giáo viên, nhân viên đang công tác',
+    description: 'Giao vien, nhan vien dang cong tac',
+    detail: 'Nguoi da va dang dong gianh cho su nghiep giao duc',
     color: '#10b981',
   },
   {
     key: 'can_bo_nghi_huu',
-    label: 'Cán bộ về hưu',
+    label: 'Can bo nghi huu',
     icon: HiOutlineUserGroup,
-    description: 'Đã nghỉ hưu, còn quyền nộp đơn',
+    description: 'Da nghi huu, van luon nho ngoi truong',
+    detail: 'Tinh yeu voi truong van luon trong tim',
     color: '#f59e0b',
   },
   {
     key: 'nha_khoa_hoc',
-    label: 'Nhà khoa học',
+    label: 'Nha khoa hoc',
     icon: HiOutlineBeaker,
-    description: 'Nghiên cứu viên, giảng viên',
+    description: 'Nghien cuu vien, giang vien, chuyen gia',
+    detail: 'Mang tri thuc den cho cong dong',
     color: '#8b5cf6',
   },
 ];
@@ -42,13 +46,15 @@ const ROLES = [
 const UserRoleSection = ({ selectedRole, onSelect, disabled }) => {
   return (
     <div className={styles.card}>
-      <div className={styles.sectionTitle}>
-        <span className={styles.stepBadge}>Phần 1B</span>
-        <span>Bạn là ai?</span>
+      <div className={styles.header}>
+        <div className={styles.headerTop}>
+          <span className={styles.stepBadge}>Phan 1B</span>
+        </div>
+        <h3 className={styles.title}>Vai tro cua ban</h3>
+        <p className={styles.subtitle}>
+          Hay cho chung toi biet ban la ai de cung tao nen dieu y nghia
+        </p>
       </div>
-      <p className={styles.sectionDesc}>
-        Chọn vai trò của bạn để hiển thị biểu mẫu phù hợp
-      </p>
 
       <div className={styles.roleGrid}>
         {ROLES.map((role) => {
@@ -66,9 +72,18 @@ const UserRoleSection = ({ selectedRole, onSelect, disabled }) => {
               <div className={styles.roleIconWrap}>
                 <Icon className={styles.roleIcon} />
               </div>
-              <div className={styles.roleLabel}>{role.label}</div>
-              <div className={styles.roleDesc}>{role.description}</div>
-              {isSelected && <div className={styles.roleCheck}>✓</div>}
+              <div className={styles.roleContent}>
+                <div className={styles.roleLabel}>{role.label}</div>
+                <div className={styles.roleDesc}>{role.description}</div>
+                <div className={styles.roleDetail}>{role.detail}</div>
+              </div>
+              {isSelected && (
+                <div className={styles.roleCheck}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              )}
             </button>
           );
         })}

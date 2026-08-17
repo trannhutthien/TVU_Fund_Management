@@ -18,6 +18,16 @@ const toBoolean = (value) => {
   return false;
 };
 
+// Helper function để lấy field từ req.body với nhiều tên khác nhau
+const getBodyField = (body, ...fieldNames) => {
+  for (const fieldName of fieldNames) {
+    if (body[fieldName] !== undefined) {
+      return body[fieldName];
+    }
+  }
+  return undefined;
+};
+
 const mapDanhGia = (row) => ({
   id: row.danhgia_id,
   danhGiaId: row.danhgia_id,

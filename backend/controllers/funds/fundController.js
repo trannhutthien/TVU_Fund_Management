@@ -131,7 +131,8 @@ export const createFund = async (req, res) => {
       trangThai,
       nguoiTao,
       soDotGiaiNgan,
-      dotGiaiNgan
+      dotGiaiNgan,
+      loaiHoTro
     } = req.body;
     const normalizedFundData = normalizeFundOperationData(req.body);
 
@@ -203,6 +204,16 @@ export const createFund = async (req, res) => {
       }
     }
 
+    // 4b. Validate loại hỗ trợ
+    const validLoaiHoTro = ['Tai tro khong hoan lai', 'Tai tro co thu hoi', 'Cho vay'];
+    const finalLoaiHoTro = loaiHoTro || 'Tai tro khong hoan lai';
+    if (!validLoaiHoTro.includes(finalLoaiHoTro)) {
+      return res.status(400).json({
+        success: false,
+        message: "Loại hỗ trợ không hợp lệ. Chỉ chấp nhận: Tài trợ không hoàn lại, Tài trợ có thu hồi, Cho vay",
+      });
+    }
+
     // 5. Validate độ dài tên quỹ
     if (tenQuy.trim().length > 150) {
       return res.status(400).json({
@@ -247,7 +258,8 @@ export const createFund = async (req, res) => {
       loaiDieuHanh: normalizedFundData.loaiDieuHanh,
       quyChaId: normalizedFundData.quyChaId,
       soDotGiaiNgan: soDotGiaiNgan ? parseInt(soDotGiaiNgan) : 0,
-      dotGiaiNgan: dotGiaiNgan || []
+      dotGiaiNgan: dotGiaiNgan || [],
+      loaiHoTro: finalLoaiHoTro
     };
 
     const result = await FundModel.createFund(fundData);
@@ -287,7 +299,8 @@ export const createFund = async (req, res) => {
         trangThai: newFund.trang_thai,
         loaiDieuHanh: newFund.loai_dieu_hanh,
         quyChaId: newFund.quy_cha_id,
-        tenQuyCha: newFund.ten_quy_cha
+        tenQuyCha: newFund.ten_quy_cha,
+        loaiHoTro: newFund.loaihotro
       }
     });
   } catch (error) {
@@ -384,17 +397,183 @@ export const getFunds = async (req, res) => {
   }
 };
 
+// ─── GET /api/funds/count-by-group ──────────────────────────────────────────
+// API công khai - KHÔNG CẦN AUTHENTICATION
+// Trả về số lượng quỹ theo từng loại (grouped by maloai)
+export const getFundCountByGroup = async (req, res) => {
+  try {
+    const { capDo, trangThai } = req.query;
+    
+    // Build WHERE clause for filters
+    let whereConditions = ["q.trangthai IN ('Dang hoat dong', 'Tam dung')"];
+    const params = [];
+    
+    if (capDo) {
+      whereConditions.push('q.capdo = ?');
+      params.push(parseInt(capDo));
+    }
+    
+    if (trangThai) {
+      whereConditions.push('q.trangthai = ?');
+      params.push(trangThai);
+    }
+    
+    const whereClause = whereConditions.join(' AND ');
+    
+    // Query to count funds grouped by maloai
+    const query = `
+      SELECT 
+        lq.maloai,
+        lq.tenloai,
+        COUNT(q.quy_id) AS soLuong
+      FROM quy q
+      INNER JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+      WHERE ${whereClause}
+      GROUP BY lq.maloai, lq.tenloai
+      HAVING soLuong > 0
+    `;
+    
+    const [rows] = await pool.query(query, params);
+    
+    // Transform to object format: { "maloai1": { tenLoai: "Học bổng", soLuong: 15 }, ... }
+    const countByGroup = {};
+    rows.forEach(row => {
+      countByGroup[row.maloai] = {
+        tenLoai: row.tenloai,
+        soLuong: row.soLuong
+      };
+    });
+    
+    return res.status(200).json({
+      success: true,
+      data: countByGroup
+    });
+  } catch (error) {
+    console.error('Error in getFundCountByGroup:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi server, vui lòng thử lại sau'
+    });
+  }
+};
+
 // ─── GET /api/funds/public ────────────────────────────────────────────────────
 // API công khai - KHÔNG CẦN AUTHENTICATION
 // Trả về danh sách quỹ đang hoạt động hoặc tạm dừng (để hiển thị trên trang công khai)
 export const getPublicFunds = async (req, res) => {
   try {
-    // Lấy danh sách quỹ công khai từ database
-    const funds = await FundModel.getPublicFunds();
-
+    const { maloai, page, limit, capDo, trangThai, search, sapXep } = req.query;
+    
+    // Parse tham số phân trang
+    const currentPage = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 1000; // Mặc định trả về nhiều nếu không có limit
+    const offset = (currentPage - 1) * pageSize;
+    
+    // Xây dựng mệnh đề WHERE
+    let whereConditions = ["q.trangthai IN ('Dang hoat dong', 'Tam dung')"];
+    const params = [];
+    
+    // Lọc theo maloai (loại quỹ)
+    if (maloai) {
+      whereConditions.push('lq.maloai = ?');
+      params.push(maloai);
+    }
+    
+    // Lọc theo capDo (cấp độ)
+    if (capDo) {
+      whereConditions.push('q.capdo = ?');
+      params.push(parseInt(capDo));
+    }
+    
+    // Lọc theo trangThai (trạng thái)
+    if (trangThai) {
+      whereConditions.push('q.trangthai = ?');
+      params.push(trangThai);
+    }
+    
+    // Tìm kiếm theo tên quỹ hoặc mô tả
+    if (search) {
+      whereConditions.push('(q.tenquy LIKE ? OR q.mota LIKE ?)');
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern);
+    }
+    
+    const whereClause = whereConditions.join(' AND ');
+    
+    // Đếm tổng số quỹ khớp với bộ lọc
+    const countQuery = `
+      SELECT COUNT(q.quy_id) AS total
+      FROM quy q
+      INNER JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+      WHERE ${whereClause}
+    `;
+    
+    const [[{ total }]] = await pool.query(countQuery, params);
+    
+    // Xác định thứ tự sắp xếp
+    let orderBy = 'q.ngaytao DESC'; // Mặc định: mới nhất trước
+    if (sapXep === 'tenquy_asc') {
+      orderBy = 'q.tenquy ASC';
+    } else if (sapXep === 'tenquy_desc') {
+      orderBy = 'q.tenquy DESC';
+    } else if (sapXep === 'ngaytao_asc') {
+      orderBy = 'q.ngaytao ASC';
+    }
+    
+    // Lấy danh sách quỹ có phân trang
+    const fundsQuery = `
+      SELECT 
+        q.quy_id,
+        q.tenquy AS ten_quy,
+        lq.loaiquy_id,
+        lq.maloai AS loai_quy,
+        lq.tenloai AS ten_loai_quy,
+        q.mota AS mo_ta,
+        q.hinhanh AS hinh_anh,
+        q.sotienmuctieu AS so_tien_muc_tieu,
+        q.sotienhotrotoida AS so_tien_ho_tro_toi_da,
+        q.soluonghotrotoida AS so_luong_chi_tieu,
+        q.dieukienhotro AS dieu_kien_tom_tat,
+        q.ngaybatdau AS ngay_bat_dau,
+        q.ngayketthuc AS han_nop_don,
+        q.sodu AS so_du,
+        q.loaidieuhanh AS loai_dieu_hanh,
+        q.capdo,
+        q.quy_cha_id,
+        qp.tenquy AS ten_quy_cha,
+        (q.sodu - COALESCE(SUM(CASE WHEN yc.trangthai = 'Cho giai ngan' THEN yc.sotiendenghi ELSE 0 END), 0)) AS so_du_thuc_te,
+        q.nguoitao_id,
+        q.ngaytao AS ngay_tao,
+        q.ngaycapnhat AS ngay_cap_nhat,
+        q.trangthai AS trang_thai,
+        COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) AS so_don_da_nop,
+        CASE 
+          WHEN q.soluonghotrotoida IS NOT NULL AND q.soluonghotrotoida > 0 
+          THEN ROUND((COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) / q.soluonghotrotoida) * 100, 0)
+          ELSE 0
+        END AS phan_tram_da_nhan,
+        (SELECT COUNT(*) 
+         FROM quy qc 
+         WHERE qc.quy_cha_id = q.quy_id 
+         AND qc.trangthai = 'Dang hoat dong') AS so_quy_con_hoat_dong
+      FROM quy q
+      INNER JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
+      LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
+      LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
+      WHERE ${whereClause}
+      GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, qp.tenquy
+      ORDER BY ${orderBy}
+      LIMIT ? OFFSET ?
+    `;
+    
+    const fundsParams = [...params, pageSize, offset];
+    const [funds] = await pool.query(fundsQuery, fundsParams);
+    
     return res.status(200).json({
       success: true,
-      total: funds.length,
+      total: total,
+      page: currentPage,
+      limit: pageSize,
       funds: funds.map(fund => ({
         quyId: fund.quy_id,
         tenQuy: fund.ten_quy,
@@ -402,30 +581,30 @@ export const getPublicFunds = async (req, res) => {
         loaiquy: {
           loaiQuyId: fund.loaiquy_id,
           maLoai: fund.loai_quy,
-          tenLoai: fund.ten_loai_quy || fund.loai_quy,
-          nhom: fund.nhom_loai_quy,
+          tenLoai: fund.ten_loai_quy,
         },
         moTa: fund.mo_ta,
-        hinhAnh: buildFundImageUrl(fund.hinh_anh), // Build full URL
+        hinhAnh: buildFundImageUrl(fund.hinh_anh),
         soTienMucTieu: fund.so_tien_muc_tieu,
         soTienHoTroToiDa: fund.so_tien_ho_tro_toi_da,
         soTienToiThieu: null,
         soTienToiDa: fund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: fund.so_luong_chi_tieu,
         hanNopDon: fund.han_nop_don,
-        ngayBatDau: fund.ngay_bat_dau || fund.ngaybatdau,
-        ngayKetThuc: fund.ngay_ket_thuc || fund.han_nop_don,
+        ngayBatDau: fund.ngay_bat_dau,
+        ngayKetThuc: fund.han_nop_don,
         dieuKienTomTat: fund.dieu_kien_tom_tat,
         soDu: fund.so_du,
-        soDuThucTe: fund.so_du_thuc_te, // Số dư thực tế sau khi trừ các khoản chờ giải ngân
+        soDuThucTe: fund.so_du_thuc_te,
         nguoiTao: fund.nguoitao_id,
         ngayTao: fund.ngay_tao,
         ngayCapNhat: fund.ngay_cap_nhat,
         trangThai: fund.trang_thai,
         soDonDaNop: fund.so_don_da_nop,
         phanTramDaNhan: fund.phan_tram_da_nhan,
-        soQuyConHoatDong: fund.so_quy_con_hoat_dong, // Số quỹ con đang hoạt động (cho quỹ mẹ)
+        soQuyConHoatDong: fund.so_quy_con_hoat_dong,
         loaiDieuHanh: fund.loai_dieu_hanh,
+        capDo: fund.capdo,
         quyChaId: fund.quy_cha_id,
         tenQuyCha: fund.ten_quy_cha
       }))
@@ -626,7 +805,8 @@ export const updateFund = async (req, res) => {
       hanNopDon,
       dieuKienTomTat,
       soDu,
-      trangThai
+      trangThai,
+      loaiHoTro
     } = req.body;
 
     // 1. Validate ID
@@ -678,6 +858,16 @@ export const updateFund = async (req, res) => {
       });
     }
 
+    // 5b. Validate loại hỗ trợ
+    const validLoaiHoTro = ['Tai tro khong hoan lai', 'Tai tro co thu hoi', 'Cho vay'];
+    const finalLoaiHoTro = loaiHoTro || fund.loaihotro || 'Tai tro khong hoan lai';
+    if (!validLoaiHoTro.includes(finalLoaiHoTro)) {
+      return res.status(400).json({
+        success: false,
+        message: "Loại hỗ trợ không hợp lệ. Chỉ chấp nhận: Tài trợ không hoàn lại, Tài trợ có thu hồi, Cho vay",
+      });
+    }
+
     const fundingPlanError = validateFundingPlan({
       soTienMucTieu,
       soTienHoTroToiDa,
@@ -724,10 +914,11 @@ export const updateFund = async (req, res) => {
       soLuongChiTieu: normalizedFundData.soLuongChiTieu,
       hanNopDon: toDateOnly(hanNopDon),
       dieuKienTomTat: dieuKienTomTat ? dieuKienTomTat.trim() : null,
-      soDu: fund.so_du, // Luôn luôn giữ nguyên số dư hiện tại của quỹ khi cập nhật thông tin qua Form
+      soDu: fund.so_du,
       trangThai: trangThai || fund.trang_thai,
       loaiDieuHanh: normalizedFundData.loaiDieuHanh,
-      quyChaId: normalizedFundData.quyChaId
+      quyChaId: normalizedFundData.quyChaId,
+      loaiHoTro: finalLoaiHoTro
     };
 
     await FundModel.updateFund(id, fundData);
@@ -768,7 +959,8 @@ export const updateFund = async (req, res) => {
         trangThai: updatedFund.trang_thai,
         loaiDieuHanh: updatedFund.loai_dieu_hanh,
         quyChaId: updatedFund.quy_cha_id,
-        tenQuyCha: updatedFund.ten_quy_cha
+        tenQuyCha: updatedFund.ten_quy_cha,
+        loaiHoTro: updatedFund.loaihotro
       }
     });
   } catch (error) {
@@ -909,3 +1101,5 @@ export const getAvailableBalance = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
+
+

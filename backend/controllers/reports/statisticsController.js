@@ -288,14 +288,14 @@ export const getKeToanSummary = async (req, res) => {
     const [[choGiaiNganRow]] = await pool.query(
       `SELECT COUNT(*) AS total
        FROM yeucauhotro
-       WHERE trangthai = 'Cho giai ngan'`
+       WHERE trangthai IN ('Cho giai ngan', 'Cho giai ngan dot 1', 'Cho giai ngan dot 2')`
     );
 
     // Thêm: Tổng số đơn đã giải ngân (cho Admin Dashboard)
     const [[tongGiaiNganRow]] = await pool.query(
       `SELECT COUNT(*) AS total
        FROM yeucauhotro
-       WHERE trangthai = 'Da giai ngan'`
+       WHERE trangthai IN ('Da giai ngan', 'Da giai ngan dot 1', 'Da nghiem thu dot 1', 'Da giai ngan dot 2')`
     );
 
     // Tổng dư nợ vay vốn (tổng còn nợ từ hopdongvayvon)
@@ -596,7 +596,6 @@ export const getKeToanFundHealth = async (req, res) => {
          q.quy_id,
          q.tenquy AS ten_quy,
          lq.tenloai AS loai_quy,
-         lq.nhom AS nhom_loai_quy,
          q.loaidieuhanh AS loai_dieu_hanh,
          q.sodu AS so_du,
          q.sotienmuctieu AS so_tien_toi_da,
@@ -611,7 +610,6 @@ export const getKeToanFundHealth = async (req, res) => {
       quy_id: f.quy_id,
       ten_quy: f.ten_quy,
       loai_quy: f.loai_quy,
-      nhom_loai_quy: f.nhom_loai_quy || null,
       loai_dieu_hanh: f.loai_dieu_hanh,
       so_du: parseFloat(f.so_du || 0),
       so_tien_toi_da: parseFloat(f.so_tien_toi_da || 0),
@@ -620,7 +618,6 @@ export const getKeToanFundHealth = async (req, res) => {
       quyId: f.quy_id,
       tenQuy: f.ten_quy,
       loaiQuy: f.loai_quy,
-      nhomLoaiQuy: f.nhom_loai_quy || null,
       loaiDieuHanh: f.loai_dieu_hanh,
       soDu: parseFloat(f.so_du || 0),
       soTienToiDa: parseFloat(f.so_tien_toi_da || 0),
@@ -710,27 +707,28 @@ export const getApplicationStats = async (req, res) => {
 
     // Đếm đơn đang xử lý
     const [[{ dangXuLy }]] = await pool.query(
-      `SELECT COUNT(*) AS dangXuLy FROM yeucauhotro yc WHERE trangthai IN ('Da duyet cap 1', 'Cho duyet cap 2', 'Da duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 3') ${yearFilter}`, yearParams
+      `SELECT COUNT(*) AS dangXuLy FROM yeucauhotro yc WHERE trangthai IN ('Da duyet cap 1', 'Cho duyet cap 2', 'Da duyet cap 2', 'Cho duyet cap 3', 'Da duyet cap 3',
+        'Cho giai ngan dot 1', 'Cho nghiem thu dot 1', 'Da nghiem thu dot 1', 'Cho giai ngan dot 2') ${yearFilter}`, yearParams
     );
 
     // Đếm đơn chờ giải ngân
     const [[{ choGiaiNgan }]] = await pool.query(
-      `SELECT COUNT(*) AS choGiaiNgan FROM yeucauhotro yc WHERE trangthai = 'Cho giai ngan' ${yearFilter}`, yearParams
+      `SELECT COUNT(*) AS choGiaiNgan FROM yeucauhotro yc WHERE trangthai IN ('Cho giai ngan', 'Cho giai ngan dot 1', 'Cho giai ngan dot 2') ${yearFilter}`, yearParams
     );
 
     // Đếm đơn đã hoàn thành
     const [[{ daHoanThanh }]] = await pool.query(
-      `SELECT COUNT(*) AS daHoanThanh FROM yeucauhotro yc WHERE trangthai = 'Da giai ngan' ${yearFilter}`, yearParams
+      `SELECT COUNT(*) AS daHoanThanh FROM yeucauhotro yc WHERE trangthai IN ('Da giai ngan', 'Da giai ngan dot 1', 'Da nghiem thu dot 1', 'Da giai ngan dot 2', 'Hoan thanh') ${yearFilter}`, yearParams
     );
 
     // Đếm đơn từ chối
     const [[{ tuChoi }]] = await pool.query(
-      `SELECT COUNT(*) AS tuChoi FROM yeucauhotro yc WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3') ${yearFilter}`, yearParams
+      `SELECT COUNT(*) AS tuChoi FROM yeucauhotro yc WHERE trangthai IN ('Tu choi', 'Tu choi cap 1', 'Tu choi cap 2', 'Tu choi cap 3', 'Nghiem thu khong dat', 'Dang thu hoi no') ${yearFilter}`, yearParams
     );
 
     // Đếm đơn chờ nghiệm thu (Da nghiem thu = completed verification; Cho nghiem thu = pending verification)
     const [[{ choNghiemThu }]] = await pool.query(
-      `SELECT COUNT(*) AS choNghiemThu FROM yeucauhotro yc WHERE trangthai = 'Da duyet cap 3' ${yearFilter}`, yearParams
+      `SELECT COUNT(*) AS choNghiemThu FROM yeucauhotro yc WHERE trangthai IN ('Da duyet cap 3', 'Cho nghiem thu', 'Cho nghiem thu dot 1') ${yearFilter}`, yearParams
     );
 
     // Đếm đơn chờ Ban Kiểm Soát xem xét
@@ -1264,6 +1262,464 @@ export const getKeToanReportStats = async (req, res) => {
   }
 };
 
+export const getPublicReportStats = async (req, res) => {
+  try {
+    const now = new Date();
+    const allowedTypes = new Set(['month', 'quarter', 'year']);
+    const type = allowedTypes.has(req.query.type) ? req.query.type : 'month';
+
+    const parseBoundedInt = (value, fallback, min, max) => {
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed)) return fallback;
+      return Math.min(Math.max(parsed, min), max);
+    };
+
+    const year = parseBoundedInt(req.query.year, now.getFullYear(), 2000, 2100);
+    const month = parseBoundedInt(req.query.month, now.getMonth() + 1, 1, 12);
+    const quarter = parseBoundedInt(
+      req.query.quarter,
+      Math.ceil((now.getMonth() + 1) / 3),
+      1,
+      4
+    );
+    const compareMode = req.query.compareMode === 'true' || req.query.compareMode === true;
+
+    const pad2 = (value) => String(value).padStart(2, '0');
+    const formatDate = (date) => (
+      `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+    );
+    const addMonths = (date, amount) => (
+      new Date(date.getFullYear(), date.getMonth() + amount, date.getDate())
+    );
+
+    const currentPeriod = { type, year, month, quarter };
+    const getPeriodRange = (period) => {
+      if (period.type === 'month') {
+        const startDate = new Date(period.year, period.month - 1, 1);
+        const endDate = new Date(period.year, period.month, 1);
+        return {
+          startDate,
+          endDate,
+          start: formatDate(startDate),
+          end: formatDate(endDate),
+        };
+      }
+
+      if (period.type === 'quarter') {
+        const startMonth = (period.quarter - 1) * 3;
+        const startDate = new Date(period.year, startMonth, 1);
+        const endDate = new Date(period.year, startMonth + 3, 1);
+        return {
+          startDate,
+          endDate,
+          start: formatDate(startDate),
+          end: formatDate(endDate),
+        };
+      }
+
+      const startDate = new Date(period.year, 0, 1);
+      const endDate = new Date(period.year + 1, 0, 1);
+      return {
+        startDate,
+        endDate,
+        start: formatDate(startDate),
+        end: formatDate(endDate),
+      };
+    };
+
+    const getPreviousPeriod = (period) => {
+      if (period.type === 'month') {
+        const prevDate = new Date(period.year, period.month - 2, 1);
+        return {
+          type: 'month',
+          year: prevDate.getFullYear(),
+          month: prevDate.getMonth() + 1,
+          quarter: Math.ceil((prevDate.getMonth() + 1) / 3),
+        };
+      }
+
+      if (period.type === 'quarter') {
+        if (period.quarter > 1) {
+          return { ...period, quarter: period.quarter - 1 };
+        }
+        return { type: 'quarter', year: period.year - 1, month: 12, quarter: 4 };
+      }
+
+      return { type: 'year', year: period.year - 1, month: period.month, quarter: period.quarter };
+    };
+
+    const buildCashflowBuckets = (period) => {
+      const buckets = [];
+
+      if (period.type === 'month') {
+        const selectedDate = new Date(period.year, period.month - 1, 1);
+        const startDate = addMonths(selectedDate, -5);
+        const endDate = addMonths(selectedDate, 1);
+
+        for (let i = 5; i >= 0; i -= 1) {
+          const date = addMonths(selectedDate, -i);
+          const key = `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+          buckets.push({
+            key,
+            thang: `T${date.getMonth() + 1}`,
+            thangKey: key,
+            thu: 0,
+            chi: 0,
+          });
+        }
+
+        return {
+          buckets,
+          start: formatDate(startDate),
+          end: formatDate(endDate),
+          keyExpression: "DATE_FORMAT(ngay_date, '%Y-%m')",
+        };
+      }
+
+      if (period.type === 'quarter') {
+        for (let q = 1; q <= 4; q += 1) {
+          const key = `${period.year}-Q${q}`;
+          buckets.push({
+            key,
+            thang: `Q${q}`,
+            thangKey: key,
+            thu: 0,
+            chi: 0,
+          });
+        }
+
+        return {
+          buckets,
+          start: `${period.year}-01-01`,
+          end: `${period.year + 1}-01-01`,
+          keyExpression: "CONCAT(YEAR(ngay_date), '-Q', QUARTER(ngay_date))",
+        };
+      }
+
+      for (let m = 1; m <= 12; m += 1) {
+        const key = `${period.year}-${pad2(m)}`;
+        buckets.push({
+          key,
+          thang: `T${m}`,
+          thangKey: key,
+          thu: 0,
+          chi: 0,
+        });
+      }
+
+      return {
+        buckets,
+        start: `${period.year}-01-01`,
+        end: `${period.year + 1}-01-01`,
+        keyExpression: "DATE_FORMAT(ngay_date, '%Y-%m')",
+      };
+    };
+
+    const toPercentBreakdown = (rows) => {
+      const total = rows.reduce((sum, row) => sum + (Number(row.value) || 0), 0);
+      return rows.map((row) => {
+        const value = Number(row.value) || 0;
+        return {
+          name: row.name,
+          value,
+          percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+        };
+      });
+    };
+
+    const rowsToNumberMap = (rows, valueField = 'total') => {
+      const map = new Map();
+      rows.forEach((row) => {
+        map.set(Number(row.quy_id), Number(row[valueField]) || 0);
+      });
+      return map;
+    };
+
+    const currentRange = getPeriodRange(currentPeriod);
+    const previousPeriod = getPreviousPeriod(currentPeriod);
+    const previousRange = getPeriodRange(previousPeriod);
+
+    const getSummaryData = async (range) => {
+      const [thuResult, chiResult, gdResult] = await Promise.all([
+        pool.query(
+          `SELECT COALESCE(SUM(sotien), 0) AS total
+           FROM khoantaitro
+           WHERE trangthai IN ('Da duyet', 'Da nhan')
+             AND ngaycapnhat >= ?
+             AND ngaycapnhat < ?`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT COALESCE(SUM(sotien), 0) AS total
+           FROM giaodich
+           WHERE trangthai = 'Thanh cong'
+             AND loaigiaodich = 'Chi'
+             AND ngaygiaodich >= ?
+             AND ngaygiaodich < ?`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT COUNT(*) AS total
+           FROM (
+             SELECT quy_id
+             FROM khoantaitro
+             WHERE trangthai IN ('Da duyet', 'Da nhan')
+               AND ngaycapnhat >= ?
+               AND ngaycapnhat < ?
+             UNION ALL
+             SELECT quy_id
+             FROM giaodich
+             WHERE trangthai = 'Thanh cong'
+               AND loaigiaodich = 'Chi'
+               AND ngaygiaodich >= ?
+               AND ngaygiaodich < ?
+           ) AS combined`,
+          [range.start, range.end, range.start, range.end]
+        ),
+      ]);
+
+      return {
+        tongThu: Number(thuResult[0][0]?.total) || 0,
+        tongChi: Number(chiResult[0][0]?.total) || 0,
+        soGiaoDich: Number(gdResult[0][0]?.total) || 0,
+      };
+    };
+
+    const getCashflowData = async (period) => {
+      const config = buildCashflowBuckets(period);
+      const [rows] = await pool.query(
+        `SELECT
+           ${config.keyExpression} AS period_key,
+           SUM(thu) AS thu,
+           SUM(chi) AS chi
+         FROM (
+           SELECT
+             ngaycapnhat AS ngay_date,
+             sotien AS thu,
+             0 AS chi
+           FROM khoantaitro
+           WHERE trangthai IN ('Da duyet', 'Da nhan')
+             AND ngaycapnhat >= ?
+             AND ngaycapnhat < ?
+           UNION ALL
+           SELECT
+             ngaygiaodich AS ngay_date,
+             0 AS thu,
+             sotien AS chi
+           FROM giaodich
+           WHERE trangthai = 'Thanh cong'
+             AND loaigiaodich = 'Chi'
+             AND ngaygiaodich >= ?
+             AND ngaygiaodich < ?
+         ) AS combined
+         GROUP BY period_key`,
+        [config.start, config.end, config.start, config.end]
+      );
+
+      const valueByKey = new Map(rows.map((row) => [row.period_key, row]));
+      return config.buckets.map((bucket) => {
+        const row = valueByKey.get(bucket.key);
+        return {
+          thang: bucket.thang,
+          thangKey: bucket.thangKey,
+          thu: row ? Number(row.thu) || 0 : 0,
+          chi: row ? Number(row.chi) || 0 : 0,
+        };
+      });
+    };
+
+    const getFundTableData = async (range) => {
+      const [
+        fundsResult,
+        fundThuResult,
+        fundChiResult,
+        fundGdResult,
+        trendResult,
+      ] = await Promise.all([
+        pool.query(
+          `SELECT
+             quy_id,
+             tenquy AS ten_quy,
+             sodu AS so_du,
+             sotienmuctieu AS so_tien_toi_da,
+             trangthai AS trang_thai
+           FROM quy
+           ORDER BY quy_id ASC`
+        ),
+        pool.query(
+          `SELECT quy_id, COALESCE(SUM(sotien), 0) AS total
+           FROM khoantaitro
+           WHERE trangthai IN ('Da duyet', 'Da nhan')
+             AND ngaycapnhat >= ?
+             AND ngaycapnhat < ?
+           GROUP BY quy_id`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT quy_id, COALESCE(SUM(sotien), 0) AS total
+           FROM giaodich
+           WHERE trangthai = 'Thanh cong'
+             AND loaigiaodich = 'Chi'
+             AND ngaygiaodich >= ?
+             AND ngaygiaodich < ?
+           GROUP BY quy_id`,
+          [range.start, range.end]
+        ),
+        pool.query(
+          `SELECT quy_id, COUNT(*) AS total
+           FROM (
+             SELECT quy_id
+             FROM khoantaitro
+             WHERE trangthai IN ('Da duyet', 'Da nhan')
+               AND ngaycapnhat >= ?
+               AND ngaycapnhat < ?
+             UNION ALL
+             SELECT quy_id
+             FROM giaodich
+             WHERE trangthai = 'Thanh cong'
+               AND loaigiaodich = 'Chi'
+               AND ngaygiaodich >= ?
+               AND ngaygiaodich < ?
+           ) AS combined
+           GROUP BY quy_id`,
+          [range.start, range.end, range.start, range.end]
+        ),
+        pool.query(
+          `SELECT quy_id, value
+           FROM (
+             SELECT
+               quy_id,
+               sotien AS value,
+               ROW_NUMBER() OVER (
+                 PARTITION BY quy_id
+                 ORDER BY ngaygiaodich DESC, giaodich_id DESC
+               ) AS rn
+             FROM giaodich
+             WHERE trangthai = 'Thanh cong'
+               AND loaigiaodich = 'Chi'
+           ) AS ranked
+           WHERE rn <= 6
+           ORDER BY quy_id ASC, rn DESC`
+        ),
+      ]);
+
+      const funds = fundsResult[0];
+      const thuByFund = rowsToNumberMap(fundThuResult[0]);
+      const chiByFund = rowsToNumberMap(fundChiResult[0]);
+      const gdByFund = rowsToNumberMap(fundGdResult[0]);
+      const trendByFund = new Map();
+
+      trendResult[0].forEach((row) => {
+        const quyId = Number(row.quy_id);
+        if (!trendByFund.has(quyId)) trendByFund.set(quyId, []);
+        trendByFund.get(quyId).push({ value: Number(row.value) || 0 });
+      });
+
+      const statusMap = {
+        'Dang hoat dong': 'Đang hoạt động',
+        'Tam dung': 'Tạm dừng',
+        'Da dong': 'Đã đóng',
+      };
+
+      return funds.map((fund) => {
+        const quyId = Number(fund.quy_id);
+        return {
+          quyId,
+          tenQuy: fund.ten_quy,
+          thu: thuByFund.get(quyId) || 0,
+          chi: chiByFund.get(quyId) || 0,
+          soDu: Number(fund.so_du) || 0,
+          soTienToiDa: Number(fund.so_tien_toi_da) || 0,
+          soGiaoDich: gdByFund.get(quyId) || 0,
+          trangThai: statusMap[fund.trang_thai] || fund.trang_thai,
+          trendData: trendByFund.get(quyId) || [],
+        };
+      });
+    };
+
+    const [
+      summaryBase,
+      activeFundsResult,
+      cashflowData,
+      compareSummaryBase,
+      compareCashflowData,
+      thuBreakdownResult,
+      chiBreakdownResult,
+      fundTableData,
+    ] = await Promise.all([
+      getSummaryData(currentRange),
+      pool.query(
+        `SELECT COUNT(*) AS total
+         FROM quy
+         WHERE trangthai = 'Dang hoat dong'`
+      ),
+      getCashflowData(currentPeriod),
+      compareMode ? getSummaryData(previousRange) : Promise.resolve(null),
+      compareMode ? getCashflowData(previousPeriod) : Promise.resolve([]),
+      pool.query(
+        `SELECT
+           CASE
+             WHEN ntt.tennhataitro = 'Nhà tài trợ' AND nd.hoten IS NOT NULL AND nd.hoten != ''
+             THEN nd.hoten
+             ELSE ntt.tennhataitro
+           END AS name,
+           SUM(kt.sotien) AS value
+         FROM khoantaitro kt
+         INNER JOIN nhataitro ntt ON kt.nhataitro_id = ntt.nhataitro_id
+         LEFT JOIN nguoidung nd ON ntt.nguoidung_id = nd.nguoidung_id
+         WHERE kt.trangthai IN ('Da duyet', 'Da nhan')
+           AND kt.ngaycapnhat >= ?
+           AND kt.ngaycapnhat < ?
+         GROUP BY name
+         ORDER BY value DESC
+         LIMIT 5`,
+        [currentRange.start, currentRange.end]
+      ),
+      pool.query(
+        `SELECT q.tenquy AS name, SUM(gd.sotien) AS value
+         FROM giaodich gd
+         INNER JOIN quy q ON gd.quy_id = q.quy_id
+         WHERE gd.trangthai = 'Thanh cong'
+           AND (gd.yeucauhotro_id IS NOT NULL OR gd.nguoinhan_id IS NOT NULL)
+           AND gd.ngaygiaodich >= ?
+           AND gd.ngaygiaodich < ?
+         GROUP BY q.tenquy
+         ORDER BY value DESC
+         LIMIT 5`,
+        [currentRange.start, currentRange.end]
+      ),
+      getFundTableData(currentRange),
+    ]);
+
+    const soQuy = Number(activeFundsResult[0][0]?.total) || 0;
+    const summaryData = { ...summaryBase, soQuy };
+    const compareSummaryData = compareSummaryBase ? { ...compareSummaryBase, soQuy } : null;
+    const breakdownThuData = toPercentBreakdown(thuBreakdownResult[0]);
+    const breakdownChiData = toPercentBreakdown(chiBreakdownResult[0]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy báo cáo thống kê thu chi công khai thành công",
+      data: {
+        summaryData,
+        compareSummaryData,
+        cashflowData,
+        compareCashflowData,
+        breakdownThuData,
+        breakdownChiData,
+        fundTableData,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi getPublicReportStats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo thống kê thu chi",
+      error: error.message,
+    });
+  }
+};
+
 export const getAdminAdvancedStats = async (req, res) => {
   try {
     const nam = req.query.nam ? parseInt(req.query.nam) : null;
@@ -1577,34 +2033,100 @@ export const getYearlyReport = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/statistics/pending-count
 // Lấy số lượng hồ sơ chờ xử lý cho sidebar badge
-// - Role 1 (Admin):      COUNT WHERE trangthai = 'Cho duyet cap 2'
-// - Role 2 (Ke Toan):    COUNT WHERE trangthai IN ('Cho duyet cap 3', 'Cho giai ngan')
-// - Role 3 (Can Bo Quy): COUNT WHERE trangthai = 'Cho duyet cap 1'
 // ─────────────────────────────────────────────────────────────────────────────
 export const getPendingCount = async (req, res) => {
   try {
     const role = req.user.vai_tro;
-    let sql = '';
-    let params = [];
+    const counts = {
+      pendingCount: 0,
+      nghiemThuCongNo: 0,
+      khoanTaiTro: 0,
+      doiSoatChungTu: 0,
+      duyetDeXuat: 0,
+    };
 
     if (role === 1) {
-      sql = `SELECT COUNT(*) AS count FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 2'`;
-    } else if (role === 2) {
-      sql = `SELECT COUNT(*) AS count FROM yeucauhotro WHERE trangthai IN ('Cho duyet cap 3', 'Cho giai ngan')`;
-    } else if (role === 3) {
-      sql = `SELECT COUNT(*) AS count FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 1'`;
-    } else {
-      return res.status(200).json({
-        success: true,
-        data: { pendingCount: 0 },
-      });
-    }
+      // Admin: pending approval
+      const [[r1]] = await pool.query(`SELECT COUNT(*) AS c FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 2'`);
+      counts.pendingCount = Number(r1.c) || 0;
 
-    const [[{ count }]] = await pool.query(sql, params);
+      // Nghiem thu + cong no
+      const [[r2]] = await pool.query(`
+        SELECT (SELECT COUNT(*) FROM yeucauhotro WHERE canghiemthu = 1 AND trangthai IN ('Cho nghiem thu','Cho nghiem thu dot 1','Cho giai ngan dot 2'))
+          + (SELECT COUNT(*) FROM lichtrano WHERE trangthaixacnhan = 'Cho xac nhan' AND trangthai IN ('Qua han','Tra mot phan'))
+          AS c
+      `);
+      counts.nghiemThuCongNo = Number(r2.c) || 0;
+
+      // Khoan tai tro: cho admin xac nhan
+      const [[r3]] = await pool.query(`SELECT COUNT(*) AS c FROM khoantaitro WHERE trangthai = 'Da duyet'`);
+      counts.khoanTaiTro = Number(r3.c) || 0;
+
+      // Doi soat chung tu
+      const [[r4]] = await pool.query(`SELECT COUNT(*) AS c FROM giaodich WHERE doisoattrangthai = 'Chua_doi_soat'`);
+      counts.doiSoatChungTu = Number(r4.c) || 0;
+
+      // Duyet de xuat: Admin - cho tao hoat dong (Da nhan tien)
+      const [[r5]] = await pool.query(`SELECT COUNT(*) AS c FROM dexuatchuongtrinh WHERE trangthai = 'Da nhan tien'`);
+      counts.duyetDeXuat = Number(r5.c) || 0;
+
+    } else if (role === 2) {
+      // Ke Toan: pending disbursement
+      const [[r1]] = await pool.query(`SELECT COUNT(*) AS c FROM yeucauhotro WHERE trangthai IN ('Cho duyet cap 3','Cho giai ngan','Cho giai ngan dot 1','Cho giai ngan dot 2')`);
+      counts.pendingCount = Number(r1.c) || 0;
+
+      // Nghiem thu + cong no
+      const [[r2]] = await pool.query(`
+        SELECT (SELECT COUNT(*) FROM yeucauhotro WHERE canghiemthu = 1 AND trangthai IN ('Cho nghiem thu','Cho nghiem thu dot 1','Cho giai ngan dot 2'))
+          + (SELECT COUNT(*) FROM lichtrano WHERE trangthaixacnhan = 'Cho xac nhan' AND trangthai IN ('Qua han','Tra mot phan'))
+          AS c
+      `);
+      counts.nghiemThuCongNo = Number(r2.c) || 0;
+
+      // Khoan tai tro: cho ke toan duyet
+      const [[r3]] = await pool.query(`SELECT COUNT(*) AS c FROM khoantaitro WHERE trangthai = 'Cho duyet'`);
+      counts.khoanTaiTro = Number(r3.c) || 0;
+
+      // Doi soat chung tu
+      const [[r4]] = await pool.query(`SELECT COUNT(*) AS c FROM giaodich WHERE doisoattrangthai = 'Chua_doi_soat'`);
+      counts.doiSoatChungTu = Number(r4.c) || 0;
+
+      // Duyet de xuat: Ke Toan - cho xac nhan tien (Can bo da duyet)
+      const [[r5]] = await pool.query(`SELECT COUNT(*) AS c FROM dexuatchuongtrinh WHERE trangthai = 'Can bo da duyet'`);
+      counts.duyetDeXuat = Number(r5.c) || 0;
+
+    } else if (role === 3) {
+      // Can Bo: pending approval cap 1
+      const [[r1]] = await pool.query(`SELECT COUNT(*) AS c FROM yeucauhotro WHERE trangthai = 'Cho duyet cap 1'`);
+      counts.pendingCount = Number(r1.c) || 0;
+
+      // Nghiem thu (can bo tao nghiem thu)
+      const [[r2]] = await pool.query(`
+        SELECT COUNT(*) AS c FROM yeucauhotro WHERE canghiemthu = 1 AND trangthai IN ('Cho nghiem thu','Cho nghiem thu dot 1','Cho giai ngan dot 2')
+      `);
+      counts.nghiemThuCongNo = Number(r2.c) || 0;
+
+      // Duyet de xuat: Can Bo - cho duyet (Cho duyet)
+      const [[r3]] = await pool.query(`SELECT COUNT(*) AS c FROM dexuatchuongtrinh WHERE trangthai = 'Cho duyet'`);
+      counts.duyetDeXuat = Number(r3.c) || 0;
+
+    } else if (role === 5) {
+      // Ban Kiem Soat: pending pheduyet
+      const [[r1]] = await pool.query(`SELECT COUNT(*) AS c FROM pheduyet WHERE ketqua = 'Cho duyet'`);
+      counts.pendingCount = Number(r1.c) || 0;
+
+      // Nghiem thu + cong no (read only but useful to see)
+      const [[r2]] = await pool.query(`
+        SELECT (SELECT COUNT(*) FROM yeucauhotro WHERE canghiemthu = 1 AND trangthai IN ('Cho nghiem thu','Cho nghiem thu dot 1','Cho giai ngan dot 2'))
+          + (SELECT COUNT(*) FROM lichtrano WHERE trangthaixacnhan = 'Cho xac nhan' AND trangthai IN ('Qua han','Tra mot phan'))
+          AS c
+      `);
+      counts.nghiemThuCongNo = Number(r2.c) || 0;
+    }
 
     return res.status(200).json({
       success: true,
-      data: { pendingCount: Number(count) || 0 },
+      data: counts,
     });
   } catch (error) {
     console.error("Lỗi getPendingCount:", error);

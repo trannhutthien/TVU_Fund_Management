@@ -3,13 +3,74 @@ import api from './api';
 /**
  * Lấy danh sách quỹ công khai (không cần authentication)
  * GET /api/funds/public
+ * Hỗ trợ các tham số: maloai, page, limit, capDo, trangThai, search, sapXep
  */
-export const getPublicFunds = async () => {
+export const getPublicFunds = async (filters = {}) => {
   try {
-    const response = await api.get('/funds/public');
+    const params = new URLSearchParams();
+    
+    if (filters.maloai) params.append('maloai', filters.maloai);
+    if (filters.page) params.append('page', filters.page);
+    if (filters.limit) params.append('limit', filters.limit);
+    if (filters.capDo) params.append('capDo', filters.capDo);
+    if (filters.trangThai) params.append('trangThai', filters.trangThai);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.sapXep) params.append('sapXep', filters.sapXep);
+    
+    const queryString = params.toString();
+    const url = queryString ? `/funds/public?${queryString}` : '/funds/public';
+    
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error('Error fetching public funds:', error);
+    throw error;
+  }
+};
+
+/**
+ * Lấy danh sách quỹ (cần authentication)
+ * GET /api/funds
+ * Hỗ trợ filter theo cap (cấp độ quỹ: 1, 2, 3)
+ */
+export const getFunds = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    
+    if (filters.cap) params.append('cap', filters.cap);
+    if (filters.maloai) params.append('maloai', filters.maloai);
+    if (filters.trangThai) params.append('trangThai', filters.trangThai);
+    if (filters.search) params.append('search', filters.search);
+    
+    const queryString = params.toString();
+    const url = queryString ? `/funds?${queryString}` : '/funds';
+    
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching funds:', error);
+    throw error;
+  }
+};
+
+/**
+ * Lấy số lượng quỹ theo từng loại (count by group)
+ * GET /api/funds/count-by-group
+ */
+export const getFundCountByGroup = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    
+    if (filters.capDo) params.append('capDo', filters.capDo);
+    if (filters.trangThai) params.append('trangThai', filters.trangThai);
+    
+    const queryString = params.toString();
+    const url = queryString ? `/funds/count-by-group?${queryString}` : '/funds/count-by-group';
+    
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching fund count by group:', error);
     throw error;
   }
 };
@@ -102,6 +163,8 @@ export const completeDisbursementRound = async (dotId) => {
 
 export default {
   getPublicFunds,
+  getFunds,
+  getFundCountByGroup,
   getPublicDisbursementRounds,
   getFundById,
   createFund,

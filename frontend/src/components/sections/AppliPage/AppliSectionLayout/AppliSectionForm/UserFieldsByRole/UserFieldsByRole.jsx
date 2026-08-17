@@ -25,6 +25,19 @@ const UserFieldsByRole = ({ role, values, onChange, isGuest = false }) => {
   const user = useAuthStore((s) => s.user);
   const [khoaOptions, setKhoaOptions] = useState([]);
 
+  // Debug: Log user object to check data
+  useEffect(() => {
+    if (user && role === 'sinh_vien') {
+      console.log('🔍 UserFieldsByRole - User object:', user);
+      console.log('📋 Khoa/Lớp data:', {
+        khoaPhong: user?.khoaPhong,
+        khoa_phong: user?.khoa_phong,
+        lop: user?.lop,
+        class: user?.class
+      });
+    }
+  }, [user, role]);
+
   useEffect(() => {
     if (role === 'sinh_vien') {
       api.get('/users/faculties')
@@ -132,30 +145,58 @@ const UserFieldsByRole = ({ role, values, onChange, isGuest = false }) => {
       {isSinhVien && (
         <div className={styles.fieldRow}>
           <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>
-              <HiOutlineBuildingOffice2 className={styles.fieldLabelIcon} />
-              Khoa / Phòng ban
-            </label>
-            <select
-              className={styles.select}
-              value={values?.khoa || ''}
-              onChange={(e) => handleFieldChange('khoa', e.target.value)}
-            >
-              <option value="">-- Chọn khoa/phòng --</option>
-              {khoaOptions.map((k) => (
-                <option key={k} value={k}>{k}</option>
-              ))}
-            </select>
+            {isGuest ? (
+              // Guest: dropdown để chọn
+              <>
+                <label className={styles.fieldLabel}>
+                  <HiOutlineBuildingOffice2 className={styles.fieldLabelIcon} />
+                  Khoa / Phòng ban
+                </label>
+                <select
+                  className={styles.select}
+                  value={values?.khoa || ''}
+                  onChange={(e) => handleFieldChange('khoa', e.target.value)}
+                >
+                  <option value="">-- Chọn khoa/phòng --</option>
+                  {khoaOptions.map((k) => (
+                    <option key={k} value={k}>{k}</option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              // Authenticated user: readonly với giá trị từ user
+              <Input
+                type="text"
+                label="Khoa / Phòng ban"
+                value={user?.khoaPhong || user?.khoa_phong || ''}
+                readOnly
+                className={styles.readonlyInput}
+                leftIcon={<HiOutlineBuildingOffice2 style={{ color: '#94a3b8' }} />}
+              />
+            )}
           </div>
           <div className={styles.fieldGroup}>
-            <Input
-              type="text"
-              label="Lớp"
-              placeholder="VD: DA20TTB..."
-              value={values?.lop || ''}
-              onChange={(e) => handleFieldChange('lop', e.target.value)}
-              leftIcon={<HiOutlineAcademicCap style={{ color: '#94a3b8' }} />}
-            />
+            {isGuest ? (
+              // Guest: text input để nhập
+              <Input
+                type="text"
+                label="Lớp"
+                placeholder="VD: DA20TTB..."
+                value={values?.lop || ''}
+                onChange={(e) => handleFieldChange('lop', e.target.value)}
+                leftIcon={<HiOutlineAcademicCap style={{ color: '#94a3b8' }} />}
+              />
+            ) : (
+              // Authenticated user: readonly với giá trị từ user
+              <Input
+                type="text"
+                label="Lớp"
+                value={user?.lop || ''}
+                readOnly
+                className={styles.readonlyInput}
+                leftIcon={<HiOutlineAcademicCap style={{ color: '#94a3b8' }} />}
+              />
+            )}
           </div>
         </div>
       )}
@@ -171,6 +212,8 @@ const UserFieldsByRole = ({ role, values, onChange, isGuest = false }) => {
               value={values?.donViCongTac || (isGuest ? '' : (user?.donViCongTac || user?.donvicongtac || ''))}
               onChange={(e) => handleFieldChange('donViCongTac', e.target.value)}
               leftIcon={<HiOutlineBriefcase style={{ color: '#94a3b8' }} />}
+              readOnly={!isGuest}
+              className={isGuest ? '' : styles.readonlyInput}
             />
           </div>
 
@@ -216,6 +259,8 @@ const UserFieldsByRole = ({ role, values, onChange, isGuest = false }) => {
               value={values?.donViCongTac || (isGuest ? '' : (user?.donViCongTac || user?.donvicongtac || ''))}
               onChange={(e) => handleFieldChange('donViCongTac', e.target.value)}
               leftIcon={<HiOutlineBriefcase style={{ color: '#94a3b8' }} />}
+              readOnly={!isGuest}
+              className={isGuest ? '' : styles.readonlyInput}
             />
           </div>
           <div className={styles.fieldGroup}>

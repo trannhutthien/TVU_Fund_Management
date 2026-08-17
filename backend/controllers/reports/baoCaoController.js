@@ -189,9 +189,9 @@ const buildDanhSachNhaTaiTro = async ({ quy_id, tu_ngay, den_ngay }) => {
       ntt.nhataitro_id,
       ntt.tennhataitro,
       ntt.loainhataitro,
-      COALESCE(nd.email, ntt.email, '') AS email,
-      COALESCE(nd.sodienthoai, ntt.sodienthoai, '') AS so_dien_thoai,
-      COALESCE(nd.diachi, ntt.diachi, '') AS dia_chi,
+      COALESCE(nd.email, '') AS email,
+      COALESCE(nd.sodienthoai, '') AS so_dien_thoai,
+      COALESCE(nd.diachi, '') AS dia_chi,
       COALESCE((
         SELECT SUM(kt.sotien) FROM khoantaitro kt 
         WHERE kt.nhataitro_id = ntt.nhataitro_id AND kt.trangthai = 'Da nhan'
@@ -570,7 +570,7 @@ const buildBaoCaoNamTaiChinh = async ({ nam_tai_chinh }) => {
   const [[duToanRow]] = await pool.query(
     `SELECT COALESCE(sotiendutoan, 0) AS sotiendutoan, trangthai
      FROM dutoanhangnam
-     WHERE namtaichinh = ?
+     WHERE namtaichinh = ? AND capduyet = 1
      LIMIT 1`,
     [nam]
   );

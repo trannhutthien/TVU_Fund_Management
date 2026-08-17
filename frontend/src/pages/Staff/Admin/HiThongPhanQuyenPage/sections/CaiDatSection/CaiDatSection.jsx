@@ -15,10 +15,14 @@ import {
   HiOutlinePlus,
   HiOutlineTrash,
   HiOutlinePencilSquare,
+  HiOutlinePhoto,
+  HiOutlineArrowUp,
+  HiOutlineArrowDown,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import api from '@services/api';
+import { uploadService } from '@services/uploadService';
 import { bankAccountService } from '@services/bankAccountService';
 import styles from './CaiDatSection.module.scss';
 
@@ -35,7 +39,7 @@ const CaiDatSection = () => {
   });
 
   // Settings State
-  const [tenHeThong, setTenHeThong] = useState('TVU Fund Management');
+  const [tenHeThong, setTenHeThong] = useState('Quỹ phát triển Đại học Trà Vinh');
   const [emailLienHe, setEmailLienHe] = useState('contact@tvu.edu.vn');
   const [soDienThoai, setSoDienThoai] = useState('0294.3855246');
   const [publicInfo, setPublicInfo] = useState({
@@ -64,6 +68,7 @@ const CaiDatSection = () => {
   
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [laiSuatNganHangThamChieu, setLaiSuatNganHangThamChieu] = useState('');
+  const [tyleLaiPhatToiDa, setTyleLaiPhatToiDa] = useState('');
 
   // ─── Landing Page Content State ──────────────────────────────
   const [heroContent, setHeroContent] = useState({
@@ -95,6 +100,10 @@ const CaiDatSection = () => {
   const [guidelinesContent, setGuidelinesContent] = useState({
     guidelines_contact_phone: '', guidelines_contact_email: '', guidelines_contact_address: '',
   });
+  const [bannerImages, setBannerImages] = useState([]);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [fundsBannerImages, setFundsBannerImages] = useState([]);
+  const [uploadingFundsBanner, setUploadingFundsBanner] = useState(false);
 
   // ─── School Bank Accounts State (DB) ────────────────────────
   const [schoolAccounts, setSchoolAccounts] = useState([]);
@@ -111,7 +120,7 @@ const CaiDatSection = () => {
         const settingsRes = await api.get('/system/settings');
         if (settingsRes.data?.success) {
           const cfg = settingsRes.data.settings;
-          setTenHeThong(cfg.ten_he_thong || 'TVU Fund Management');
+          setTenHeThong(cfg.ten_he_thong || 'Quỹ phát triển Đại học Trà Vinh');
           setEmailLienHe(cfg.email_lien_he || '');
           setSoDienThoai(cfg.so_dien_thoai || '');
           setPublicInfo({
@@ -137,6 +146,7 @@ const CaiDatSection = () => {
           setDinhDangChoPhep(cfg.dinh_dang_cho_phep || ['PDF', 'JPG', 'PNG', 'DOC']);
           setMaintenanceMode(cfg.maintenanceMode || false);
           setLaiSuatNganHangThamChieu(cfg.laisuatnganhangthamchieu != null ? String(cfg.laisuatnganhangthamchieu) : '');
+          setTyleLaiPhatToiDa(cfg.tyleLaiPhatToiDa != null ? String(cfg.tyleLaiPhatToiDa) : '');
           // Landing page content
           setHeroContent({
             hero_badge: cfg.hero_badge || '', hero_title: cfg.hero_title || '',
@@ -174,6 +184,8 @@ const CaiDatSection = () => {
             guidelines_contact_email: cfg.guidelines_contact_email || '',
             guidelines_contact_address: cfg.guidelines_contact_address || '',
           });
+          setBannerImages(cfg.hero_banner_images || []);
+          setFundsBannerImages(cfg.funds_banner_images || []);
         }
 
         // Fetch User Statistics
@@ -318,6 +330,106 @@ const CaiDatSection = () => {
   const updateTestimonialsContent = (field, value) => setTestimonialsContent(prev => ({ ...prev, [field]: value }));
   const updateFooterContent = (field, value) => setFooterContent(prev => ({ ...prev, [field]: value }));
   const updateGuidelinesContent = (field, value) => setGuidelinesContent(prev => ({ ...prev, [field]: value }));
+
+  // ─── Banner Image Handlers ────────────────────────────────────
+  const handleBannerImageUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingBanner(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const res = await uploadService.uploadFile(file);
+        if (res.success && res.data?.filePath) {
+          uploaded.push({ url: res.data.filePath, alt: file.name.replace(/\.[^.]+$/, '') });
+        }
+      }
+      if (uploaded.length > 0) {
+        const newImages = [...bannerImages, ...uploaded];
+        setBannerImages(newImages);
+        await handleSaveSettings({ hero_banner_images: newImages });
+        toast.success(`Đã upload ${uploaded.length} ảnh banner`);
+      }
+    } catch (err) {
+      toast.error('Lỗi upload ảnh banner');
+    } finally {
+      setUploadingBanner(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveBannerImage = async (index) => {
+    const newImages = bannerImages.filter((_, i) => i !== index);
+    setBannerImages(newImages);
+    await handleSaveSettings({ hero_banner_images: newImages });
+  };
+
+  const handleMoveBannerImage = async (index, direction) => {
+    const newImages = [...bannerImages];
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= newImages.length) return;
+    [newImages[index], newImages[swapIndex]] = [newImages[swapIndex], newImages[index]];
+    setBannerImages(newImages);
+    await handleSaveSettings({ hero_banner_images: newImages });
+  };
+
+  const handleBannerAltChange = async (index, alt) => {
+    const newImages = [...bannerImages];
+    newImages[index] = { ...newImages[index], alt };
+    setBannerImages(newImages);
+    await handleSaveSettings({ hero_banner_images: newImages });
+  };
+
+  // ─── Funds Banner Image Handlers ──────────────────────────────
+  const handleFundsBannerImageUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingFundsBanner(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const res = await uploadService.uploadFile(file);
+        if (res.success && res.data?.filePath) {
+          uploaded.push({ url: res.data.filePath, alt: file.name.replace(/\.[^.]+$/, '') });
+        }
+      }
+      if (uploaded.length > 0) {
+        const newImages = [...fundsBannerImages, ...uploaded];
+        setFundsBannerImages(newImages);
+        await handleSaveSettings({ funds_banner_images: newImages });
+        toast.success(`Đã upload ${uploaded.length} ảnh banner danh mục quỹ`);
+      }
+    } catch (err) {
+      toast.error('Lỗi upload ảnh banner danh mục quỹ');
+    } finally {
+      setUploadingFundsBanner(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveFundsBannerImage = async (index) => {
+    const newImages = fundsBannerImages.filter((_, i) => i !== index);
+    setFundsBannerImages(newImages);
+    await handleSaveSettings({ funds_banner_images: newImages });
+  };
+
+  const handleMoveFundsBannerImage = async (index, direction) => {
+    const newImages = [...fundsBannerImages];
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= newImages.length) return;
+    [newImages[index], newImages[swapIndex]] = [newImages[swapIndex], newImages[index]];
+    setFundsBannerImages(newImages);
+    await handleSaveSettings({ funds_banner_images: newImages });
+  };
+
+  const handleFundsBannerAltChange = async (index, alt) => {
+    const newImages = [...fundsBannerImages];
+    newImages[index] = { ...newImages[index], alt };
+    setFundsBannerImages(newImages);
+    await handleSaveSettings({ funds_banner_images: newImages });
+  };
 
   if (loading) {
     return (
@@ -595,6 +707,22 @@ const CaiDatSection = () => {
                     Mốc duyệt tối đa: <strong>{Math.round(parseFloat(laiSuatNganHangThamChieu) * 0.7 * 100) / 100}%/năm</strong>
                   </div>
                 )}
+                <Input
+                  label="Tỷ lệ lãi phạt quá hạn (hệ số)"
+                  type="number"
+                  step="0.1"
+                  min="0.5"
+                  max="3"
+                  value={tyleLaiPhatToiDa}
+                  onChange={(e) => setTyleLaiPhatToiDa(e.target.value)}
+                  placeholder="VD: 2"
+                  disabled={saving}
+                />
+                {tyleLaiPhatToiDa && laiSuatNganHangThamChieu && (
+                  <div style={{ fontSize: 13, color: '#f59e0b', alignSelf: 'end', paddingBottom: 8 }}>
+                    Lãi phạt: <strong>{parseFloat(tyleLaiPhatToiDa)} × {parseFloat(laiSuatNganHangThamChieu)}% = {Math.round(parseFloat(tyleLaiPhatToiDa) * parseFloat(laiSuatNganHangThamChieu) * 100) / 100}%/năm</strong>
+                  </div>
+                )}
               </div>
               <div className={styles.formActions}>
                 <Button
@@ -604,6 +732,7 @@ const CaiDatSection = () => {
                   onClick={() =>
                     handleSaveSettings({
                       laisuatnganhangthamchieu: laiSuatNganHangThamChieu ? parseFloat(laiSuatNganHangThamChieu) : null,
+                      tyleLaiPhatToiDa: tyleLaiPhatToiDa ? parseFloat(tyleLaiPhatToiDa) : null,
                     })
                   }
                 >
@@ -698,8 +827,151 @@ const CaiDatSection = () => {
                 <Input label="Stat 4 - Tiêu đề" value={heroContent.hero_stat_quy} onChange={(e) => updateHeroContent('hero_stat_quy', e.target.value)} disabled={saving} />
                 <Input label="Stat 4 - Phụ đề" value={heroContent.hero_stat_quy_sub} onChange={(e) => updateHeroContent('hero_stat_quy_sub', e.target.value)} disabled={saving} />
               </div>
+
+              {/* ─── Banner Images Management ──────────────────────── */}
+              <div className={styles.bannerImagesSection}>
+                <div className={styles.bannerImagesHeader}>
+                  <HiOutlinePhoto className={styles.bannerImagesIcon} />
+                  <div>
+                    <h4 className={styles.bannerImagesTitle}>Ảnh Banner Slideshow</h4>
+                    <p className={styles.bannerImagesDesc}>
+                      Ảnh sẽ tự động trượt mỗi 4 giây. Kéo để sắp xếp thứ tự.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Image Grid */}
+                {bannerImages.length > 0 && (
+                  <div className={styles.bannerImageGrid}>
+                    {bannerImages.map((img, idx) => (
+                      <div key={idx} className={styles.bannerImageCard}>
+                        <div className={styles.bannerImagePreview}>
+                          <img src={img.url} alt={img.alt || `Banner ${idx + 1}`} />
+                          <span className={styles.bannerImageIndex}>{idx + 1}</span>
+                        </div>
+                        <div className={styles.bannerImageActions}>
+                          <button
+                            type="button"
+                            className={styles.iconBtn}
+                            disabled={idx === 0}
+                            onClick={() => handleMoveBannerImage(idx, -1)}
+                            title="Di chuyển lên"
+                          >
+                            <HiOutlineArrowUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.iconBtn}
+                            disabled={idx === bannerImages.length - 1}
+                            onClick={() => handleMoveBannerImage(idx, 1)}
+                            title="Di chuyển xuống"
+                          >
+                            <HiOutlineArrowDown size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                            onClick={() => handleRemoveBannerImage(idx)}
+                            title="Xóa ảnh"
+                          >
+                            <HiOutlineTrash size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload Button */}
+                <label className={styles.bannerUploadBtn}>
+                  <HiOutlinePlus size={16} />
+                  <span>{uploadingBanner ? 'Đang upload...' : 'Thêm ảnh banner'}</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={handleBannerImageUpload}
+                    disabled={uploadingBanner || saving}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </div>
               <div className={styles.formActions}>
                 <Button variant="primary" size="sm" disabled={saving} onClick={() => handleSaveSettings(heroContent)}>Lưu thay đổi</Button>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── Card 5b: Funds Banner Content ───────────────────── */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <HiOutlinePhoto className={styles.cardIcon} />
+              <h3 className={styles.cardTitle}>Nội dung Banner Danh mục Quỹ</h3>
+            </div>
+            <div className={styles.cardBody}>
+              <p className={styles.cardDescription}>
+                Quản lý ảnh slideshow cho trang Danh mục Quỹ. Ảnh sẽ hiển thị dạng vòng lặp (slideshow) ở đầu trang.
+              </p>
+
+              {/* Banner Images Management */}
+              <div className={styles.bannerImagesSection}>
+                <div className={styles.bannerImagesHeader}>
+                  <HiOutlinePhoto className={styles.bannerImagesIcon} />
+                  <div>
+                    <h4 className={styles.bannerImagesTitle}>Ảnh Banner Danh mục Quỹ</h4>
+                    <p className={styles.bannerImagesDesc}>
+                      Kích thước khuyến nghị: 1920×600px. Định dạng JPG, PNG hoặc WebP.
+                    </p>
+                  </div>
+                </div>
+
+                {fundsBannerImages.length > 0 && (
+                  <div className={styles.bannerImageGrid}>
+                    {fundsBannerImages.map((img, idx) => (
+                      <div key={idx} className={styles.bannerImageCard}>
+                        <div className={styles.bannerImagePreview}>
+                          <img src={img.url} alt={img.alt || `Banner ${idx + 1}`} />
+                          <span className={styles.bannerImageIndex}>{idx + 1}</span>
+                        </div>
+                        <div className={styles.bannerImageActions}>
+                          <button
+                            type="button"
+                            className={styles.bannerActionBtn}
+                            disabled={idx === 0}
+                            onClick={() => handleMoveFundsBannerImage(idx, -1)}
+                            title="Di chuyển lên"
+                          >↑</button>
+                          <button
+                            type="button"
+                            className={styles.bannerActionBtn}
+                            disabled={idx === fundsBannerImages.length - 1}
+                            onClick={() => handleMoveFundsBannerImage(idx, 1)}
+                            title="Di chuyển xuống"
+                          >↓</button>
+                          <button
+                            type="button"
+                            className={`${styles.bannerActionBtn} ${styles.bannerActionDanger}`}
+                            onClick={() => handleRemoveFundsBannerImage(idx)}
+                            title="Xóa ảnh"
+                          >✕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <label className={styles.bannerUploadBtn}>
+                  <HiOutlinePlus size={16} />
+                  <span>{uploadingFundsBanner ? 'Đang upload...' : 'Thêm ảnh banner'}</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={handleFundsBannerImageUpload}
+                    disabled={uploadingFundsBanner || saving}
+                    style={{ display: 'none' }}
+                  />
+                </label>
               </div>
             </div>
           </div>

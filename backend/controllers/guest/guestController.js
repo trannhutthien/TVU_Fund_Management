@@ -8,285 +8,127 @@ import {
   sendDonationCreatedEmail
 } from "../../services/emailService.js";
 
-/**
- * Validates email format
- */
-const validateEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-/**
- * Validates phone format (10-11 digits)
- */
-const validatePhone = (phone) => {
-  const phoneRegex = /^[0-9]{10,11}$/;
-  return phoneRegex.test(phone.trim());
-};
-
-const validateBankAccountNumber = (accountNumber) => {
-  const accountRegex = /^[0-9]{6,20}$/;
-  return accountRegex.test(accountNumber.trim());
-};
-
-const isEmailDeliveryError = (error) => {
-  return error?.code === "EMAIL_NOT_CONFIGURED" || error?.code === "EMAIL_SEND_FAILED";
-};
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const validatePhone = (phone) => /^[0-9]{10,11}$/.test(phone.trim());
+const validateBankAccountNumber = (n) => /^[0-9]{6,20}$/.test(n.trim());
+const isEmailDeliveryError = (e) => e?.code === "EMAIL_NOT_CONFIGURED" || e?.code === "EMAIL_SEND_FAILED";
 const GUEST_OTP_EXPIRY_MINUTES = 30;
 
-const sendEmailErrorResponse = (res, action = "gửi mã OTP") => {
-  return res.status(500).json({
-    success: false,
-    message: `Không thể ${action} qua email thật. Vui lòng kiểm tra cấu hình SMTP và thử lại.`
-  });
-};
+const sendEmailErrorResponse = (res, action = "gui ma OTP") =>
+  res.status(500).json({ success: false, message: `Khong the ${action} qua email. Vui long kiem tra SMTP.` });
 
-/**
- * Tạo mật khẩu ngẫu nhiên an toàn
- */
 const generateRandomPassword = () => {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-  let password = "";
-  for (let i = 0; i < 12; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
+  let pw = "";
+  for (let i = 0; i < 12; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
+  return pw;
 };
 
-const getGuestOtpSecret = () => (
-  process.env.GUEST_OTP_SECRET ||
-  process.env.JWT_SECRET ||
-  "tvu-fund-management-guest-otp-secret"
-);
+const getGuestOtpSecret = () =>
+  process.env.GUEST_OTP_SECRET || process.env.JWT_SECRET || "tvu-fund-management-guest-otp-secret";
 
-const hashGuestOtp = (email, trackingUuid, otpCode) => (
-  crypto
-    .createHmac("sha256", getGuestOtpSecret())
-    .update(`${email}:${trackingUuid}:${otpCode}`)
-    .digest("hex")
-);
+const hashGuestOtp = (email, trackingUuid, otpCode) =>
+  crypto.createHmac("sha256", getGuestOtpSecret()).update(`${email}:${trackingUuid}:${otpCode}`).digest("hex");
 
-const createGuestOtpExpiresAt = () => (
-  new Date(Date.now() + GUEST_OTP_EXPIRY_MINUTES * 60 * 1000)
-);
+const createGuestOtpExpiresAt = () => new Date(Date.now() + GUEST_OTP_EXPIRY_MINUTES * 60 * 1000);
 
 const signGuestOtpPayload = (payload) => {
-  const encodedPayload = Buffer
-    .from(JSON.stringify(payload), "utf8")
-    .toString("base64url");
-  const signature = crypto
-    .createHmac("sha256", getGuestOtpSecret())
-    .update(encodedPayload)
-    .digest("base64url");
+  const encodedPayload = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const signature = crypto.createHmac("sha256", getGuestOtpSecret()).update(encodedPayload).digest("base64url");
   return `${encodedPayload}.${signature}`;
 };
 
 const timingSafeStringEqual = (left, right) => {
-  const leftBuffer = Buffer.from(left || "");
-  const rightBuffer = Buffer.from(right || "");
-  return leftBuffer.length === rightBuffer.length &&
-    crypto.timingSafeEqual(leftBuffer, rightBuffer);
+  const a = Buffer.from(left || "");
+  const b = Buffer.from(right || "");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 };
 
 const readGuestOtpPayload = (token, options = {}) => {
-  if (!token || typeof token !== "string" || !token.includes(".")) {
+  if (!token || typeof token !== "string" || !token.includes("."))
     throw new Error("OTP_INVALID_OR_NOT_FOUND");
-  }
-
   const [encodedPayload, signature] = token.split(".");
-  const expectedSignature = crypto
-    .createHmac("sha256", getGuestOtpSecret())
-    .update(encodedPayload)
-    .digest("base64url");
-
-  if (!timingSafeStringEqual(signature, expectedSignature)) {
-    throw new Error("OTP_INVALID_OR_NOT_FOUND");
-  }
-
+  const expected = crypto.createHmac("sha256", getGuestOtpSecret()).update(encodedPayload).digest("base64url");
+  if (!timingSafeStringEqual(signature, expected)) throw new Error("OTP_INVALID_OR_NOT_FOUND");
   const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8"));
-  if (!options.allowExpired && (!payload.expiresAt || Date.now() > new Date(payload.expiresAt).getTime())) {
+  if (!options.allowExpired && (!payload.expiresAt || Date.now() > new Date(payload.expiresAt).getTime()))
     throw new Error("OTP_EXPIRED");
-  }
-
   return payload;
 };
 
-/**
- * POST /api/guest/yeu-cau
- * Gửi đơn xin hỗ trợ vãng lai
- */
+// ═══════════════════════════════════════════════════════════════════════════════
+// POST /api/guest/yeu-cau — Gui don ho tro vang lai
+// ═══════════════════════════════════════════════════════════════════════════════
 export const submitGuestApplication = async (req, res) => {
   try {
     const {
-      guestHoTen,
-      guestEmail,
-      guestSoDienThoai,
-      guestMssv,
-      guestKhoa,
-      guestLop,
-      guestSoTaiKhoan,
-      guestNganHang,
-      guestChuTaiKhoan,
-      quyId,
-      lyDo,
-      soTienDeNghi,
-      taiLieuDinhKem,
-      loaiHoTro,
-      tongKinhPhiDuAn,
-      laDeTai,
-      formTimestamp,
-      userRole,
-      donViCongTac,
-      soNamCongTac,
-      chuyenMon,
+      guestHoTen, guestEmail, guestSoDienThoai, guestMssv, guestKhoa, guestLop,
+      guestSoTaiKhoan, guestNganHang, guestChuTaiKhoan,
+      quyId, tieuDe, lyDo, soTienDeNghi, taiLieuDinhKem, loaiHoTro, tongKinhPhiDuAn,
+      laDeTai, formTimestamp, userRole, donViCongTac, soNamCongTac,
     } = req.body;
 
-    // Anti-bot: Kiểm tra thời gian tối thiểu từ khi mở form (>= 3 giây)
+    // Anti-bot
     if (formTimestamp) {
       const elapsed = Date.now() - new Date(formTimestamp).getTime();
-      if (elapsed < 3000) {
-        return res.status(400).json({
-          success: false,
-          message: "Vui lòng đợi ít nhất 3 giây trước khi gửi form."
-        });
-      }
+      if (elapsed < 3000)
+        return res.status(400).json({ success: false, message: "Vui long doi it nhat 3 giay truoc khi gui form." });
     }
 
-    const requiredApplicationFields = [
-      guestHoTen,
-      guestEmail,
-      guestSoDienThoai,
-      quyId,
-      lyDo,
-      soTienDeNghi,
-      taiLieuDinhKem
-    ];
-    // Non-student roles don't need guestLop
-    if (userRole === 'sinh_vien' || !userRole) {
-      requiredApplicationFields.push(guestMssv, guestKhoa, guestLop, guestSoTaiKhoan, guestNganHang, guestChuTaiKhoan);
-    } else {
-      requiredApplicationFields.push(guestSoTaiKhoan, guestNganHang, guestChuTaiKhoan);
-    }
     const normalizedEmail = guestEmail ? guestEmail.trim().toLowerCase() : "";
 
-    if (requiredApplicationFields.some((value) => value === undefined || value === null || String(value).trim() === "")) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui long nhap day du thong tin ca nhan, ngan hang, quy, ly do, so tien va file minh chung"
-      });
-    }
+    // Validate
+    const required = [guestHoTen, guestEmail, quyId, lyDo, soTienDeNghi, taiLieuDinhKem];
+    const isStudent = userRole === 'sinh_vien' || !userRole;
+    if (isStudent) required.push(guestMssv, guestKhoa, guestLop, guestSoTaiKhoan, guestNganHang, guestChuTaiKhoan);
+    else required.push(guestSoTaiKhoan, guestNganHang, guestChuTaiKhoan);
 
-    // 1. Validate bắt buộc
-    if (!guestHoTen || !guestEmail || !quyId || !lyDo || !soTienDeNghi || !taiLieuDinhKem) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng nhập đầy đủ thông tin bắt buộc: Họ tên, Email, Quỹ, Lý do, Số tiền và File minh chứng"
-      });
-    }
-
-    if (!validateEmail(normalizedEmail)) {
-      return res.status(400).json({
-        success: false,
-        message: "Email không đúng định dạng"
-      });
-    }
-
-    if (guestSoDienThoai && !validatePhone(guestSoDienThoai)) {
-      return res.status(400).json({
-        success: false,
-        message: "Số điện thoại không đúng định dạng (10-11 số)"
-      });
-    }
-
-    if (!validateBankAccountNumber(guestSoTaiKhoan)) {
-      return res.status(400).json({
-        success: false,
-        message: "So tai khoan ngan hang khong hop le"
-      });
-    }
+    if (required.some(v => v === undefined || v === null || String(v).trim() === ""))
+      return res.status(400).json({ success: false, message: "Vui long nhap day du thong tin bat buoc" });
+    if (!validateEmail(normalizedEmail))
+      return res.status(400).json({ success: false, message: "Email khong dung dinh dang" });
+    if (guestSoDienThoai && !validatePhone(guestSoDienThoai))
+      return res.status(400).json({ success: false, message: "So dien thoai khong dung dinh dang (10-11 so)" });
+    if (!validateBankAccountNumber(guestSoTaiKhoan))
+      return res.status(400).json({ success: false, message: "So tai khoan ngan hang khong hop le" });
 
     const amount = parseFloat(soTienDeNghi);
-    if (isNaN(amount) || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Số tiền đề nghị phải lớn hơn 0"
-      });
-    }
+    if (isNaN(amount) || amount <= 0)
+      return res.status(400).json({ success: false, message: "So tien de nghi phai lon hon 0" });
 
-
-
-    // Validate loaiHoTro
     const validLoaiHoTro = ['Tai tro khong hoan lai', 'Tai tro co thu hoi', 'Cho vay'];
     const resolvedLoaiHoTro = loaiHoTro || 'Tai tro khong hoan lai';
-    if (!validLoaiHoTro.includes(resolvedLoaiHoTro)) {
-      return res.status(400).json({
-        success: false,
-        message: "Loai hinh ho tro khong hop le"
-      });
-    }
+    if (!validLoaiHoTro.includes(resolvedLoaiHoTro))
+      return res.status(400).json({ success: false, message: "Loai hinh ho tro khong hop le" });
 
-    // Validate tongKinhPhiDuAn khi chọn "Tai tro co thu hoi"
     let resolvedTongKinhPhiDuAn = tongKinhPhiDuAn ? parseFloat(tongKinhPhiDuAn) : null;
     if (resolvedLoaiHoTro === 'Tai tro co thu hoi') {
-      if (!resolvedTongKinhPhiDuAn || isNaN(resolvedTongKinhPhiDuAn) || resolvedTongKinhPhiDuAn <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Don tai tro thu hoi phai co Tong kinh phi du an > 0",
-          error_code: "THIEU_TONG_KINH_PHI"
-        });
-      }
-      if (resolvedTongKinhPhiDuAn < amount) {
-        return res.status(400).json({
-          success: false,
-          message: "Tong kinh phi du an phai lon hon hoac bang so tien de nghi"
-        });
-      }
+      if (!resolvedTongKinhPhiDuAn || isNaN(resolvedTongKinhPhiDuAn) || resolvedTongKinhPhiDuAn <= 0)
+        return res.status(400).json({ success: false, message: "Don tai tro thu hoi phai co Tong kinh phi du an > 0", error_code: "THIEU_TONG_KINH_PHI" });
+      if (resolvedTongKinhPhiDuAn < amount)
+        return res.status(400).json({ success: false, message: "Tong kinh phi du an phai lon hon hoac bang so tien de nghi" });
     }
 
-    // 2. Kiểm tra quỹ tồn tại và đang hoạt động
+    // Kiem tra quy
     const fund = await FundModel.getFundById(quyId);
-    if (!fund) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy quỹ hỗ trợ này"
-      });
-    }
+    if (!fund) return res.status(404).json({ success: false, message: "Khong tim thay quy ho tro nay" });
+    if (fund.trang_thai !== "Dang hoat dong")
+      return res.status(400).json({ success: false, message: "Quy hien dang tam dong nhan don" });
+    if (fund.sotienhotrotoida && amount > parseFloat(fund.sotienhotrotoida))
+      return res.status(400).json({ success: false, message: `So tien vuot qua muc ho tro toi da cua quy` });
+    if (fund.loai_dieu_hanh === "Tap trung - Be chung")
+      return res.status(400).json({ success: false, message: "Khong duoc nop don vao Bao tien chung phat trien" });
 
-    if (fund.trang_thai !== "Dang hoat dong") {
-      return res.status(400).json({
-        success: false,
-        message: "Quỹ hiện đang tạm đóng nhận đơn xin hỗ trợ"
-      });
-    }
-
-    // Kiểm tra số tiền không vượt quá trần của quỹ (nếu có cấu hình)
-    if (fund.sotienhotrotoida && amount > parseFloat(fund.sotienhotrotoida)) {
-      return res.status(400).json({
-        success: false,
-        message: `So tien yeu cau (${amount.toLocaleString('vi-VN')}d) vuot qua muc ho tro toi da cua quy (${parseFloat(fund.sotienhotrotoida).toLocaleString('vi-VN')}d)`
-      });
-    }
-
-    if (fund.loai_dieu_hanh === "Tap trung - Be chung") {
-      return res.status(400).json({
-        success: false,
-        message: "Không được phép nộp đơn xin hỗ trợ từ Bể tiền chung phát triển. Vui lòng nộp vào các Mục chi con."
-      });
-    }
-
-    // 3. Tạo bảo mật và tracking
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // OTP 6 số
+    // Tao OTP + tracking
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = createGuestOtpExpiresAt();
     const trackingUuid = crypto.randomUUID();
 
-    // Map role-specific fields to generic columns
     const validRoles = ['sinh_vien', 'can_bo_truong', 'can_bo_nghi_huu', 'nha_khoa_hoc'];
     const resolvedUserRole = validRoles.includes(userRole) ? userRole : 'sinh_vien';
-
     let resolvedKhoa = guestKhoa ? guestKhoa.trim() : null;
     let resolvedLop = guestLop ? guestLop.trim() : null;
     if (resolvedUserRole !== 'sinh_vien') {
-      // Non-student: guest_khoa = donViCongTac, guest_lop = soNamCongTac (nếu có)
       resolvedKhoa = donViCongTac ? donViCongTac.trim() : resolvedKhoa;
       resolvedLop = soNamCongTac ? String(soNamCongTac).trim() : null;
     }
@@ -303,6 +145,7 @@ export const submitGuestApplication = async (req, res) => {
       guestNganHang: guestNganHang.trim(),
       guestChuTaiKhoan: guestChuTaiKhoan.trim().toUpperCase(),
       quyId,
+      tieuDe: tieuDe ? tieuDe.trim() : null,
       lyDo: lyDo.trim(),
       soTienDeNghi: amount,
       taiLieuDinhKem: taiLieuDinhKem.trim(),
@@ -311,6 +154,7 @@ export const submitGuestApplication = async (req, res) => {
       laDeTai: laDeTai ? 1 : 0,
       trackingUuid
     };
+
     const otpToken = signGuestOtpPayload({
       type: "application",
       email: normalizedEmail,
@@ -320,123 +164,73 @@ export const submitGuestApplication = async (req, res) => {
       application: pendingApplication
     });
 
-    sendOTPEmail(
-      normalizedEmail,
-      guestHoTen.trim(),
-      otpCode,
-      trackingUuid
-    ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
+    // LUU VAO guest_tracking (de tracking truoc khi verify OTP)
+    await GuestModel.createTracking({
+      trackingUuid,
+      hoten: guestHoTen.trim(),
+      email: normalizedEmail,
+      loai: 'yeucauhotro',
+      quyId,
+      sotien: amount,
+      otpHash: hashGuestOtp(normalizedEmail, trackingUuid, otpCode),
+    });
+
+    // Gui OTP email
+    sendOTPEmail(normalizedEmail, guestHoTen.trim(), otpCode, trackingUuid)
+      .catch(err => console.error("Email OTP failed (non-blocking):", err.message));
 
     return res.status(201).json({
       success: true,
       message: "Da gui ma OTP ve email. Ho so chi duoc luu sau khi xac thuc OTP thanh cong.",
-      data: {
-        email: normalizedEmail,
-        trackingUuid,
-        otpToken
-      }
+      data: { email: normalizedEmail, trackingUuid, otpToken }
     });
-
   } catch (error) {
-    console.error("Lỗi submitGuestApplication:", error);
-    if (isEmailDeliveryError(error)) {
-      return sendEmailErrorResponse(res, "gửi mã OTP xác thực");
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi hệ thống khi gửi đơn xin hỗ trợ"
-    });
+    console.error("Loi submitGuestApplication:", error);
+    if (isEmailDeliveryError(error)) return sendEmailErrorResponse(res, "gui ma OTP xac thuc");
+    return res.status(500).json({ success: false, message: "Loi he thong khi gui don ho tro" });
   }
 };
 
-/**
- * POST /api/guest/tai-tro
- * Đăng ký tài trợ vãng lai
- */
+// ═══════════════════════════════════════════════════════════════════════════════
+// POST /api/guest/tai-tro — Dang ky tai tro vang lai
+// ═══════════════════════════════════════════════════════════════════════════════
 export const submitGuestDonation = async (req, res) => {
   try {
     const {
-      guestHoTen,
-      guestEmail,
-      guestSoDienThoai,
-      guestToChuc,
-      guestDiaChi,
-      quyId,
-      soTien,
-      hinhThuc,
-      maGiaoDich,
-      chungTu,
-      ghiChu,
-      formTimestamp,
+      guestHoTen, guestEmail, guestSoDienThoai, guestToChuc, guestDiaChi,
+      quyId, soTien, hinhThuc, maGiaoDich, chungTu, ghiChu, formTimestamp,
       loaiNhaTaiTro,
-      masothue,
-      linhVucHopTac,
-      nguoiLienHe,
-      chucDanh,
     } = req.body;
 
-    // Anti-bot: Kiểm tra thời gian tối thiểu từ khi mở form (>= 3 giây)
     if (formTimestamp) {
       const elapsed = Date.now() - new Date(formTimestamp).getTime();
-      if (elapsed < 3000) {
-        return res.status(400).json({
-          success: false,
-          message: "Vui long doi it nhat 3 giay truoc khi gui form."
-        });
-      }
+      if (elapsed < 3000)
+        return res.status(400).json({ success: false, message: "Vui long doi it nhat 3 giay truoc khi gui form." });
     }
 
-    if (!guestHoTen || !guestEmail || !quyId || !soTien) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui long nhap day du thong tin bat buoc: Ho ten, Email, Quy, So tien"
-      });
-    }
+    if (!guestHoTen || !guestEmail || !quyId || !soTien)
+      return res.status(400).json({ success: false, message: "Vui long nhap day du: Ho ten, Email, Quy, So tien" });
 
     const normalizedEmail = guestEmail.trim().toLowerCase();
-
-    if (!validateEmail(normalizedEmail)) {
-      return res.status(400).json({
-        success: false,
-        message: "Email khong dung dinh dang"
-      });
-    }
-
-    if (guestSoDienThoai && !validatePhone(guestSoDienThoai)) {
-      return res.status(400).json({
-        success: false,
-        message: "So dien thoai khong dung dinh dang (10-11 so)"
-      });
-    }
+    if (!validateEmail(normalizedEmail))
+      return res.status(400).json({ success: false, message: "Email khong dung dinh dang" });
+    if (guestSoDienThoai && !validatePhone(guestSoDienThoai))
+      return res.status(400).json({ success: false, message: "So dien thoai khong dung dinh dang (10-11 so)" });
 
     const amount = parseFloat(soTien);
-    if (isNaN(amount) || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "So tien dong gop phai lon hon 0"
-      });
-    }
+    if (isNaN(amount) || amount <= 0)
+      return res.status(400).json({ success: false, message: "So tien dong gop phai lon hon 0" });
 
     const fund = await FundModel.getFundById(quyId);
-    if (!fund) {
-      return res.status(404).json({
-        success: false,
-        message: "Khong tim thay quy dong gop nay"
-      });
-    }
-
-    if (fund.trang_thai !== "Dang hoat dong") {
-      return res.status(400).json({
-        success: false,
-        message: "Quy dong gop hien dang tam dung tiep nhan dong gop"
-      });
-    }
+    if (!fund) return res.status(404).json({ success: false, message: "Khong tim thay quy dong gop nay" });
+    if (fund.trang_thai !== "Dang hoat dong")
+      return res.status(400).json({ success: false, message: "Quy hien dang tam dung tiep nhan dong gop" });
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = createGuestOtpExpiresAt();
     const trackingUuid = crypto.randomUUID();
     const normalizedMethod = ["Tien mat", "Chuyen khoan", "Khac"].includes(hinhThuc) ? hinhThuc : "Khac";
+
     const pendingDonation = {
       guestHoTen: guestHoTen.trim(),
       guestEmail: normalizedEmail,
@@ -444,10 +238,6 @@ export const submitGuestDonation = async (req, res) => {
       guestToChuc: guestToChuc ? guestToChuc.trim() : null,
       guestDiaChi: guestDiaChi ? guestDiaChi.trim() : null,
       loaiNhaTaiTro: loaiNhaTaiTro || 'Ca nhan',
-      masothue: masothue ? masothue.trim() : null,
-      linhVucHopTac: linhVucHopTac ? linhVucHopTac.trim() : null,
-      nguoiLienHe: nguoiLienHe ? nguoiLienHe.trim() : null,
-      chucDanh: chucDanh ? chucDanh.trim() : null,
       quyId,
       soTien: amount,
       hinhThuc: normalizedMethod,
@@ -457,6 +247,7 @@ export const submitGuestDonation = async (req, res) => {
       ghiChu: ghiChu ? ghiChu.trim() : null,
       trackingUuid
     };
+
     const otpToken = signGuestOtpPayload({
       type: "donation",
       email: normalizedEmail,
@@ -466,62 +257,47 @@ export const submitGuestDonation = async (req, res) => {
       donation: pendingDonation
     });
 
-    sendDonationOTPEmail(
-      normalizedEmail,
-      guestHoTen.trim(),
-      otpCode,
-      trackingUuid
-    ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
+    // LUU VAO guest_tracking
+    await GuestModel.createTracking({
+      trackingUuid,
+      hoten: guestHoTen.trim(),
+      email: normalizedEmail,
+      loai: 'khoantaitro',
+      quyId,
+      sotien: amount,
+      otpHash: hashGuestOtp(normalizedEmail, trackingUuid, otpCode),
+    });
+
+    sendDonationOTPEmail(normalizedEmail, guestHoTen.trim(), otpCode, trackingUuid)
+      .catch(err => console.error("Email OTP failed (non-blocking):", err.message));
 
     return res.status(201).json({
       success: true,
       message: "Da gui ma OTP tai tro ve email. Khoan tai tro chi duoc luu sau khi xac thuc OTP thanh cong.",
-      data: {
-        email: normalizedEmail,
-        trackingUuid,
-        otpToken
-      }
+      data: { email: normalizedEmail, trackingUuid, otpToken }
     });
   } catch (error) {
     console.error("Loi submitGuestDonation:", error);
-    if (isEmailDeliveryError(error)) {
-      return sendEmailErrorResponse(res, "gui ma OTP xac thuc");
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Loi he thong khi dang ky dong gop tai tro"
-    });
+    if (isEmailDeliveryError(error)) return sendEmailErrorResponse(res, "gui ma OTP xac thuc");
+    return res.status(500).json({ success: false, message: "Loi he thong khi dang ky dong gop tai tro" });
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// POST /api/guest/resend-otp — Gui lai OTP
+// ═══════════════════════════════════════════════════════════════════════════════
 export const resendGuestOtp = async (req, res) => {
   try {
     const { email, type, otpToken } = req.body;
-
-    if (!email || !type || !otpToken) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui long cung cap email, loai don va ma phien OTP"
-      });
-    }
-
-    if (type !== "application" && type !== "donation") {
-      return res.status(400).json({
-        success: false,
-        message: "Loai don khong hop le"
-      });
-    }
+    if (!email || !type || !otpToken)
+      return res.status(400).json({ success: false, message: "Vui long cung cap email, loai don va ma phien OTP" });
+    if (type !== "application" && type !== "donation")
+      return res.status(400).json({ success: false, message: "Loai don khong hop le" });
 
     const normalizedEmail = email.trim().toLowerCase();
     const pending = readGuestOtpPayload(otpToken, { allowExpired: true });
-
-    if (pending.type !== type || pending.email !== normalizedEmail) {
-      return res.status(400).json({
-        success: false,
-        message: "Thong tin gui lai OTP khong khop voi phien dang xac thuc"
-      });
-    }
+    if (pending.type !== type || pending.email !== normalizedEmail)
+      return res.status(400).json({ success: false, message: "Thong tin gui lai OTP khong khop voi phien dang xac thuc" });
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = createGuestOtpExpiresAt();
@@ -533,264 +309,124 @@ export const resendGuestOtp = async (req, res) => {
     const nextOtpToken = signGuestOtpPayload(nextPayload);
 
     if (type === "application") {
-      sendOTPEmail(
-        normalizedEmail,
-        pending.application?.guestHoTen || "Khach vang lai",
-        otpCode,
-        pending.trackingUuid
-      ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
+      sendOTPEmail(normalizedEmail, pending.application?.guestHoTen || "Khach vang lai", otpCode, pending.trackingUuid)
+        .catch(err => console.error("Email OTP failed (non-blocking):", err.message));
     } else {
-      sendDonationOTPEmail(
-        normalizedEmail,
-        pending.donation?.guestHoTen || "Nha tai tro",
-        otpCode,
-        pending.trackingUuid
-      ).catch(err => console.error("Email OTP failed (non-blocking):", err.message));
+      sendDonationOTPEmail(normalizedEmail, pending.donation?.guestHoTen || "Nha tai tro", otpCode, pending.trackingUuid)
+        .catch(err => console.error("Email OTP failed (non-blocking):", err.message));
     }
 
     return res.status(200).json({
       success: true,
       message: "Da gui lai ma OTP moi ve email",
-      data: {
-        email: normalizedEmail,
-        trackingUuid: pending.trackingUuid,
-        otpToken: nextOtpToken,
-        expiresInMinutes: GUEST_OTP_EXPIRY_MINUTES
-      }
+      data: { email: normalizedEmail, trackingUuid: pending.trackingUuid, otpToken: nextOtpToken, expiresInMinutes: GUEST_OTP_EXPIRY_MINUTES }
     });
   } catch (error) {
     console.error("Loi resendGuestOtp:", error);
-
-    if (error.message === "OTP_INVALID_OR_NOT_FOUND") {
-      return res.status(400).json({
-        success: false,
-        message: "Phien xac thuc OTP khong hop le. Vui long gui lai form."
-      });
-    }
-
-    if (isEmailDeliveryError(error)) {
-      return sendEmailErrorResponse(res, "gui lai ma OTP");
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Loi he thong khi gui lai ma OTP"
-    });
+    if (error.message === "OTP_INVALID_OR_NOT_FOUND")
+      return res.status(400).json({ success: false, message: "Phien xac thuc OTP khong hop le. Vui long gui lai form." });
+    if (isEmailDeliveryError(error)) return sendEmailErrorResponse(res, "gui lai ma OTP");
+    return res.status(500).json({ success: false, message: "Loi he thong khi gui lai ma OTP" });
   }
 };
-/**
- * POST /api/guest/verify-otp
- * Xác thực mã OTP và kích hoạt luồng di chuyển dữ liệu
- */
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// POST /api/guest/verify-otp — Xac thuc OTP va tao du lieu chinh
+// Ho tro 2 luong: token-based (ApplyPage) va DB-based (TrackPage)
+// ═══════════════════════════════════════════════════════════════════════════════
 export const verifyOtp = async (req, res) => {
   try {
-    const { email, otpCode, type, otpToken } = req.body;
-
-    if (!email || !otpCode || !type) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui long cung cap day du thong tin: Email, ma OTP va loai don"
-      });
-    }
-
-    if (type !== "application" && type !== "donation") {
-      return res.status(400).json({
-        success: false,
-        message: "Loai don khong hop le"
-      });
-    }
+    const { email, otpCode, type, otpToken, trackingUuid } = req.body;
+    if (!email || !otpCode || !type)
+      return res.status(400).json({ success: false, message: "Vui long cung cap day du: Email, ma OTP, loai don" });
+    if (type !== "application" && type !== "donation")
+      return res.status(400).json({ success: false, message: "Loai don khong hop le" });
 
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedOtp = otpCode.trim();
     const plainPassword = generateRandomPassword();
 
-    if (type === "application") {
-      let result;
-      let guestName;
-
-      if (otpToken) {
-        const pending = readGuestOtpPayload(otpToken);
-
-        if (pending.type !== "application" || pending.email !== normalizedEmail) {
-          return res.status(400).json({
-            success: false,
-            message: "Ma xac thuc OTP khong dung hoac thong tin email khong khop"
-          });
-        }
-
-        const expectedHash = hashGuestOtp(normalizedEmail, pending.trackingUuid, normalizedOtp);
-        if (!timingSafeStringEqual(pending.otpHash, expectedHash)) {
-          return res.status(400).json({
-            success: false,
-            message: "Ma xac thuc OTP khong dung hoac da het hieu luc"
-          });
-        }
-
-        result = await GuestModel.verifyOTPAndCreateApplication(
-          pending.application,
-          plainPassword
-        );
-        guestName = pending.application.guestHoTen;
-      } else {
-        const guestApp = await GuestModel.findApplicationByEmailAndOtp(normalizedEmail, normalizedOtp);
-        if (!guestApp) {
-          return res.status(400).json({
-            success: false,
-            message: "Ma xac thuc OTP khong dung hoac don da duoc xac minh truoc do"
-          });
-        }
-
-        result = await GuestModel.verifyOTPAndMigrateApplication(
-          normalizedEmail,
-          normalizedOtp,
-          plainPassword
-        );
-        guestName = guestApp.guest_hoten;
-      }
-
-      sendAccountCreatedEmail(
-        normalizedEmail,
-        guestName,
-        plainPassword,
-        result.trackingUuid
-      ).catch(err => console.error("Email created failed (non-blocking):", err.message));
-
-      return res.status(200).json({
-        success: true,
-        message: "Xac thuc OTP thanh cong. Ho so da duoc luu va gui den bo phan duyet.",
-        data: {
-          trackingUuid: result.trackingUuid,
-          email: normalizedEmail,
-          tempPassword: plainPassword,
-          autoCreatedUser: true
-        }
-      });
-    }
-
-    let result;
-    let guestName;
-    let donationAmount;
-
+    // ── Luong 1: Token-based (tu ApplyPage, co otpToken) ──────────────────────
     if (otpToken) {
       const pending = readGuestOtpPayload(otpToken);
-
-      if (pending.type !== "donation" || pending.email !== normalizedEmail) {
-        return res.status(400).json({
-          success: false,
-          message: "Ma xac thuc OTP khong dung hoac thong tin email khong khop"
-        });
-      }
+      if (pending.type !== type || pending.email !== normalizedEmail)
+        return res.status(400).json({ success: false, message: "Ma xac thuc OTP khong dung hoac email khong khop" });
 
       const expectedHash = hashGuestOtp(normalizedEmail, pending.trackingUuid, normalizedOtp);
-      if (!timingSafeStringEqual(pending.otpHash, expectedHash)) {
-        return res.status(400).json({
-          success: false,
-          message: "Ma xac thuc OTP khong dung hoac da het hieu luc"
+      if (!timingSafeStringEqual(pending.otpHash, expectedHash))
+        return res.status(400).json({ success: false, message: "Ma OTP khong dung hoac da het hieu luc" });
+
+      if (type === "application") {
+        const appData = pending.application;
+        const result = await GuestModel.verifyAndMigrateApplication(appData, plainPassword);
+        sendAccountCreatedEmail(normalizedEmail, appData.guestHoTen, plainPassword, result.trackingUuid)
+          .catch(err => console.error("Email created failed (non-blocking):", err.message));
+        return res.status(200).json({
+          success: true,
+          message: "Xac thuc OTP thanh cong. Ho so da duoc luu va gui den bo phan duyet.",
+          data: { trackingUuid: result.trackingUuid, email: normalizedEmail, tempPassword: plainPassword, autoCreatedUser: true }
+        });
+      } else {
+        const donData = pending.donation;
+        const result = await GuestModel.verifyAndMigrateDonation(donData, plainPassword);
+        sendDonationCreatedEmail(normalizedEmail, donData.guestHoTen, plainPassword, donData.soTien, result.trackingUuid)
+          .catch(err => console.error("Email created failed (non-blocking):", err.message));
+        return res.status(200).json({
+          success: true,
+          message: "Xac thuc OTP tai tro thanh cong. Khoan tai tro da duoc luu va chuyen qua he thong duyet.",
+          data: { trackingUuid: result.trackingUuid, email: normalizedEmail, tempPassword: plainPassword, autoCreatedUser: true }
         });
       }
-
-      result = await GuestModel.verifyOTPAndCreateDonation(
-        pending.donation,
-        plainPassword
-      );
-      guestName = pending.donation.guestHoTen;
-      donationAmount = pending.donation.soTien;
-    } else {
-      const guestDon = await GuestModel.findDonationByEmailAndOtp(normalizedEmail, normalizedOtp);
-      if (!guestDon) {
-        return res.status(400).json({
-          success: false,
-          message: "Ma xac thuc OTP khong dung hoac khoan dong gop da duoc xac minh truoc do"
-        });
-      }
-
-      result = await GuestModel.verifyOTPAndMigrateDonation(
-        normalizedEmail,
-        normalizedOtp,
-        plainPassword
-      );
-      guestName = guestDon.guest_hoten;
-      donationAmount = guestDon.sotien;
     }
 
-    sendDonationCreatedEmail(
-      normalizedEmail,
-      guestName,
-      plainPassword,
-      donationAmount,
-      result.trackingUuid
-    ).catch(err => console.error("Email created failed (non-blocking):", err.message));
+    // ── Luong 2: DB-based (tu TrackPage, khong co otpToken) ───────────────────
+    if (!trackingUuid)
+      return res.status(400).json({ success: false, message: "Thieu ma phien OTP hoac ma tra cuu" });
 
-    return res.status(200).json({
-      success: true,
-      message: "Xac thuc OTP tai tro thanh cong. Khoan tai tro da duoc luu va chuyen qua he thong duyet giao dich.",
-      data: {
-        trackingUuid: result.trackingUuid,
-        email: normalizedEmail,
-        tempPassword: plainPassword,
-        autoCreatedUser: true
-      }
-    });
+    const expectedHash = hashGuestOtp(normalizedEmail, trackingUuid, normalizedOtp);
+    const guestRecord = await GuestModel.findByTrackingUuidAndOtpHash(trackingUuid, expectedHash);
+    if (!guestRecord)
+      return res.status(400).json({ success: false, message: "Ma OTP khong dung, da het hieu luc, hoac da duoc xac thuc" });
+
+    // Tao password va thuc hien migrate
+    if (guestRecord.loai === 'yeucauhotro') {
+      // Can du lieu day du tu token de tao nguoidung + yeucauhotro
+      // Neu khong co token, chi co the cap nhat trang thai
+      return res.status(400).json({
+        success: false,
+        message: "Vui long su dung form nop don de hoan tat xac thuc OTP"
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Vui long su dung form nop don de hoan tat xac thuc OTP"
+      });
+    }
   } catch (error) {
     console.error("Loi verifyOtp:", error);
-    if (error.message === "OTP_EXPIRED") {
-      return res.status(400).json({
-        success: false,
-        message: "Ma OTP da het hieu luc"
-      });
-    }
-
-    if (error.message === "OTP_ALREADY_VERIFIED") {
-      return res.status(400).json({
-        success: false,
-        message: "Ma OTP nay da duoc xac thuc truoc do"
-      });
-    }
-
-    if (isEmailDeliveryError(error)) {
-      return sendEmailErrorResponse(res, "gui email xac nhan");
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Loi he thong khi xac thuc ma OTP"
-    });
+    if (error.message === "OTP_EXPIRED")
+      return res.status(400).json({ success: false, message: "Ma OTP da het hieu luc" });
+    if (error.message === "OTP_ALREADY_VERIFIED")
+      return res.status(400).json({ success: false, message: "Ma OTP nay da duoc xac thuc truoc do" });
+    if (isEmailDeliveryError(error)) return sendEmailErrorResponse(res, "gui email xac nhan");
+    return res.status(500).json({ success: false, message: "Loi he thong khi xac thuc ma OTP" });
   }
 };
-/**
- * GET /api/guest/track/:uuid
- * Tra cứu trạng thái đơn/khoản tài trợ vãng lai qua UUID
- */
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GET /api/guest/track/:uuid — Tra cuu trang thai
+// ═══════════════════════════════════════════════════════════════════════════════
 export const trackGuestStatus = async (req, res) => {
   try {
     const { uuid } = req.params;
-
-    if (!uuid) {
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng cung cấp mã UUID tra cứu"
-      });
-    }
+    if (!uuid) return res.status(400).json({ success: false, message: "Vui long cung cap ma UUID tra cuu" });
 
     const data = await GuestModel.trackStatusByUuid(uuid);
+    if (!data) return res.status(404).json({ success: false, message: "Khong tim thay don voi ma tra cuu nay" });
 
-    if (!data) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy dữ liệu đơn với mã tra cứu UUID này"
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data
-    });
-
+    return res.status(200).json({ success: true, data });
   } catch (error) {
-    console.error("Lỗi trackGuestStatus:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi hệ thống khi tra cứu trạng thái đơn"
-    });
+    console.error("Loi trackGuestStatus:", error);
+    return res.status(500).json({ success: false, message: "Loi he thong khi tra cuu trang thai" });
   }
 };

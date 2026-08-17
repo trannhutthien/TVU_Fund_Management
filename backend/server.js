@@ -18,7 +18,7 @@ import bankAccountRoutes from "./routes/funds/bankAccountRoutes.js";
 import uploadRoutes from "./routes/uploads/uploadRoutes.js";
 import baoCaoRoutes from "./routes/reports/baoCaoRoutes.js";
 import pheDuyetRoutes from "./routes/applications/pheDuyetRoutes.js";
-import studentShowcaseRoutes from "./routes/showcase/studentShowcaseRoutes.js";
+// import studentShowcaseRoutes from "./routes/showcase/studentShowcaseRoutes.js"; // REMOVED: Feature không còn sử dụng
 import danhGiaRoutes from "./routes/testimonials/danhGiaRoutes.js";
 import loaiQuyRoutes from "./routes/funds/loaiQuyRoutes.js";
 import { vaiTroRouter, nguoiDungRouter, nhatKyRouter, settingsRouter } from "./routes/system/systemRoutes.js";
@@ -29,6 +29,11 @@ import nghiemThuRoutes from "./routes/applications/nghiemThuRoutes.js";
 import chucVuRoutes from "./routes/system/chucVuRoutes.js";
 import congNoRoutes from "./routes/finance/congNoRoutes.js";
 import lichTraNoRoutes from "./routes/finance/lichTraNoRoutes.js";
+import thongBaoRoutes from "./routes/common/thongBaoRoutes.js";
+import thuHoiRoutes from "./routes/finance/thuHoiRoutes.js";
+import ThongBaoModel from "./models/common/ThongBaoModel.js";
+import { sendPaymentDueReminderEmail } from "./services/emailService.js";
+import pool from "./config/db.js";
 import { auditLogMiddleware } from "./middleware/auditLogMiddleware.js";
 import laiPhatService from "./services/laiPhatService.js";
 
@@ -74,7 +79,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/bao-cao", baoCaoRoutes);
 app.use("/api/pheduyet", pheDuyetRoutes);
 app.use("/api/nghiem-thu", nghiemThuRoutes);
-app.use("/api/student-showcase", studentShowcaseRoutes);
+// app.use("/api/student-showcase", studentShowcaseRoutes); // REMOVED: Feature không còn sử dụng
 app.use("/api/danhgia", danhGiaRoutes);
 app.use("/api/disbursement-rounds", disbursementRoundRoutes);
 app.use("/api/loai-quy", loaiQuyRoutes);
@@ -87,6 +92,8 @@ app.use("/api/system/settings", settingsRouter);
 app.use("/api/guest", guestRoutes);
 app.use("/api/cong-no", congNoRoutes);
 app.use("/api/lich-tra-no", lichTraNoRoutes);
+app.use("/api/thong-bao", thongBaoRoutes);
+app.use("/api/thu-hoi", thuHoiRoutes);
 
 app.get("/", (req, res) => {
     res.send("API đang chạy...");
@@ -126,4 +133,65 @@ app.listen(PORT, "0.0.0.0", () => {
 
     setTimeout(chayDinhKy, tinhThoiGianDenLanChayTiep());
     console.log(`[CRON] Kiem tra qua han se chay luc 00:05 moi ngay`);
+
+    // ═══ Cron job: Nhac no truoc 7 ngay - 08:00 moi ngay ═══
+    const guiNhacTruoc7Ngay = async () => {
+        let connection;
+        try {
+            connection = await pool.getConnection();
+            const [rows] = await connection.query(`
+                SELECT lt.*, nd.hoten, nd.email, nd.nguoidung_id, hd.yeucauhotro_id
+                FROM lichtrano lt
+                INNER JOIN hopdongvayvon hd ON lt.hopdongvayvon_id = hd.hopdongvayvon_id
+                INNER JOIN yeucauhotro yc ON hd.yeucauhotro_id = yc.yeucauhotro_id
+                INNER JOIN nguoidung nd ON yc.nguoidung_id = nd.nguoidung_id
+                WHERE lt.trangthai IN ('Chua den han', 'Tra mot phan')
+                  AND lt.ngaydenhan BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+                  AND lt.trangthaixacnhan != 'Da xac nhan'
+            `);
+
+            for (const row of rows) {
+                const soNgayConLai = Math.ceil((new Date(row.ngaydenhan) - Date.now()) / 86400000);
+                const soPhaiTra = Number(row.sotiengocphaitra) + Number(row.sotienlaiphaitra);
+
+                // Gui email (fire-and-forget)
+                if (row.email) {
+                    sendPaymentDueReminderEmail(row.email, row.hoten, row.kythu, row.ngaydenhan, soPhaiTra, soNgayConLai).catch(() => {});
+                }
+
+                // Tao thong bao trong he thong
+                await ThongBaoModel.create({
+                    nguoidungId: row.nguoidung_id,
+                    loai: 'nhacno',
+                    tieude: `Sap den han tra no ky ${row.kythu}`,
+                    noidung: `Con ${soNgayConLai} ngay nua den han tra no ky ${row.kythu}. So tien: ${soPhaiTra.toLocaleString('vi-VN')} VND`,
+                    duongdan: `/cong-no/chi-tiet/${row.yeucauhotro_id}`
+                });
+            }
+
+            if (rows.length > 0) {
+                console.log(`[CRON] Da gui nhac no truoc 7 ngay cho ${rows.length} ky tra no`);
+            }
+        } catch (err) {
+            console.error('[CRON] Loi gui nhac no truoc 7 ngay:', err.message);
+        } finally {
+            if (connection) connection.release();
+        }
+    };
+
+    const tinhThoiGianDenNhacNo = () => {
+        const now = new Date();
+        const target = new Date(now);
+        target.setHours(8, 0, 0, 0);
+        if (target <= now) target.setDate(target.getDate() + 1);
+        return target - now;
+    };
+
+    const chayNhacNo = () => {
+        guiNhacTruoc7Ngay();
+        setTimeout(chayNhacNo, 24 * 60 * 60 * 1000);
+    };
+
+    setTimeout(chayNhacNo, tinhThoiGianDenNhacNo());
+    console.log(`[CRON] Nhac no truoc 7 ngay se chay luc 08:00 moi ngay`);
 });

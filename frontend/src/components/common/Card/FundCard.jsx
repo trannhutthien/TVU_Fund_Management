@@ -93,7 +93,7 @@ const FundCard = ({ fund }) => {
   };
 
   const handleDonate = () => {
-    navigate(`/apply?role=donor&fundId=${fund.quy_id}`, {
+    navigate(`/dong-gop?fundId=${fund.quy_id}`, {
       state: buildFundNavigationState('donor'),
     });
   };

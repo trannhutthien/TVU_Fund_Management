@@ -1,0 +1,242 @@
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import {
+  HiOutlineXMark,
+  HiOutlineRocketLaunch,
+  HiOutlineExclamationTriangle,
+  HiOutlineInformationCircle,
+} from 'react-icons/hi2';
+import Button from '@components/common/Button/Button';
+import { createActivityByAdmin } from '@services/proposalService';
+import { getFundById } from '@services/fundService';
+import { formatCurrency } from '@utils/formatters';
+import styles from './CreateActivityModal.module.scss';
+
+const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
+  const [ghiChu, setGhiChu] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [fundInfo, setFundInfo] = useState(null);
+  const [loadingFund, setLoadingFund] = useState(false);
+
+  useEffect(() => {
+    if (proposal) {
+      setGhiChu('');
+      setConfirmed(false);
+      setSubmitting(false);
+      fetchFundInfo();
+    }
+  }, [proposal?.dexuatchuongtrinh_id]);
+
+  const fetchFundInfo = async () => {
+    if (!proposal?.quythanhphan_id) return;
+    
+    setLoadingFund(true);
+    try {
+      const res = await getFundById(proposal.quythanhphan_id);
+      if (res?.success) {
+        setFundInfo(res.data);
+      }
+    } catch (err) {
+      console.error('Lỗi tải thông tin quỹ:', err);
+      toast.error('Không thể tải thông tin quỹ thành phần');
+    } finally {
+      setLoadingFund(false);
+    }
+  };
+
+  if (!proposal) return null;
+
+  const soTienCanTrich = proposal.so_tien_thuc_te || 
+    (proposal.soluongsuat || 0) * (proposal.sotienmoisuat || 0);
+  const soDuQuy = fundInfo?.so_du || 0;
+  const soDuSauKhiTrich = soDuQuy - soTienCanTrich;
+  const khongDuSoDu = soDuSauKhiTrich < 0;
+
+  const handleSubmit = async () => {
+    if (!confirmed || submitting || khongDuSoDu) return;
+
+    setSubmitting(true);
+    try {
+      await createActivityByAdmin(proposal.dexuatchuongtrinh_id, {
+        ghiChu: ghiChu.trim() || null,
+      });
+
+      toast.success(
+        `Đã tạo hoạt động "${proposal.tenchuongtrinh}" thành công! Quỹ cấp 3 đã được tạo và nhận tiền.`
+      );
+      onSuccess?.();
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        'Có lỗi xảy ra khi tạo hoạt động. Vui lòng thử lại.';
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <header className={styles.header}>
+          <h2 className={styles.title}>
+            <HiOutlineRocketLaunch className={styles.titleIcon} />
+            Tạo hoạt động từ đề xuất
+          </h2>
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Đóng"
+          >
+            <HiOutlineXMark />
+          </button>
+        </header>
+
+        <div className={styles.body}>
+          {/* Thông tin quỹ thành phần (cấp 2) */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>
+              Quỹ thành phần (cấp 2) - Nguồn tiền
+            </div>
+            <div className={styles.fundCard}>
+              <div className={styles.fundRow}>
+                <span className={styles.fundLabel}>Tên quỹ</span>
+                <span className={styles.fundValue}>
+                  {proposal.ten_quy_thanh_phan || '—'}
+                </span>
+              </div>
+              <div className={styles.fundRow}>
+                <span className={styles.fundLabel}>Số dư hiện tại</span>
+                <span className={`${styles.fundValue} ${styles.fundAmount}`}>
+                  {loadingFund ? 'Đang tải...' : formatCurrency(soDuQuy)}
+                </span>
+              </div>
+              <div className={styles.fundRow}>
+                <span className={styles.fundLabel}>Số tiền sẽ trích ra</span>
+                <span className={`${styles.fundValue} ${styles.fundDeduct}`}>
+                  - {formatCurrency(soTienCanTrich)}
+                </span>
+              </div>
+              <div className={styles.fundRow}>
+                <span className={styles.fundLabel}>Số dư sau khi trích</span>
+                <span
+                  className={`${styles.fundValue} ${styles.fundResult} ${
+                    khongDuSoDu ? styles.fundError : ''
+                  }`}
+                >
+                  {formatCurrency(soDuSauKhiTrich)}
+                </span>
+              </div>
+            </div>
+
+            {khongDuSoDu && (
+              <div className={styles.errorBanner}>
+                <HiOutlineExclamationTriangle className={styles.errorIcon} />
+                <div className={styles.errorText}>
+                  <strong>Số dư không đủ!</strong> Quỹ thành phần không đủ tiền để
+                  tạo hoạt động này. Vui lòng kiểm tra lại hoặc yêu cầu kế toán bổ
+                  sung tiền vào quỹ.
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Thông tin hoạt động sẽ tạo (cấp 3) */}
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>
+              Hoạt động mới (cấp 3) - Sẽ được tạo
+            </div>
+            <div className={styles.activityCard}>
+              <div className={styles.activityRow}>
+                <span className={styles.activityLabel}>Tên hoạt động</span>
+                <span className={styles.activityValue}>
+                  {proposal.tenchuongtrinh}
+                </span>
+              </div>
+              <div className={styles.activityRow}>
+                <span className={styles.activityLabel}>Số tiền</span>
+                <span className={styles.activityAmount}>
+                  {formatCurrency(soTienCanTrich)}
+                </span>
+              </div>
+              <div className={styles.activityRow}>
+                <span className={styles.activityLabel}>Số lượng suất</span>
+                <span className={styles.activityValue}>
+                  {proposal.soluongsuat || 0} suất
+                </span>
+              </div>
+              <div className={styles.activityRow}>
+                <span className={styles.activityLabel}>Loại hỗ trợ</span>
+                <span className={styles.activityValue}>
+                  {proposal.loaihotro || '—'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Banner thông tin */}
+          {!khongDuSoDu && (
+            <div className={styles.infoBanner}>
+              <HiOutlineInformationCircle className={styles.infoIcon} />
+              <div className={styles.infoText}>
+                Hệ thống sẽ tự động TRỪ {formatCurrency(soTienCanTrich)} từ quỹ
+                thành phần, TẠO quỹ mới cấp 3, CỘNG tiền vào quỹ mới, và TẠO bản
+                ghi phân bổ ngân sách.{' '}
+                <strong>Hành động này không thể hoàn tác.</strong>
+              </div>
+            </div>
+          )}
+
+          {/* Ghi chú */}
+          <div className={styles.field}>
+            <label className={styles.label}>Ghi chú của admin</label>
+            <textarea
+              className={styles.textarea}
+              rows={3}
+              placeholder="Ghi chú nội bộ về hoạt động này..."
+              value={ghiChu}
+              onChange={(e) => setGhiChu(e.target.value)}
+            />
+          </div>
+
+          {/* Checkbox xác nhận */}
+          {!khongDuSoDu && (
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.target.checked)}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkboxLabel}>
+                Tôi xác nhận tạo hoạt động "<strong>{proposal.tenchuongtrinh}</strong>
+                " với số tiền <strong>{formatCurrency(soTienCanTrich)}</strong> được
+                trích từ quỹ thành phần{' '}
+                <strong>{proposal.ten_quy_thanh_phan}</strong>.
+              </span>
+            </label>
+          )}
+        </div>
+
+        <footer className={styles.footer}>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>
+            Hủy
+          </Button>
+          <Button
+            variant="primary"
+            leftIcon={<HiOutlineRocketLaunch />}
+            disabled={!confirmed || khongDuSoDu}
+            loading={submitting}
+            onClick={handleSubmit}
+          >
+            Tạo hoạt động
+          </Button>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
+export default CreateActivityModal;

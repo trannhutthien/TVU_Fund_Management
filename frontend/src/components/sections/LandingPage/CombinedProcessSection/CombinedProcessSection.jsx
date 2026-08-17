@@ -99,7 +99,7 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
 
   // Handle "Trở thành nhà tài trợ" (Nhà tài trợ)
   const handleDonorClick = () => {
-    navigate('/apply?role=donor');
+    navigate('/dong-gop');
   };
 
   return (
@@ -165,6 +165,16 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
               >
                 Bắt đầu ngay →
               </Button>
+              {!isAuthenticated && onLoginClick && (
+                <button
+                  type="button"
+                  className={styles.loginLink}
+                  onClick={onLoginClick}
+                  aria-label="Mở form đăng nhập"
+                >
+                  Hoặc <span className={styles.loginLinkHighlight}>đăng nhập</span> để tiếp tục
+                </button>
+              )}
               <a 
                 href="/guidelines" 
                 onClick={(e) => { e.preventDefault(); navigate('/guidelines'); }}

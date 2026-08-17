@@ -62,7 +62,7 @@
   "track": {
     "label": "Tra cứu",
     "path": "/track",
-    "admin": true,
+    "admin": false,
     "canbo": true,
     "ketoan": true,
     "sinhvien": true,
@@ -94,7 +94,7 @@
     "path": "/xet-duyet",
     "admin": true,
     "canbo": true,
-    "ketoan": false,
+    "ketoan": true,
     "sinhvien": false,
     "nhataitro": false,
     "bankiemsoat": false
@@ -279,9 +279,29 @@
     "nhataitro": false,
     "bankiemsoat": false
   },
+  "du_toan": {
+    "label": "Dự toán hàng năm",
+    "path": "/du-toan",
+    "admin": true,
+    "canbo": true,
+    "ketoan": true,
+    "sinhvien": false,
+    "nhataitro": false,
+    "bankiemsoat": true
+  },
   "danhgia": {
     "label": "Cảm nhận sinh viên",
     "path": "/danhgia",
+    "admin": true,
+    "canbo": true,
+    "ketoan": false,
+    "sinhvien": false,
+    "nhataitro": false,
+    "bankiemsoat": false
+  },
+  "de_xuat_chuong_trinh": {
+    "label": "Đề xuất chương trình",
+    "path": "/de-xuat-chuong-trinh",
     "admin": true,
     "canbo": true,
     "ketoan": false,

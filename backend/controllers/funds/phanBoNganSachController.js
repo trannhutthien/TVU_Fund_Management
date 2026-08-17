@@ -259,32 +259,55 @@ export const rollbackAllocation = async (req, res) => {
     // Thực thi thu hồi trong transaction
     const data = await PhanBoNganSachModel.rollbackRequest(id, nguoiDuyetId);
 
+    // Tạo message thông báo dựa trên kết quả thu hồi
+    let message = '';
+    if (data.isThuHoiDayDu) {
+      message = `Thu hồi ngân sách thành công. Đã thu hồi đầy đủ ${parseFloat(data.soTienThuHoiThucTe).toLocaleString('vi-VN')} VNĐ về Bể chung '${pb.ten_quy_nguon}'.`;
+    } else {
+      message = `Thu hồi ngân sách một phần thành công. Đã thu hồi ${parseFloat(data.soTienThuHoiThucTe).toLocaleString('vi-VN')} VNĐ / ${parseFloat(data.soTienTrichBanDau).toLocaleString('vi-VN')} VNĐ về Bể chung. Số tiền còn lại đã được chi tiêu: ${parseFloat(data.soTienTrichBanDau - data.soTienThuHoiThucTe).toLocaleString('vi-VN')} VNĐ.`;
+    }
+
     // Ghi nhật ký
     await logSystemActivity(req, {
       hanhdong: "THU_HOI_TRICH_LAP_NGAN_SACH",
       loaidoituong: "phanbongansach",
       doituong_id: parseInt(id),
-      mota: `Thu hồi khoản trích lập ngân sách ${parseFloat(data.soTien).toLocaleString('vi-VN')} VNĐ của mục chi '${pb.ten_quy_dich}' trả lại bể lớn '${pb.ten_quy_nguon}'`,
-      dulieucu: { trangthai: 'Da duyet' },
-      dulieumoi: { trangthai: 'Da thu hoi' }
+      mota: data.isThuHoiDayDu 
+        ? `Thu hồi toàn bộ ${parseFloat(data.soTienThuHoiThucTe).toLocaleString('vi-VN')} VNĐ của mục chi '${pb.ten_quy_dich}' trả lại bể lớn '${pb.ten_quy_nguon}'`
+        : `Thu hồi một phần ${parseFloat(data.soTienThuHoiThucTe).toLocaleString('vi-VN')} VNĐ / ${parseFloat(data.soTienTrichBanDau).toLocaleString('vi-VN')} VNĐ từ mục chi '${pb.ten_quy_dich}' về bể lớn '${pb.ten_quy_nguon}'`,
+      dulieucu: { trangthai: 'Da duyet', soTienTrichBanDau: data.soTienTrichBanDau },
+      dulieumoi: { 
+        trangthai: 'Da thu hoi', 
+        soTienThuHoiThucTe: data.soTienThuHoiThucTe,
+        isThuHoiDayDu: data.isThuHoiDayDu
+      }
     });
 
     return res.status(200).json({
       success: true,
-      message: "Thu hồi ngân sách đã trích lập thành công. Dòng tiền đã được điều chuyển hoàn trả.",
-      data
+      message,
+      data: {
+        ...data,
+        warningThuHoiKhongDayDu: !data.isThuHoiDayDu
+      }
     });
   } catch (error) {
     console.error("Lỗi rollbackAllocation:", error);
     let status = 500;
     let message = "Lỗi server, vui lòng thử lại sau";
 
-    if (error.message === 'INSUFFICIENT_DESTINATION_FUND_BALANCE_FOR_ROLLBACK') {
+    if (error.message === 'NO_BALANCE_TO_ROLLBACK') {
       status = 400;
-      message = "Số dư hiện tại của Mục chi con không đủ để thực hiện thu hồi ngân sách (tiền đã được chi tiêu cho sinh viên)";
+      message = "Không thể thu hồi vì Mục chi con không còn số dư nào (tất cả số tiền đã được chi tiêu hết cho sinh viên)";
     } else if (error.message === 'ALLOCATION_REQUEST_CANNOT_BE_ROLLED_BACK') {
       status = 400;
       message = "Đề xuất này không ở trạng thái hợp lệ để thu hồi";
+    } else if (error.message === 'DESTINATION_FUND_NOT_FOUND') {
+      status = 404;
+      message = "Không tìm thấy Mục chi con";
+    } else if (error.message === 'SOURCE_FUND_NOT_FOUND') {
+      status = 404;
+      message = "Không tìm thấy Bể tiền chung";
     }
 
     return res.status(status).json({

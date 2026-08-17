@@ -238,7 +238,7 @@ NotificationBell.propTypes = {
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       title: PropTypes.string.isRequired,
       message: PropTypes.string,
-      type: PropTypes.oneOf(['info', 'success', 'error']),
+      type: PropTypes.oneOf(['info', 'success', 'error', 'warning', 'hethong', 'thanhtoan', 'nhacno', 'quahan']),
       timestamp: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
       isRead: PropTypes.bool,
     })

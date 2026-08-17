@@ -146,6 +146,61 @@
   gap: 16px;
 }
 
+// ── Badge nhóm quỹ - Nổi bật ────────────
+.nhomQuyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  align-self: flex-start;
+  border: 2px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.nhomQuyIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.nhomQuyText {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badgeGrant {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #047857;
+  border-color: #10b981;
+}
+
+.badgeRecoverable {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-color: #3b82f6;
+}
+
+.badgeLoan {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+  border-color: #f59e0b;
+}
+
+.badgeDefault {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border-color: #94a3b8;
+}
+
 // ── Stats row ────────────────────────────
 .statsRow {
   display: grid;

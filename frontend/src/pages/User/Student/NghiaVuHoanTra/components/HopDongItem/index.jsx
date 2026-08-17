@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DownOutlined, UpOutlined, BankOutlined, FileTextOutlined } from '@ant-design/icons';
 import { formatCurrency } from '@utils/formatters';
+import { systemSettingsService } from '@services/systemSettingsService';
 import BangKyTraNo from '../BangKyTraNo';
+import BangKyThuHoi from '../BangKyThuHoi';
+import NopTienThuHoiModal from '../NopTienThuHoiModal';
 import styles from './index.module.scss';
 
 const LOAI_HO_TRO_LABELS = {
@@ -9,19 +12,30 @@ const LOAI_HO_TRO_LABELS = {
   'Tai tro co thu hoi': { label: 'Tài trợ thu hồi', color: '#c2410c', bg: '#fff7ed' },
 };
 
-const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
+const HopDongItem = ({ don, onSubmitProof, onRevokeProof, onSubmitThuHoi, onHuyThuHoi, submitting }) => {
   const [expanded, setExpanded] = useState(false);
+  const [modalThuHoiOpen, setModalThuHoiOpen] = useState(false);
+  const [bankInfo, setBankInfo] = useState(null);
+
+  useEffect(() => {
+    systemSettingsService.getPublicSettings()
+      .then((settings) => setBankInfo(settings.tai_khoan_nhan_tai_tro || null))
+      .catch(() => {});
+  }, []);
 
   const isVay = don.loaihotro === 'Cho vay';
-  const loaiInfo = LOAI_HO_TRO_LABELS[don.loaihotro] || { label: don.loaihotro, color: '#64748b', bg: '#f1f5f9' };
+  const isThuHoiNo = isVay && don.trangThaiDon === 'Dang thu hoi no' && don.dieuKhoan;
+  const loaiInfo = isThuHoiNo
+    ? { label: 'Thu hồi nợ vay', color: '#b45309', bg: '#fffbeb' }
+    : LOAI_HO_TRO_LABELS[don.loaihotro] || { label: don.loaihotro, color: '#64748b', bg: '#f1f5f9' };
 
   // Tính progress
   let totalPaid = 0;
   let totalDue = 0;
   let overdueCount = 0;
-  const kyList = isVay ? (don.lichTra || []) : [];
+  const kyList = isVay && !isThuHoiNo ? (don.lichTra || []) : [];
 
-  if (isVay) {
+  if (isVay && !isThuHoiNo) {
     for (const ky of kyList) {
       totalDue += ky.tongPhaiTra;
       if (ky.trangThaiKy === 'Da tra') {
@@ -31,6 +45,10 @@ const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
       }
       if (ky.trangThaiKy === 'Qua han') overdueCount++;
     }
+  } else if (isThuHoiNo) {
+    // Don vay da that bai nghiem thu → tien thu hoi
+    totalDue = don.dieuKhoan?.mucthuhoi || 0;
+    totalPaid = don.dieuKhoan?.sotiendadathu || 0;
   } else {
     // Tài trợ thu hồi
     totalDue = don.dieuKhoan?.mucthuhoi || 0;
@@ -38,6 +56,7 @@ const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
   }
 
   const progress = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) : 0;
+  const conLaiAmount = Math.max(0, totalDue - totalPaid);
 
   return (
     <div className={`${styles.card} ${expanded ? styles.cardExpanded : ''}`}>
@@ -62,11 +81,22 @@ const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
             <div className={styles.headerSub}>
               <span>{don.tieuDe || '—'}</span>
               <span className={styles.dot}>·</span>
-              <span>{isVay ? `${kyList.length} kỳ trả` : `Thu hồi ${formatCurrency(totalDue)}`}</span>
-              {!isVay && don.dieuKhoan?.conLai > 0 && (
+              <span>
+                {isThuHoiNo
+                  ? `Thu hồi nợ vay ${formatCurrency(totalDue)}`
+                  : isVay ? `${kyList.length} kỳ trả` : `Thu hồi ${formatCurrency(totalDue)}`
+                }
+              </span>
+              {isThuHoiNo && conLaiAmount > 0 && (
                 <>
                   <span className={styles.dot}>·</span>
-                  <span className={styles.conLaiText}>Còn nợ {formatCurrency(don.dieuKhoan.conLai)}</span>
+                  <span className={styles.conLaiText}>Còn nợ {formatCurrency(conLaiAmount)}</span>
+                </>
+              )}
+              {!isVay && !isThuHoiNo && conLaiAmount > 0 && (
+                <>
+                  <span className={styles.dot}>·</span>
+                  <span className={styles.conLaiText}>Còn nợ {formatCurrency(conLaiAmount)}</span>
                 </>
               )}
             </div>
@@ -74,14 +104,12 @@ const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
         </div>
 
         <div className={styles.headerRight}>
-          {isVay && (
-            <div className={styles.progressWrap}>
-              <div className={styles.progressText}>{progress}%</div>
-              <div className={styles.progressTrack}>
-                <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-              </div>
+          <div className={styles.progressWrap}>
+            <div className={styles.progressText}>{progress}%</div>
+            <div className={styles.progressTrack}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
             </div>
-          )}
+          </div>
           <span className={styles.expandIcon}>
             {expanded ? <UpOutlined /> : <DownOutlined />}
           </span>
@@ -126,11 +154,11 @@ const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
             </div>
           )}
 
-          {/* Tài trợ thu hồi info */}
-          {!isVay && don.dieuKhoan && (
+          {/* Tài trợ thu hồi / Don vay that bai nghiem thu info */}
+          {(!isVay || isThuHoiNo) && don.dieuKhoan && (
             <div className={styles.contractInfo}>
               <h4 className={styles.sectionTitle}>
-                <FileTextOutlined /> Thông tin tài trợ thu hồi
+                <FileTextOutlined /> {isThuHoiNo ? 'Thông tin thu hồi nợ vay' : 'Thông tin tài trợ thu hồi'}
               </h4>
               <div className={styles.fieldGrid}>
                 <div className={styles.field}>
@@ -151,8 +179,8 @@ const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
                 </div>
                 <div className={styles.field}>
                   <span className={styles.fieldLabel}>Còn lại</span>
-                  <span className={`${styles.fieldValue} ${don.dieuKhoan.conLai > 0 ? styles.conLaiRed : styles.status_Da_hoan_tat}`}>
-                    {formatCurrency(don.dieuKhoan.conLai)}
+                  <span className={`${styles.fieldValue} ${conLaiAmount > 0 ? styles.conLaiRed : styles.status_Da_hoan_tat}`}>
+                    {formatCurrency(conLaiAmount)}
                   </span>
                 </div>
               </div>
@@ -164,8 +192,45 @@ const HopDongItem = ({ don, onSubmitProof, onRevokeProof }) => {
             <BangKyTraNo
               kyTraNoList={kyList}
               loaiHotro={don.loaihotro}
+              tenQuy={don.tenquy}
               onSubmitProof={onSubmitProof}
               onRevokeProof={onRevokeProof}
+            />
+          )}
+
+          {/* Bảng lịch sử nộp tiền thu hồi */}
+          {(!isVay || isThuHoiNo) && don.lichSuNopTien && don.lichSuNopTien.length > 0 && (
+            <BangKyThuHoi
+              lichSuNopTien={don.lichSuNopTien}
+              onHuy={(lanNopId) => onHuyThuHoi?.(don.dieuKhoan?.dieukhoanthuhoiId, lanNopId)}
+            />
+          )}
+
+          {/* Nut nop tien thu hoi */}
+          {(!isVay || isThuHoiNo) && don.dieuKhoan && conLaiAmount > 0 && (
+            <div style={{ paddingTop: 12 }}>
+              <button
+                className={styles.submitBtn}
+                onClick={() => setModalThuHoiOpen(true)}
+              >
+                Nộp tiền thu hồi
+              </button>
+            </div>
+          )}
+
+          {/* Modal nop tien thu hoi */}
+          {(!isVay || isThuHoiNo) && (
+            <NopTienThuHoiModal
+              isOpen={modalThuHoiOpen}
+              conLai={conLaiAmount}
+              bankInfo={bankInfo}
+              tenQuy={don.tenquy}
+              onSubmit={async (data) => {
+                await onSubmitThuHoi?.(don.dieuKhoan?.dieukhoanthuhoiId, data);
+                setModalThuHoiOpen(false);
+              }}
+              onClose={() => setModalThuHoiOpen(false)}
+              submitting={submitting}
             />
           )}
         </div>

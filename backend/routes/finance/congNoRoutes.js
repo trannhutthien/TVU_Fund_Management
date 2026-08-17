@@ -7,6 +7,7 @@ import {
   confirmPayment,
   rejectPayment,
   sendReminder,
+  getNghiemThuTongQuan,
   getNghiemThuList,
 } from '../../controllers/finance/congNoController.js';
 import { protect } from '../../middleware/authMiddleware.js';
@@ -42,6 +43,9 @@ router.post('/nhac-no/:lichtranoId', protect, authorizeRoles(1, 2, 3), sendRemin
 // ═══════════════════════════════════════════════════════════════════════════════
 // NGHIEM THU ROUTES (danh cho trang giam sat)
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// GET /api/cong-no/nghiem-thu/tong-quan — Thong ke tong quan nghiem thu (all roles)
+router.get('/nghiem-thu/tong-quan', protect, authorizeRoles(1, 2, 3, 5), getNghiemThuTongQuan);
 
 // GET /api/cong-no/nghiem-thu — Danh sach don co nghiem thu (all roles)
 router.get('/nghiem-thu', protect, authorizeRoles(1, 2, 3, 5), getNghiemThuList);

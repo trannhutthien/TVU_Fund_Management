@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ToastContainer } from 'react-toastify'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext'
 import 'react-toastify/dist/ReactToastify.css'
 import './styles/main.scss'
 
@@ -25,8 +26,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <App />
-          <ToastContainer position="top-right" autoClose={3000} />
+          <NotificationProvider>
+            <App />
+            <ToastContainer position="top-right" autoClose={3000} />
+          </NotificationProvider>
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>

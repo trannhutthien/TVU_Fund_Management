@@ -1,7 +1,7 @@
 import api from './api';
 
 export const DEFAULT_PUBLIC_SETTINGS = {
-  ten_he_thong: 'TVU Fund Management',
+  ten_he_thong: 'Quỹ phát triển Đại học Trà Vinh',
   don_vi_quan_ly: 'Phòng Công tác Sinh viên - Trường Đại học Trà Vinh',
   email_lien_he: 'TVU@tvu.edu.vn',
   email_ho_tro: 'phongctsv@tvu.edu.vn',

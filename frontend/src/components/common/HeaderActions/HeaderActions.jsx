@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { HiOutlineUser, HiOutlineCog6Tooth, HiOutlineArrowRightOnRectangle } from 'react-icons/hi2';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
 import CloseButton from '@components/common/CloseButton/CloseButton';
+import { useNotification } from '@context/NotificationContext';
 import './HeaderActions.scss';
 
 /**
@@ -14,11 +16,6 @@ import './HeaderActions.scss';
  * - UserAvatar: Avatar + dropdown menu
  * 
  * @param {object} user - Thông tin user đăng nhập
- * @param {array} notifications - Danh sách thông báo
- * @param {number} unreadCount - Số lượng thông báo chưa đọc
- * @param {function} onNotificationClick - Callback khi click notification
- * @param {function} onMarkAllRead - Callback khi mark all as read
- * @param {function} onViewAllNotifications - Callback khi view all notifications
  * @param {function} onUserAvatarClick - Callback khi click user avatar
  * @param {function} onLogout - Callback khi logout
  * @param {string} size - Kích thước: 'sm' | 'md' | 'lg'
@@ -27,11 +24,6 @@ import './HeaderActions.scss';
  */
 const HeaderActions = ({
   user,
-  notifications = [],
-  unreadCount = 0,
-  onNotificationClick,
-  onMarkAllRead,
-  onViewAllNotifications,
   onUserAvatarClick,
   onLogout,
   size = 'md',
@@ -39,6 +31,7 @@ const HeaderActions = ({
   className = '',
 }) => {
   const navigate = useNavigate();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotification();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleUserAvatarClick = () => {
@@ -54,6 +47,17 @@ const HeaderActions = ({
     if (onLogout) {
       onLogout();
     }
+  };
+
+  const handleNotificationClick = (notification) => {
+    markAsRead(notification.id);
+    if (notification.link) {
+      navigate(notification.link);
+    }
+  };
+
+  const handleMarkAllRead = () => {
+    markAllAsRead();
   };
 
   const handleProfileNavigation = () => {
@@ -76,9 +80,8 @@ const HeaderActions = ({
         <NotificationBell
           notifications={notifications}
           unreadCount={unreadCount}
-          onNotificationClick={onNotificationClick}
-          onMarkAllRead={onMarkAllRead}
-          onViewAll={onViewAllNotifications}
+          onNotificationClick={handleNotificationClick}
+          onMarkAllRead={handleMarkAllRead}
           size={size}
         />
       )}
@@ -126,11 +129,11 @@ const HeaderActions = ({
 
             <div className="user-menu-items">
               <button className="user-menu-item" onClick={handleProfileNavigation}>
-                <span className="user-menu-item-icon">👤</span>
+                <HiOutlineUser className="user-menu-item-icon" />
                 <span className="user-menu-item-text">Hồ sơ cá nhân</span>
               </button>
               <button className="user-menu-item" onClick={handleProfileNavigation}>
-                <span className="user-menu-item-icon">⚙️</span>
+                <HiOutlineCog6Tooth className="user-menu-item-icon" />
                 <span className="user-menu-item-text">Cài đặt</span>
               </button>
             </div>
@@ -139,7 +142,7 @@ const HeaderActions = ({
 
             <div className="user-menu-footer">
               <button className="user-menu-logout" onClick={handleLogout}>
-                <span className="user-menu-item-icon">🚪</span>
+                <HiOutlineArrowRightOnRectangle className="user-menu-item-icon" />
                 <span className="user-menu-item-text">Đăng xuất</span>
               </button>
             </div>
@@ -161,11 +164,6 @@ HeaderActions.propTypes = {
     isOnline: PropTypes.bool,
     status: PropTypes.oneOf(['online', 'offline', 'away', 'busy']),
   }),
-  notifications: PropTypes.array,
-  unreadCount: PropTypes.number,
-  onNotificationClick: PropTypes.func,
-  onMarkAllRead: PropTypes.func,
-  onViewAllNotifications: PropTypes.func,
   onUserAvatarClick: PropTypes.func,
   onLogout: PropTypes.func,
   size: PropTypes.oneOf(['sm', 'md', 'lg']),

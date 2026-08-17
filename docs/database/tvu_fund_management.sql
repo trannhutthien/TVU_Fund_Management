@@ -92,10 +92,28 @@ CREATE TABLE `donvihoc` (
   `donvihoc_id` int(11) NOT NULL,
   `madonvi` varchar(20) NOT NULL,
   `tenkhoa` varchar(200) NOT NULL,
-  `lop` varchar(100) DEFAULT NULL,
   `trangthai` enum('Hoat dong','Ngung hoat dong') DEFAULT 'Hoat dong',
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `donvihoc` (`donvihoc_id`, `madonvi`, `tenkhoa`, `trangthai`) VALUES
+(1, 'TVU-CKDL', 'Khoa Cơ khí - Động lực', 'Hoat dong'),
+(2, 'TVU-CNTT', 'Khoa Công nghệ Thông tin', 'Hoat dong'),
+(3, 'TVU-DDT', 'Khoa Điện - Điện tử', 'Hoat dong'),
+(4, 'TVU-KTHH', 'Khoa Kỹ thuật Hóa học', 'Hoat dong'),
+(5, 'TVU-XD', 'Khoa Xây dựng', 'Hoat dong'),
+(6, 'TVU-MT', 'Khoa Môi trường', 'Hoat dong'),
+(7, 'TVU-KHMER', 'Khoa Ngôn ngữ – Văn hóa – Nghệ thuật Khmer Nam Bộ', 'Hoat dong'),
+(8, 'TVU-NN', 'Khoa Ngoại ngữ', 'Hoat dong'),
+(9, 'TVU-SP', 'Khoa Sư phạm', 'Hoat dong'),
+(10, 'TVU-QTDL-NH-KS', 'Khoa Quản trị Du lịch – Nhà hàng – Khách sạn', 'Hoat dong'),
+(11, 'TVU-YD', 'Khoa Y Dược', 'Hoat dong'),
+(12, 'TVU-RHM', 'Khoa Răng Hàm Mặt', 'Hoat dong'),
+(13, 'TVU-NNTS', 'Khoa Nông nghiệp – Thủy sản', 'Hoat dong'),
+(14, 'TVU-KHCB', 'Khoa Khoa học Cơ bản', 'Hoat dong'),
+(15, 'TVU-LLCT', 'Khoa Lý luận Chính trị', 'Hoat dong'),
+(16, 'TVU-GDTC', 'Khoa Giáo dục Thể chất', 'Hoat dong'),
+(17, 'TVU-HHUD', 'Khoa Hóa học Ứng dụng', 'Hoat dong');
 
 -- --------------------------------------------------------
 
@@ -392,16 +410,6 @@ CREATE TABLE `nhataitro` (
   `nhataitro_id` int(11) NOT NULL,
   `tennhataitro` varchar(200) NOT NULL,
   `loainhataitro` enum('Ca nhan','To chuc','Doanh nghiep','Doi tac') NOT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `sodienthoai` varchar(15) DEFAULT NULL,
-  `diachi` text DEFAULT NULL,
-  `masothue` varchar(30) DEFAULT NULL,
-  `linhVucHopTac` varchar(100) DEFAULT NULL,
-  `nguoiLienHe` varchar(100) DEFAULT NULL,
-  `chucDanh` varchar(50) DEFAULT NULL,
-  `website` varchar(255) DEFAULT NULL,
-  `mota` text DEFAULT NULL,
-  `logo` varchar(255) DEFAULT NULL,
   `nguoidung_id` int(11) DEFAULT NULL,
   `trangthai` enum('Hoat dong','Ngung hoat dong') DEFAULT 'Hoat dong',
   `ngaytao` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -607,8 +615,7 @@ CREATE TABLE `yeucauhotro` (
   `ngaynop` timestamp NOT NULL DEFAULT current_timestamp(),
   `ngaycapnhat` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `loaihotro` enum('Tai tro khong hoan lai','Tai tro co thu hoi','Cho vay') DEFAULT 'Tai tro khong hoan lai',
-  `canghiemthu` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1 = đơn thuộc loại Dự án/Đề tài, bắt buộc nghiệm thu theo Điều 20; 0 = học bổng/hỗ trợ đơn giản, không cần',
-  `laidetac` tinyint(1) NOT NULL DEFAULT 0,
+  `canghiemthu` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1 = don thu loai Du an/De tai, bat buoc nghiem thu theo Dieu 20; 0 = hoc bong/ho tro don gian, khong can',
   `tongkinhphidudan` decimal(15,2) DEFAULT NULL COMMENT 'Tong kinh phi du an (bat buoc khi loai co thu hoi)'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

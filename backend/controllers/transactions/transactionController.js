@@ -728,6 +728,131 @@ export const uploadProof = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PUBLIC SANITIZER ───────────────────────────────────────────────────────────
+// Bỏ MSSV, người duyệt, minh chứng, lịch sử duyệt, đối soát — giữ tên SV + số tiền
+// ═══════════════════════════════════════════════════════════════════════════════
+const sanitizePublicTransaction = (tx) => {
+  if (!tx) return null;
+  const sanitized = mapTransactionRow(tx);
+  if (!sanitized) return null;
+
+  // Chỉ giữ hoTen (bỏ maSoDinhDanh, khoaPhong)
+  if (sanitized.sinhVien) {
+    sanitized.sinhVien = { id: sanitized.sinhVien.id, hoTen: sanitized.sinhVien.hoTen };
+  }
+
+  // Xóa các field nhạy cảm
+  delete sanitized.nguoiTao;
+  delete sanitized.minhChung;
+  delete sanitized.doiSoatTrangThai;
+  delete sanitized.doiSoatLuc;
+  delete sanitized.doiSoatGhiChu;
+  delete sanitized.doiSoatBoiTen;
+
+  return sanitized;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/transactions/public (PUBLIC — KHÔNG CẦN TOKEN) ────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getPublicTransactions = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      loai,
+      quyId,
+      trangThai,
+      tuNgay,
+      denNgay,
+      keyword
+    } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+
+    if (isNaN(pageNum) || pageNum < 1) {
+      return res.status(400).json({ success: false, message: "Trang phải là số nguyên dương" });
+    }
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+      return res.status(400).json({ success: false, message: "Limit phải từ 1 đến 100" });
+    }
+    if (loai && !['Thu', 'Chi'].includes(loai)) {
+      return res.status(400).json({ success: false, message: "Loại giao dịch phải là 'Thu' hoặc 'Chi'" });
+    }
+
+    const filters = {
+      loai,
+      quyId: quyId ? parseInt(quyId) : null,
+      trangThai,
+      doiSoatTrangThai: null,
+      tuNgay,
+      denNgay,
+      keyword: keyword?.trim() || null
+    };
+
+    const offset = (pageNum - 1) * limitNum;
+    const result = await TransactionModel.getAllTransactions(filters, limitNum, offset);
+    const totalPages = Math.ceil(result.total / limitNum);
+    const formatted = result.transactions.map(sanitizePublicTransaction);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy danh sách giao dịch công khai thành công",
+      data: formatted,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalRecords: result.total,
+        limit: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      },
+      filters: {
+        loai: loai || 'Tất cả',
+        quyId: quyId || 'Tất cả',
+        trangThai: trangThai || 'Tất cả',
+        tuNgay: tuNgay || null,
+        denNgay: denNgay || null
+      }
+    });
+  } catch (error) {
+    console.error("Lỗi getPublicTransactions:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── GET /api/transactions/public/:id (PUBLIC — KHÔNG CẦN TOKEN) ────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+export const getPublicTransactionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID giao dịch không hợp lệ" });
+    }
+
+    const transaction = await TransactionModel.getTransactionByIdDetailed(id);
+
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy giao dịch" });
+    }
+
+    const formatted = sanitizePublicTransaction(transaction);
+
+    return res.status(200).json({
+      success: true,
+      message: "Lấy thông tin giao dịch công khai thành công",
+      data: formatted
+    });
+  } catch (error) {
+    console.error("Lỗi getPublicTransactionById:", error);
+    return res.status(500).json({ success: false, message: "Lỗi server, vui lòng thử lại sau" });
+  }
+};
+
 export default {
   getAllTransactions,
   getTransactionById,
@@ -737,4 +862,6 @@ export default {
   updateDoiSoatStatus,
   getTransactionByApplication,
   uploadProof,
+  getPublicTransactions,
+  getPublicTransactionById,
 };

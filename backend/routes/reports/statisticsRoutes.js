@@ -12,6 +12,7 @@ import {
   getKeToanPendingDonations,
   getApplicationStats,
   getKeToanReportStats,
+  getPublicReportStats,
   getAdminAdvancedStats,
   getYearlyReport,
   getPendingCount,
@@ -29,6 +30,7 @@ const router = express.Router();
 router.get('/public', getPublicStats);
 router.get('/fund-breakdown', getFundBreakdown);
 router.get('/impact', getImpactStats);
+router.get('/public/report', getPublicReportStats);
 
 // ─── AVAILABLE YEARS (dùng chung cho YearFilter) ──────────────────────────────
 router.get('/available-years', protect, authorizeRoles(1, 2, 5), getAvailableYears);

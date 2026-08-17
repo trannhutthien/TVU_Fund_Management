@@ -44,11 +44,15 @@
   padding: $space-6;
   width: 100%;
   max-width: 420px; // Same as LoginForm
+  max-height: 90vh; // Giới hạn chiều cao tối đa
+  display: flex;
+  flex-direction: column;
   animation: fadeInUp 0.4s ease-out;
 
   @media (max-width: 640px) {
     padding: $space-5;
     max-width: 100%;
+    max-height: 95vh;
   }
 }
 
@@ -128,6 +132,29 @@
   flex-direction: column;
   gap: $space-3;
   margin-bottom: $space-2;
+  overflow-y: auto; // Cho phép scroll
+  overflow-x: hidden;
+  max-height: 400px; // Giới hạn chiều cao tối đa của form
+  padding-right: 4px; // Tránh scrollbar che nội dung
+  
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #94a3b8;
+    }
+  }
 }
 
 // Field container

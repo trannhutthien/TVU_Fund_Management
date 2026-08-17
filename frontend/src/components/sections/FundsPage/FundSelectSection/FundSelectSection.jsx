@@ -1,15 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
-import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineMagnifyingGlass, HiOutlineBuildingLibrary, HiOutlineSquare3Stack3D, HiOutlineRocketLaunch } from 'react-icons/hi2';
 import Input from '@components/common/Input';
 import Dropdown from '@components/common/Dropdown';
 import styles from './FundSelectSection.module.scss';
-
-const NHOM_ICONS = {
-  'Tai tro khong hoan lai': '🎁',
-  'Tai tro co thu hoi': '🔄',
-  'Cho vay': '💰',
-};
 
 const ALL_VALUE = '__all__';
 
@@ -19,6 +13,11 @@ const FundSelectSection = ({
   loaiQuyData = [],
   activeMaLoai,
   onMaLoaiChange,
+  onCapDoChange,
+  onTrangThaiChange,
+  activeCapDo,
+  activeTrangThai,
+  hideLoaiQuyFilter = false, // Prop mới để ẩn filter loại quỹ
 }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [sortValue, setSortValue] = useState('newest');
@@ -28,6 +27,57 @@ const FundSelectSection = ({
     { value: 'oldest', label: 'Cũ nhất' },
     { value: 'highest', label: 'Số dư cao nhất' },
     { value: 'name', label: 'Tên A→Z' },
+  ];
+
+  // Options cho cấp độ quỹ với icon React và tên mới
+  const capDoOptions = [
+    { value: ALL_VALUE, label: 'Tất cả cấp độ' },
+    { 
+      value: '1', 
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <HiOutlineBuildingLibrary size={18} />
+          <span>Quỹ Phát triển ĐH Trà Vinh</span>
+        </span>
+      ),
+      searchLabel: 'Quỹ Phát triển ĐH Trà Vinh'
+    },
+    { 
+      value: '2', 
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <HiOutlineSquare3Stack3D size={18} />
+          <span>Quỹ thành phần</span>
+        </span>
+      ),
+      searchLabel: 'Quỹ thành phần'
+    },
+    { 
+      value: '3', 
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <HiOutlineRocketLaunch size={18} />
+          <span>Quỹ hoạt động</span>
+        </span>
+      ),
+      searchLabel: 'Quỹ hoạt động'
+    },
+  ];
+
+  // Options cho trạng thái
+  const trangThaiOptions = [
+    { value: ALL_VALUE, label: 'Tất cả trạng thái' },
+    { value: 'Dang hoat dong', label: '✅ Đang hoạt động' },
+    { value: 'Tam dung', label: '⏸️ Tạm dừng' },
+  ];
+
+  // Options cho loại quỹ (từ loaiQuyData)
+  const loaiQuyOptions = [
+    { value: ALL_VALUE, label: 'Tất cả loại quỹ' },
+    ...loaiQuyData.map((item) => ({
+      value: item.maLoai || item.ma_loai,
+      label: item.tenLoai || item.ten_loai,
+    })),
   ];
 
   const handleSearchChange = (e) => {
@@ -41,7 +91,7 @@ const FundSelectSection = ({
     onSortChange?.(value);
   };
 
-  const handleNhomChange = (nhomKey, value) => {
+  const handleLoaiQuyChange = (value) => {
     if (value === ALL_VALUE) {
       onMaLoaiChange?.(null);
     } else {
@@ -49,84 +99,95 @@ const FundSelectSection = ({
     }
   };
 
-  // Group loaiquy by nhom
-  const nhomGroups = useMemo(() => {
-    const map = new Map();
-    for (const item of loaiQuyData) {
-      const nhom = item.nhom;
-      if (!nhom) continue;
-      if (!map.has(nhom)) {
-        map.set(nhom, { nhom, items: [] });
-      }
-      map.get(nhom).items.push(item);
+  const handleCapDoChange = (value) => {
+    if (value === ALL_VALUE) {
+      onCapDoChange?.(null);
+    } else {
+      onCapDoChange?.(value);
     }
-    return Array.from(map.values());
-  }, [loaiQuyData]);
+  };
+
+  const handleTrangThaiChange = (value) => {
+    if (value === ALL_VALUE) {
+      onTrangThaiChange?.(null);
+    } else {
+      onTrangThaiChange?.(value);
+    }
+  };
 
   return (
     <section className={styles.fundSelectSection}>
       <div className={styles.container}>
-        {/* Thanh tìm kiếm + Sắp xếp */}
         <div className={styles.searchRow}>
+          {/* Search Bar - Full Width, Prominent */}
           <div className={styles.searchWrapper}>
             <Input
               type="text"
-              placeholder="Nhập tên quỹ bạn quan tâm..."
+              placeholder="Tìm kiếm quỹ theo tên hoặc mô tả..."
               value={searchKeyword}
               onChange={handleSearchChange}
-              leftIcon={<HiOutlineMagnifyingGlass size={20} />}
+              leftIcon={<HiOutlineMagnifyingGlass size={24} />}
               className={styles.searchInput}
             />
           </div>
 
-          <div className={styles.sortWrapper}>
-            <Dropdown
-              options={sortOptions}
-              value={sortValue}
-              onChange={handleSortChange}
-              placeholder="Sắp xếp"
-              size="medium"
-              className={styles.sortDropdown}
-            />
+          {/* Filters Row - 3 or 4 Equal Columns */}
+          <div className={styles.filtersRow}>
+            {/* Filter: Sắp xếp */}
+            <div className={styles.filterItem}>
+              <label className={styles.filterLabel}>Sắp xếp</label>
+              <Dropdown
+                options={sortOptions}
+                value={sortValue}
+                onChange={handleSortChange}
+                placeholder="Chọn cách sắp xếp"
+                size="medium"
+                className={styles.sortDropdown}
+              />
+            </div>
+
+            {/* Filter: Loại quỹ - Ẩn nếu hideLoaiQuyFilter = true */}
+            {!hideLoaiQuyFilter && (
+              <div className={styles.filterItem}>
+                <label className={styles.filterLabel}>Loại quỹ</label>
+                <Dropdown
+                  options={loaiQuyOptions}
+                  value={activeMaLoai || ALL_VALUE}
+                  onChange={handleLoaiQuyChange}
+                  placeholder="Tất cả loại quỹ"
+                  size="medium"
+                  className={styles.filterDropdown}
+                />
+              </div>
+            )}
+
+            {/* Filter: Cấp độ */}
+            <div className={styles.filterItem}>
+              <label className={styles.filterLabel}>Cấp độ</label>
+              <Dropdown
+                options={capDoOptions}
+                value={activeCapDo || ALL_VALUE}
+                onChange={handleCapDoChange}
+                placeholder="Tất cả cấp độ"
+                size="medium"
+                className={styles.filterDropdown}
+              />
+            </div>
+
+            {/* Filter: Trạng thái */}
+            <div className={styles.filterItem}>
+              <label className={styles.filterLabel}>Trạng thái</label>
+              <Dropdown
+                options={trangThaiOptions}
+                value={activeTrangThai || ALL_VALUE}
+                onChange={handleTrangThaiChange}
+                placeholder="Tất cả trạng thái"
+                size="medium"
+                className={styles.filterDropdown}
+              />
+            </div>
           </div>
         </div>
-
-        {/* 3 Dropdown lọc theo nhóm */}
-        {nhomGroups.length > 0 && (
-          <div className={styles.nhomRow}>
-            {nhomGroups.map((group) => {
-              const icon = NHOM_ICONS[group.nhom] || '📂';
-              const dropdownOptions = [
-                { value: ALL_VALUE, label: `Tất cả (${group.nhom})` },
-                ...group.items.map((item) => ({
-                  value: item.maLoai,
-                  label: item.tenLoai,
-                })),
-              ];
-
-              // Find current value: if activeMaLoai belongs to this group, show it
-              const currentValue = group.items.some(
-                (item) => item.maLoai === activeMaLoai
-              )
-                ? activeMaLoai
-                : ALL_VALUE;
-
-              return (
-                <div key={group.nhom} className={styles.nhomDropdownWrapper}>
-                  <span className={styles.nhomIcon}>{icon}</span>
-                  <Dropdown
-                    options={dropdownOptions}
-                    value={currentValue}
-                    onChange={(val) => handleNhomChange(group.nhom, val)}
-                    placeholder={group.nhom}
-                    size="medium"
-                    className={styles.nhomDropdown}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </section>
   );
@@ -138,10 +199,14 @@ FundSelectSection.propTypes = {
   loaiQuyData: PropTypes.arrayOf(PropTypes.shape({
     maLoai: PropTypes.string,
     tenLoai: PropTypes.string,
-    nhom: PropTypes.string,
   })),
   activeMaLoai: PropTypes.string,
   onMaLoaiChange: PropTypes.func,
+  onCapDoChange: PropTypes.func,
+  onTrangThaiChange: PropTypes.func,
+  activeCapDo: PropTypes.string,
+  activeTrangThai: PropTypes.string,
+  hideLoaiQuyFilter: PropTypes.bool,
 };
 
 export default FundSelectSection;

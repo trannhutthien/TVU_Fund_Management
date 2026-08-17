@@ -208,7 +208,14 @@ const isCanBo = user?.vaiTro === 3;
     try {
       const res = await allocationService.rollbackAllocation(id);
       if (res?.success) {
-        toast.success("Thu hồi ngân sách trích lập thành công");
+        // Hiển thị message từ backend
+        if (res.data?.warningThuHoiKhongDayDu) {
+          toast.warning(res.message || "Thu hồi ngân sách một phần thành công", {
+            autoClose: 6000
+          });
+        } else {
+          toast.success(res.message || "Thu hồi ngân sách trích lập thành công");
+        }
         fetchRequests();
         fetchFunds(); // Cập nhật lại số dư
       }
@@ -224,22 +231,23 @@ const isCanBo = user?.vaiTro === 3;
       title: 'Mã số',
       dataIndex: 'phanBoNganSachId',
       key: 'phanBoNganSachId',
-      width: 80,
+      width: 70,
       render: (id) => <strong>#{id}</strong>
     },
     {
       title: 'Thông tin quỹ điều chuyển',
       key: 'funds_info',
+      width: 260,
       render: (_, record) => (
         <div className={styles.fundRoute}>
           <div className={styles.sourceFund}>
             <span className={styles.fundTypeTag}>Bể nguồn</span>
-            <span className={styles.fundName}>{record.tenQuyNguon}</span>
+            <span className={styles.fundName} title={record.tenQuyNguon}>{record.tenQuyNguon}</span>
           </div>
-          <div className={styles.fundArrow}>➔</div>
+          <div className={styles.fundArrow}>↓</div>
           <div className={styles.destFund}>
             <span className={styles.fundTypeTagCon}>Mục chi con</span>
-            <span className={styles.fundName}>{record.tenQuyDich}</span>
+            <span className={styles.fundName} title={record.tenQuyDich}>{record.tenQuyDich}</span>
           </div>
         </div>
       )
@@ -248,7 +256,7 @@ const isCanBo = user?.vaiTro === 3;
       title: 'Số tiền trích',
       dataIndex: 'soTien',
       key: 'soTien',
-      width: 140,
+      width: 130,
       render: (amount) => (
         <span className={styles.amountText}>
           {formatCurrency(amount)}
@@ -258,10 +266,11 @@ const isCanBo = user?.vaiTro === 3;
     {
       title: 'Quyết định / Văn bản',
       key: 'quyet_dinh',
-      width: 180,
+      width: 170,
+      ellipsis: true,
       render: (_, record) => (
         <div className={styles.docInfo}>
-          <div className={styles.docNo}>QĐ: {record.soQuyetDinh}</div>
+          <div className={styles.docNo} title={record.soQuyetDinh}>QĐ: {record.soQuyetDinh}</div>
           {record.fileQuyetDinh ? (
             <a 
               href={getFileUrl(record.fileQuyetDinh)} 
@@ -280,12 +289,12 @@ const isCanBo = user?.vaiTro === 3;
     {
       title: 'Nhân sự',
       key: 'staff_info',
-      width: 180,
+      width: 160,
       render: (_, record) => (
         <div className={styles.staffInfo}>
-          <div>Đề xuất: <strong>{record.tenNguoiDeXuat}</strong></div>
+          <div><span style={{color:'#94a3b8'}}>Đề xuất:</span> <strong>{record.tenNguoiDeXuat}</strong></div>
           {record.tenNguoiDuyet && (
-            <div>Duyệt: <strong>{record.tenNguoiDuyet}</strong></div>
+            <div><span style={{color:'#94a3b8'}}>Duyệt:</span> <strong>{record.tenNguoiDuyet}</strong></div>
           )}
         </div>
       )
@@ -293,12 +302,12 @@ const isCanBo = user?.vaiTro === 3;
     {
       title: 'Thời gian',
       key: 'time_info',
-      width: 150,
+      width: 140,
       render: (_, record) => (
         <div className={styles.timeInfo}>
-          <div>Đề xuất: {new Date(record.ngayDeXuat).toLocaleDateString('vi-VN')}</div>
+          <div>{new Date(record.ngayDeXuat).toLocaleDateString('vi-VN')}</div>
           {record.ngayDuyet && (
-            <div>Duyệt: {new Date(record.ngayDuyet).toLocaleDateString('vi-VN')}</div>
+            <div>{new Date(record.ngayDuyet).toLocaleDateString('vi-VN')}</div>
           )}
         </div>
       )
@@ -364,7 +373,7 @@ const isCanBo = user?.vaiTro === 3;
             {isApproved && canApprove && (
               <Popconfirm
                 title="Thu hồi ngân sách trích lập"
-                description="Bạn có chắc chắn muốn thu hồi khoản trích lập này? Số dư sẽ được điều chuyển hoàn trả ngược lại Bể chung."
+                description="Bạn có chắc chắn muốn thu hồi khoản trích lập này? Hệ thống sẽ thu hồi tối đa số dư còn lại trong Mục chi con về Bể chung."
                 onConfirm={() => handleRollback(record.phanBoNganSachId)}
                 okText="Thu hồi"
                 cancelText="Hủy"
@@ -482,7 +491,7 @@ const isCanBo = user?.vaiTro === 3;
           dataSource={data}
           loading={loading}
           rowKey="phanBoNganSachId"
-          scroll={{ x: 1100 }}
+          scroll={{ x: 1300 }}
           pagination={{
             current: page,
             pageSize: pageSize,

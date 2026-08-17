@@ -1,23 +1,92 @@
 import NghiemThuModel from "../../models/applications/NghiemThuModel.js";
 import ApplicationModel from "../../models/applications/ApplicationModel.js";
+import HopDongVayVonModel from "../../models/applications/HopDongVayVonModel.js";
+import DieuKhoanThuHoiModel from "../../models/applications/DieuKhoanThuHoiModel.js";
+import ThongBaoModel from "../../models/common/ThongBaoModel.js";
+import { sendNghiemThuThatBaiEmail } from "../../services/emailService.js";
+import pool from "../../config/db.js";
 
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
+
+// ─── Helper: Tao dieukhoanthuhoi khi nghiem thu that bai ───────────────────
+const taoDieuKhoanThuHoi = async (yeucauhotroId, don, dotgiaingan) => {
+  try {
+    const hopDong = don?.hopdongvayvon;
+
+    let soTienCanThuHoi;
+    let loaiVay;
+
+    if (hopDong) {
+      // Co hopdong → tinh theo dot giai ngan
+      const hopDongFull = await HopDongVayVonModel.getByApplicationId(yeucauhotroId);
+      const lichTra = hopDongFull?.lichTraNo || [];
+      const tongDaTra = lichTra.reduce((sum, ky) => sum + Number(ky.sotienthuctra || 0), 0);
+
+      if (dotgiaingan === 2) {
+        soTienCanThuHoi = Number(hopDong.sotienvon) - tongDaTra;
+      } else {
+        soTienCanThuHoi = Number(hopDong.sotien_dot1 || 0) - tongDaTra;
+      }
+      loaiVay = dotgiaingan === 2 ? 'vay von (dot 2)' : `vay von (dot ${dotgiaingan})`;
+    } else {
+      // Khong co hopdong → fallback dung sotiendenghi (don cu truoc khi fix)
+      console.warn(`[nghiemThu] Don #${yeucauhotroId} khong co hopdongvayvon, su dung sotiendenghi as fallback`);
+      soTienCanThuHoi = Number(don?.sotiendenghi || 0);
+      loaiVay = `vay von (dot ${dotgiaingan || 1})`;
+    }
+
+    if (soTienCanThuHoi <= 0) {
+      await ApplicationModel.updateApplicationStatus(yeucauhotroId, 'Hoan thanh').catch(() => {});
+      return;
+    }
+
+    // Kiem tra da co dieukhoanthuhoi chua
+    const existingDKH = await DieuKhoanThuHoiModel.getByApplicationId(yeucauhotroId);
+    if (existingDKH) return;
+
+    await DieuKhoanThuHoiModel.createDieuKhoan({
+      yeucauhotroId: yeucauhotroId,
+      mucthuhoi: soTienCanThuHoi,
+      laisuat: 0,
+      thoihanhoantra: 3,
+      trangthai: 'Chua thu',
+      ngaybatdauthuhoi: new Date(),
+      soQuyetDinh: null,
+    });
+
+    // Gui email thong bao cho nguoi vay
+    const hoTen = don?.nguoi_nop_ho_ten || 'Nguoi dung';
+    const email = don?.nguoi_nop_email;
+    if (email) {
+      sendNghiemThuThatBaiEmail(email, hoTen, soTienCanThuHoi, 3, loaiVay).catch(() => {});
+    }
+
+    // Tao thong bao trong he thong
+    const nguoidungId = don?.nguoidung_id;
+    if (nguoidungId && !isNaN(soTienCanThuHoi) && soTienCanThuHoi > 0) {
+      const tieuDe = don?.tieu_de || 'Don vay von';
+      ThongBaoModel.create({
+        nguoidungId,
+        loai: 'hethong',
+        tieude: 'Nghiem thu khong dat',
+        noidung: `Don "${tieuDe}" chua dat nghiem thu. Ban can thu hoi ${soTienCanThuHoi.toLocaleString('vi-VN')} VNĐ trong vong 3 thang.`,
+        duongdan: '/nghia-vu-hoan-tra',
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("Loi tao dieukhoanthuhoi:", err);
+  }
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── POST /api/nghiem-thu (TẠO LƯỢT KIỂM TRA / NGHIỆM THU) ──────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-//
-// CÔNG DỤNG: Cán bộ (role 3) hoặc Admin (role 1) tạo 1 lượt kiểm tra/nghiệm thu
-// cho đơn xin hỗ trợ đã giải ngân.
-//
-// Điều kiện: don.trangthai IN ('Da giai ngan','Cho nghiem thu') AND don.canghiemthu = 1
-//
+
 export const createInspection = async (req, res) => {
   try {
-    const { yeucauhotroId, loaiKiemTra } = req.body;
+    const { yeucauhotroId, loaiKiemTra, dotgiaingan, soQuyetDinh, fileBienBan, nhanXet } = req.body;
     const nguoiNghiemThuId = req.user.id;
 
-    // Validate
     if (!yeucauhotroId || !loaiKiemTra) {
       return res.status(400).json({
         success: false,
@@ -25,7 +94,6 @@ export const createInspection = async (req, res) => {
       });
     }
 
-    // Validate enum
     const validLoaiKiemTra = ['Kiem tra tien do', 'Nghiem thu cuoi cung'];
     if (!validLoaiKiemTra.includes(loaiKiemTra)) {
       return res.status(400).json({
@@ -34,7 +102,6 @@ export const createInspection = async (req, res) => {
       });
     }
 
-    // Kiểm tra đơn có tồn tại và đủ điều kiện
     const don = await NghiemThuModel.checkEligibility(yeucauhotroId);
     if (!don) {
       return res.status(404).json({
@@ -50,7 +117,11 @@ export const createInspection = async (req, res) => {
       });
     }
 
-    const trangThaiHopLe = ['Da giai ngan', 'Cho nghiem thu'];
+    const trangThaiHopLe = [
+      'Da giai ngan', 'Cho nghiem thu',
+      'Da giai ngan dot 1', 'Cho nghiem thu dot 1',
+      'Cho giai ngan dot 2'
+    ];
     if (!trangThaiHopLe.includes(don.trangthai)) {
       return res.status(400).json({
         success: false,
@@ -58,32 +129,51 @@ export const createInspection = async (req, res) => {
       });
     }
 
-    // Nếu là nghiệm thu cuối cùng, chỉ Admin (role 1) hoặc Cán bộ Quỹ (role 3) mới được phép
-    if (loaiKiemTra === 'Nghiem thu cuoi cung' && req.user.vai_tro !== 1 && req.user.vai_tro !== 3) {
+    if (req.user.vai_tro !== 3) {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền thực hiện nghiệm thu cuối cùng",
+        message: "Chỉ Cán bộ Quỹ mới được tạo lượt nghiệm thu",
       });
     }
 
-    // Tạo lượt nghiệm thu mới
+    // Xac dinh dot giai ngan
+    let dotNT = dotgiaingan || 1;
+    const isLoan = don?.loaihotro === 'Cho vay';
+    // Dot 1 da co du 2/3 luot "Nghiem thu cuoi cung" dat thi day la dot 2
+    const soDatDot1 = isLoan ? await NghiemThuModel.countApprovedByDot(yeucauhotroId, 1) : 0;
+    const daNghiemThuDot1 = isLoan && soDatDot1 >= 2;
+
+    if (don.trangthai === 'Da giai ngan' || don.trangthai === 'Cho nghiem thu') {
+      // Neu la cho vay va da nghiem thu dot 1 thanh cong → dot 2
+      dotNT = daNghiemThuDot1 ? 2 : 1;
+    } else if (don.trangthai === 'Da giai ngan dot 1' || don.trangthai === 'Cho nghiem thu dot 1') {
+      dotNT = 1;
+    } else if (don.trangthai === 'Cho giai ngan dot 2') {
+      dotNT = 2;
+    }
+
     const result = await NghiemThuModel.createInspection({
       yeucauhotroId,
       loaiKiemTra,
-      nguoiNghiemThuId
+      nguoiNghiemThuId,
+      dotgiaingan: dotNT,
+      soQuyetDinh,
+      fileBienBan,
+      nhanXet,
     });
 
-    // Cập nhật trạng thái đơn → 'Cho nghiem thu' (nếu chưa phải)
-    if (don.trangthai === 'Da giai ngan') {
+    // Cap nhat trang thai don (chi cho dot 1, dot 2 giu nguyen 'Da giai ngan')
+    if (don.trangthai === 'Da giai ngan' && !daNghiemThuDot1) {
       await ApplicationModel.updateApplicationStatus(yeucauhotroId, 'Cho nghiem thu');
+    } else if (don.trangthai === 'Da giai ngan dot 1') {
+      await ApplicationModel.updateApplicationStatus(yeucauhotroId, 'Cho nghiem thu dot 1');
     }
 
-    // Ghi nhật ký hệ thống
     await logSystemActivity(req, {
       hanhdong: "TAO_LUOT_NGHIEM_THU",
       loaidoituong: "nghiemthu",
       doituong_id: result.nghiemthuId,
-      mota: `Tạo lượt nghiệm thu lần ${result.lanthu} (${loaiKiemTra === 'Kiem tra tien do' ? 'Kiểm tra tiến độ' : 'Nghiệm thu cuối cùng'}) cho đơn #${yeucauhotroId}`,
+      mota: `Tạo lượt nghiệm thu lần ${result.lanthu} (đợt ${dotNT}) cho đơn #${yeucauhotroId}`,
     });
 
     return res.status(201).json({
@@ -123,7 +213,7 @@ export const updateResult = async (req, res) => {
     }
 
     const validKetQua = ['Cho danh gia', 'Dat', 'Dat co dieu chinh', 'Khong dat'];
-    if (ketqua && !validKetQua.includes(ketqua)) {
+    if (!ketqua || !validKetQua.includes(ketqua)) {
       return res.status(400).json({
         success: false,
         message: "Kết quả không hợp lệ",
@@ -138,7 +228,6 @@ export const updateResult = async (req, res) => {
       });
     }
 
-    // Chỉ Admin (role 1) mới được duyệt kết quả nghiệm thu (cả 2 loại)
     if (req.user.vai_tro !== 1) {
       return res.status(403).json({
         success: false,
@@ -146,28 +235,110 @@ export const updateResult = async (req, res) => {
       });
     }
 
-    await NghiemThuModel.updateResult(id, {
-      ketqua,
-      nhanXet,
-      soQuyetDinh,
-      fileBienBan,
-      ngayNghiemThu
-    });
+    // ─── Lay thong tin don (read-only, khong can transaction) ───────────
+    const don = await ApplicationModel.getApplicationById(nt.yeucauhotro_id);
+    const isLoan = don?.loaihotro === 'Cho vay';
+    const dotgiaingan = nt.dotgiaingan || 1;
 
-    if (nt.loaikiemtra === 'Nghiem thu cuoi cung' && (ketqua === 'Dat' || ketqua === 'Dat co dieu chinh')) {
-      await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Da nghiem thu');
-    } else if (ketqua === 'Khong dat') {
-      await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Nghiem thu khong dat');
+    // ─── BAT DAU TRANSACTION ────────────────────────────────────────────
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      await NghiemThuModel.updateResult(id, {
+        ketqua,
+        nhanXet,
+        soQuyetDinh,
+        fileBienBan,
+        ngayNghiemThu
+      }, connection);
+
+      // ─── LOGIC 2 PHA ───────────────────────────────────────────────────
+
+      if (nt.loaikiemtra === 'Nghiem thu cuoi cung' && (ketqua === 'Dat' || ketqua === 'Dat co dieu chinh')) {
+        const soLuotDat = await NghiemThuModel.countApprovedByDot(nt.yeucauhotro_id, dotgiaingan, connection);
+
+        if (isLoan && dotgiaingan === 1) {
+          const tongLuot = await NghiemThuModel.getByApplicationId(nt.yeucauhotro_id, connection);
+          const tongCuoiCungTrongDot = tongLuot.filter(x => (x.dotgiaingan || 1) === 1 && x.loaikiemtra === 'Nghiem thu cuoi cung');
+
+          if (soLuotDat >= 2) {
+            await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Cho giai ngan dot 2', connection);
+          } else if (tongCuoiCungTrongDot.length >= 3 && soLuotDat < 2) {
+            await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Dang thu hoi no', connection);
+
+            // Cap nhat lichtrano: xoa ky 2, cap nhat ky 1 voi ngay moi
+            const hopDongId3 = don?.hopdongvayvon?.hopdongvayvon_id;
+            if (hopDongId3) {
+              const ngayNghiemThu3 = ngayNghiemThu || new Date().toISOString().slice(0, 10);
+              await HopDongVayVonModel.capNhatLichTraNoKhiKhongDat({
+                hopdongvayvonId: hopDongId3,
+                ngayDuyet: ngayNghiemThu3,
+                thoiHanThang: 3,
+                dotgiaingan,
+                laisuatphantram: don?.hopdongvayvon?.laisuatphantram || 0,
+                sotienvon: don?.hopdongvayvon?.sotienvon || 0,
+              }, connection);
+            }
+
+            // taoDieuKhoanThuHoi will be called AFTER commit (fire-and-forget)
+          }
+        } else if (isLoan && dotgiaingan === 2) {
+          if (don?.hopdongvayvon?.hopdongvayvon_id) {
+            await HopDongVayVonModel.tangLanNghiemThuDat(don.hopdongvayvon.hopdongvayvon_id, connection);
+          }
+          await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Hoan thanh', connection);
+        } else {
+          await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Da nghiem thu', connection);
+        }
+      } else if (ketqua === 'Khong dat') {
+        if (nt.loaikiemtra === 'Nghiem thu cuoi cung') {
+          if (isLoan) {
+            await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Dang thu hoi no', connection);
+
+            // Cap nhat lichtrano: xoa ky 2, cap nhat ky 1 voi ngay moi
+            const hopDongId = don?.hopdongvayvon?.hopdongvayvon_id;
+            if (hopDongId) {
+              const ngayDuyetNT = ngayNghiemThu || new Date().toISOString().slice(0, 10);
+              await HopDongVayVonModel.capNhatLichTraNoKhiKhongDat({
+                hopdongvayvonId: hopDongId,
+                ngayDuyet: ngayDuyetNT,
+                thoiHanThang: 3,
+                dotgiaingan,
+                laisuatphantram: don?.hopdongvayvon?.laisuatphantram || 0,
+                sotienvon: don?.hopdongvayvon?.sotienvon || 0,
+              }, connection);
+            }
+
+            // taoDieuKhoanThuHoi will be called AFTER commit (fire-and-forget)
+          } else {
+            await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Nghiem thu khong dat', connection);
+          }
+        }
+      }
+
+      await connection.commit();
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
     }
 
-    await logSystemActivity(req, {
+    // ─── SAU TRANSACTION: thu hoi von (fire-and-forget, co the fail) ─────
+    if (ketqua === 'Khong dat' && nt.loaikiemtra === 'Nghiem thu cuoi cung' && isLoan) {
+      await taoDieuKhoanThuHoi(nt.yeucauhotro_id, don, dotgiaingan);
+    }
+
+    // Fire-and-forget: log sau response (khong block frontend)
+    logSystemActivity(req, {
       hanhdong: "CAP_NHAT_KET_QUA_NGHIEM_THU",
       loaidoituong: "nghiemthu",
       doituong_id: parseInt(id),
-      mota: `Cập nhật kết quả nghiệm thu lần ${nt.lanthu} → ${ketqua || nt.ketqua} cho đơn #${nt.yeucauhotro_id}`,
+      mota: `Cap nhat ket qua nghiem thu lan ${nt.lanthu} -> ${ketqua || nt.ketqua} cho don #${nt.yeucauhotro_id}`,
       dulieucu: { ketqua: nt.ketqua },
       dulieumoi: { ketqua: ketqua || nt.ketqua }
-    });
+    }).catch(() => {});
 
     return res.status(200).json({
       success: true,
@@ -297,7 +468,12 @@ export const deleteInspection = async (req, res) => {
 
     const remaining = await NghiemThuModel.getByApplicationId(nt.yeucauhotro_id);
     if (remaining.length === 0) {
-      await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Da giai ngan');
+      const app = await ApplicationModel.getApplicationById(nt.yeucauhotro_id);
+      if (app?.loaihotro === 'Cho vay') {
+        await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Da giai ngan dot 1');
+      } else {
+        await ApplicationModel.updateApplicationStatus(nt.yeucauhotro_id, 'Da giai ngan');
+      }
     }
 
     await logSystemActivity(req, {
@@ -367,6 +543,7 @@ export const getInspectionHistory = async (req, res) => {
           tenNguoiNghiemThu: nt.nguoi_nghiem_thu_ten,
           nhanXet: nt.nhanxet,
           ngayNghiemThu: nt.ngaynghiemthu,
+          dotgiaingan: nt.dotgiaingan || 1,
           ngayTao: nt.ngaytao
         }))
       }

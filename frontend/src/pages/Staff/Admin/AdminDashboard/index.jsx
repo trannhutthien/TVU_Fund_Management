@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { HiSignal, HiExclamationCircle } from 'react-icons/hi2';
 import useAuthStore from '@stores/authStore';
 import api from '@services/api';
+import congNoService from '@services/congNoService';
 import YearFilter from '@components/common/YearFilter';
 import AdminAlertSection from './sections/AdminAlertSection';
 import AdminFinanceSection from './sections/AdminFinanceSection';
+import AdminCongNoSection from './sections/AdminCongNoSection';
+import AdminNghiemThuSection from './sections/AdminNghiemThuSection';
 import AdminUserSection from './sections/AdminUserSection';
 import AdminOperationSection from './sections/AdminOperationSection';
 import AdminChartSection from './sections/AdminChartSection';
@@ -120,6 +123,8 @@ const AdminDashboard = () => {
   const [chartData, setChartData] = useState(null);
   const [activityData, setActivityData] = useState([]);
   const [staffData, setStaffData] = useState([]);
+  const [congNoData, setCongNoData] = useState(null);
+  const [nghiemThuData, setNghiemThuData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedYear, setSelectedYear] = useState(null); // null = tất cả
@@ -145,6 +150,8 @@ const AdminDashboard = () => {
           staffUsers,
           userGrowthRes,
           systemLogs,
+          congNoRes,
+          nghiemThuRes,
         ] = await Promise.all([
           api.get('/statistics/ketoan/summary', { params: yearParams }),
           api.get('/users/stats'),
@@ -155,6 +162,8 @@ const AdminDashboard = () => {
           api.get('/users', { params: { role_id: '1,2,3', limit: 10 } }),
           api.get('/users/growth', { params: { months: 6 } }).catch(() => ({ data: { data: [] } })),
           api.get('/nhat-ky', { params: { page: 1, page_size: 10 } }).catch(() => ({ data: { logs: [] } })),
+          congNoService.getTongQuan().catch(() => null),
+          congNoService.getNghiemThuTongQuan().catch(() => null),
         ]);
 
         if (!mounted) return;
@@ -188,6 +197,8 @@ const AdminDashboard = () => {
           tongGiaiNgan: keToanData.tongGiaiNgan || 0,
           duNoVay: keToanData.duNoVay || 0,
           hopDongVayDangThucHien: keToanData.hopDongVayDangThucHien || 0,
+          hopDongVayQuaHan: keToanData.hopDongVayQuaHan || 0,
+          lichTraNoChoXacNhan: keToanData.lichTraNoChoXacNhan || 0,
           tongSoDuQuy: appStats.tongSoDu || 0,
         });
 
@@ -245,6 +256,9 @@ const AdminDashboard = () => {
           })(),
         });
 
+        setCongNoData(congNoRes);
+        setNghiemThuData(nghiemThuRes);
+
         // Process and map real activity logs from database
         const logsArray = systemLogs.data?.logs || [];
         const mappedActivities = logsArray.map(log => ({
@@ -274,7 +288,7 @@ const AdminDashboard = () => {
     fetchAllData();
 
     return () => { mounted = false; };
-  }, [selectedPeriod, selectedYear]);
+  }, [selectedYear]);
 
   // ─── GET CURRENT DATE ──────────────────────────────────────────────────────
   const getCurrentDate = () => {
@@ -346,6 +360,15 @@ const AdminDashboard = () => {
         <>
           {alertData && <AdminAlertSection alertData={alertData} />}
           {financeData && <AdminFinanceSection financeData={financeData} />}
+          <AdminCongNoSection
+            summaryData={financeData}
+            congNoData={congNoData}
+            isLoading={isLoading}
+          />
+          <AdminNghiemThuSection
+            nghiemThuData={nghiemThuData}
+            isLoading={isLoading}
+          />
           {userData && <AdminUserSection userData={userData} />}
           {operationData && <AdminOperationSection operationData={operationData} />}
           {chartData && (

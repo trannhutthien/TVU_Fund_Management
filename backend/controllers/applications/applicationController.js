@@ -173,11 +173,13 @@ export const createApplication = async (req, res) => {
       });
     }
 
-    // Không cho phép nộp đơn vào Bể tiền chung phát triển (Be chung)
-    if (fund.loai_dieu_hanh === 'Tap trung - Be chung') {
+    // Chỉ cho phép nộp đơn vào quỹ cấp 3 (quỹ hoạt động/chương trình)
+    // Không cho phép nộp vào cấp 1 (quỹ mẹ) hoặc cấp 2 (quỹ thành phần)
+    if (fund.capdo !== 3) {
+      const capName = fund.capdo === 1 ? 'Quỹ mẹ' : (fund.capdo === 2 ? 'Quỹ thành phần' : 'quỹ không xác định');
       return res.status(400).json({
         success: false,
-        message: "Không được phép nộp đơn xin hỗ trợ từ Bể tiền chung phát triển. Vui lòng nộp vào các Mục chi con.",
+        message: `Không được phép nộp đơn vào ${capName}. Vui lòng chọn quỹ chương trình cụ thể (cấp 3).`,
       });
     }
 
@@ -202,6 +204,7 @@ export const createApplication = async (req, res) => {
       nguoiDungId: userId,
       quyId,
       dotId,
+      tieuDe: tieuDe.trim(),
       lyDo: moTa.trim(),
       soTienDeNghi: parseFloat(soTienYeuCau),
       taiLieuDinhKem: fileDinhKem.trim(),
@@ -299,8 +302,18 @@ export const getMyApplications = async (req, res) => {
         'Da duyet cap 3': 'CHO_GIAI_NGAN',
         'Tu choi cap 3': 'TU_CHOI',
         'Cho giai ngan': 'CHO_GIAI_NGAN',
+        'Cho giai ngan dot 1': 'CHO_GIAI_NGAN',
+        'Da giai ngan dot 1': 'DA_GIAI_NGAN',
+        'Cho nghiem thu dot 1': 'DANG_XU_LY',
+        'Da nghiem thu dot 1': 'DANG_XU_LY',
+        'Cho giai ngan dot 2': 'CHO_GIAI_NGAN',
         'Da giai ngan': 'DA_GIAI_NGAN',
         'Tu choi': 'TU_CHOI',
+        'Cho nghiem thu': 'DANG_XU_LY',
+        'Da nghiem thu': 'DA_GIAI_NGAN',
+        'Nghiem thu khong dat': 'TU_CHOI',
+        'Dang thu hoi no': 'DANG_XU_LY',
+        'Hoan thanh': 'DA_GIAI_NGAN',
         
         // old values fallback
         'Cho duyet': 'CHO_DUYET',
@@ -317,7 +330,7 @@ export const getMyApplications = async (req, res) => {
       limit: limitNum,
       data: applications.map(app => ({
         requestId: app.yeucauhotro_id,
-        tieuDe: app.lydo ? (app.lydo.substring(0, 50) + (app.lydo.length > 50 ? '...' : '')) : '',
+        tieuDe: app.tieu_de || app.lydo || '',
         moTa: app.lydo,
         soTienYeuCau: parseFloat(app.sotiendenghi),
         trangThai: normalizeStatus(app.trangthai),
@@ -380,7 +393,7 @@ export const getApplicationById = async (req, res) => {
       message: "Lấy thông tin đơn thành công",
       data: {
         requestId: application.yeucauhotro_id,
-        tieuDe: application.lydo || '',
+        tieuDe: application.tieu_de || application.lydo || '',
         moTa: application.lydo,
         lyDo: application.lydo,
         soTienYeuCau: parseFloat(application.sotiendenghi),
@@ -419,7 +432,6 @@ export const getApplicationById = async (req, res) => {
         dotDuyet: application.dot_duyet_ten || null,
         canNghiemThu: application.canghiemthu === 1,
         tongKinhPhiDuAn: application.tongkinhphidudan ? parseFloat(application.tongkinhphidudan) : null,
-        laDeTai: application.laidetac === 1,
         dieukhoanthuhoi: application.dieukhoanthuhoi,
         hopdongvayvon: application.hopdongvayvon
       }
@@ -485,7 +497,7 @@ export const getAllApplications = async (req, res) => {
       message: "Lấy danh sách đơn thành công",
       data: result.applications.map(app => ({
         requestId: app.yeucauhotro_id,
-        tieuDe: app.lydo || '',
+        tieuDe: app.tieu_de || app.lydo || '',
         moTa: app.lydo,
         soTienYeuCau: parseFloat(app.sotiendenghi),
         trangThai: app.trangthai,
@@ -621,7 +633,7 @@ export const rejectApplication = async (req, res) => {
     }
 
     // Chỉ cho phép từ chối đơn ở trạng thái chờ duyệt hoặc chờ giải ngân
-    if (!['Cho duyet', 'Cho duyet cap 1', 'Cho duyet cap 2', 'Cho duyet cap 3', 'Dang xu ly', 'Cho giai ngan'].includes(currentStatus)) {
+    if (!['Cho duyet', 'Cho duyet cap 1', 'Cho duyet cap 2', 'Cho duyet cap 3', 'Dang xu ly', 'Cho giai ngan', 'Cho giai ngan dot 1', 'Cho giai ngan dot 2'].includes(currentStatus)) {
       await connection.rollback();
       return res.status(400).json({
         success: false,
@@ -694,7 +706,7 @@ export const rejectApplication = async (req, res) => {
       message: `Từ chối đơn xin hỗ trợ tại cấp ${capDuyet} thành công`,
       data: {
         requestId: parseInt(id),
-        tieuDe: application.lydo ? (application.lydo.substring(0, 50) + (application.lydo.length > 50 ? '...' : '')) : '',
+        tieuDe: application.tieu_de || application.lydo || '',
         soTienYeuCau: parseFloat(application.sotiendenghi),
         capDuyet: capDuyet,
         trangThaiCu: currentStatus,
@@ -852,7 +864,7 @@ export const staffApprove = async (req, res) => {
       message: "Duyệt đơn xin hỗ trợ cấp 1 thành công",
       data: {
         requestId: parseInt(id),
-        tieuDe: application.lydo ? (application.lydo.substring(0, 50) + (application.lydo.length > 50 ? '...' : '')) : '',
+        tieuDe: application.tieu_de || application.lydo || '',
         soTienYeuCau: parseFloat(application.sotiendenghi),
         capDuyet: 1,
         trangThaiCu: 'Cho duyet cap 1',
@@ -994,23 +1006,11 @@ export const adminApprove = async (req, res) => {
     if (ketqua === 'Tu choi') {
       await PheDuyetModel.updatePheDuyet(id, 2, nguoiDuyetId, 'Tu choi', ghiChu || null, null, connection);
 
-      await connection.query(
-        `UPDATE yeucauhotro SET trangthai = 'Tu choi cap 2', ngaycapnhat = NOW() WHERE yeucauhotro_id = ?`,
-        [id]
-      );
-
-      await logSystemActivity(req, {
-        hanhdong: "TU_CHOI_DON_CAP_2",
-        loaidoituong: "yeucauhotro",
-        doituong_id: id,
-        mota: `Từ chối đơn ID ${id} ở cấp 2 (Admin). Lý do: ${ghiChu || 'Không có'}`,
-        dulieucu: { trangthai: 'Cho duyet cap 2' },
-        dulieumoi: { trangthai: 'Tu choi cap 2' }
-      });
+      await ApplicationModel.updateTuChoi(id, 'Tu choi cap 2', ghiChu || null, connection);
 
       await connection.commit();
 
-      return res.status(200).json({
+      const rejectResp = {
         success: true,
         message: "Từ chối đơn thành công",
         data: {
@@ -1020,7 +1020,18 @@ export const adminApprove = async (req, res) => {
           nguoiDuyet: { id: nguoiDuyetId, hoTen: req.user.hoten || "", vaiTro: 'Admin' },
           ngayDuyet: new Date()
         }
-      });
+      };
+
+      logSystemActivity(req, {
+        hanhdong: "TU_CHOI_DON_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Từ chối đơn ID ${id} ở cấp 2 (Admin). Lý do: ${ghiChu || 'Không có'}`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: { trangthai: 'Tu choi cap 2' }
+      }).catch(() => {});
+
+      return res.status(200).json(rejectResp);
     }
 
     // ─── TRƯỜNG HỢP 2: DUYỆT — LOẠI THƯỜNG (không thu hồi) ──────────────────
@@ -1034,18 +1045,10 @@ export const adminApprove = async (req, res) => {
         [id]
       );
 
-      await logSystemActivity(req, {
-        hanhdong: "DUYET_YEU_CAU_HO_TRO_CAP_2",
-        loaidoituong: "yeucauhotro",
-        doituong_id: id,
-        mota: `Duyệt đơn ID ${id} cấp 2 (Admin). Trạng thái → 'Chờ duyệt cấp 3'`,
-        dulieucu: { trangthai: 'Cho duyet cap 2' },
-        dulieumoi: { trangthai: 'Cho duyet cap 3' }
-      });
-
       await connection.commit();
 
-      return res.status(200).json({
+      // Trả response ngay, log sau
+      const respData = {
         success: true,
         message: "Duyệt đơn thành công. Đơn chờ duyệt cấp 3.",
         data: {
@@ -1055,7 +1058,19 @@ export const adminApprove = async (req, res) => {
           nguoiDuyet: { id: nguoiDuyetId, hoTen: req.user.hoten || "", vaiTro: 'Admin' },
           ngayDuyet: new Date()
         }
-      });
+      };
+
+      // Ghi nhật ký SAU commit (fire-and-forget)
+      logSystemActivity(req, {
+        hanhdong: "DUYET_YEU_CAU_HO_TRO_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Duyệt đơn ID ${id} cấp 2 (Admin). Trạng thái → 'Chờ duyệt cấp 3'`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: { trangthai: 'Cho duyet cap 3' }
+      }).catch(() => {});
+
+      return res.status(200).json(respData);
     }
 
     // ─── TRƯỜNG HỢP 2b: DUYỆT — CHO VAY ─────────────────────────────────────
@@ -1158,6 +1173,15 @@ export const adminApprove = async (req, res) => {
           ghichu: ghiChu || null
         }, connection);
 
+        // BAO VE: Verify hopdongvayvon thuc te ton tai
+        if (!hopdongvayvonId || hopdongvayvonId === 0) {
+          await connection.rollback();
+          return res.status(500).json({
+            success: false,
+            message: "Khong the tao hop dong vay von. Vui long thu lai.",
+          });
+        }
+
         // c. Insert lichtrano — 1 dòng duy nhất
         const lichTraNoResult = await HopDongVayVonModel.createLichTraNo({
           hopdongvayvonId,
@@ -1167,9 +1191,9 @@ export const adminApprove = async (req, res) => {
           ngaydaohan: ngayDaoHanStr
         }, connection);
 
-        // d. Update trangthai → 'Cho giai ngan'
+        // d. Update trangthai → 'Cho giai ngan dot 1'
         await connection.query(
-          `UPDATE yeucauhotro SET trangthai = 'Cho giai ngan', ngaycapnhat = NOW() WHERE yeucauhotro_id = ?`,
+          `UPDATE yeucauhotro SET trangthai = 'Cho giai ngan dot 1', ngaycapnhat = NOW() WHERE yeucauhotro_id = ?`,
           [id]
         );
 
@@ -1182,37 +1206,21 @@ export const adminApprove = async (req, res) => {
         });
       }
 
-      // 4.5. Ghi nhật ký hệ thống
-      await logSystemActivity(req, {
-        hanhdong: "DUYET_DON_CHO_VAY_CAP_2",
-        loaidoituong: "yeucauhotro",
-        doituong_id: id,
-        mota: `Duyệt đơn cho vay ID ${id} cấp 2 (Admin). Tạo hợp đồng vay vốn + lịch trả nợ. Trạng thái → 'Cho giai ngan'`,
-        dulieucu: { trangthai: 'Cho duyet cap 2' },
-        dulieumoi: {
-          trangthai: 'Cho giai ngan',
-          hopdongvayvon: {
-            sotienvon: parseFloat(sotienvon),
-            laisuatphantram: parseFloat(laisuatphantram),
-            ngaykyhopdong: ngayKyDate.toISOString().split('T')[0],
-            kyhandothang: parseInt(kyhandothang),
-            ngaydaohan: ngayDaoHanStr
-          }
-        }
-      });
-
-      // 4.6. Trả response
+      // 4.5. Commit giao dịch
       await connection.commit();
 
-      return res.status(200).json({
+      // 4.6. Trả response NGAY LẬP TỨC (trước khi log để tránh timeout)
+      const responseData = {
         success: true,
-        message: "Duyệt đơn cho vay thành công. Hợp đồng vay vốn đã được tạo.",
+        message: "Duyệt đơn cho vay thành công. Hợp đồng vay vốn đã được tạo với 2 đợt giải ngân.",
         yeucauhotro: {
           yeucauhotro_id: parseInt(id),
-          trangthai: 'Cho giai ngan'
+          trangthai: 'Cho giai ngan dot 1'
         },
         hopdongvayvon: {
           sotienvon: parseFloat(sotienvon),
+          sotien_dot1: Math.round(parseFloat(sotienvon) * 0.5 * 100) / 100,
+          sotien_dot2: parseFloat(sotienvon) - Math.round(parseFloat(sotienvon) * 0.5 * 100) / 100,
           laisuatphantram: parseFloat(laisuatphantram),
           ngaykyhopdong: ngayKyDate.toISOString().split('T')[0],
           kyhandothang: parseInt(kyhandothang),
@@ -1222,11 +1230,38 @@ export const adminApprove = async (req, res) => {
         lichtrano: [{
           kythu: 1,
           ngaydenhan: ngayDaoHanStr,
-          sotiengocphaitra: parseFloat(sotienvon),
-          sotienlaiphaitra: lichTraNoResult.sotienlaiphaitra,
+          sotiengocphaitra: Math.round(parseFloat(sotienvon) * 0.5 * 100) / 100,
+          sotienlaiphaitra: Math.round(parseFloat(sotienvon) * (parseFloat(laisuatphantram) / 100) * (parseInt(kyhandothang) / 12) * 100) / 100,
+          trangthai: 'Chua den han'
+        }, {
+          kythu: 2,
+          ngaydenhan: ngayDaoHanStr,
+          sotiengocphaitra: parseFloat(sotienvon) - Math.round(parseFloat(sotienvon) * 0.5 * 100) / 100,
+          sotienlaiphaitra: 0,
           trangthai: 'Chua den han'
         }]
-      });
+      };
+
+      // 4.7. Ghi nhật ký (fire-and-forget, không block response)
+      logSystemActivity(req, {
+        hanhdong: "DUYET_DON_CHO_VAY_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Duyệt đơn cho vay ID ${id} cấp 2 (Admin). Tạo hợp đồng vay vốn + lịch trả nợ 2 kỳ. Trạng thái → 'Cho giai ngan dot 1'`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: {
+          trangthai: 'Cho giai ngan dot 1',
+          hopdongvayvon: {
+            sotienvon: parseFloat(sotienvon),
+            laisuatphantram: parseFloat(laisuatphantram),
+            ngaykyhopdong: ngayKyDate.toISOString().split('T')[0],
+            kyhandothang: parseInt(kyhandothang),
+            ngaydaohan: ngayDaoHanStr
+          }
+        }
+      }).catch(() => {});
+
+      return res.status(200).json(responseData);
     }
 
     // ─── TRƯỜNG HỢP 3: DUYỆT — LOẠI CÓ THU HỒI ─────────────────────────────
@@ -1316,23 +1351,10 @@ export const adminApprove = async (req, res) => {
         });
       }
 
-      // 5.6. Ghi nhật ký hệ thống
-      await logSystemActivity(req, {
-        hanhdong: "DUYET_DON_CO_THU_HOI_CAP_2",
-        loaidoituong: "yeucauhotro",
-        doituong_id: id,
-        mota: `Duyệt đơn ID ${id} cấp 2 (loại có thu hồi). Mức thu hồi: ${parseFloat(mucthuhoi).toLocaleString('vi-VN')}đ, thời hạn: ${thoihanhoantra} tháng`,
-        dulieucu: { trangthai: 'Cho duyet cap 2' },
-        dulieumoi: {
-          trangthai: 'Cho duyet cap 3',
-          dieukhoanthuhoi: { mucthuhoi, thoihanhoantra, soQuyetDinh }
-        }
-      });
-
+      // 5.5. Commit giao dịch
       await connection.commit();
 
-      // 5.7. Trả response
-      return res.status(200).json({
+      const coThuHoiResp = {
         success: true,
         message: "Duyệt đơn loại có thu hồi thành công. Đơn chờ duyệt cấp 3.",
         data: {
@@ -1348,7 +1370,22 @@ export const adminApprove = async (req, res) => {
           nguoiDuyet: { id: nguoiDuyetId, hoTen: req.user.hoten || "", vaiTro: 'Admin' },
           ngayDuyet: new Date()
         }
-      });
+      };
+
+      // 5.7. Ghi nhật ký SAU KHI đã gửi response (fire-and-forget)
+      logSystemActivity(req, {
+        hanhdong: "DUYET_DON_CO_THU_HOI_CAP_2",
+        loaidoituong: "yeucauhotro",
+        doituong_id: id,
+        mota: `Duyệt đơn ID ${id} cấp 2 (loại có thu hồi). Mức thu hồi: ${parseFloat(mucthuhoi).toLocaleString('vi-VN')}đ, thời hạn: ${thoihanhoantra} tháng`,
+        dulieucu: { trangthai: 'Cho duyet cap 2' },
+        dulieumoi: {
+          trangthai: 'Cho duyet cap 3',
+          dieukhoanthuhoi: { mucthuhoi, thoihanhoantra, soQuyetDinh }
+        }
+      }).catch(() => {});
+
+      return res.status(200).json(coThuHoiResp);
     }
 
     // Fallback (không nên tới đây)
@@ -1443,12 +1480,11 @@ export const disburseApplication = async (req, res) => {
       });
     }
 
-    if (!['Cho duyet cap 3', 'Dang xu ly', 'Cho giai ngan'].includes(currentStatus)) {
+    if (!['Cho duyet cap 3', 'Dang xu ly', 'Cho giai ngan', 'Cho giai ngan dot 1', 'Cho giai ngan dot 2'].includes(currentStatus)) {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: `Không thể giải ngân đơn ở trạng thái "${currentStatus}".
-         Chỉ chấp nhận "Chờ duyệt cấp 3" hoặc "Chờ giải ngân".`,
+        message: `Không thể giải ngân đơn ở trạng thái "${currentStatus}".`,
       });
     }
     // BƯỚC 4: KIỂM TRA CẤP 1 VÀ CẤP 2 ĐÃ DUYỆT
@@ -1470,7 +1506,7 @@ export const disburseApplication = async (req, res) => {
       });
     }
     // BƯỚC 5: KIỂM TRA CẤP ĐỘ DUYỆT HIỆN TẠI
-    const isRetryDisbursement = currentStatus === 'Cho giai ngan';
+    const isRetryDisbursement = currentStatus === 'Cho giai ngan' || currentStatus === 'Cho giai ngan dot 1' || currentStatus === 'Cho giai ngan dot 2';
     let capHienTai = null;
     if (!isRetryDisbursement) {
       capHienTai = await PheDuyetModel.getCapDoDuyetHienTai(id);
@@ -1508,6 +1544,36 @@ export const disburseApplication = async (req, res) => {
     const soDuQuy = parseFloat(fund.so_du);
     const soTienYeuCau = parseFloat(application.sotiendenghi);
 
+    // Xac dinh so tien giai ngan theo dot
+    const isLoan = application.loaihotro === 'Cho vay';
+
+    // BAO VE: Cho vay PHAI co hopdongvayvon
+    if (isLoan && !application.hopdongvayvon) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Don vay chua co hop dong vay von. Vui long lien he Admin duyet cap 2.",
+        error_code: "THIEU_HOP_DONG_VAY_VON"
+      });
+    }
+
+    let soTienGiaiNgan = soTienYeuCau;
+    let dotGiaiNgan = 0;
+
+    if (isLoan && application.hopdongvayvon) {
+      const hopDongSoTien = parseFloat(application.hopdongvayvon.sotienvon) || soTienYeuCau;
+      if (currentStatus === 'Cho giai ngan dot 1') {
+        soTienGiaiNgan = parseFloat(application.hopdongvayvon.sotien_dot1) || Math.round(hopDongSoTien * 0.5 * 100) / 100;
+        dotGiaiNgan = 1;
+      } else if (currentStatus === 'Cho giai ngan dot 2') {
+        soTienGiaiNgan = parseFloat(application.hopdongvayvon.sotien_dot2) || (hopDongSoTien - Math.round(hopDongSoTien * 0.5 * 100) / 100);
+        dotGiaiNgan = 2;
+      } else if (currentStatus === 'Cho giai ngan') {
+        soTienGiaiNgan = soTienYeuCau;
+        dotGiaiNgan = 0;
+      }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 7: KIỂM TRA SỐ DƯ QUỸ VÀ XỬ LÝ
     // ─────────────────────────────────────────────────────────────────────────
@@ -1516,7 +1582,7 @@ export const disburseApplication = async (req, res) => {
     let transactionId = null;
     let isDisbursed = false;
 
-    if (soDuQuy >= soTienYeuCau) {
+    if (soDuQuy >= soTienGiaiNgan) {
       // ═══════════════════════════════════════════════════════════════════════
       // TRƯỜNG HỢP A: ĐỦ TIỀN GIẢI NGÂN
       // ═══════════════════════════════════════════════════════════════════════
@@ -1527,7 +1593,7 @@ export const disburseApplication = async (req, res) => {
          SET sodu = sodu - ?,
              ngaycapnhat = NOW()
          WHERE quy_id = ?`,
-        [soTienYeuCau, application.quy_id]
+        [soTienGiaiNgan, application.quy_id]
       );
 
       // A2. Tạo giao dịch CHI
@@ -1535,19 +1601,37 @@ export const disburseApplication = async (req, res) => {
         yeucauhotroId: parseInt(id),
         quyId: application.quy_id,
         nguoiNhanId: application.nguoidung_id,
-        soTien: soTienYeuCau,
+        soTien: soTienGiaiNgan,
         hinhThuc: 'Chuyen khoan',
         maGiaoDich: null,
         chungTu: minhChungChuyenKhoan || null,
         trangThai: 'Thanh cong',
-        ghiChu: ghiChu || `Giải ngân đơn xin hỗ trợ #${id}`,
+        ghiChu: ghiChu || (isLoan && dotGiaiNgan > 0 ? `Giải ngân đợt ${dotGiaiNgan} hợp đồng vay vốn #${id}` : `Giải ngân đơn xin hỗ trợ #${id}`),
         nguoiThucHienId: nguoiDuyetId
       }, connection);
 
       transactionId = transactionResult.insertId;
 
-      // A3. Cập nhật trạng thái đơn
-      trangThaiMoi = 'Da giai ngan';
+      // A3. Xac dinh trang thai moi
+      if (isLoan) {
+        // Cap nhat ngay giai ngan tren hopdongvayvon
+        const hopDongVayVonId = application.hopdongvayvon?.hopdongvayvon_id;
+        if (hopDongVayVonId) {
+          if (currentStatus === 'Cho giai ngan dot 1' || dotGiaiNgan === 1) {
+            await HopDongVayVonModel.capNhatNgayGiaiNganDot1(hopDongVayVonId, connection);
+            trangThaiMoi = 'Da giai ngan dot 1';
+          } else if (currentStatus === 'Cho giai ngan dot 2' || dotGiaiNgan === 2) {
+            await HopDongVayVonModel.capNhatNgayGiaiNganDot2(hopDongVayVonId, connection);
+            trangThaiMoi = 'Da giai ngan';
+          } else {
+            trangThaiMoi = 'Da giai ngan';
+          }
+        } else {
+          trangThaiMoi = 'Da giai ngan';
+        }
+      } else {
+        trangThaiMoi = 'Da giai ngan';
+      }
       isDisbursed = true;
 
     } else {
@@ -1555,7 +1639,17 @@ export const disburseApplication = async (req, res) => {
       // TRƯỜNG HỢP B: THIẾU TIỀN, CHỜ GIẢI NGÂN
       // ═══════════════════════════════════════════════════════════════════════
       
-      trangThaiMoi = 'Cho giai ngan';
+      if (isLoan) {
+        if (currentStatus === 'Cho giai ngan dot 1' || currentStatus === 'Da giai ngan dot 1') {
+          trangThaiMoi = 'Cho giai ngan dot 1';
+        } else if (currentStatus === 'Cho giai ngan dot 2') {
+          trangThaiMoi = 'Cho giai ngan dot 2';
+        } else {
+          trangThaiMoi = 'Cho giai ngan';
+        }
+      } else {
+        trangThaiMoi = 'Cho giai ngan';
+      }
       isDisbursed = false;
     }
 
@@ -1604,12 +1698,13 @@ export const disburseApplication = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: isDisbursed 
-        ? "Duyệt đơn xin hỗ trợ cấp 3 và giải ngân thành công"
+        ? (isLoan && dotGiaiNgan > 0 ? `Giải ngân đợt ${dotGiaiNgan} thành công` : "Duyệt đơn xin hỗ trợ cấp 3 và giải ngân thành công")
         : "Duyệt đơn xin hỗ trợ cấp 3 thành công. Đơn chờ giải ngân khi quỹ có đủ tiền.",
       data: {
         requestId: parseInt(id),
-        tieuDe: application.lydo ? (application.lydo.substring(0, 50) + (application.lydo.length > 50 ? '...' : '')) : '',
-        soTienYeuCau: soTienYeuCau,
+        tieuDe: application.tieu_de || application.lydo || '',
+        soTienYeuCau: soTienGiaiNgan,
+        dotGiaiNgan: dotGiaiNgan,
         capDuyet: 3,
         trangThaiCu: currentStatus,
         trangThaiMoi: trangThaiMoi,
@@ -1618,12 +1713,12 @@ export const disburseApplication = async (req, res) => {
           id: fund.quy_id,
           tenQuy: fund.ten_quy,
           soDuCu: soDuQuy,
-          soDuMoi: isDisbursed ? soDuQuy - soTienYeuCau : soDuQuy
+          soDuMoi: isDisbursed ? soDuQuy - soTienGiaiNgan : soDuQuy
         },
         giaoDich: isDisbursed ? {
           transactionId: transactionId,
           loai: 'Chi',
-          soTien: soTienYeuCau,
+          soTien: soTienGiaiNgan,
           trangThai: 'Thanh cong'
         } : null,
         nguoiDuyet: {
