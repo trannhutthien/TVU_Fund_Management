@@ -42,5 +42,7 @@ coverage/
 .eslintcache
 
 # Uploads (images will not be pushed, only .gitkeep files)
+uploads/*
+!uploads/.gitkeep
 uploads/**/*
 !uploads/**/.gitkeep
