@@ -119,9 +119,10 @@ const createPublicDonation = async (donationData) => {
         ngaytaitro,
         trangthai,
         ghichu,
-        chungtu
-      ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?)`,
-      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Chuyen khoan', null, ghiChu, taiKhoanNganHangId ? String(taiKhoanNganHangId) : null]
+        chungtu,
+        taikhoannganhang_id
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?, ?)`,
+      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Chuyen khoan', null, ghiChu, null, taiKhoanNganHangId || null]
     );
 
     const khoanTaiTroId = insertDonationResult.insertId;
