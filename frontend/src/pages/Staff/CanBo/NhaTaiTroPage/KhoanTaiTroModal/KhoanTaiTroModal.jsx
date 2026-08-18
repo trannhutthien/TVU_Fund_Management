@@ -8,6 +8,8 @@ import {
   HiOutlineTrash,
   HiOutlineUser,
   HiOutlineUserPlus,
+  HiOutlineInformationCircle,
+  HiOutlineBuildingLibrary,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import api from '@services/api';
@@ -58,6 +60,7 @@ const KhoanTaiTroModal = ({
   const [selectedFund, setSelectedFund] = useState(null);
   const [schoolBankAccounts, setSchoolBankAccounts] = useState([]);
   const [selectedBankAccountId, setSelectedBankAccountId] = useState(null);
+  const [selectedBankAccount, setSelectedBankAccount] = useState(null);
   const [transactionId, setTransactionId] = useState('');
   
   const [errors, setErrors] = useState({});
@@ -156,6 +159,12 @@ const KhoanTaiTroModal = ({
     setForm((f) => ({ ...f, so_tien: amount }));
   };
 
+  const handleBankAccountSelect = (accountId) => {
+    setSelectedBankAccountId(accountId);
+    const account = schoolBankAccounts.find((a) => a.taiKhoanId === accountId);
+    setSelectedBankAccount(account || null);
+  };
+
   const validate = () => {
     const errs = {};
     if (donorMode === 'existing' && !form.nha_tai_tro_id) {
@@ -204,6 +213,7 @@ const KhoanTaiTroModal = ({
         ghi_chu: form.ghi_chu?.trim() || null,
         hinh_thuc: form.hinh_thuc,
         hinh_anh_minh_chung: urlMinhChung,
+        taikhoannganhang_id: selectedBankAccountId || null,
       });
 
       toast.success('Đã ghi nhận khoản tài trợ thành công. Chờ duyệt.');
@@ -355,7 +365,7 @@ const KhoanTaiTroModal = ({
             )}
           </div>
 
-          {/* Section: Số tiền (reused public component) */}
+          {/* Section: Số tiền + Chọn tài khoản ngân hàng */}
           <div className={styles.field}>
             <DonationAmountSection
               selectedFund={selectedFund}
@@ -363,12 +373,65 @@ const KhoanTaiTroModal = ({
               onAmountChange={handleAmountChange}
               schoolBankAccounts={schoolBankAccounts}
               selectedBankAccountId={selectedBankAccountId}
-              onBankAccountSelect={setSelectedBankAccountId}
+              onBankAccountSelect={handleBankAccountSelect}
             />
             {errors.so_tien && (
               <div className={styles.errorText}>{errors.so_tien}</div>
             )}
           </div>
+
+          {/* Section: Chú thích hướng dẫn chuyển khoản */}
+          {selectedBankAccount && form.hinh_thuc === 'Chuyen khoan' && (
+            <div className={styles.transferNoteBox}>
+              <HiOutlineInformationCircle className={styles.transferNoteIcon} />
+              <div className={styles.transferNoteContent}>
+                <div className={styles.transferNoteTitle}>Hướng dẫn nội dung chuyển khoản</div>
+                <div className={styles.transferNoteText}>
+                  Khi chuyển khoản, vui lòng nhập đúng nội dung gồm:
+                </div>
+                <ul className={styles.transferNoteList}>
+                  <li>Số điện thoại người gửi</li>
+                  <li>Tên người gửi</li>
+                  <li>Email</li>
+                  <li>Số tiền</li>
+                  <li>Tên quỹ đã tài trợ</li>
+                </ul>
+                <div className={styles.transferNoteExample}>
+                  Ví dụ: <strong>0912345678 Nguyen Van A nguyena@email.com 1,000,000 Quỹ học bổng</strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section: Xác nhận thông tin ngân hàng nhận chuyển khoản */}
+          {selectedBankAccount && form.hinh_thuc === 'Chuyen khoan' && (
+            <div className={styles.bankConfirmBox}>
+              <div className={styles.bankConfirmTitle}>
+                <HiOutlineBuildingLibrary className={styles.bankConfirmIcon} />
+                Thông tin tài khoản nhận chuyển khoản
+              </div>
+              <div className={styles.bankConfirmInfo}>
+                <div className={styles.bankConfirmRow}>
+                  <span className={styles.bankConfirmLabel}>Ngân hàng:</span>
+                  <span className={styles.bankConfirmValue}>{selectedBankAccount.tenNganHang}</span>
+                </div>
+                <div className={styles.bankConfirmRow}>
+                  <span className={styles.bankConfirmLabel}>Số tài khoản:</span>
+                  <span className={styles.bankConfirmValue}>{selectedBankAccount.soTaiKhoan}</span>
+                </div>
+                <div className={styles.bankConfirmRow}>
+                  <span className={styles.bankConfirmLabel}>Chủ tài khoản:</span>
+                  <span className={styles.bankConfirmValue}>{selectedBankAccount.chuTaiKhoan}</span>
+                </div>
+                {selectedBankAccount.chiNhanh && (
+                  <div className={styles.bankConfirmRow}>
+                    <span className={styles.bankConfirmLabel}>Chi nhánh:</span>
+                    <span className={styles.bankConfirmValue}>{selectedBankAccount.chiNhanh}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Section: Hình thức thanh toán */}
           <div className={styles.field}>

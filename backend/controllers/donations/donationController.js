@@ -249,6 +249,7 @@ export const createStaffDonation = async (req, res) => {
       ghi_chu,
       hinh_anh_minh_chung,
       hinh_thuc,
+      taikhoannganhang_id,
     } = req.body;
 
     if (!quy_id || isNaN(quy_id)) {
@@ -402,9 +403,9 @@ export const createStaffDonation = async (req, res) => {
 
     const [insertRes] = await connection.execute(
       `INSERT INTO khoantaitro (
-         nhataitro_id, quy_id, sotien, hinhthuc, ngaytaitro, trangthai, ghichu, chungtu
-       ) VALUES (?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?)`,
-      [resolvedNhaTaiTroId, quy_id, amount, finalMethod, ghi_chu ? String(ghi_chu).trim() : null, proofDoc]
+         nhataitro_id, quy_id, sotien, hinhthuc, ngaytaitro, trangthai, ghichu, chungtu, taikhoannganhang_id
+       ) VALUES (?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?, ?)`,
+      [resolvedNhaTaiTroId, quy_id, amount, finalMethod, ghi_chu ? String(ghi_chu).trim() : null, proofDoc, taikhoannganhang_id || null]
     );
     const newDonationId = insertRes.insertId;
 
