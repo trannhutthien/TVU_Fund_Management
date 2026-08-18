@@ -297,6 +297,7 @@ const PublicDonationPage = () => {
                   formData={formData}
                   destinationType={destinationType}
                   selectedFund={selectedFund}
+                  bankAccounts={bankAccounts}
                 />
               </div>
 

@@ -4,8 +4,12 @@ import { DESTINATION_TYPES, PAYMENT_METHOD_LABELS } from '../constants';
 import { formatCurrency, formatDate, formatNumberInput } from '../formatters';
 import styles from './ReviewStep.module.scss';
 
-const ReviewStep = memo(({ formData, destinationType, selectedFund }) => {
+const ReviewStep = memo(({ formData, destinationType, selectedFund, bankAccounts }) => {
   const isPropose = destinationType === DESTINATION_TYPES.PROPOSE_PROGRAM;
+
+  const selectedBankAccount = formData.taiKhoanNganHangId
+    ? (bankAccounts || []).find(acc => acc.taiKhoanId === formData.taiKhoanNganHangId)
+    : null;
 
   return (
     <div className={styles.stepContent}>
@@ -116,6 +120,22 @@ const ReviewStep = memo(({ formData, destinationType, selectedFund }) => {
             <span className={styles.reviewLabel}>Hình thức đóng góp:</span>
             <span className={styles.reviewValue}>{PAYMENT_METHOD_LABELS[formData.hinhThuc]}</span>
           </div>
+          {selectedBankAccount && (
+            <>
+              <div className={styles.reviewItem}>
+                <span className={styles.reviewLabel}>Ngân hàng nhận:</span>
+                <span className={styles.reviewValue}>{selectedBankAccount.tenNganHang}</span>
+              </div>
+              <div className={styles.reviewItem}>
+                <span className={styles.reviewLabel}>Số tài khoản:</span>
+                <span className={styles.reviewValue}>{selectedBankAccount.soTaiKhoan}</span>
+              </div>
+              <div className={styles.reviewItem}>
+                <span className={styles.reviewLabel}>Chủ tài khoản:</span>
+                <span className={styles.reviewValue}>{selectedBankAccount.chuTaiKhoan}</span>
+              </div>
+            </>
+          )}
           <div className={styles.reviewItem}>
             <span className={styles.reviewLabel}>Ngày đăng ký:</span>
             <span className={styles.reviewValue}>{formatDate(new Date())}</span>
@@ -131,6 +151,7 @@ ReviewStep.propTypes = {
   formData: PropTypes.object.isRequired,
   destinationType: PropTypes.string,
   selectedFund: PropTypes.object,
+  bankAccounts: PropTypes.array,
 };
 
 export default ReviewStep;

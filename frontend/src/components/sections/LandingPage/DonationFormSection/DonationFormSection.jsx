@@ -229,6 +229,7 @@ const DonationFormSection = () => {
                 formData={formData}
                 destinationType={destinationType}
                 selectedFund={selectedFund}
+                bankAccounts={bankAccounts}
               />
             )}
             {isSuccess && (
