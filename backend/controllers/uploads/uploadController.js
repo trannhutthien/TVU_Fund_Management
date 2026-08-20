@@ -391,6 +391,80 @@ export const uploadFund = (req, res) => {
 // Feature không còn sử dụng - đã xóa các hàm uploadStudentShowcaseMiddleware và uploadStudentShowcase
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ─── DONOR LOGO UPLOAD CONFIGURATION & CONTROLLER ──────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const donorStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../../uploads/avatars/donor');
+
+    // Tạo thư mục nếu chưa tồn tại
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '_' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    const nameWithoutExt = path.basename(file.originalname, ext);
+    const safeName = nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '_');
+    cb(null, `${safeName}_${uniqueSuffix}${ext}`);
+  }
+});
+
+const donorFileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Chỉ chấp nhận file ảnh JPG, JPEG, PNG, WEBP'), false);
+  }
+};
+
+const donorLogoUpload = multer({
+  storage: donorStorage,
+  fileFilter: donorFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  }
+});
+
+export const uploadDonorLogoMiddleware = donorLogoUpload.single('file');
+
+export const uploadDonorLogo = (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng chọn file để upload'
+      });
+    }
+
+    const filePath = `uploads/avatars/donor/${req.file.filename}`;
+
+    return res.status(200).json({
+      success: true,
+      message: 'Upload logo nhà tài trợ thành công',
+      data: {
+        fileName: req.file.filename,
+        originalName: req.file.originalname,
+        filePath: filePath,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype
+      }
+    });
+  } catch (error) {
+    console.error('Lỗi uploadDonorLogo:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi server khi upload logo nhà tài trợ'
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ─── NEWS UPLOAD CONFIGURATION & CONTROLLER ────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 

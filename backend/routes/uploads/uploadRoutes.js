@@ -9,6 +9,8 @@ import {
   uploadAvatar,
   uploadFundMiddleware,
   uploadFund,
+  uploadDonorLogoMiddleware,
+  uploadDonorLogo,
   // uploadStudentShowcaseMiddleware, // REMOVED: Feature không còn sử dụng
   // uploadStudentShowcase, // REMOVED: Feature không còn sử dụng
   uploadNewsMiddleware,
@@ -40,6 +42,10 @@ router.post('/avatar', protect, uploadAvatarMiddleware, uploadAvatar);
 // POST /api/upload/fund - Upload ảnh bìa quỹ
 // Yêu cầu: Token hợp lệ, FormData với key 'file'
 router.post('/fund', protect, uploadFundMiddleware, uploadFund);
+
+// POST /api/upload/donor - Upload logo nhà tài trợ
+// Yêu cầu: Token hợp lệ, FormData với key 'file'
+router.post('/donor', protect, uploadDonorLogoMiddleware, uploadDonorLogo);
 
 // POST /api/upload/student - Upload ảnh sinh viên nổi bật
 // REMOVED: Feature không còn sử dụng

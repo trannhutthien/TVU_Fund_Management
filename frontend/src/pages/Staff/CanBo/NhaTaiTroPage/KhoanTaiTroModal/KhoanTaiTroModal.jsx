@@ -288,9 +288,9 @@ const KhoanTaiTroModal = ({
                 <label className={styles.label}>Nhà tài trợ</label>
                 <div className={styles.sponsorCard}>
                   <div className={styles.sponsorAvatar}>
-                    {preselectedSponsor.avatar ? (
+                    {preselectedSponsor.logo || preselectedSponsor.avatar ? (
                       <img
-                        src={preselectedSponsor.avatar}
+                        src={preselectedSponsor.logo || preselectedSponsor.avatar}
                         alt={preselectedSponsor.ten_nha_tai_tro}
                       />
                     ) : (

@@ -4,6 +4,7 @@ import {
   getStaffDonors,
   getDonorDetail,
   getDonorStats,
+  createDonorForStaff,
   getMyDonorStats,
   getMyDonations,
   getPublicDonorDetail,
@@ -42,6 +43,9 @@ router.get('/stats', protect, authorizeRoles(1, 3), getDonorStats);
 
 // GET /api/donors - Cán bộ Quỹ/Admin: danh sách + filter + sort + phân trang
 router.get('/', protect, authorizeRoles(1, 3), getStaffDonors);
+
+// POST /api/donors - Cán bộ Quỹ/Admin: tạo nhà tài trợ mới
+router.post('/', protect, authorizeRoles(1, 3), createDonorForStaff);
 
 // GET /api/donors/:id - Cán bộ Quỹ/Admin: chi tiết + lịch sử khoản tài trợ
 router.get('/:id', protect, authorizeRoles(1, 3), getDonorDetail);

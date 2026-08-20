@@ -1,6 +1,7 @@
 import pool from "../../config/db.js";
 import { buildDonorAvatarUrl } from "../../utils/helpers/imageHelper.js";
 import DonorModel from "../../models/donations/DonorModel.js";
+import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── DONOR CONTROLLER (NHÀ TÀI TRỢ) ───────────────────────────────────────────
@@ -19,6 +20,7 @@ export const getDonorWall = async (req, res) => {
         nt.nhataitro_id,
         nt.tennhataitro,
         nt.loainhataitro,
+        nt.logo,
         nd.avatar,
         nd.email,
         nd.sodienthoai,
@@ -32,7 +34,7 @@ export const getDonorWall = async (req, res) => {
        LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
        LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
        WHERE nt.trangthai = 'Hoat dong'
-       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nd.avatar, nd.email, nd.sodienthoai
+       GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo, nd.avatar, nd.email, nd.sodienthoai
        HAVING tong_dong_gop > 0
        ORDER BY tong_dong_gop DESC`
     );
@@ -69,7 +71,7 @@ export const getDonorWall = async (req, res) => {
       totalAmount: parseFloat(donor.tong_dong_gop),
       soQuyHoTro: donor.so_quy_ho_tro,
       cacQuyHoTro: fundsMap[donor.nhataitro_id] || [],
-      logo: buildDonorAvatarUrl(donor.avatar),
+      logo: buildDonorAvatarUrl(donor.logo || donor.avatar),
     }));
 
     return res.status(200).json({
@@ -129,6 +131,7 @@ export const getStaffDonors = async (req, res) => {
       trangthai: r.trangthai,
       nguoidung_id: r.nguoidung_id,
       avatar: buildDonorAvatarUrl(r.avatar),
+      logo: buildDonorAvatarUrl(r.logo || r.avatar),
       tong_da_dong_gop: Number(r.tong_da_dong_gop) || 0,
       so_khoan: Number(r.so_khoan) || 0,
       lan_cuoi: r.lan_cuoi,
@@ -171,6 +174,72 @@ export const getDonorStats = async (_req, res) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ─── POST /api/donors (CHO CÁN BỘ QUỸ - YÊU CẦU TOKEN) ─────────────────────────
+// CÔNG DỤNG: Tạo nhà tài trợ mới (chỉ hồ sơ donor, không tạo tài khoản đăng nhập)
+// BODY: { tenNhaTaiTro, loaiNhaTaiTro, logo }
+// ═══════════════════════════════════════════════════════════════════════════════
+const VALID_LOAI = ['Ca nhan', 'To chuc', 'Doanh nghiep', 'Doi tac'];
+
+export const createDonorForStaff = async (req, res) => {
+  try {
+    const { tenNhaTaiTro, loaiNhaTaiTro, logo } = req.body || {};
+
+    const name = String(tenNhaTaiTro || '').trim();
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Tên nhà tài trợ là bắt buộc" });
+    }
+
+    const loai = String(loaiNhaTaiTro || 'Ca nhan').trim();
+    if (!VALID_LOAI.includes(loai)) {
+      return res.status(400).json({
+        success: false,
+        message: "Loại nhà tài trợ không hợp lệ",
+      });
+    }
+
+    const logoPath = logo ? String(logo).trim() : null;
+
+    const result = await DonorModel.createDonor({
+      nguoiDungId: null,
+      tenNhaTaiTro: name,
+      loaiNhaTaiTro: loai,
+      logo: logoPath,
+    });
+    const donorId = result.insertId;
+
+    // Ghi nhật ký hệ thống (không block response nếu fail)
+    try {
+      await logSystemActivity(req, {
+        hanhdong: "THEM_MOI_NHA_TAI_TRO",
+        loaidoituong: "nhataitro",
+        doituong_id: donorId,
+        mota: `Tạo nhà tài trợ mới: ${name} (Loại: ${loai})`,
+        dulieumoi: { tenNhaTaiTro: name, loaiNhaTaiTro: loai, logo: logoPath }
+      });
+    } catch (logError) {
+      console.error('⚠️ Warning: Failed to create system log:', logError);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Tạo nhà tài trợ thành công",
+      data: {
+        nha_tai_tro_id: donorId,
+        ten_nha_tai_tro: name,
+        loai: loai,
+        logo: buildDonorAvatarUrl(logoPath),
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi createDonorForStaff:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi tạo nhà tài trợ",
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ─── GET /api/donors/:id (CHO CÁN BỘ QUỸ) ─────────────────────────────────────
 // CÔNG DỤNG: Chi tiết 1 nhà tài trợ + lịch sử các khoản tài trợ
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -201,6 +270,7 @@ export const getDonorDetail = async (req, res) => {
         trangthai: donor.trangthai,
         nguoidung_id: donor.nguoidung_id,
         avatar: buildDonorAvatarUrl(donor.avatar),
+        logo: buildDonorAvatarUrl(donor.logo || donor.avatar),
         tong_da_dong_gop: Number(donor.tong_da_dong_gop) || 0,
         so_khoan: Number(donor.so_khoan) || 0,
         lan_cuoi: donor.lan_cuoi,
@@ -397,6 +467,7 @@ export default {
   getDonorWall,
   getStaffDonors,
   getDonorStats,
+  createDonorForStaff,
   getDonorDetail,
   // Thêm APIs mới cho donor user
   getMyDonorStats,

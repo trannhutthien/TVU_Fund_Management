@@ -50,6 +50,12 @@ export const getStaffDonors = async (params = {}) => {
   return response.data;
 };
 
+// Cán bộ Quỹ: tạo nhà tài trợ mới (chỉ hồ sơ donor, không tạo tài khoản)
+export const createDonor = async (payload = {}) => {
+  const response = await api.post('/donors', payload);
+  return response.data;
+};
+
 // Cán bộ Quỹ: 4 thẻ thống kê
 export const getDonorStats = async () => {
   const response = await api.get('/donors/stats');
@@ -71,6 +77,7 @@ export default {
   getMyDonations,
   // Staff
   getStaffDonors,
+  createDonor,
   getDonorStats,
   getDonorDetail,
 };

@@ -27,6 +27,7 @@ const createDonor = async (donorData) => {
     nguoiDungId,
     tenNhaTaiTro,
     loaiNhaTaiTro,
+    logo,
   } = donorData;
 
   const [result] = await pool.execute(
@@ -34,12 +35,14 @@ const createDonor = async (donorData) => {
       nguoidung_id,
       tennhataitro,
       loainhataitro,
+      logo,
       trangthai
-    ) VALUES (?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?)`,
     [
       nguoiDungId || null,
       tenNhaTaiTro,
       loaiNhaTaiTro || 'Ca nhan',
+      logo || null,
       'Hoat dong'
     ]
   );
@@ -58,6 +61,7 @@ const getDonorById = async (nhaTaiTroId) => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
+      nt.logo,
       nd.email,
       nd.sodienthoai,
       nd.diachi,
@@ -86,6 +90,7 @@ const getAllDonors = async () => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
+      nt.logo,
       nd.email,
       nd.sodienthoai,
       nd.diachi,
@@ -165,6 +170,7 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
         nt.nhataitro_id,
         nt.tennhataitro,
         nt.loainhataitro,
+        nt.logo,
         nd.email,
         nd.sodienthoai,
         nd.diachi,
@@ -202,6 +208,7 @@ const getDonorWithStats = async (nhaTaiTroId) => {
         nt.nguoidung_id,
         nt.tennhataitro,
         nt.loainhataitro,
+        nt.logo,
         nd.email,
         nd.sodienthoai,
         nd.diachi,
@@ -341,6 +348,7 @@ const getDonorByNguoiDungId = async (nguoiDungId) => {
       nt.nguoidung_id,
       nt.tennhataitro,
       nt.loainhataitro,
+      nt.logo,
         nd.email,
         nd.sodienthoai,
         nd.diachi,

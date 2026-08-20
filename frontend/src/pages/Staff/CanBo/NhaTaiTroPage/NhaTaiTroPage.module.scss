@@ -49,6 +49,10 @@
   color: #64748b;
 }
 
+.headerBtn {
+  margin-right: 10px;
+}
+
 // ── Stat cards ──────────────────────────────
 .statsRow {
   display: grid;
@@ -228,6 +232,11 @@
 .badgeToChuc {
   background: rgba(16, 185, 129, 0.1);
   color: #047857;
+}
+
+.badgeDoiTac {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
 }
 
 .divider {

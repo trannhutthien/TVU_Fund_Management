@@ -37,6 +37,15 @@ export const uploadService = {
     return response.data
   },
 
+  // Upload logo nhà tài trợ
+  uploadDonorLogo: async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post('/upload/donor', formData)
+    return response.data
+  },
+
   // Upload ảnh sinh viên nổi bật
   uploadStudentImage: async (file) => {
     const formData = new FormData()

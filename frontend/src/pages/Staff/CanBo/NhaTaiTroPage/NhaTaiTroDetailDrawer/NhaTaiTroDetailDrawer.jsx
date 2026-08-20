@@ -99,8 +99,8 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro, isPublic = false
         {/* Profile */}
         <section className={styles.profile}>
           <div className={styles.avatar}>
-            {data.avatar ? (
-              <img src={data.avatar} alt={data.ten_nha_tai_tro} />
+            {data.logo || data.avatar ? (
+              <img src={data.logo || data.avatar} alt={data.ten_nha_tai_tro} />
             ) : (
               <span>{getInitial(data.ten_nha_tai_tro)}</span>
             )}

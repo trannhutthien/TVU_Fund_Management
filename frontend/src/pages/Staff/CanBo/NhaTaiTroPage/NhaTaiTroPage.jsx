@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   HiOutlinePlusCircle,
+  HiOutlineUserPlus,
   HiOutlineMagnifyingGlass,
   HiOutlineXMark,
   HiOutlineHandRaised,
@@ -21,6 +22,7 @@ import { getStaffDonors, getDonorStats } from '@services/donorService';
 import { formatCurrency, getInitial } from '@utils/formatters';
 import NhaTaiTroDetailDrawer from './NhaTaiTroDetailDrawer/NhaTaiTroDetailDrawer';
 import KhoanTaiTroModal from './KhoanTaiTroModal/KhoanTaiTroModal';
+import CreateDonorModal from './CreateDonorModal/CreateDonorModal';
 import styles from './NhaTaiTroPage.module.scss';
 
 const PAGE_SIZE = 12;
@@ -28,8 +30,9 @@ const PAGE_SIZE = 12;
 const LOAI_OPTIONS = [
   { value: '', label: '-- Tất cả loại --' },
   { value: 'Ca nhan', label: 'Cá nhân' },
+  { value: 'To chuc', label: 'Tổ chức' },
   { value: 'Doanh nghiep', label: 'Doanh nghiệp' },
-  { value: 'To chuc phi loi nhuan', label: 'Tổ chức phi lợi nhuận' },
+  { value: 'Doi tac', label: 'Đối tác' },
 ];
 
 const SORT_OPTIONS = [
@@ -41,8 +44,9 @@ const SORT_OPTIONS = [
 
 const LOAI_LABEL = {
   'Ca nhan': 'Cá nhân',
+  'To chuc': 'Tổ chức',
   'Doanh nghiep': 'Doanh nghiệp',
-  'To chuc phi loi nhuan': 'Tổ chức phi lợi nhuận',
+  'Doi tac': 'Đối tác',
 };
 
 const formatDate = (value) => {
@@ -68,6 +72,7 @@ const NhaTaiTroPage = () => {
   const [selectedSponsor, setSelectedSponsor] = useState(null);
   const [showKhoanModal, setShowKhoanModal] = useState(false);
   const [preselectedSponsor, setPreselectedSponsor] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedKeyword(filters.keyword), 500);
@@ -184,6 +189,14 @@ const NhaTaiTroPage = () => {
             </p>
           </div>
           <Button
+            variant="secondary"
+            leftIcon={<HiOutlineUserPlus />}
+            onClick={() => setShowCreateModal(true)}
+            className={styles.headerBtn}
+          >
+            Tạo nhà tài trợ
+          </Button>
+          <Button
             variant="primary"
             leftIcon={<HiOutlinePlusCircle />}
             onClick={() => handleOpenCreateModal(null)}
@@ -283,13 +296,15 @@ const NhaTaiTroPage = () => {
                     ? styles.badgeCaNhan
                     : sp.loai === 'Doanh nghiep'
                       ? styles.badgeDoanhNghiep
-                      : styles.badgeToChuc;
+                      : sp.loai === 'Doi tac'
+                        ? styles.badgeDoiTac
+                        : styles.badgeToChuc;
                 return (
                   <div key={sp.nha_tai_tro_id} className={styles.card}>
                     <div className={styles.cardHead}>
                       <div className={styles.avatar}>
-                        {sp.avatar ? (
-                          <img src={sp.avatar} alt={sp.ten_nha_tai_tro} />
+                        {sp.logo || sp.avatar ? (
+                          <img src={sp.logo || sp.avatar} alt={sp.ten_nha_tai_tro} />
                         ) : (
                           <span>{getInitial(sp.ten_nha_tai_tro)}</span>
                         )}
@@ -407,6 +422,13 @@ const NhaTaiTroPage = () => {
         isOpen={showKhoanModal}
         onClose={handleCloseModal}
         preselectedSponsor={preselectedSponsor}
+        onSuccess={handleSuccessSave}
+      />
+
+      {/* ── Modal tạo nhà tài trợ mới ────────── */}
+      <CreateDonorModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
         onSuccess={handleSuccessSave}
       />
     </div>
