@@ -35,12 +35,12 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
   useEffect(() => {
     if (proposal) {
       setGhiChu('');
-      setQuyThanhPhanId(proposal.quythanhphan_id?.toString() || '');
+      setQuyThanhPhanId(proposal.quy_thanh_phan_id?.toString() || '');
       setConfirmed(false);
       setSubmitting(false);
       fetchFunds();
     }
-  }, [proposal?.dexuatchuongtrinh_id]);
+  }, [proposal?.de_xuat_id]);
 
   const fetchFunds = async () => {
     setLoadingFunds(true);
@@ -59,9 +59,9 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
 
   if (!proposal) return null;
 
-  const tongSoTien = (proposal.soluongsuat || 0) * (proposal.sotienmoisuat || 0);
+  const tongSoTien = (proposal.so_luong_suat || 0) * (proposal.so_tien_moi_suat || 0);
   const hasChangedFund =
-    quyThanhPhanId && quyThanhPhanId !== proposal.quythanhphan_id?.toString();
+    quyThanhPhanId && quyThanhPhanId !== proposal.quy_thanh_phan_id?.toString();
 
   const handleSubmit = async () => {
     if (!confirmed || submitting) return;
@@ -77,10 +77,10 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
         payload.quyThanhPhanId = parseInt(quyThanhPhanId, 10);
       }
 
-      await approveByCanBo(proposal.dexuatchuongtrinh_id, payload);
+      await approveByCanBo(proposal.de_xuat_id, payload);
 
       toast.success(
-        `Đã duyệt đề xuất "${proposal.tenchuongtrinh}". Chuyển sang bước kế toán xác nhận tiền.`
+        `Đã duyệt đề xuất "${proposal.ten_chuong_trinh}". Chuyển sang bước kế toán xác nhận tiền.`
       );
       onSuccess?.();
     } catch (err) {
@@ -117,25 +117,25 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Tên chương trình</span>
               <span className={styles.summaryValue}>
-                {proposal.tenchuongtrinh}
+                {proposal.ten_chuong_trinh}
               </span>
             </div>
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Mô tả</span>
               <span className={styles.summaryValue}>
-                {proposal.mota || '—'}
+                {proposal.mo_ta || '—'}
               </span>
             </div>
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Số lượng suất</span>
               <span className={styles.summaryValue}>
-                {proposal.soluongsuat || 0}
+                {proposal.so_luong_suat || 0}
               </span>
             </div>
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Số tiền mỗi suất</span>
               <span className={styles.summaryValue}>
-                {formatCurrency(proposal.sotienmoisuat || 0)}
+                {formatCurrency(proposal.so_tien_moi_suat || 0)}
               </span>
             </div>
             <div className={styles.summaryRow}>
@@ -147,14 +147,14 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Loại hỗ trợ</span>
               <span className={styles.summaryValue}>
-                {proposal.loaihotro || '—'}
+                {proposal.loai_ho_tro || '—'}
               </span>
             </div>
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Thời gian</span>
               <span className={styles.summaryValue}>
-                {formatDateTime(proposal.ngaybatdau)} -{' '}
-                {formatDateTime(proposal.ngayketthuc)}
+                {formatDateTime(proposal.ngay_bat_dau)} -{' '}
+                {formatDateTime(proposal.ngay_ket_thuc)}
               </span>
             </div>
           </div>
@@ -179,7 +179,7 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
                 {funds.map((fund) => (
                   <option key={fund.quy_id} value={fund.quy_id}>
                     {fund.ten_quy}
-                    {fund.quy_id === proposal.quythanhphan_id && ' (Hiện tại)'}
+                    {fund.quy_id === proposal.quy_thanh_phan_id && ' (Hiện tại)'}
                   </option>
                 ))}
               </select>
@@ -225,7 +225,7 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
             />
             <span className={styles.checkboxLabel}>
               Tôi xác nhận đã kiểm tra đề xuất chương trình "
-              <strong>{proposal.tenchuongtrinh}</strong>" và phê duyệt cho đề
+              <strong>{proposal.ten_chuong_trinh}</strong>" và phê duyệt cho đề
               xuất này tiếp tục sang bước kế toán xác nhận tiền.
             </span>
           </label>

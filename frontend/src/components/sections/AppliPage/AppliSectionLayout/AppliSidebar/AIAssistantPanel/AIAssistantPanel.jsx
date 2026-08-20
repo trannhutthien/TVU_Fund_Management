@@ -252,11 +252,11 @@ const AIAssistantPanel = ({ moTa, tieuDe, onApplySuggestion, selectedFund, isGue
               <>
                 <div className={styles.draftInputBox}>
                   <label className={styles.draftLabel}>
-                    Nhập hoàn cảnh / các ý chính của bạn:
+                    Nhập vài nét về bản thân / các ý chính của bạn:
                   </label>
                   <textarea
                     className={styles.draftTextarea}
-                    placeholder="Ví dụ: Gia đình làm nông ở vùng sâu, hạn mặn mất mùa, gặp khó khăn đóng học phí học kỳ 2. Cam kết cố gắng học tốt..."
+                    placeholder="Ví dụ: Gia đình làm nông ở vùng sâu, hạn mặn mất mùa nên việc đóng học phí học kỳ 2 gặp khó khăn. Em rất mong được Quỹ đồng hành để tiếp tục việc học. Em sẽ cố gắng học tập thật tốt..."
                     value={draftInput}
                     onChange={(e) => setDraftInput(e.target.value)}
                   />

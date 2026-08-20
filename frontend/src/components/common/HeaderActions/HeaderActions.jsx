@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { HiOutlineUser, HiOutlineCog6Tooth, HiOutlineArrowRightOnRectangle } from 'react-icons/hi2';
+import { HiOutlineUser, HiOutlineCog6Tooth, HiOutlineMagnifyingGlass, HiOutlineArrowPathRoundedSquare, HiOutlineArrowRightOnRectangle } from 'react-icons/hi2';
 import NotificationBell from './NotificationBell';
 import UserAvatar from './UserAvatar';
 import CloseButton from '@components/common/CloseButton/CloseButton';
@@ -31,7 +31,7 @@ const HeaderActions = ({
   className = '',
 }) => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotification();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotification();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleUserAvatarClick = () => {
@@ -65,6 +65,11 @@ const HeaderActions = ({
     navigate('/profile');
   };
 
+  const handleMenuNavigation = (path) => {
+    setShowUserMenu(false);
+    navigate(path);
+  };
+
   const headerActionsClasses = [
     'header-actions',
     `header-actions-${size}`,
@@ -82,6 +87,7 @@ const HeaderActions = ({
           unreadCount={unreadCount}
           onNotificationClick={handleNotificationClick}
           onMarkAllRead={handleMarkAllRead}
+          onDeleteNotification={deleteNotification}
           size={size}
         />
       )}
@@ -128,6 +134,14 @@ const HeaderActions = ({
             <div className="user-menu-divider" />
 
             <div className="user-menu-items">
+              <button className="user-menu-item" onClick={() => handleMenuNavigation('/track')}>
+                <HiOutlineMagnifyingGlass className="user-menu-item-icon" />
+                <span className="user-menu-item-text">Tra cứu đơn</span>
+              </button>
+              <button className="user-menu-item" onClick={() => handleMenuNavigation('/nghia-vu-hoan-tra')}>
+                <HiOutlineArrowPathRoundedSquare className="user-menu-item-icon" />
+                <span className="user-menu-item-text">Nghĩa vụ hoàn trả</span>
+              </button>
               <button className="user-menu-item" onClick={handleProfileNavigation}>
                 <HiOutlineUser className="user-menu-item-icon" />
                 <span className="user-menu-item-text">Hồ sơ cá nhân</span>

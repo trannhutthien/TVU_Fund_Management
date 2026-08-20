@@ -64,7 +64,7 @@ export const LOAI_HO_TRO_INFO = {
       'Ký hợp đồng vay vốn sau khi hồ sơ được duyệt',
     ],
     examples: 'Vay vốn khởi nghiệp, vay hoàn thiện sản phẩm, vay nghiên cứu ứng dụng',
-    note: 'Đây là khoản VAY — bạn bắt buộc phải hoàn trả. Quỹ sẽ liên hệ ký hợp đồng sau khi duyệt.',
+    note: 'Khoản vay sẽ được hoàn trả theo đúng lịch trả góp đã thỏa thuận trong hợp đồng. Quỹ sẽ liên hệ để ký hợp đồng sau khi hồ sơ được duyệt.',
   },
 };
 

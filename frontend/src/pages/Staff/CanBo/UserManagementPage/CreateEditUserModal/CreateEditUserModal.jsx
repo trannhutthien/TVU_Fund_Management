@@ -19,6 +19,7 @@ import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import { KHOA_OPTIONS } from '@constants/departments';
 import { userService } from '@services/userService';
+import { ROLE_TO_NHOM, DEFAULT_NHOM_OPTIONS } from '../NhanSuSection/nhomOptions';
 import styles from './CreateEditUserModal.module.scss';
 
 const LOAI_NTT_OPTIONS = [
@@ -53,31 +54,46 @@ const initialForm = (user) => ({
   mat_khau: '',
 });
 
-const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false, defaultTab = 'tat_ca' }) => {
+const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false, defaultTab = 'tat_ca', availableRoles }) => {
   const isEdit = !!user;
   const isStaff = user && Number(user.role_id) !== 4;
+  const staffOnly = Array.isArray(availableRoles) && availableRoles.length > 0;
+  const canChooseRole = !isEdit && (isAdmin || staffOnly);
+  const chucVuMode = !isEdit && staffOnly;
   
-  const [selectedRole, setSelectedRole] = useState(4);
-  const [loaiTaiKhoan, setLoaiTaiKhoan] = useState('SINH_VIEN');
-  const [xacNhanDocLap, setXacNhanDocLap] = useState(false);
-  const [form, setForm] = useState(initialForm(user));
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+const [selectedRole, setSelectedRole] = useState(4);
+const [loaiTaiKhoan, setLoaiTaiKhoan] = useState('SINH_VIEN');
+const [chucDanh, setChucDanh] = useState('');
+const [nhom, setNhom] = useState('Hoi dong quy');
+const [form, setForm] = useState(initialForm(user));
+const [errors, setErrors] = useState({});
+const [submitting, setSubmitting] = useState(false);
+const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
     if (isOpen) {
       const staffCheck = user && Number(user.role_id) !== 4;
-      const initialRole = isEdit ? Number(user.role_id) : (isAdmin && defaultTab === 'nhan_vien' ? 2 : 4);
-      
+      let initialRole = 4;
+
+      if (isEdit) {
+        initialRole = Number(user.role_id);
+      } else if (staffOnly) {
+        // Chế độ tạo tài khoản nhân viên: mặc định Cán bộ Quỹ nếu được phép
+        initialRole = availableRoles.includes(3) ? 3 : availableRoles[0];
+      } else if (isAdmin && defaultTab === 'nhan_vien') {
+        initialRole = 2;
+      }
+
       setSelectedRole(initialRole);
       setLoaiTaiKhoan(staffCheck ? 'NHAN_VIEN' : (user?.loai_tai_khoan || 'SINH_VIEN'));
+      setChucDanh('');
+      setNhom(ROLE_TO_NHOM[initialRole] || 'Hoi dong quy');
       setForm(initialForm(user));
       setErrors({});
       setShowPassword(false);
       setSubmitting(false);
     }
-  }, [isOpen, user?.user_id, isAdmin, defaultTab]);
+  }, [isOpen, user?.user_id, isAdmin, defaultTab, staffOnly]);
 
   if (!isOpen) return null;
 
@@ -102,9 +118,9 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
     if (selectedRole === 4 && loaiTaiKhoan === 'NHA_TAI_TRO' && !form.ten_nha_tai_tro.trim()) {
       errs.ten_nha_tai_tro = 'Bắt buộc nhập tên tổ chức / nhà tài trợ';
     }
-    // Validate xacNhanDocLap cho role 5
-    if (selectedRole === 5 && !xacNhanDocLap) {
-      errs.xacNhanDocLap = 'Cần xác nhận không có quan hệ thân nhân theo Điều 8 Điều lệ';
+    // Validate chức danh khi tạo người dùng kèm chức vụ tổ chức
+    if (chucVuMode && !chucDanh.trim()) {
+      errs.chucDanh = 'Bắt buộc nhập chức danh';
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -145,9 +161,10 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
           payload.loaiNhaTaiTro = loaiTaiKhoan === 'NHA_TAI_TRO' ? form.loai_ntt : null;
         }
 
-        // Thêm xacNhanDocLap cho role 5 (Ban Kiem Soat)
-        if (selectedRole === 5) {
-          payload.xacNhanDocLap = xacNhanDocLap;
+        // Thêm chức danh + nhóm khi tạo người dùng kèm chức vụ tổ chức
+        if (chucVuMode) {
+          payload.chucDanh = chucDanh.trim();
+          payload.nhom = nhom;
         }
 
         await userService.create(payload);
@@ -184,8 +201,8 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
         </header>
 
         <div className={styles.body}>
-          {/* Role selector — chỉ khi Admin tạo mới */}
-          {!isEdit && isAdmin && (
+          {/* Role selector — chỉ hiện khi tạo mới và có quyền chọn vai trò */}
+          {canChooseRole && (
             <div className={styles.field}>
               <label className={styles.label}>
                 Vai trò <span style={{ color: '#ef4444' }}>*</span>
@@ -202,28 +219,49 @@ const CreateEditUserModal = ({ isOpen, user, onClose, onSuccess, isAdmin = false
                   } else {
                     setLoaiTaiKhoan('SINH_VIEN');
                   }
+                  // Mặc định nhóm theo vai trò mới (chỉ ở chế độ tạo user kèm chức vụ)
+                  if (chucVuMode) {
+                    setNhom(ROLE_TO_NHOM[newRole] || nhom);
+                  }
                 }}
               >
-                <option value={4}>Người dùng (Sinh viên / Nhà tài trợ)</option>
-                <option value={2}>Kế toán</option>
-                <option value={3}>Cán bộ Quỹ</option>
-                <option value={5}>Ban Kiểm soát</option>
+                {(staffOnly ? [1, 2, 3, 5] : [4, 2, 3, 5]).map(id => (
+                  <option key={id} value={id}>
+                    {({ 1: 'Quản trị viên', 2: 'Kế toán', 3: 'Cán bộ Quỹ', 4: 'Người dùng (Sinh viên / Nhà tài trợ)', 5: 'Ban Kiểm soát' }[id])}
+                  </option>
+                ))}
               </select>
             </div>
           )}
 
-          {/* Checkbox xacNhanDocLap — chỉ khi role = 5 (Ban Kiem Soat) */}
-          {!isEdit && selectedRole === 5 && (
-            <div className={styles.field}>
-              <label className={styles.checkboxLabel}>
+          {/* Chức danh + Nhóm — chỉ khi tạo người dùng kèm chức vụ tổ chức */}
+          {chucVuMode && (
+            <div className={styles.chucVuRow}>
+              <div className={styles.field}>
+                <label className={styles.label}>
+                  Chức danh <span style={{ color: '#ef4444' }}>*</span>
+                </label>
                 <input
-                  type="checkbox"
-                  checked={xacNhanDocLap}
-                  onChange={(e) => setXacNhanDocLap(e.target.checked)}
-                  className={styles.checkbox}
+                  className={styles.select}
+                  type="text"
+                  value={chucDanh}
+                  onChange={(e) => setChucDanh(e.target.value)}
+                  placeholder="VD: Uỷ viên Hội đồng Quỹ..."
                 />
-                <span>Tôi xác nhận người này <strong>không có quan hệ</strong> vợ/chồng, cha/mẹ, con, anh chị em ruột với thành viên Hội đồng Quỹ, Giám đốc, Phó Giám đốc, Kế toán trưởng (Điều 8 Điều lệ)</span>
-              </label>
+                {errors.chucDanh && <div className={styles.errorText}>{errors.chucDanh}</div>}
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Nhóm</label>
+                <select
+                  className={styles.select}
+                  value={nhom}
+                  onChange={(e) => setNhom(e.target.value)}
+                >
+                  {DEFAULT_NHOM_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 

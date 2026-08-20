@@ -7,6 +7,85 @@
   background: $bg-page;
 }
 
+.ctaBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 32px;
+  background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(26, 82, 118, 0.25);
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 20px;
+    margin: 0 16px;
+  }
+}
+
+.ctaContent {
+  flex: 1;
+
+  h3 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+
+    @media (max-width: 640px) {
+      font-size: 16px;
+    }
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+
+    @media (max-width: 640px) {
+      font-size: 13px;
+    }
+  }
+}
+
+.ctaButton {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: #f39c12;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.4);
+
+  &:hover {
+    background: #e67e22;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.5);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  @media (max-width: 640px) {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+}
+
 .mainContent {
   flex: 1;
   width: 100%;

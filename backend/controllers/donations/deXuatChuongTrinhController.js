@@ -1,7 +1,19 @@
+import crypto from "crypto";
 import DeXuatChuongTrinhModel from "../../models/donations/DeXuatChuongTrinhModel.js";
 import DonationModel from "../../models/donations/DonationModel.js";
 import FundModel from "../../models/funds/FundModel.js";
+import GuestModel from "../../models/guest/GuestModel.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
+import { sendProposalOTPEmail, sendProposalCreatedEmail } from "../../services/emailService.js";
+import {
+  hashGuestOtp,
+  createGuestOtpExpiresAt,
+  signGuestOtpPayload,
+  readGuestOtpPayload,
+  timingSafeStringEqual,
+  generateRandomPassword,
+  isEmailDeliveryError,
+} from "../../utils/otpUtils.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── ĐỀ XUẤT CHƯƠNG TRÌNH CONTROLLER ──────────────────────────────────────────
@@ -122,6 +134,8 @@ export const createProposal = async (req, res) => {
       quyThanhPhanId: quy_thanh_phan_id,
       khoanTaiTroId: khoan_tai_tro_id || null,
       nhaTaiTroId: nha_tai_tro_id || null,
+      nguoiTaoId: req.user?.id || null,
+      tuDongDuyetCap1: Number(req.user?.vai_tro) === 3,
       tenChuongTrinh: ten_chuong_trinh.trim(),
       moTa: mo_ta ? mo_ta.trim() : null,
       soLuongSuat: soLuong,
@@ -132,6 +146,7 @@ export const createProposal = async (req, res) => {
     };
 
     const result = await DeXuatChuongTrinhModel.createProposal(proposalData);
+    const tuDongDuyet = Number(req.user?.vai_tro) === 3;
 
     // Ghi nhật ký hệ thống
     await logSystemActivity(req, {
@@ -144,7 +159,9 @@ export const createProposal = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Tạo đề xuất chương trình thành công. Chờ duyệt.",
+      message: tuDongDuyet
+        ? "Tạo đề xuất chương trình thành công. Cán bộ đã tự động duyệt, đang chờ Kế toán xác nhận tiền."
+        : "Tạo đề xuất chương trình thành công. Chờ duyệt.",
       data: {
         de_xuat_id: result.insertId,
         quy_thanh_phan_id,
@@ -152,7 +169,7 @@ export const createProposal = async (req, res) => {
         so_luong_suat: soLuong,
         so_tien_moi_suat: soTien,
         tong_so_tien: soLuong * soTien,
-        trang_thai: 'Cho duyet'
+        trang_thai: result.trangThai || (tuDongDuyet ? 'Can bo da duyet' : 'Cho duyet')
       }
     });
   } catch (error) {
@@ -174,6 +191,7 @@ export const createPublicProposal = async (req, res) => {
       guest_ho_ten,
       guest_email,
       guest_so_dien_thoai,
+      guest_dia_chi,
       quy_thanh_phan_id,
       ten_chuong_trinh,
       mo_ta,
@@ -181,8 +199,16 @@ export const createPublicProposal = async (req, res) => {
       so_tien_moi_suat,
       loai_ho_tro,
       ngay_bat_dau,
-      ngay_ket_thuc
+      ngay_ket_thuc,
+      formTimestamp
     } = req.body;
+
+    // Anti-bot
+    if (formTimestamp) {
+      const elapsed = Date.now() - new Date(formTimestamp).getTime();
+      if (elapsed < 3000)
+        return res.status(400).json({ success: false, message: "Vui lòng đợi ít nhất 3 giây trước khi gửi form." });
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 1: VALIDATE DỮ LIỆU ĐẦU VÀO
@@ -200,6 +226,8 @@ export const createPublicProposal = async (req, res) => {
         message: "Thiếu email nhà tài trợ"
       });
     }
+
+    const normalizedEmail = guest_email.trim().toLowerCase();
 
     if (!quy_thanh_phan_id || isNaN(quy_thanh_phan_id)) {
       return res.status(400).json({
@@ -250,7 +278,7 @@ export const createPublicProposal = async (req, res) => {
       });
     }
 
-    if (fund.trangthai !== 'Dang hoat dong') {
+    if (fund.trang_thai !== 'Dang hoat dong') {
       return res.status(400).json({
         success: false,
         message: "Quỹ hiện không hoạt động"
@@ -258,17 +286,17 @@ export const createPublicProposal = async (req, res) => {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 3: TẠO ĐỀ XUẤT + GUEST TRACKING
+    // BƯỚC 3: TẠO GUEST TRACKING + OTP TOKEN (chưa tạo proposal)
     // ─────────────────────────────────────────────────────────────────────────
-    const { v4: uuidv4 } = await import('uuid');
-    const crypto = await import('crypto');
-
-    const trackingUuid = uuidv4();
+    const trackingUuid = crypto.randomUUID();
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpSecret = process.env.GUEST_OTP_SECRET || process.env.JWT_SECRET || 'fallback-secret';
-    const otpHash = crypto.createHmac('sha256', otpSecret).update(`${guest_email.trim().toLowerCase()}:${trackingUuid}:${otpCode}`).digest('hex');
+    const otpExpiresAt = createGuestOtpExpiresAt();
 
-    const proposalData = {
+    const pendingProposal = {
+      guestHoTen: guest_ho_ten.trim(),
+      guestEmail: normalizedEmail,
+      guestSoDienThoai: guest_so_dien_thoai?.trim() || null,
+      guestDiaChi: guest_dia_chi?.trim() || null,
       quyThanhPhanId: quy_thanh_phan_id,
       tenChuongTrinh: ten_chuong_trinh.trim(),
       moTa: mo_ta ? mo_ta.trim() : null,
@@ -277,43 +305,116 @@ export const createPublicProposal = async (req, res) => {
       loaiHoTro: loai_ho_tro || 'Tai tro khong hoan lai',
       ngayBatDau: ngay_bat_dau || null,
       ngayKetThuc: ngay_ket_thuc || null,
-      guestHoTen: guest_ho_ten.trim(),
-      guestEmail: guest_email.trim().toLowerCase(),
-      guestSoDienThoai: guest_so_dien_thoai?.trim() || null,
-      trackingUuid,
-      otpHash
+      trackingUuid
     };
 
-    const result = await DeXuatChuongTrinhModel.createPublicProposal(proposalData);
-
-    // Ghi nhật ký hệ thống (không có req.user)
-    await logSystemActivity(req, {
-      hanhdong: "TAO_DE_XUAT_CHUONG_TRINH_CONG_KHAI",
-      loaidoituong: "dexuatchuongtrinh",
-      doituong_id: result.insertId,
-      mota: `Khách vãng lai "${guest_ho_ten.trim()}" tạo đề xuất chương trình "${ten_chuong_trinh.trim()}" cho quỹ "${fund.tenquy}"`,
-      dulieumoi: { ...proposalData, guestHoTen: undefined, guestEmail: undefined, guestSoDienThoai: undefined }
+    const otpToken = signGuestOtpPayload({
+      type: "proposal",
+      email: normalizedEmail,
+      trackingUuid,
+      otpHash: hashGuestOtp(normalizedEmail, trackingUuid, otpCode),
+      expiresAt: otpExpiresAt.toISOString(),
+      proposal: pendingProposal
     });
+
+    // Lưu vào guest_tracking (chỉ tracking, chưa tạo proposal)
+    const tongTien = soLuong * soTien;
+    await GuestModel.createTracking({
+      trackingUuid,
+      hoten: guest_ho_ten.trim(),
+      email: normalizedEmail,
+      loai: 'dexuatchuongtrinh',
+      quyId: quy_thanh_phan_id,
+      sotien: tongTien,
+      otpHash: hashGuestOtp(normalizedEmail, trackingUuid, otpCode),
+    });
+
+    // Gửi OTP email (non-blocking)
+    sendProposalOTPEmail(normalizedEmail, guest_ho_ten.trim(), otpCode, trackingUuid)
+      .catch(err => console.error("Email OTP proposal failed (non-blocking):", err.message));
 
     return res.status(201).json({
       success: true,
-      message: "Tạo đề xuất chương trình thành công. Vui lòng kiểm tra email để xác thực.",
-      data: {
-        de_xuat_id: result.insertId,
-        quy_thanh_phan_id,
-        ten_chuong_trinh: ten_chuong_trinh.trim(),
-        so_luong_suat: soLuong,
-        so_tien_moi_suat: soTien,
-        tong_so_tien: soLuong * soTien,
-        trang_thai: 'Cho duyet'
-      }
+      message: "Đã gửi mã OTP xác thực về email. Đề xuất chỉ được lưu sau khi xác thực OTP thành công.",
+      data: { email: normalizedEmail, trackingUuid, otpToken }
     });
   } catch (error) {
     console.error("Lỗi createPublicProposal:", error);
+    if (isEmailDeliveryError(error))
+      return res.status(500).json({ success: false, message: "Không thể gửi mã OTP qua email. Vui lòng kiểm tra SMTP." });
     return res.status(500).json({
       success: false,
       message: "Lỗi server, vui lòng thử lại sau"
     });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── POST /api/donations/public/propose-program/verify-otp ────────────────────
+// MỤC ĐÍCH: Xác thực OTP và tạo đề xuất chương trình + tài khoản khách
+// ═══════════════════════════════════════════════════════════════════════════════
+export const verifyProposalOtp = async (req, res) => {
+  try {
+    const { email, otpCode, type, otpToken } = req.body;
+
+    if (!email || !otpCode || !type)
+      return res.status(400).json({ success: false, message: "Vui lòng cung cấp đầy đủ: Email, mã OTP, loại đơn" });
+    if (type !== "proposal")
+      return res.status(400).json({ success: false, message: "Loại đơn không hợp lệ" });
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedOtp = otpCode.trim();
+    const plainPassword = generateRandomPassword();
+
+    if (!otpToken)
+      return res.status(400).json({ success: false, message: "Thiếu mã phiên OTP" });
+
+    // ── Đọc và validate OTP token ──────────────────────────────────────────────
+    const pending = readGuestOtpPayload(otpToken);
+    if (pending.type !== type || pending.email !== normalizedEmail)
+      return res.status(400).json({ success: false, message: "Mã xác thực OTP không đúng hoặc email không khớp" });
+
+    const expectedHash = hashGuestOtp(normalizedEmail, pending.trackingUuid, normalizedOtp);
+    if (!timingSafeStringEqual(pending.otpHash, expectedHash))
+      return res.status(400).json({ success: false, message: "Mã OTP không đúng hoặc đã hết hiệu lực" });
+
+    // ── Tạo user + proposal ────────────────────────────────────────────────────
+    const proposalData = pending.proposal;
+    const result = await GuestModel.verifyAndMigrateProposal(proposalData, plainPassword);
+
+    // Gửi email thông báo tài khoản (non-blocking)
+    sendProposalCreatedEmail(normalizedEmail, proposalData.guestHoTen, plainPassword, result.trackingUuid)
+      .catch(err => console.error("Email proposal created failed (non-blocking):", err.message));
+
+    // Ghi nhật ký hệ thống
+    await logSystemActivity(req, {
+      hanhdong: "XAC_THUC_OTP_DE_XUAT_CHUONG_TRINH",
+      loaidoituong: "dexuatchuongtrinh",
+      doituong_id: result.proposalId,
+      mota: `Khách "${proposalData.guestHoTen}" xác thực OTP và tạo đề xuất "${proposalData.tenChuongTrinh}"`,
+      dulieumoi: {
+        tenChuongTrinh: proposalData.tenChuongTrinh,
+        quyThanhPhanId: proposalData.quyThanhPhanId,
+        tongSoTien: proposalData.soLuongSuat * proposalData.soTienMoiSuat,
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Xác thực OTP thành công. Đề xuất chương trình đã được lưu và chờ duyệt.",
+      data: { trackingUuid: result.trackingUuid, email: normalizedEmail, tempPassword: plainPassword, autoCreatedUser: true }
+    });
+  } catch (error) {
+    console.error("Lỗi verifyProposalOtp:", error);
+    if (error.message === "OTP_EXPIRED")
+      return res.status(400).json({ success: false, message: "Mã OTP đã hết hiệu lực" });
+    if (error.message === "OTP_ALREADY_VERIFIED")
+      return res.status(400).json({ success: false, message: "Mã OTP này đã được xác thực trước đó" });
+    if (error.message === "OTP_INVALID_OR_NOT_FOUND")
+      return res.status(400).json({ success: false, message: "Phiên xác thực OTP không hợp lệ" });
+    if (isEmailDeliveryError(error))
+      return res.status(500).json({ success: false, message: "Không thể gửi email xác nhận. Vui lòng kiểm tra SMTP." });
+    return res.status(500).json({ success: false, message: "Lỗi hệ thống khi xác thực mã OTP" });
   }
 };
 
@@ -449,277 +550,6 @@ export const getProposalDetail = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Lỗi server"
-    });
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ─── PUT /api/donations/propose-program/:id/approve (Protect 1) ───────────────
-// MỤC ĐÍCH: Admin duyệt đề xuất → tạo quỹ cấp 3 + phân bổ ngân sách
-// ═══════════════════════════════════════════════════════════════════════════════
-export const approveProposal = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const nguoiDuyetId = req.user.id; // Lấy từ middleware protect
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 1: VALIDATE ID
-    // ─────────────────────────────────────────────────────────────────────────
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "ID đề xuất không hợp lệ"
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 2: KIỂM TRA ĐỀ XUẤT CÓ TỒN TẠI KHÔNG
-    // ─────────────────────────────────────────────────────────────────────────
-    const proposal = await DeXuatChuongTrinhModel.getProposalById(id);
-
-    if (!proposal) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy đề xuất chương trình"
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 3: KIỂM TRA TRẠNG THÁI HIỆN TẠI
-    // ─────────────────────────────────────────────────────────────────────────
-    if (proposal.trangthai === 'Da duyet') {
-      return res.status(400).json({
-        success: false,
-        message: "Đề xuất này đã được duyệt trước đó"
-      });
-    }
-
-    if (proposal.trangthai === 'Tu choi') {
-      return res.status(400).json({
-        success: false,
-        message: "Không thể duyệt đề xuất đã bị từ chối"
-      });
-    }
-
-    if (proposal.trangthai !== 'Cho duyet') {
-      return res.status(400).json({
-        success: false,
-        message: "Chỉ có thể duyệt đề xuất đang ở trạng thái 'Chờ duyệt'"
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 4: KIỂM TRA SỐ DƯ QUỸ THÀNH PHẦN
-    // ─────────────────────────────────────────────────────────────────────────
-    const soTienCanPhanBo = parseFloat(proposal.soluongsuat) * parseFloat(proposal.sotienmoisuat);
-    const soDuQuy = parseFloat(proposal.so_du_quy_thanh_phan) || 0;
-
-    if (soDuQuy < soTienCanPhanBo) {
-      return res.status(400).json({
-        success: false,
-        message: `Quỹ thành phần không đủ số dư. Cần ${soTienCanPhanBo.toLocaleString('vi-VN')} VNĐ, còn ${soDuQuy.toLocaleString('vi-VN')} VNĐ`
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 5: THỰC HIỆN DUYỆT VỚI TRANSACTION
-    // ─────────────────────────────────────────────────────────────────────────
-    // Model sẽ xử lý:
-    // - Tạo quỹ cấp 3 mới
-    // - Tạo bản ghi phân bổ ngân sách (auto-approve)
-    // - Trừ tiền quỹ cấp 2, cộng tiền quỹ cấp 3
-    // - Cập nhật trạng thái đề xuất
-    const result = await DeXuatChuongTrinhModel.approveProposal(id, nguoiDuyetId);
-
-    // Ghi nhật ký hệ thống
-    await logSystemActivity(req, {
-      hanhdong: "DUYET_DE_XUAT_CHUONG_TRINH",
-      loaidoituong: "dexuatchuongtrinh",
-      doituong_id: id,
-      mota: `Duyệt đề xuất chương trình "${proposal.tenchuongtrinh}" → Tạo quỹ cấp 3 (ID: ${result.quyMoiId}) và phân bổ ${soTienCanPhanBo.toLocaleString('vi-VN')} VNĐ`,
-      dulieucu: { trangthai: proposal.trangthai },
-      dulieumoi: {
-        trangthai: 'Da duyet',
-        quy_ket_qua_id: result.quyMoiId,
-        phan_bo_id: result.phanBoId
-      }
-    });
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 6: TRẢ VỀ KẾT QUẢ
-    // ─────────────────────────────────────────────────────────────────────────
-    return res.status(200).json({
-      success: true,
-      message: "Duyệt đề xuất chương trình thành công",
-      data: {
-        de_xuat_id: id,
-        ten_chuong_trinh: proposal.tenchuongtrinh,
-        quy_moi_id: result.quyMoiId,
-        phan_bo_id: result.phanBoId,
-        so_tien_phan_bo: result.soTienPhanBo,
-        trang_thai_cu: proposal.trangthai,
-        trang_thai_moi: 'Da duyet',
-        ngay_duyet: new Date(),
-        nguoi_duyet: nguoiDuyetId
-      }
-    });
-  } catch (error) {
-    console.error("Lỗi approveProposal:", error);
-
-    // Xử lý lỗi đặc biệt
-    if (error.message === 'PROPOSAL_NOT_FOUND') {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy đề xuất chương trình"
-      });
-    }
-
-    if (error.message === 'PROPOSAL_ALREADY_PROCESSED') {
-      return res.status(400).json({
-        success: false,
-        message: "Đề xuất đã được xử lý trước đó"
-      });
-    }
-
-    if (error.message === 'PARENT_FUND_NOT_FOUND') {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy quỹ thành phần"
-      });
-    }
-
-    if (error.message === 'PARENT_FUND_MUST_BE_LEVEL_2') {
-      return res.status(400).json({
-        success: false,
-        message: "Chỉ có thể tạo chương trình từ quỹ thành phần (cấp 2)"
-      });
-    }
-
-    if (error.message === 'INSUFFICIENT_PARENT_FUND_BALANCE') {
-      return res.status(400).json({
-        success: false,
-        message: "Quỹ thành phần không đủ số dư"
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi server, vui lòng thử lại sau",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ─── PUT /api/donations/propose-program/:id/reject (Protect 1) ────────────────
-// MỤC ĐÍCH: Admin từ chối đề xuất (tiền vẫn ở quỹ thành phần)
-// ═══════════════════════════════════════════════════════════════════════════════
-export const rejectProposal = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { ly_do_tu_choi } = req.body;
-    const nguoiTuChoiId = req.user.id;
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 1: VALIDATE
-    // ─────────────────────────────────────────────────────────────────────────
-    if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "ID đề xuất không hợp lệ"
-      });
-    }
-
-    if (!ly_do_tu_choi || ly_do_tu_choi.trim() === "") {
-      return res.status(400).json({
-        success: false,
-        message: "Vui lòng nhập lý do từ chối"
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 2: KIỂM TRA ĐỀ XUẤT
-    // ─────────────────────────────────────────────────────────────────────────
-    const proposal = await DeXuatChuongTrinhModel.getProposalById(id);
-
-    if (!proposal) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy đề xuất chương trình"
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 3: KIỂM TRA TRẠNG THÁI
-    // ─────────────────────────────────────────────────────────────────────────
-    if (proposal.trangthai === 'Da duyet') {
-      return res.status(400).json({
-        success: false,
-        message: "Không thể từ chối đề xuất đã được duyệt"
-      });
-    }
-
-    if (proposal.trangthai === 'Tu choi') {
-      return res.status(400).json({
-        success: false,
-        message: "Đề xuất này đã bị từ chối trước đó"
-      });
-    }
-
-    if (proposal.trangthai !== 'Cho duyet') {
-      return res.status(400).json({
-        success: false,
-        message: "Chỉ có thể từ chối đề xuất đang ở trạng thái 'Chờ duyệt'"
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 4: THỰC HIỆN TỪ CHỐI
-    // ─────────────────────────────────────────────────────────────────────────
-    const success = await DeXuatChuongTrinhModel.rejectProposal(
-      id,
-      nguoiTuChoiId,
-      ly_do_tu_choi.trim()
-    );
-
-    if (!success) {
-      return res.status(400).json({
-        success: false,
-        message: "Không thể từ chối đề xuất. Vui lòng thử lại"
-      });
-    }
-
-    // Ghi nhật ký hệ thống
-    await logSystemActivity(req, {
-      hanhdong: "TU_CHOI_DE_XUAT_CHUONG_TRINH",
-      loaidoituong: "dexuatchuongtrinh",
-      doituong_id: id,
-      mota: `Từ chối đề xuất chương trình "${proposal.tenchuongtrinh}". Lý do: ${ly_do_tu_choi.trim()}`,
-      dulieucu: { trangthai: proposal.trangthai },
-      dulieumoi: { trangthai: 'Tu choi', ly_do_tu_choi: ly_do_tu_choi.trim() }
-    });
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 5: TRẢ VỀ KẾT QUẢ
-    // ─────────────────────────────────────────────────────────────────────────
-    return res.status(200).json({
-      success: true,
-      message: "Từ chối đề xuất chương trình thành công",
-      data: {
-        de_xuat_id: id,
-        ten_chuong_trinh: proposal.tenchuongtrinh,
-        trang_thai_cu: proposal.trangthai,
-        trang_thai_moi: 'Tu choi',
-        ly_do_tu_choi: ly_do_tu_choi.trim(),
-        ngay_tu_choi: new Date(),
-        nguoi_tu_choi: nguoiTuChoiId
-      }
-    });
-  } catch (error) {
-    console.error("Lỗi rejectProposal:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Lỗi server, vui lòng thử lại sau"
     });
   }
 };

@@ -24,7 +24,8 @@ export const createUser = async (req, res) => {
       avatar,
       tenNhaTaiTro,
       loaiNhaTaiTro,
-      xacNhanDocLap,
+      chucDanh,
+      nhom,
     } = req.body;
 
     // 1. Validate dữ liệu đầu vào
@@ -51,11 +52,12 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // 3.5. Validate xacNhanDocLap cho role 5 (Ban Kiem Soat)
-    if (Number(roleId) === 5 && !xacNhanDocLap) {
+    // 3.5. Xác thực thông tin chức vụ nếu có (tạo người dùng kèm chức vụ tổ chức)
+    const validNhom = ['Hoi dong quy', 'Ban dieu hanh', 'Ban kiem soat', 'Van phong thuong truc'];
+    if (chucDanh && nhom && !validNhom.includes(nhom)) {
       return res.status(400).json({
         success: false,
-        message: "Cần xác nhận không có quan hệ thân nhân theo Điều 8 Điều lệ (xacNhanDocLap = true)",
+        message: "Nhóm không hợp lệ. Chỉ chấp nhận: Hội đồng Quỹ, Ban điều hành, Ban kiểm soát, Văn phòng thường trực",
       });
     }
 
@@ -111,10 +113,10 @@ export const createUser = async (req, res) => {
       diaChi: diaChi || null,
       loaiTaiKhoan: (Number(roleId) === 4 && loaiTaiKhoan) ? loaiTaiKhoan : null,
       avatar: avatar || null,
-      xacNhanDocLap: (Number(roleId) === 5 && xacNhanDocLap) ? 1 : null
     };
 
-    const userId = await UserModel.createUser(userData);
+    const result = await UserModel.createUser(userData);
+    const userId = result.insertId;
 
     // Nếu là NHA_TAI_TRO, tự tạo record trong nhataitro (FK user_id UNIQUE NOT NULL)
     if (Number(roleId) === 4 && loaiTaiKhoan === 'NHA_TAI_TRO') {
@@ -122,6 +124,15 @@ export const createUser = async (req, res) => {
         `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro)
         VALUES (?, ?, ?)`,
         [userId, tenNhaTaiTro?.trim() || hoTen.trim(), loaiNhaTaiTro || 'Ca nhan']
+      );
+    }
+
+    // Nếu cung cấp chức danh + nhóm (tạo người dùng kèm chức vụ tổ chức), tạo record chucvuquy
+    if (chucDanh && nhom && Number(roleId) !== 4) {
+      await pool.execute(
+        `INSERT INTO chucvuquy (nguoidung_id, chucdanh, nhom, trangthai)
+        VALUES (?, ?, ?, 'Dang nhiem')`,
+        [userId, chucDanh.trim(), nhom]
       );
     }
 

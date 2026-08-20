@@ -213,6 +213,13 @@ const AboutFundPage = () => {
               >
                 Tiếp nhận tài trợ
               </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate('/guidelines')}
+                className={styles.heroBtn}
+              >
+                Hướng dẫn & Quy định
+              </Button>
             </div>
           </div>
         </div>
@@ -359,7 +366,7 @@ const AboutFundPage = () => {
                       <li>Vận động, tiếp nhận và quản lý các nguồn tài trợ hợp pháp.</li>
                       <li>Quản lý, sử dụng hiệu quả các nguồn vốn.</li>
                       <li>Triển khai các hoạt động nhằm duy trì và phát triển nguồn vốn.</li>
-                      <li>Tiếp nhận hồ sơ xin tài trợ, vay vốn; tổ chức thẩm định và quyết định hỗ trợ theo quy định.</li>
+                      <li>Tiếp nhận hồ sơ đề nghị hỗ trợ, vay vốn; tổ chức thẩm định và quyết định hỗ trợ theo quy định.</li>
                       <li>Kiểm tra, giám sát, nghiệm thu các dự án được tài trợ.</li>
                       <li>Thu hồi vốn đối với các khoản vay hoặc tài trợ có thu hồi.</li>
                       <li>Đình chỉ hoặc thu hồi kinh phí khi phát hiện sử dụng vốn sai mục đích hoặc vi phạm quy định.</li>
@@ -506,6 +513,37 @@ const AboutFundPage = () => {
                       <li>Hoàn trả kinh phí đối với các khoản vay hoặc tài trợ có thu hồi theo đúng hợp đồng đã ký.</li>
                       <li>Trường hợp vi phạm nghĩa vụ hoàn trả sẽ phải chịu các chế tài theo quy định của pháp luật và Điều lệ Quỹ.</li>
                     </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA: Hướng dẫn & Quy định */}
+              <div className={styles.ctaSection}>
+                <div className={styles.ctaCard}>
+                  <div className={styles.ctaIcon}>
+                    <HiOutlineBookOpen size={32} />
+                  </div>
+                  <div className={styles.ctaContent}>
+                    <h3>Bạn muốn tìm hiểu thêm?</h3>
+                    <p>
+                      Xem hướng dẫn chi tiết cho sinh viên và nhà tài trợ, cùng các quy định cụ thể của Quỹ Phát triển Đại học Trà Vinh.
+                    </p>
+                  </div>
+                  <div className={styles.ctaActions}>
+                    <Button 
+                      variant="primary" 
+                      size="md"
+                      onClick={() => navigate('/guidelines')}
+                    >
+                      Hướng dẫn & Quy định →
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="md"
+                      onClick={() => navigate('/testimonials')}
+                    >
+                      Sinh viên nói gì về TVU Fund
+                    </Button>
                   </div>
                 </div>
               </div>

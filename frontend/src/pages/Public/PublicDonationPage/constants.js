@@ -22,8 +22,8 @@ export const PAYMENT_METHOD_LABELS = {
 };
 
 export const LOAI_HO_TRO = [
-  { value: 'Trao tang', label: 'Trao tặng (không hoàn lại)' },
-  { value: 'Tai tro khong hoan lai', label: 'Tài trợ (không hoàn lại)' },
+  { value: 'Tai tro khong hoan lai', label: 'Tài trợ không hoàn lại' },
+  { value: 'Tai tro co thu hoi', label: 'Tài trợ có thu hồi' },
   { value: 'Cho vay', label: 'Cho vay (hoàn lại)' },
 ];
 

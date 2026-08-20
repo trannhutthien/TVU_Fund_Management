@@ -3,25 +3,22 @@ import {
   HiOutlinePlus,
   HiOutlinePencil,
   HiOutlineTrash,
+  HiOutlineUserPlus,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
+import api from '@services/api';
 import chucVuService from '@services/chucVuService';
 import ChucVuModal from './ChucVuModal';
+import { buildNhomOptions, DEFAULT_NHOM_OPTIONS } from './nhomOptions';
 import styles from './NhanSuSection.module.scss';
 
-const NHOM_OPTIONS = [
-  { id: 'Hoi dong quy', label: 'Hội đồng Quỹ' },
-  { id: 'Ban dieu hanh', label: 'Ban điều hành' },
-  { id: 'Ban kiem soat', label: 'Ban kiểm soát' },
-  { id: 'Van phong thuong truc', label: 'Văn phòng thường trực' },
-];
-
-const NhanSuSection = () => {
+const NhanSuSection = ({ onOpenCreateUser, refreshKey = 0 }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeNhom, setActiveNhom] = useState('Hoi dong quy');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [nhomOptions, setNhomOptions] = useState(DEFAULT_NHOM_OPTIONS);
 
   const fetchData = async () => {
     try {
@@ -39,6 +36,24 @@ const NhanSuSection = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
+
+  // Load vai trò (bảng vaitro) để xây nhãn các tab nhóm theo cột mota
+  useEffect(() => {
+    let mounted = true;
+    const loadNhomOptions = async () => {
+      try {
+        const response = await api.get('/roles');
+        if (mounted && response.data?.success) {
+          setNhomOptions(buildNhomOptions(response.data.roles || []));
+        }
+      } catch (err) {
+        console.error('Lỗi tải vai trò cho tab nhóm:', err);
+      }
+    };
+    loadNhomOptions();
+    return () => { mounted = false; };
   }, []);
 
   const filteredData = data.filter(item => item.nhom === activeNhom);
@@ -74,13 +89,18 @@ const NhanSuSection = () => {
     <div className={styles.section}>
       <div className={styles.header}>
         <h3>Chức vụ tổ chức</h3>
-        <Button onClick={handleCreate} icon={HiOutlinePlus}>
-          Thêm chức vụ
-        </Button>
+        <div className={styles.headerActions}>
+          <Button variant="ghost" onClick={onOpenCreateUser} leftIcon={<HiOutlineUserPlus />}>
+            Tạo tài khoản mới
+          </Button>
+          <Button onClick={handleCreate} icon={HiOutlinePlus}>
+            Thêm chức vụ
+          </Button>
+        </div>
       </div>
 
       <div className={styles.nhomTabs}>
-        {NHOM_OPTIONS.map(nhom => (
+        {nhomOptions.map(nhom => (
           <button
             key={nhom.id}
             className={`${styles.nhomTab} ${activeNhom === nhom.id ? styles.active : ''}`}

@@ -251,6 +251,21 @@
   margin-top: 18px;
 }
 
+.trackLink {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2a4a8f;
+  text-decoration: none;
+  transition: color 0.25s ease;
+
+  &:hover {
+    color: var(--color-gold-dark);
+    text-decoration: underline;
+  }
+}
+
 .navyButton {
   background: $color-navy-blue !important;
   box-shadow: 0 4px 14px rgba(26, 47, 94, 0.3) !important;

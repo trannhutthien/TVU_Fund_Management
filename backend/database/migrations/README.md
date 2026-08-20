@@ -4,7 +4,87 @@ This directory contains database migration scripts for the TVU Fund Management S
 
 ## Available Migrations
 
-### 1. fix_orphan_donors.js
+### 1. add_proposal_otp_schema.mjs
+
+**Purpose:** Add database schema support for OTP email verification on public proposal submissions
+
+**What it does:**
+- Adds `dexuatchuongtrinh_id` foreign key column to `guest_tracking` table
+- Makes `dexuatchuongtrinh.nhataitro_id` nullable (for guest submissions)
+- Adds `dexuatchuongtrinh.nguoidung_id` foreign key column
+- Verifies `guest_tracking.loai` enum includes 'dexuatchuongtrinh'
+
+**When to run:**
+- Before deploying OTP verification for public proposals
+- After running `update_guest_tracking_loai_enum.mjs`
+
+**How to run:**
+
+```bash
+cd backend/database/migrations
+node add_proposal_otp_schema.mjs          # Run migration
+node add_proposal_otp_schema.mjs rollback # Rollback migration
+```
+
+**Requirements covered:** 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
+
+**Safety:**
+- ✅ Idempotent (safe to run multiple times)
+- ✅ Checks existing columns before altering
+- ✅ Uses `ON DELETE SET NULL` for foreign keys
+- ✅ Provides rollback capability
+- ✅ Detailed logging and verification
+
+**Expected output:**
+
+```
+Starting migration: Add proposal OTP schema...
+
+STEP 1: Verifying guest_tracking table exists...
+✅ guest_tracking table exists
+
+STEP 2: Checking guest_tracking.loai enum...
+   Current type: enum('yeucauhotro','khoantaitro','dexuatchuongtrinh')
+✅ ENUM includes "dexuatchuongtrinh"
+
+STEP 3: Adding dexuatchuongtrinh_id column to guest_tracking...
+✅ Added dexuatchuongtrinh_id column
+
+STEP 4: Adding foreign key constraint for dexuatchuongtrinh_id...
+✅ Added foreign key constraint fk_guest_tracking_dexuat
+
+STEP 5: Verifying dexuatchuongtrinh table exists...
+✅ dexuatchuongtrinh table exists
+
+STEP 6: Making dexuatchuongtrinh.nhataitro_id nullable...
+✅ Made nhataitro_id nullable
+
+STEP 7: Adding nguoidung_id column to dexuatchuongtrinh...
+✅ Added nguoidung_id column
+
+STEP 8: Adding foreign key constraint for nguoidung_id...
+✅ Added foreign key constraint fk_dexuat_nguoidung
+
+STEP 9: Verifying all changes...
+
+guest_tracking columns:
+  - loai: enum('yeucauhotro','khoantaitro','dexuatchuongtrinh'), Null: NO, Key: 
+  - dexuatchuongtrinh_id: int, Null: YES, Key: MUL
+
+dexuatchuongtrinh columns:
+  - nhataitro_id: int, Null: YES, Key: MUL
+  - nguoidung_id: int, Null: YES, Key: MUL
+
+✅ Migration completed successfully!
+
+Summary:
+  ✓ guest_tracking.loai includes "dexuatchuongtrinh"
+  ✓ guest_tracking.dexuatchuongtrinh_id (INT NULL, FK)
+  ✓ dexuatchuongtrinh.nhataitro_id (INT NULL)
+  ✓ dexuatchuongtrinh.nguoidung_id (INT NULL, FK)
+```
+
+### 2. fix_orphan_donors.js
 
 **Purpose:** Fix existing donors that don't have linked user accounts
 

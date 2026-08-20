@@ -58,6 +58,8 @@ const UserManagementPage = ({ isAdmin = false, initialTab }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [editUser, setEditUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [createMode, setCreateMode] = useState('default'); // 'default' | 'staff'
+  const [chucVuRefreshKey, setChucVuRefreshKey] = useState(0);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedKeyword(filters.keyword), 500);
@@ -222,6 +224,13 @@ const UserManagementPage = ({ isAdmin = false, initialTab }) => {
 
   const handleOpenCreate = () => {
     setEditUser(null);
+    setCreateMode('default');
+    setShowModal(true);
+  };
+
+  const handleOpenCreateStaff = () => {
+    setEditUser(null);
+    setCreateMode('staff');
     setShowModal(true);
   };
 
@@ -233,6 +242,7 @@ const UserManagementPage = ({ isAdmin = false, initialTab }) => {
   const handleModalSuccess = () => {
     setShowModal(false);
     setEditUser(null);
+    setChucVuRefreshKey((k) => k + 1);
     fetchData();
     fetchStats();
   };
@@ -287,7 +297,7 @@ const UserManagementPage = ({ isAdmin = false, initialTab }) => {
         </div>
 
         {mainTab === 'chuc_vu' ? (
-          <NhanSuSection />
+          <NhanSuSection onOpenCreateUser={handleOpenCreateStaff} refreshKey={chucVuRefreshKey} />
         ) : (
           <>
             <UserStatsBar
@@ -382,6 +392,7 @@ const UserManagementPage = ({ isAdmin = false, initialTab }) => {
         onSuccess={handleModalSuccess}
         isAdmin={isAdmin}
         defaultTab={activeTab}
+        availableRoles={createMode === 'staff' ? [1, 2, 3, 5] : undefined}
       />
     </div>
   );

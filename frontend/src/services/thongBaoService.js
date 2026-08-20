@@ -8,6 +8,8 @@ const thongBaoService = {
   markAsRead: (id) => api.put(`/thong-bao/${id}/doc`),
   
   markAllAsRead: () => api.put('/thong-bao/doc-tat-ca'),
+
+  deleteNotification: (id) => api.delete(`/thong-bao/${id}`),
 }
 
 export default thongBaoService

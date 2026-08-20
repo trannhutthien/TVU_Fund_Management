@@ -8,19 +8,19 @@ import styles from './PublicKhoanTaiTroPage.module.scss';
 const PAGE_SIZE = 15;
 
 const DONOR_TYPE_LABELS = {
-  CaNhan: 'Cá nhân',
-  ToChuc: 'Tổ chức',
-  DoanhNghiep: 'Doanh nghiệp',
-  DoiTac: 'Đối tác',
+  'Ca nhan': 'Cá nhân',
+  'To chuc': 'Tổ chức',
+  'Doanh nghiep': 'Doanh nghiệp',
+  'Doi tac': 'Đối tác',
 };
 
-const DONOR_TYPE_KEYS = ['CaNhan', 'ToChuc', 'DoanhNghiep', 'DoiTac'];
+const DONOR_TYPE_KEYS = ['Ca nhan', 'To chuc', 'Doanh nghiep', 'Doi tac'];
 
 const DONOR_TYPE_CLASS = {
-  CaNhan: styles.caNhan,
-  ToChuc: styles.toChuc,
-  DoanhNghiep: styles.doanhNghiep,
-  DoiTac: styles.doiTac,
+  'Ca nhan': styles.caNhan,
+  'To chuc': styles.toChuc,
+  'Doanh nghiep': styles.doanhNghiep,
+  'Doi tac': styles.doiTac,
 };
 
 const PublicKhoanTaiTroPage = () => {

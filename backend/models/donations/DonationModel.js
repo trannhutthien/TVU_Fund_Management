@@ -195,6 +195,7 @@ const getDonationById = async (khoanTaiTroId) => {
       ntt.loainhataitro,
       nd.email AS ntt_email,
       nd.sodienthoai AS ntt_sodienthoai,
+      nd.diachi AS ntt_diachi,
       nd.avatar AS logo,
       q.tenquy,
       q.loaiquy_id,
@@ -214,6 +215,11 @@ const getDonationById = async (khoanTaiTroId) => {
 // HÀM: listDonations
 // MỤC ĐÍCH: List khoản tài trợ với filter + phân trang
 // ─────────────────────────────────────────────────────────────────────────────
+// HÀM: listDonations
+// MỤC ĐÍCH: List khoản tài trợ với filter + phân trang
+// CHÚ Ý: Chỉ hiển thị khoản tài trợ độc lập (dexuat_id IS NULL)
+//        Khoản tài trợ đi kèm đề xuất chương trình sẽ quản lý ở trang Đề xuất
+// ─────────────────────────────────────────────────────────────────────────────
 const listDonations = async ({
   keyword = '',
   quy_id = '',
@@ -223,9 +229,16 @@ const listDonations = async ({
   den_ngay = '',
   page = 1,
   page_size = 15,
+  includeProposalLinked = false,
 }) => {
   const conds = [];
   const params = [];
+
+  // Mặc định CHỈ lấy khoản tài trợ độc lập (dexuat_id IS NULL - không thuộc đề xuất chương trình)
+  // Trang công khai (includeProposalLinked = true) hiển thị cả tài trợ cho đề xuất chương trình
+  if (!includeProposalLinked) {
+    conds.push(`kt.dexuat_id IS NULL`);
+  }
 
   if (keyword) {
     conds.push(`(ntt.tennhataitro LIKE ? OR q.tenquy LIKE ? OR kt.ghichu LIKE ?)`);
@@ -290,26 +303,31 @@ const listDonations = async ({
 // ─────────────────────────────────────────────────────────────────────────────
 // HÀM: getDonationStatsForKeToan
 // MỤC ĐÍCH: Stats cho trang Khoản tài trợ (Kế toán)
+// CHÚ Ý: Chỉ đếm khoản tài trợ độc lập (dexuat_id IS NULL)
 // ─────────────────────────────────────────────────────────────────────────────
 const getDonationStatsForKeToan = async () => {
   const [[{ canXacNhan }]] = await pool.query(
-    `SELECT COUNT(*) AS canXacNhan FROM khoantaitro WHERE trangthai = 'Da duyet'`
+    `SELECT COUNT(*) AS canXacNhan FROM khoantaitro 
+     WHERE trangthai = 'Da duyet' AND dexuat_id IS NULL`
   );
   const [[{ daXacNhanHomNay }]] = await pool.query(
     `SELECT COUNT(*) AS daXacNhanHomNay FROM khoantaitro
-     WHERE trangthai = 'Da nhan' AND DATE(ngaycapnhat) = CURDATE()`
+     WHERE trangthai = 'Da nhan' AND DATE(ngaycapnhat) = CURDATE() AND dexuat_id IS NULL`
   );
   const [[{ tongThangNay }]] = await pool.query(
     `SELECT COALESCE(SUM(sotien),0) AS tongThangNay FROM khoantaitro
      WHERE trangthai = 'Da nhan'
        AND MONTH(ngaycapnhat) = MONTH(CURRENT_DATE())
-       AND YEAR(ngaycapnhat) = YEAR(CURRENT_DATE())`
+       AND YEAR(ngaycapnhat) = YEAR(CURRENT_DATE())
+       AND dexuat_id IS NULL`
   );
   const [[{ choCanBo }]] = await pool.query(
-    `SELECT COUNT(*) AS choCanBo FROM khoantaitro WHERE trangthai = 'Cho duyet'`
+    `SELECT COUNT(*) AS choCanBo FROM khoantaitro 
+     WHERE trangthai = 'Cho duyet' AND dexuat_id IS NULL`
   );
   const [[{ tongKhoanTaiTro }]] = await pool.query(
-    `SELECT COUNT(*) AS tongKhoanTaiTro FROM khoantaitro WHERE trangthai = 'Da nhan'`
+    `SELECT COUNT(*) AS tongKhoanTaiTro FROM khoantaitro 
+     WHERE trangthai = 'Da nhan' AND dexuat_id IS NULL`
   );
   return {
     canXacNhan: Number(canXacNhan) || 0,

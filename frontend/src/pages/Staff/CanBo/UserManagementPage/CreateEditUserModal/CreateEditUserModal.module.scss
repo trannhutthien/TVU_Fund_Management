@@ -129,6 +129,12 @@
   gap: 6px;
 }
 
+.chucVuRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .label {
   font-size: 13px;
   font-weight: 600;
@@ -257,6 +263,9 @@
     border-radius: 0;
   }
   .typeSelector {
+    grid-template-columns: 1fr;
+  }
+  .chucVuRow {
     grid-template-columns: 1fr;
   }
 }

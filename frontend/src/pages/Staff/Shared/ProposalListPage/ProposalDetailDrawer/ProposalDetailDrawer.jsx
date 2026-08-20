@@ -61,10 +61,10 @@ const ProposalDetailDrawer = ({
   const renderActionButtons = () => {
     if (!proposal) return null;
 
-    const { dexuatchuongtrinh_id: id, trangthai } = proposal;
+    const { de_xuat_id: id, trang_thai: trangThai } = proposal;
 
     // Cán bộ (role 3) + status "Cho duyet"
-    if (userRole === 3 && trangthai === 'Cho duyet') {
+    if (userRole === 3 && trangThai === 'Cho duyet') {
       return (
         <div className={styles.actionButtons}>
           <button
@@ -88,7 +88,7 @@ const ProposalDetailDrawer = ({
     }
 
     // Kế toán (role 2) + status "Can bo da duyet"
-    if (userRole === 2 && trangthai === 'Can bo da duyet') {
+    if (userRole === 2 && trangThai === 'Can bo da duyet') {
       return (
         <div className={styles.actionButtons}>
           <button
@@ -104,7 +104,7 @@ const ProposalDetailDrawer = ({
     }
 
     // Admin (role 1) + status "Da nhan tien"
-    if (userRole === 1 && trangthai === 'Da nhan tien') {
+    if (userRole === 1 && trangThai === 'Da nhan tien') {
       return (
         <div className={styles.actionButtons}>
           <button
@@ -134,7 +134,7 @@ const ProposalDetailDrawer = ({
             <h2 className={styles.drawerTitle}>Chi tiết đề xuất</h2>
             {proposal && (
               <p className={styles.drawerSubtitle}>
-                Mã đề xuất: #{proposal.dexuatchuongtrinh_id}
+                Mã đề xuất: #{proposal.de_xuat_id}
               </p>
             )}
           </div>
@@ -176,7 +176,7 @@ const ProposalDetailDrawer = ({
               {/* Status Badge */}
               <div className={styles.statusSection}>
                 <ProposalStatusBadge
-                  status={proposal.trangthai}
+                  status={proposal.trang_thai}
                   size="lg"
                 />
               </div>
@@ -191,7 +191,7 @@ const ProposalDetailDrawer = ({
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Tên chương trình</span>
                     <span className={styles.infoValue}>
-                      {proposal.tenchuongtrinh}
+                      {proposal.ten_chuong_trinh}
                     </span>
                   </div>
                   <div className={styles.infoItem}>
@@ -200,10 +200,10 @@ const ProposalDetailDrawer = ({
                       {proposal.ten_quy_thanh_phan || '—'}
                     </span>
                   </div>
-                  {proposal.mota && (
+                  {proposal.mo_ta && (
                     <div className={`${styles.infoItem} ${styles.fullWidth}`}>
                       <span className={styles.infoLabel}>Mô tả</span>
-                      <span className={styles.infoValue}>{proposal.mota}</span>
+                      <span className={styles.infoValue}>{proposal.mo_ta}</span>
                     </div>
                   )}
                 </div>
@@ -219,13 +219,13 @@ const ProposalDetailDrawer = ({
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Số lượng suất</span>
                     <span className={styles.infoValue}>
-                      {proposal.soluongsuat} suất
+                      {proposal.so_luong_suat} suất
                     </span>
                   </div>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Số tiền mỗi suất</span>
                     <span className={styles.infoValue}>
-                      {formatCurrency(proposal.sotienmoisuat)}
+                      {formatCurrency(proposal.so_tien_moi_suat)}
                     </span>
                   </div>
                   <div className={styles.infoItem}>
@@ -234,14 +234,14 @@ const ProposalDetailDrawer = ({
                       className={`${styles.infoValue} ${styles.highlight}`}
                     >
                       {formatCurrency(
-                        proposal.soluongsuat * proposal.sotienmoisuat
+                        proposal.so_luong_suat * proposal.so_tien_moi_suat
                       )}
                     </span>
                   </div>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Loại hỗ trợ</span>
                     <span className={styles.infoValue}>
-                      {proposal.loaihotro || '—'}
+                      {proposal.loai_ho_tro || '—'}
                     </span>
                   </div>
                   {proposal.so_tien_thuc_te && (
@@ -266,46 +266,46 @@ const ProposalDetailDrawer = ({
                   <span>Thời gian</span>
                 </h3>
                 <div className={styles.infoGrid}>
-                  {proposal.ngaybatdau && (
+                  {proposal.ngay_bat_dau && (
                     <div className={styles.infoItem}>
                       <span className={styles.infoLabel}>Ngày bắt đầu</span>
                       <span className={styles.infoValue}>
-                        {formatDate(proposal.ngaybatdau)}
+                        {formatDate(proposal.ngay_bat_dau)}
                       </span>
                     </div>
                   )}
-                  {proposal.ngayketthuc && (
+                  {proposal.ngay_ket_thuc && (
                     <div className={styles.infoItem}>
                       <span className={styles.infoLabel}>Ngày kết thúc</span>
                       <span className={styles.infoValue}>
-                        {formatDate(proposal.ngayketthuc)}
+                        {formatDate(proposal.ngay_ket_thuc)}
                       </span>
                     </div>
                   )}
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>Ngày tạo đề xuất</span>
                     <span className={styles.infoValue}>
-                      {formatDate(proposal.ngaytao)}
+                      {formatDate(proposal.ngay_tao)}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Lý do từ chối (nếu có) */}
-              {proposal.trangthai === 'Tu choi' && proposal.lydotuchoi && (
+              {proposal.trang_thai === 'Tu choi' && proposal.ly_do_tu_choi && (
                 <div className={`${styles.section} ${styles.rejectSection}`}>
                   <h3 className={styles.sectionTitle}>
                     <HiOutlineXCircle />
                     <span>Lý do từ chối</span>
                   </h3>
-                  <p className={styles.rejectReason}>{proposal.lydotuchoi}</p>
+                  <p className={styles.rejectReason}>{proposal.ly_do_tu_choi}</p>
                 </div>
               )}
 
               {/* Timeline */}
               <div className={styles.section}>
                 <ProposalTimeline
-                  proposalId={proposal.dexuatchuongtrinh_id}
+                  proposalId={proposal.de_xuat_id}
                   onRefresh={fetchProposal}
                 />
               </div>

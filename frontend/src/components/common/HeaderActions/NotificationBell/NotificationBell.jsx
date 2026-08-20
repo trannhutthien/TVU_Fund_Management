@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { HiBell, HiCheckCircle, HiXCircle } from 'react-icons/hi2';
+import { HiBell, HiCheckCircle, HiXCircle, HiXMark } from 'react-icons/hi2';
 import CloseButton from '@components/common/CloseButton/CloseButton';
 import './NotificationBell.scss';
 
@@ -24,6 +24,7 @@ const NotificationBell = ({
   onNotificationClick,
   onMarkAllRead,
   onViewAll,
+  onDeleteNotification,
   size = 'md',
   className = '',
 }) => {
@@ -210,6 +211,22 @@ const NotificationBell = ({
                   {!notification.isRead && (
                     <span className="unread-indicator" />
                   )}
+
+                  {/* Delete button */}
+                  <button
+                    type="button"
+                    className="notification-item-delete"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onDeleteNotification) {
+                        onDeleteNotification(notification.id);
+                      }
+                    }}
+                    aria-label="Xóa thông báo"
+                    title="Xóa thông báo"
+                  >
+                    <HiXMark />
+                  </button>
                 </div>
               ))
             )}
@@ -247,6 +264,7 @@ NotificationBell.propTypes = {
   onNotificationClick: PropTypes.func,
   onMarkAllRead: PropTypes.func,
   onViewAll: PropTypes.func,
+  onDeleteNotification: PropTypes.func,
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   className: PropTypes.string,
 };

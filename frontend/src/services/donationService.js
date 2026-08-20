@@ -30,8 +30,41 @@ export const createPublicProposal = async (proposalData) => {
     const response = await api.post('/donations/public/propose-program', proposalData);
     return response.data;
   } catch (error) {
-    console.error('Error creating public proposal:', error);
+    const serverMsg = error.response?.data?.message || error.message;
+    console.error('Error creating public proposal:', serverMsg, proposalData);
     throw error.response?.data || { message: 'Lỗi khi tạo đề xuất chương trình' };
+  }
+};
+
+/**
+ * Xác thực OTP cho đề xuất chương trình
+ * @param {Object} data - { email, otpCode, type: 'proposal', otpToken }
+ * @returns {Promise} Response từ server
+ */
+export const verifyProposalOtp = async (data) => {
+  try {
+    const response = await api.post('/donations/public/propose-program/verify-otp', data);
+    return response.data;
+  } catch (error) {
+    const serverMsg = error.response?.data?.message || error.message;
+    console.error('Error verifying proposal OTP:', serverMsg);
+    throw error.response?.data || { message: 'Lỗi xác thực OTP đề xuất' };
+  }
+};
+
+/**
+ * Gửi lại OTP cho đề xuất chương trình
+ * @param {Object} data - { email, type: 'proposal', otpToken }
+ * @returns {Promise} Response từ server
+ */
+export const resendProposalOtp = async (data) => {
+  try {
+    const response = await api.post('/guest/resend-otp', data);
+    return response.data;
+  } catch (error) {
+    const serverMsg = error.response?.data?.message || error.message;
+    console.error('Error resending proposal OTP:', serverMsg);
+    throw error.response?.data || { message: 'Lỗi gửi lại OTP đề xuất' };
   }
 };
 

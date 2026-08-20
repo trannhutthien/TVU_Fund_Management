@@ -10,7 +10,9 @@ import {
   HiOutlineExclamationTriangle,
   HiOutlineShieldCheck,
   HiOutlineArrowPath,
+  HiOutlineMagnifyingGlass,
 } from 'react-icons/hi2';
+import { useNavigate } from 'react-router-dom';
 import styles from './HDSinhVienSection.module.scss';
 
 const STEPS_SV = [
@@ -94,6 +96,8 @@ const LUU_Y = [
 ];
 
 const HDSinhVienSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className={styles.hdSinhVienSection}>
       <div className={styles.container}>
@@ -189,6 +193,22 @@ const HDSinhVienSection = () => {
               </div>
             );
           })}
+        </div>
+
+        {/* Track Application CTA */}
+        <div className={styles.trackCta}>
+          <HiOutlineMagnifyingGlass className={styles.trackCtaIcon} />
+          <div className={styles.trackCtaText}>
+            <h4 className={styles.trackCtaTitle}>Đã nộp đơn và nhận mã tra cứu?</h4>
+            <p className={styles.trackCtaDesc}>Theo dõi tình trạng xét duyệt hồ sơ của bạn bất kỳ lúc nào, không cần đăng nhập.</p>
+          </div>
+          <a
+            href="/track"
+            onClick={(e) => { e.preventDefault(); navigate('/track'); }}
+            className={styles.trackCtaButton}
+          >
+            Tra cứu đơn ngay →
+          </a>
         </div>
       </div>
     </section>

@@ -12,7 +12,7 @@ const DEFAULT_FEATURES = [
     id: 1,
     icon: HiOutlinePencilSquare,
     title: 'AI Writing',
-    description: 'Hỗ trợ sinh viên viết thư ngỏ, trình bày hoàn cảnh một cách thuyết phục và chuyên nghiệp thông qua gợi ý ngôn ngữ tối ưu.',
+    description: 'Hỗ trợ sinh viên viết thư ngỏ, trình bày nhu cầu của mình một cách chân thành, rõ ràng và chuyên nghiệp thông qua gợi ý ngôn ngữ phù hợp.',
     iconBgColor: 'primary',
   },
   {

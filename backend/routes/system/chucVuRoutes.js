@@ -16,22 +16,22 @@ const router = express.Router();
 // GET /api/chuc-vu/public — API công khai, KHÔNG CẦN TOKEN
 router.get("/public", getPublicChucVu);
 
-// GET /api/chuc-vu — cần access token hợp lệ và quyền admin
-router.get("/", protect, authorizeRoles(1), getAllChucVu);
+// GET /api/chuc-vu — cần access token hợp lệ, quyền Admin hoặc Cán bộ Quỹ
+router.get("/", protect, authorizeRoles(1, 3), getAllChucVu);
 
-// PUT /api/chuc-vu/reorder — cần access token hợp lệ và quyền admin
-router.put("/reorder", protect, authorizeRoles(1), updateThuTu);
+// PUT /api/chuc-vu/reorder — cần access token hợp lệ, quyền Admin hoặc Cán bộ Quỹ
+router.put("/reorder", protect, authorizeRoles(1, 3), updateThuTu);
 
-// GET /api/chuc-vu/:id — cần access token hợp lệ và quyền admin
-router.get("/:id", protect, authorizeRoles(1), getChucVuById);
+// GET /api/chuc-vu/:id — cần access token hợp lệ, quyền Admin hoặc Cán bộ Quỹ
+router.get("/:id", protect, authorizeRoles(1, 3), getChucVuById);
 
-// POST /api/chuc-vu — cần access token hợp lệ và quyền admin
-router.post("/", protect, authorizeRoles(1), createChucVu);
+// POST /api/chuc-vu — cần access token hợp lệ, quyền Admin hoặc Cán bộ Quỹ
+router.post("/", protect, authorizeRoles(1, 3), createChucVu);
 
-// PUT /api/chuc-vu/:id — cần access token hợp lệ và quyền admin
-router.put("/:id", protect, authorizeRoles(1), updateChucVu);
+// PUT /api/chuc-vu/:id — cần access token hợp lệ, quyền Admin hoặc Cán bộ Quỹ
+router.put("/:id", protect, authorizeRoles(1, 3), updateChucVu);
 
-// DELETE /api/chuc-vu/:id — cần access token hợp lệ và quyền admin (xóa mềm)
-router.delete("/:id", protect, authorizeRoles(1), softDeleteChucVu);
+// DELETE /api/chuc-vu/:id — cần access token hợp lệ, quyền Admin hoặc Cán bộ Quỹ (xóa mềm)
+router.delete("/:id", protect, authorizeRoles(1, 3), softDeleteChucVu);
 
 export default router;

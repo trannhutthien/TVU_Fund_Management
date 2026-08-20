@@ -183,42 +183,10 @@ const PublicHeader = ({ onLoginClick, onRegisterClick, onToggleSidebar }) => {
   // Navigation items
   const navItems = [
     { label: 'VỀ QUỸ PHÁT TRIỂN ĐHTV', path: '/ve-quy-phat-trien' },
-    {
-      label: 'TIN TỨC & HƯỚNG DẪN',
-      isDropdown: true,
-      children: [
-        { label: 'Tin tức & Sự kiện', path: '/news' },
-        { label: 'Hướng dẫn & Quy định', path: '/guidelines' },
-        { label: 'Cựu sinh viên', path: '/alumni' },
-        { label: 'Sinh viên nói gì về TVU Fund', path: '/testimonials' },
-      ],
-    },
-    {
-      label: 'TÀI CHÍNH & QUỸ',
-      isDropdown: true,
-      children: [
-        { label: 'Danh mục quỹ', path: '/funds' },
-        { label: 'Lịch sử giao dịch công khai', path: '/lich-su-giao-dich' },
-        { label: 'Thống kê thu chi', path: '/thong-ke-cong-khai' },
-        { label: 'Khoản tài trợ', path: '/khoan-tai-tro-cong-khai' },
-        { label: 'Đối tác & Nhà tài trợ', path: '/donors' },
-      ],
-    },
-    {
-      label: 'TÀI KHOẢN',
-      isDropdown: true,
-      children: [
-        { label: 'Tra cứu đơn', path: '/track' },
-        ...(isAuthenticated
-          ? [
-              { label: 'Cá nhân', path: '/profile' },
-              ...(Number(user?.vaiTro) === 4
-                ? [{ label: 'Nghĩa vụ hoàn trả', path: '/nghia-vu-hoan-tra' }]
-                : []),
-            ]
-          : []),
-      ],
-    },
+    { label: 'TIN TỨC & SỰ KIỆN', path: '/news' },
+    { label: 'CỰU SINH VIÊN', path: '/alumni' },
+    { label: 'DANH MỤC QUỸ', path: '/funds' },
+    { label: 'ĐỐI TÁC & NHÀ TÀI TRỢ', path: '/donors' },
   ];
 
   const [permissions, setPermissions] = useState({});

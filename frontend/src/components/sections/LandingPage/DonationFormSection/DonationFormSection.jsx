@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPublicDonation } from '@services/donationService';
+import { guestService } from '@services/guestService';
+import useAuthStore from '@stores/authStore';
 import fundService from '@services/fundService';
 import { bankAccountService } from '@services/bankAccountService';
 import DonationStepper from '@pages/Public/PublicDonationPage/components/DonationStepper';
@@ -12,6 +14,7 @@ import { validateDonorInfo, validateDonationDetails } from '@pages/Public/Public
 import styles from './DonationFormSection.module.scss';
 
 const DonationFormSection = () => {
+  const { isAuthenticated } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [destinationType, setDestinationType] = useState(null);
@@ -22,6 +25,14 @@ const DonationFormSection = () => {
   const [successResult, setSuccessResult] = useState(null);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  // OTP flow states (guest only)
+  const [submittedGuestInfo, setSubmittedGuestInfo] = useState(null);
+  const [guestOtpCode, setGuestOtpCode] = useState('');
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
+  const [guestSuccessInfo, setGuestSuccessInfo] = useState(null);
+  const [formTimestamp] = useState(() => new Date().toISOString());
 
   const [formData, setFormData] = useState({
     hoTen: '',
@@ -132,31 +143,128 @@ const DonationFormSection = () => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const payload = {
-        ten: formData.hoTen.trim(),
-        email: formData.email.trim().toLowerCase(),
-        soDienThoai: formData.soDienThoai.trim(),
-        soTien: parseFloat(formData.soTien),
-        quyId: formData.quyId,
-        ghiChu: formData.ghiChu?.trim() || null,
-      };
-      const result = await createPublicDonation(payload);
-      setSuccessResult(result?.donation || result);
-      setCompletedSteps(prev => [...new Set([...prev, currentStep])]);
-      setCurrentStep(DONATION_STEPS.length + 1);
+      if (isAuthenticated) {
+        const payload = {
+          ten: formData.hoTen.trim(),
+          email: formData.email.trim().toLowerCase(),
+          soDienThoai: formData.soDienThoai.trim(),
+          soTien: parseFloat(formData.soTien),
+          quyId: formData.quyId,
+          ghiChu: formData.ghiChu?.trim() || null,
+        };
+        const result = await createPublicDonation(payload);
+        setSuccessResult(result?.donation || result);
+        setCompletedSteps(prev => [...new Set([...prev, currentStep])]);
+        setCurrentStep(DONATION_STEPS.length + 1);
+      } else {
+        const guestPayload = {
+          guestHoTen: formData.hoTen.trim(),
+          guestEmail: formData.email.trim().toLowerCase(),
+          guestSoDienThoai: formData.soDienThoai.trim(),
+          guestToChuc: formData.toChuc?.trim() || null,
+          guestDiaChi: formData.diaChi?.trim() || null,
+          quyId: formData.quyId,
+          soTien: parseFloat(formData.soTien),
+          hinhThuc: formData.hinhThuc,
+          loaiNhaTaiTro: formData.loaiNhaTaiTro,
+          ghiChu: formData.ghiChu?.trim() || null,
+          formTimestamp,
+        };
+        const result = await guestService.submitDonation(guestPayload);
+        if (result.success) {
+          setSubmittedGuestInfo({
+            email: result.data.email,
+            trackingUuid: result.data.trackingUuid,
+            otpToken: result.data.otpToken,
+          });
+          try {
+            localStorage.setItem(`guest_otp_${result.data.trackingUuid}`, result.data.otpToken);
+          } catch (e) { /* ignore */ }
+        } else {
+          setErrors({ submit: result.message || 'Gửi đăng ký thất bại' });
+        }
+      }
     } catch (err) {
-      const msg = err?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+      const msg = err?.message || err?.response?.data?.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.';
       setErrors({ submit: msg });
     } finally {
       setSubmitting(false);
     }
-  }, [formData, submitting, currentStep]);
+  }, [formData, submitting, currentStep, isAuthenticated]);
+
+  const handleVerifyGuestOtp = useCallback(async () => {
+    if (!guestOtpCode || guestOtpCode.trim().length !== 6 || isNaN(guestOtpCode)) {
+      setErrors({ otp: 'Mã OTP phải gồm 6 chữ số' });
+      return;
+    }
+
+    try {
+      setVerifyingOtp(true);
+      setErrors({});
+      const response = await guestService.verifyOtp({
+        email: submittedGuestInfo.email,
+        otpCode: guestOtpCode.trim(),
+        type: 'donation',
+        otpToken: submittedGuestInfo.otpToken,
+      });
+
+      if (response.success) {
+        setGuestSuccessInfo({
+          email: response.data.email,
+          tempPassword: response.data.tempPassword,
+          trackingUuid: response.data.trackingUuid,
+        });
+        setSubmittedGuestInfo(null);
+      } else {
+        setErrors({ otp: response.message || 'Mã OTP không chính xác' });
+      }
+    } catch (err) {
+      setErrors({ otp: err?.response?.data?.message || 'Lỗi xác minh mã OTP' });
+    } finally {
+      setVerifyingOtp(false);
+    }
+  }, [guestOtpCode, submittedGuestInfo]);
+
+  const handleResendGuestOtp = useCallback(async () => {
+    if (!submittedGuestInfo?.otpToken) {
+      setErrors({ otp: 'Phiên xác thực không hợp lệ, vui lòng gửi lại form' });
+      return;
+    }
+
+    try {
+      setResendingOtp(true);
+      setErrors({});
+      const response = await guestService.resendOtp({
+        email: submittedGuestInfo.email,
+        type: 'donation',
+        otpToken: submittedGuestInfo.otpToken,
+      });
+
+      if (response.success) {
+        setSubmittedGuestInfo((prev) => ({
+          ...prev,
+          trackingUuid: response.data.trackingUuid,
+          otpToken: response.data.otpToken,
+        }));
+        setGuestOtpCode('');
+      } else {
+        setErrors({ otp: response.message || 'Không thể gửi lại mã OTP' });
+      }
+    } catch (err) {
+      setErrors({ otp: err?.response?.data?.message || 'Lỗi gửi lại mã OTP' });
+    } finally {
+      setResendingOtp(false);
+    }
+  }, [submittedGuestInfo]);
 
   const handleNewDonation = useCallback(() => {
     setCurrentStep(1);
     setCompletedSteps([]);
     setDestinationType(null);
     setSuccessResult(null);
+    setSubmittedGuestInfo(null);
+    setGuestSuccessInfo(null);
+    setGuestOtpCode('');
     setErrors({});
     setTouched({});
     setFormData({
@@ -170,6 +278,108 @@ const DonationFormSection = () => {
   const isLastStep = currentStep === DONATION_STEPS.length;
   const isSuccess = currentStep > DONATION_STEPS.length;
 
+  // ─── GUEST OTP VERIFICATION SCREEN ────────────────────────────
+  if (submittedGuestInfo) {
+    return (
+      <section className={styles.donationFormSection} id="donation-form">
+        <div className={styles.container}>
+          <div className={styles.formCard}>
+            <div className={styles.otpCard}>
+              <div className={styles.otpTitle}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <h3>Xác thực email của bạn</h3>
+              </div>
+              <p className={styles.otpDesc}>
+                Hệ thống đã gửi mã xác thực (OTP) 6 chữ số về email <strong>{submittedGuestInfo.email}</strong>.
+                Vui lòng kiểm tra hộp thư (hoặc Spam/Thư rác).
+              </p>
+              <div className={styles.otpTrackingCode}>
+                Mã tra cứu: <strong>{submittedGuestInfo.trackingUuid}</strong>
+              </div>
+              <input
+                type="text"
+                maxLength={6}
+                value={guestOtpCode}
+                onChange={(e) => {
+                  setGuestOtpCode(e.target.value.replace(/\D/g, ''));
+                  setErrors(prev => { const n = { ...prev }; delete n.otp; return n; });
+                }}
+                className={styles.otpInput}
+                placeholder="000000"
+                autoFocus
+              />
+              {errors.otp && <div className={styles.otpError}>{errors.otp}</div>}
+              <button
+                type="button"
+                className={styles.submitBtn}
+                onClick={handleVerifyGuestOtp}
+                disabled={verifyingOtp || guestOtpCode.length !== 6}
+              >
+                {verifyingOtp ? 'Đang xác thực...' : 'Xác nhận & Kích hoạt'}
+              </button>
+              <button
+                type="button"
+                className={styles.otpResendBtn}
+                onClick={handleResendGuestOtp}
+                disabled={resendingOtp || verifyingOtp}
+              >
+                {resendingOtp ? 'Đang gửi lại...' : 'Gửi lại mã OTP'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ─── GUEST SUCCESS SCREEN (with temp credentials) ──────────────
+  if (guestSuccessInfo) {
+    return (
+      <section className={styles.donationFormSection} id="donation-form">
+        <div className={styles.container}>
+          <div className={styles.formCard}>
+            <div className={styles.guestSuccessCard}>
+              <div className={styles.guestSuccessIcon}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#27ae60" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              <h3>Đăng ký đóng góp thành công!</h3>
+              <p className={styles.guestSuccessMsg}>
+                Hệ thống đã tự động tạo tài khoản để bạn theo dõi khoản tài trợ.
+              </p>
+              <div className={styles.guestCredentials}>
+                <div className={styles.credentialRow}>
+                  <span className={styles.credentialLabel}>Email đăng nhập:</span>
+                  <span className={styles.credentialValue}>{guestSuccessInfo.email}</span>
+                </div>
+                <div className={styles.credentialRow}>
+                  <span className={styles.credentialLabel}>Mật khẩu tạm:</span>
+                  <span className={`${styles.credentialValue} password`}>{guestSuccessInfo.tempPassword}</span>
+                </div>
+              </div>
+              <p className={styles.guestCredentialWarning}>
+                Vui lòng đăng nhập và đổi mật khẩu ngay để bảo mật tài khoản.
+              </p>
+              <div className={styles.guestTrackingCode}>
+                Mã tra cứu: <strong>{guestSuccessInfo.trackingUuid}</strong>
+              </div>
+              <button type="button" className={styles.submitBtn} onClick={handleNewDonation}>
+                Đăng ký đóng góp mới
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ─── MAIN FORM ─────────────────────────────────────────────────
   return (
     <section className={styles.donationFormSection} id="donation-form">
       <div className={styles.container}>

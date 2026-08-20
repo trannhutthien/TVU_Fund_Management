@@ -74,6 +74,16 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [])
 
+  const deleteNotification = useCallback(async (id) => {
+    try {
+      await thongBaoService.deleteNotification(id)
+      setNotifications((prev) => prev.filter((n) => n.id !== id))
+      fetchUnreadCount()
+    } catch (err) {
+      console.error('Loi xoa thong bao:', err)
+    }
+  }, [fetchUnreadCount])
+
   useEffect(() => {
     if (user) {
       fetchUnreadCount()
@@ -96,6 +106,7 @@ export const NotificationProvider = ({ children }) => {
         fetchUnreadCount,
         markAsRead,
         markAllAsRead,
+        deleteNotification,
       }}
     >
       {children}

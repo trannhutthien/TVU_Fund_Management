@@ -182,6 +182,13 @@ const CombinedProcessSection = ({ onLoginClick, onContactClick }) => {
               >
                 Xem hướng dẫn chi tiết
               </a>
+              <a 
+                href="/track" 
+                onClick={(e) => { e.preventDefault(); navigate('/track'); }}
+                className={styles.loginLink}
+              >
+                Đã nộp đơn? <span className={styles.loginLinkHighlight}>Tra cứu đơn ngay →</span>
+              </a>
             </div>
           </div>
 

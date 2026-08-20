@@ -233,3 +233,67 @@
   line-height: 1.6;
   margin: 0;
 }
+
+// Track Application CTA
+.trackCta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 32px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #2a4a8f 100%);
+  color: #fff;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.trackCtaIcon {
+  font-size: 36px;
+  color: var(--color-gold);
+  flex-shrink: 0;
+}
+
+.trackCtaText {
+  flex: 1;
+}
+
+.trackCtaTitle {
+  margin: 0 0 4px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.trackCtaDesc {
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+.trackCtaButton {
+  margin-left: auto;
+  white-space: nowrap;
+  background: var(--color-gold);
+  color: var(--color-navy-blue);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #ffcc44;
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    margin-left: 0;
+  }
+}

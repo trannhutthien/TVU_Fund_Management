@@ -571,6 +571,13 @@ const FundDetailPage = () => {
                       Xem hướng dẫn
                     </Button>
                   </div>
+                  <a
+                    href="/track"
+                    onClick={(e) => { e.preventDefault(); navigate('/track'); }}
+                    className={styles.trackLink}
+                  >
+                    Đã nộp đơn? Tra cứu đơn ngay →
+                  </a>
                 </>
               ) : (
                 <div className={styles.closedNotice}>
@@ -582,7 +589,7 @@ const FundDetailPage = () => {
 
             <section className={`${styles.card} ${styles.ctaCard}`}>
               <h2>Bạn muốn đồng hành?</h2>
-              <p>Đóng góp cho quỹ để hỗ trợ thêm sinh viên có hoàn cảnh cần được tiếp sức.</p>
+              <p>Đồng hành cùng quỹ để tiếp sức cho sinh viên hiện thực hóa khát vọng học tập của mình.</p>
               <div className={styles.ctaActions}>
                 <Button variant="primary" size="md" className={styles.navyButton} onClick={handleSponsorClick}>
                   Đóng góp ngay

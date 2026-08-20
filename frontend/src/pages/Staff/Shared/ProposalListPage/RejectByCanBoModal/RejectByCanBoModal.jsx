@@ -23,24 +23,24 @@ const RejectByCanBoModal = ({ proposal, onClose, onSuccess }) => {
       setConfirmed(false);
       setSubmitting(false);
     }
-  }, [proposal?.dexuatchuongtrinh_id]);
+  }, [proposal?.de_xuat_id]);
 
   if (!proposal) return null;
 
-  const tongSoTien = (proposal.soluongsuat || 0) * (proposal.sotienmoisuat || 0);
+  const tongSoTien = (proposal.so_luong_suat || 0) * (proposal.so_tien_moi_suat || 0);
 
   const handleSubmit = async () => {
     if (!confirmed || submitting || !lyDoTuChoi.trim()) return;
 
     setSubmitting(true);
     try {
-      await rejectByCanBo(proposal.dexuatchuongtrinh_id, {
+      await rejectByCanBo(proposal.de_xuat_id, {
         lyDoTuChoi: lyDoTuChoi.trim(),
         ghiChu: ghiChu.trim() || null,
       });
 
       toast.success(
-        `Đã từ chối đề xuất "${proposal.tenchuongtrinh}". Nhà tài trợ sẽ được thông báo.`
+        `Đã từ chối đề xuất "${proposal.ten_chuong_trinh}". Nhà tài trợ sẽ được thông báo.`
       );
       onSuccess?.();
     } catch (err) {
@@ -77,7 +77,7 @@ const RejectByCanBoModal = ({ proposal, onClose, onSuccess }) => {
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Tên chương trình</span>
               <span className={styles.summaryValue}>
-                {proposal.tenchuongtrinh}
+                {proposal.ten_chuong_trinh}
               </span>
             </div>
             <div className={styles.summaryRow}>
@@ -145,7 +145,7 @@ const RejectByCanBoModal = ({ proposal, onClose, onSuccess }) => {
             />
             <span className={styles.checkboxLabel}>
               Tôi xác nhận từ chối đề xuất chương trình "
-              <strong>{proposal.tenchuongtrinh}</strong>" với lý do đã nêu trên.
+              <strong>{proposal.ten_chuong_trinh}</strong>" với lý do đã nêu trên.
             </span>
           </label>
         </div>

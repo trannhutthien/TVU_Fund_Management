@@ -3,7 +3,7 @@
 .impactStatsSection {
   width: 100%;
   padding: 0 $space-4;
-  margin: -40px 0 48px 0; // Negative margin để nổi lên trên section trước
+  margin: 0 0 48px 0; // Không dùng negative margin để tránh card đè lên chữ tiêu đề
   position: relative;
   z-index: 10;
 }
@@ -173,7 +173,7 @@
 // ============================================
 @media (max-width: 767px) {
   .impactStatsSection {
-    margin: -30px 0 32px 0;
+    margin: 0 0 32px 0;
   }
 
   .statsCard {

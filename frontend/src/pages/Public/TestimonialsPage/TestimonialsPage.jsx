@@ -158,9 +158,9 @@ const TestimonialsPage = () => {
             <HiOutlineChevronRight className={styles.breadcrumbDivider} />
             <Link to="/news" className={styles.breadcrumbLink}>Tin tức & Hướng dẫn</Link>
             <HiOutlineChevronRight className={styles.breadcrumbDivider} />
-            <span className={styles.breadcrumbActive}>Sinh viên nói gì về TVU Fund</span>
+            <span className={styles.breadcrumbActive}>Cảm nghĩ về Quỹ Phát triển Đại học Trà Vinh</span>
           </nav>
-          <h1>Sinh viên nói gì về TVU Fund</h1>
+          <h1>Cảm nghĩ về Quỹ Phát triển Đại học Trà Vinh</h1>
           <p>Những cảm nhận đã được kiểm duyệt từ sinh viên và cộng đồng TVU Fund.</p>
         </div>
       </BackgroundImage>

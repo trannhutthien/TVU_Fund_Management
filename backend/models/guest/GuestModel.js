@@ -165,9 +165,9 @@ const ensureDonorRecord = async (connection, don, email, nguoiDungId) => {
 const createMainDonationRecord = async (connection, don, nhaTaiTroId) => {
   const [donationInsert] = await connection.query(
     `INSERT INTO khoantaitro (
-      nhataitro_id, quy_id, sotien, hinhthuc, magiaodich, ngaytaitro, chungtu, trangthai, ghichu
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Cho duyet', ?)`,
-    [nhaTaiTroId, don.quy_id, don.sotien, don.hinhthuc, don.magiaodich, don.ngaytaitro, don.chungtu, don.ghichu]
+      nhataitro_id, quy_id, sotien, hinhthuc, magiaodich, ngaytaitro, chungtu, trangthai, ghichu, taikhoannganhang_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Cho duyet', ?, ?)`,
+    [nhaTaiTroId, don.quy_id, don.sotien, don.hinhthuc, don.magiaodich, don.ngaytaitro, don.chungtu, don.ghichu, don.taiKhoannganhangId || null]
   );
   return donationInsert.insertId;
 };
@@ -186,6 +186,21 @@ const createTracking = async ({ trackingUuid, hoten, email, loai, quyId, sotien,
     `INSERT INTO guest_tracking (tracking_uuid, hoten, email, loai, quy_id, sotien, otp_hash, trangthai)
      VALUES (?, ?, ?, ?, ?, ?, ?, 'CHO_XAC_MINH')`,
     [trackingUuid, hoten, email, loai, quyId, sotien, otpHash || null]
+  );
+  return trackingUuid;
+};
+
+/**
+ * Luu thong tin tracking cho de xuat chuong trinh (truoc OTP).
+ * Sub-task 2.1: Requirements 1.6, 8.1, 8.2, 8.3
+ * @param {Object} data - { trackingUuid, hoten, email, quyId, sotien, otpHash }
+ * @returns {string} tracking_uuid
+ */
+const createProposalTracking = async ({ trackingUuid, hoten, email, quyId, sotien, otpHash }) => {
+  await pool.execute(
+    `INSERT INTO guest_tracking (tracking_uuid, hoten, email, loai, quy_id, sotien, otp_hash, trangthai)
+     VALUES (?, ?, ?, 'dexuatchuongtrinh', ?, ?, ?, 'CHO_XAC_MINH')`,
+    [trackingUuid, hoten, email, quyId, sotien, otpHash]
   );
   return trackingUuid;
 };
@@ -336,6 +351,144 @@ const verifyAndMigrateDonation = async (donationData, plainPassword) => {
 };
 
 /**
+ * Chuyen doi de xuat chuong trinh: tao nguoidung + dexuatchuongtrinh, cap nhat guest_tracking.
+ * Sub-task 2.3: Requirements 4.6, 4.7, 4.8, 4.9, 8.4, 8.5, 8.6
+ * @param {Object} proposalData - Proposal form data from OTP token
+ * @param {string} plainPassword - Generated random password for new user
+ * @returns {Object} { success, proposalId, nguoiDungId, trackingUuid }
+ */
+const verifyAndMigrateProposal = async (proposalData, plainPassword) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const data = proposalData;
+    const email = (data.guestEmail || "").trim().toLowerCase();
+
+    // 1. Kiem tra da verify chua
+    const [existing] = await connection.query(
+      "SELECT tracking_uuid FROM guest_tracking WHERE tracking_uuid = ? AND trangthai != 'CHO_XAC_MINH' LIMIT 1",
+      [data.trackingUuid]
+    );
+    if (existing.length > 0) throw new Error("OTP_ALREADY_VERIFIED");
+
+    // 2. Tao nguoi dung (Nha tai tro)
+    const [users] = await connection.query(
+      "SELECT nguoidung_id FROM nguoidung WHERE email = ? LIMIT 1",
+      [email]
+    );
+    let nguoiDungId;
+    if (users.length > 0) {
+      nguoiDungId = users[0].nguoidung_id;
+    } else {
+      const bcrypt = await import("bcryptjs");
+      const hashedPassword = await bcrypt.default.hash(plainPassword, 10);
+      const maSoDinhDanh = `GG${Date.now()}`;
+
+      const [userInsert] = await connection.query(
+        `INSERT INTO nguoidung (
+          email, matkhau, hoten, masodinhdanh, sodienthoai, diachi, vaitro_id, loaitaikhoan, trangthai
+        ) VALUES (?, ?, ?, ?, ?, ?, 4, 'Nha tai tro', 'Hoat dong')`,
+        [email, hashedPassword, data.guestHoTen, maSoDinhDanh, data.guestSoDienThoai || null, data.guestDiaChi || null]
+      );
+      nguoiDungId = userInsert.insertId;
+    }
+
+    // 2b. Tao nha tai tro (link voi nguoi dung)
+    let nhaTaiTroId = null;
+    const [existingDonors] = await connection.query(
+      "SELECT nhataitro_id FROM nhataitro WHERE nguoidung_id = ? LIMIT 1",
+      [nguoiDungId]
+    );
+    if (existingDonors.length > 0) {
+      nhaTaiTroId = existingDonors[0].nhataitro_id;
+    } else {
+      const [donorInsert] = await connection.query(
+        `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, trangthai)
+         VALUES (?, ?, 'Ca nhan', 'Hoat dong')`,
+        [nguoiDungId, data.guestHoTen]
+      );
+      nhaTaiTroId = donorInsert.insertId;
+    }
+
+    // 3. Tao de xuat chuong trinh (lien ket nha tai tro)
+    const soTienTaitro =
+      parseFloat(data.soLuongSuat) * parseFloat(data.soTienMoiSuat);
+
+    const [proposalInsert] = await connection.query(
+      `INSERT INTO dexuatchuongtrinh (
+        quythanhphan_id, nhataitro_id, khoantaitro_id,
+        tenchuongtrinh, mota, soluongsuat, sotienmoisuat, sotientaitro,
+        loaihotro, ngaybatdau, ngayketthuc, trangthai
+      ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
+      [
+        data.quyThanhPhanId,
+        nhaTaiTroId,
+        data.tenChuongTrinh,
+        data.moTa || null,
+        data.soLuongSuat,
+        data.soTienMoiSuat,
+        soTienTaitro,
+        data.loaiHoTro || 'Tai tro khong hoan lai',
+        data.ngayBatDau || null,
+        data.ngayKetThuc || null
+      ]
+    );
+    const proposalId = proposalInsert.insertId;
+
+    // 3b. Tao khoan tai tro lien ket voi de xuat (qua dexuat_id)
+    const [donationInsert] = await connection.query(
+      `INSERT INTO khoantaitro (
+        nhataitro_id, quy_id, dexuat_id, sotien,
+        hinhthuc, ngaytaitro, trangthai, ghichu
+      ) VALUES (?, ?, ?, ?, 'Chuyen khoan', CURRENT_DATE, 'Cho duyet', ?)`,
+      [
+        nhaTaiTroId,
+        data.quyThanhPhanId,
+        proposalId,
+        soTienTaitro,
+        `Tai tro cho de xuat chuong trinh: ${data.tenChuongTrinh}`
+      ]
+    );
+    const khoanTaiTroId = donationInsert.insertId;
+
+    // 3c. Link khoantaitro_id vao de xuat
+    await connection.query(
+      `UPDATE dexuatchuongtrinh
+       SET khoantaitro_id = ?
+       WHERE dexuatchuongtrinh_id = ?`,
+      [khoanTaiTroId, proposalId]
+    );
+
+    // 3d. Tao 3 dong phe duyet: Cap 1 = Can bo, Cap 2 = Ke toan, Cap 3 = Admin
+    for (const cap of [1, 2, 3]) {
+      await connection.query(
+        `INSERT INTO pheduyet (
+          dexuatchuongtrinh_id, nguoiduyet_id, capduyet, ketqua
+        ) VALUES (?, NULL, ?, 'Cho duyet')`,
+        [proposalId, cap]
+      );
+    }
+
+    // 4. Cap nhat guest_tracking
+    await connection.query(
+      `UPDATE guest_tracking 
+       SET trangthai = 'DA_CHUYEN', doituong_id = ?, nguoidung_id = ?
+       WHERE tracking_uuid = ?`,
+      [proposalId, nguoiDungId, data.trackingUuid]
+    );
+
+    await connection.commit();
+    return { success: true, proposalId, khoanTaiTroId, nguoiDungId, nhaTaiTroId, trackingUuid: data.trackingUuid };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+/**
  * Tra cuu trang thai don theo UUID.
  * Tra ve du lieu giong hieu ung truoc de khong pha frontend.
  */
@@ -356,17 +509,20 @@ const trackStatusByUuid = async (uuid) => {
       CASE 
         WHEN gt.loai = 'yeucauhotro' AND gt.doituong_id IS NOT NULL THEN yc.trangthai
         WHEN gt.loai = 'khoantaitro' AND gt.doituong_id IS NOT NULL THEN kt.trangthai
+        WHEN gt.loai = 'dexuatchuongtrinh' AND gt.doituong_id IS NOT NULL THEN dx.trangthai
         ELSE NULL 
       END AS real_status,
       CASE 
         WHEN gt.loai = 'yeucauhotro' AND gt.doituong_id IS NOT NULL THEN yc.ghichu
         WHEN gt.loai = 'khoantaitro' AND gt.doituong_id IS NOT NULL THEN kt.ghichu
+        WHEN gt.loai = 'dexuatchuongtrinh' AND gt.doituong_id IS NOT NULL THEN dx.tenchuongtrinh
         ELSE NULL 
       END AS real_ghichu
      FROM guest_tracking gt
      INNER JOIN quy q ON gt.quy_id = q.quy_id
      LEFT JOIN yeucauhotro yc ON gt.loai = 'yeucauhotro' AND gt.doituong_id = yc.yeucauhotro_id
      LEFT JOIN khoantaitro kt ON gt.loai = 'khoantaitro' AND gt.doituong_id = kt.khoantaitro_id
+     LEFT JOIN dexuatchuongtrinh dx ON gt.loai = 'dexuatchuongtrinh' AND gt.doituong_id = dx.dexuatchuongtrinh_id
      WHERE gt.tracking_uuid = ? LIMIT 1`,
     [uuid]
   );
@@ -375,7 +531,7 @@ const trackStatusByUuid = async (uuid) => {
 
   const data = rows[0];
   return {
-    type: data.loai === 'yeucauhotro' ? 'application' : 'donation',
+    type: data.loai === 'yeucauhotro' ? 'application' : data.loai === 'dexuatchuongtrinh' ? 'proposal' : 'donation',
     name: data.hoten,
     email: data.email,
     fundName: data.tenquy,
@@ -389,8 +545,10 @@ const trackStatusByUuid = async (uuid) => {
 
 export default {
   createTracking,
+  createProposalTracking,
   findByTrackingUuidAndOtpHash,
   verifyAndMigrateApplication,
   verifyAndMigrateDonation,
+  verifyAndMigrateProposal,
   trackStatusByUuid,
 };

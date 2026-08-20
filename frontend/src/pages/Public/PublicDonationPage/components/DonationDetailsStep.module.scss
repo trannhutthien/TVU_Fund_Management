@@ -496,6 +496,10 @@
 .customAmount {
   position: relative;
 
+  .currencyInput {
+    padding-right: 60px;
+  }
+
   .currency {
     position: absolute;
     right: 14px;
@@ -508,10 +512,107 @@
   }
 }
 
+.currencyFieldWrapper {
+  position: relative;
+
+  .currencyInput {
+    padding-right: 60px;
+  }
+
+  .currency {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.currencyInput {
+  width: 100%;
+  height: 44px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #212529;
+  background: #f8f9ff;
+  transition: all 0.25s ease;
+  outline: none;
+  box-sizing: border-box;
+
+  &:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+  }
+
+  &:focus {
+    border-color: #1a5276;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.08);
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+  }
+}
+
+.inputError {
+  border-color: #e74c3c;
+
+  &:focus {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+  }
+}
+
 .errorText {
   font-size: 12px;
   color: #e74c3c;
   margin-top: 4px;
+}
+
+// ============================================
+// SLOT HINT (proposal: total ÷ per-slot)
+// ============================================
+.slotHintOk,
+.slotHintWarn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.slotHintOk {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+
+  svg {
+    flex-shrink: 0;
+    color: #10b981;
+  }
+}
+
+.slotHintWarn {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+
+  svg {
+    flex-shrink: 0;
+    color: #f59e0b;
+  }
 }
 
 // ============================================

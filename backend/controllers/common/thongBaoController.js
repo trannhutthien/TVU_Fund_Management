@@ -78,3 +78,28 @@ export const markAllAsRead = async (req, res) => {
     });
   }
 };
+
+// DELETE /api/thong-bao/:id — Xoa 1 thong bao cua user
+export const deleteNotification = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const deleted = await ThongBaoModel.deleteById(parseInt(id), userId);
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Khong tim thay thong bao"
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: { deleted: true }
+    });
+  } catch (error) {
+    console.error("Loi deleteNotification:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Loi server, vui long thu lai sau"
+    });
+  }
+};

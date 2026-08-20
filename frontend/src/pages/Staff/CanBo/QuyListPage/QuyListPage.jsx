@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
   HiOutlineBuildingLibrary,
@@ -15,6 +15,8 @@ import {
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
   HiOutlinePlus,
+  HiOutlineSquares2X2,
+  HiOutlineLightBulb,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
@@ -23,6 +25,7 @@ import { StatCard } from '@components/common/Card';
 import api from '@services/api';
 import { getAllLoaiQuy, createLoaiQuy, getDisbursementRounds } from '@services/fundService';
 import { formatCurrency } from '@utils/formatters';
+import DeXuatChuongTrinhPage from '../DeXuatChuongTrinhPage/DeXuatChuongTrinhPage';
 import QuyDetailDrawer from './QuyDetailDrawer/QuyDetailDrawer';
 import styles from './QuyListPage.module.scss';
 
@@ -108,6 +111,15 @@ const generateMaLoai = (str) => {
 
 const QuyListPage = ({ isAdmin = false }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() =>
+    searchParams.get('tab') === 'de_xuat' ? 'de_xuat' : 'quy',
+  );
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchParams(tab === 'de_xuat' ? { tab: 'de_xuat' } : {}, { replace: true });
+  };
 
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [keywordInput, setKeywordInput] = useState('');
@@ -356,9 +368,37 @@ const QuyListPage = ({ isAdmin = false }) => {
             Trang chủ
           </Link>
           <span className={styles.crumbSep}>/</span>
-          <span>Danh sách Quỹ</span>
+          <span>{activeTab === 'de_xuat' ? 'Đề xuất chương trình' : 'Danh sách Quỹ'}</span>
         </div>
 
+        {/* Tab Bar */}
+        <div className={styles.tabBar} role="tablist" aria-label="Quản lý quỹ">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'quy'}
+            className={`${styles.tabButton} ${activeTab === 'quy' ? styles.tabButtonActive : ''}`}
+            onClick={() => handleTabChange('quy')}
+          >
+            <HiOutlineSquares2X2 className={styles.tabIcon} />
+            Danh sách Quỹ
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'de_xuat'}
+            className={`${styles.tabButton} ${activeTab === 'de_xuat' ? styles.tabButtonActive : ''}`}
+            onClick={() => handleTabChange('de_xuat')}
+          >
+            <HiOutlineLightBulb className={styles.tabIcon} />
+            Đề xuất chương trình
+          </button>
+        </div>
+
+        {activeTab === 'de_xuat' ? (
+          <DeXuatChuongTrinhPage embedded />
+        ) : (
+        <>
         {/* Page Header */}
         <header className={styles.header}>
           <div className={styles.headerText}>
@@ -789,6 +829,8 @@ const QuyListPage = ({ isAdmin = false }) => {
         onStatusUpdated={handleStatusUpdated}
         loaiQuyList={loaiQuyList}
       />
+      </>
+      )}
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ const ProposalFilter = ({ filters, activeTab, onChange }) => {
   const fetchQuyThanhPhan = async () => {
     try {
       // Lấy danh sách quỹ cấp 2 (Quỹ Thành Phần)
-      const res = await api.get('/api/funds', {
+      const res = await api.get('/funds', {
         params: { cap_do: 2, trang_thai: 'Dang hoat dong' },
       });
       if (res.data?.success) {

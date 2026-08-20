@@ -235,6 +235,46 @@
   }
 }
 
+// Delete button - xóa từng thông báo
+.notification-item-delete {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: $radius-full;
+  color: $text-muted;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: $transition-base;
+  z-index: 2;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    background: $color-danger-bg;
+    color: $color-danger;
+  }
+}
+
+.notification-item:hover .notification-item-delete {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.notification-item:hover .unread-indicator {
+  opacity: 0;
+}
+
 .notification-item-icon {
   flex-shrink: 0;
   margin-top: 2px;

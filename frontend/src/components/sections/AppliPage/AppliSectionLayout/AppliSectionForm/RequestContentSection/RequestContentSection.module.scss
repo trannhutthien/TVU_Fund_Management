@@ -529,8 +529,9 @@
 .qualityBar {
   margin-top: 10px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px 10px;
 }
 
 .qualityLabel {
@@ -540,7 +541,7 @@
 }
 
 .qualityTrack {
-  width: 160px;
+  width: 120px;
   height: 6px;
   background: #e2e8f0;
   border-radius: 3px;
@@ -558,6 +559,13 @@
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.qualityHint {
+  width: 100%;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
 }
 
 // ============================================

@@ -348,8 +348,35 @@ export const createFund = async (req, res) => {
 // Trả về danh sách tất cả quỹ trong hệ thống
 export const getFunds = async (req, res) => {
   try {
+    // Lấy query params
+    const { cap, maloai, trangThai, search } = req.query;
+
     // Lấy danh sách quỹ từ database
-    const funds = await FundModel.getAllFunds();
+    let funds = await FundModel.getAllFunds();
+
+    // Filter theo cap (cấp độ)
+    if (cap) {
+      const capFilter = parseInt(cap, 10);
+      funds = funds.filter(fund => fund.capdo === capFilter);
+    }
+
+    // Filter theo maloai
+    if (maloai) {
+      funds = funds.filter(fund => fund.loai_quy === maloai);
+    }
+
+    // Filter theo trangThai
+    if (trangThai) {
+      funds = funds.filter(fund => fund.trang_thai === trangThai);
+    }
+
+    // Filter theo search (tìm trong tên quỹ)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      funds = funds.filter(fund => 
+        fund.ten_quy?.toLowerCase().includes(searchLower)
+      );
+    }
 
     return res.status(200).json({
       success: true,
@@ -362,30 +389,29 @@ export const getFunds = async (req, res) => {
           loaiQuyId: fund.loaiquy_id,
           maLoai: fund.loai_quy,
           tenLoai: fund.ten_loai_quy || fund.loai_quy,
-          nhom: fund.nhom_loai_quy,
         },
         moTa: fund.mo_ta,
-        hinhAnh: buildFundImageUrl(fund.hinh_anh), // Build full URL
+        hinhAnh: buildFundImageUrl(fund.hinh_anh),
         soTienMucTieu: fund.so_tien_muc_tieu,
+        soTienToiThieu: fund.so_tien_toi_thieu,
+        soTienToiDa: fund.so_tien_toi_da,
         soTienHoTroToiDa: fund.so_tien_ho_tro_toi_da,
-        soTienToiThieu: null,
-        soTienToiDa: fund.so_tien_ho_tro_toi_da,
         soLuongChiTieu: fund.so_luong_chi_tieu,
-        hanNopDon: fund.han_nop_don,
-        ngayBatDau: fund.ngay_bat_dau || fund.ngaybatdau,
-        ngayKetThuc: fund.ngay_ket_thuc || fund.han_nop_don,
         dieuKienTomTat: fund.dieu_kien_tom_tat,
+        ngayBatDau: fund.ngaybatdau,
+        hanNopDon: fund.han_nop_don,
         soDu: fund.so_du,
-        nguoiTao: fund.nguoitao_id,
-        ngayTao: fund.ngay_tao,
-        ngayCapNhat: fund.ngay_cap_nhat,
-        trangThai: fund.trang_thai,
+        soDuThucTe: fund.so_du,
+        loaiDieuHanh: fund.loai_dieu_hanh,
+        capDo: fund.capdo,
+        quyChaId: fund.quy_cha_id,
+        loaiHoTro: fund.loaihotro,
+        tenQuyCha: fund.ten_quy_cha,
         soDonDaNop: fund.so_don_da_nop,
         phanTramDaNhan: fund.phan_tram_da_nhan,
-        soQuyConHoatDong: fund.so_quy_con_hoat_dong, // Số quỹ con đang hoạt động (cho quỹ mẹ)
-        loaiDieuHanh: fund.loai_dieu_hanh,
-        quyChaId: fund.quy_cha_id,
-        tenQuyCha: fund.ten_quy_cha
+        trangThai: fund.trang_thai,
+        ngayTao: fund.ngay_tao,
+        ngayCapNhat: fund.ngay_cap_nhat,
       }))
     });
   } catch (error) {

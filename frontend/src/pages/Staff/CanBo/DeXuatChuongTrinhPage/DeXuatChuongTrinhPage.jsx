@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import { 
   Table, Tag, Button, Modal, Form, Select, InputNumber, 
   Input, Space, Popconfirm, Card, Col, Row, Statistic, DatePicker 
 } from 'antd';
 import { 
   HiOutlineLightBulb, HiOutlineCheck, HiOutlineXMark,
-  HiOutlineBanknotes, HiOutlineUsers, HiOutlineDocumentCheck
+  HiOutlineBanknotes, HiOutlineDocumentCheck,
+  HiOutlineEye, HiOutlineRocketLaunch
 } from 'react-icons/hi2';
 import { toast } from 'react-toastify';
 import useAuthStore from '@stores/authStore';
@@ -16,10 +19,13 @@ import styles from './DeXuatChuongTrinhPage.module.scss';
 
 const { RangePicker } = DatePicker;
 
-const DeXuatChuongTrinhPage = () => {
+const DeXuatChuongTrinhPage = ({ embedded = false }) => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [form] = Form.useForm();
-  const [rejectForm] = Form.useForm();
+  const soLuongSuat = Form.useWatch('soLuongSuat', form);
+  const soTienMoiSuat = Form.useWatch('soTienMoiSuat', form);
+  const tongSoTien = (Number(soLuongSuat) || 0) * (Number(soTienMoiSuat) || 0);
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
@@ -35,8 +41,6 @@ const DeXuatChuongTrinhPage = () => {
   
   // Trạng thái modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [selectedProposalId, setSelectedProposalId] = useState(null);
   
   // Bộ lọc
   const [filterStatus, setFilterStatus] = useState('');
@@ -46,7 +50,6 @@ const DeXuatChuongTrinhPage = () => {
   const isAdmin = user?.vaiTro === 1;
   const isCanBo = user?.vaiTro === 3;
   const canCreate = isAdmin || isCanBo;
-  const canApprove = isAdmin;
 
   // Load danh sách đề xuất
   const fetchProposals = async () => {
@@ -134,37 +137,13 @@ const DeXuatChuongTrinhPage = () => {
     }
   };
 
-  // Duyệt đề xuất
-  const handleApprove = async (id) => {
-    try {
-      const res = await proposalService.approveProposal(id);
-      if (res?.success) {
-        toast.success("Duyệt đề xuất chương trình thành công");
-        fetchProposals();
-        fetchStats();
-        fetchFunds(); // Cập nhật lại số dư
-      }
-    } catch (err) {
-      console.error("Approve proposal error:", err);
-      toast.error(err.response?.data?.message || "Lỗi khi duyệt đề xuất");
-    }
-  };
-
-  // Từ chối đề xuất
-  const handleRejectSubmit = async (values) => {
-    try {
-      const res = await proposalService.rejectProposal(selectedProposalId, values.lyDoTuChoi);
-      if (res?.success) {
-        toast.success("Từ chối đề xuất chương trình thành công");
-        setIsRejectModalOpen(false);
-        rejectForm.resetFields();
-        fetchProposals();
-        fetchStats();
-      }
-    } catch (err) {
-      console.error("Reject proposal error:", err);
-      toast.error(err.response?.data?.message || "Lỗi khi từ chối đề xuất");
-    }
+  // Xem chi tiết đề xuất (điều hướng theo vai trò đến ProposalDetailPage)
+  const handleViewDetail = (record) => {
+    const role = user?.vaiTro;
+    if (role === 1) navigate(`/admin/de-xuat/${record.de_xuat_id}`);
+    else if (role === 2) navigate(`/ke-toan/de-xuat/${record.de_xuat_id}`);
+    else if (role === 3) navigate(`/can-bo/de-xuat/${record.de_xuat_id}`);
+    else if (role === 5) navigate(`/kiem-soat/de-xuat/${record.de_xuat_id}`);
   };
 
   // Định nghĩa các cột cho Table
@@ -284,6 +263,9 @@ const DeXuatChuongTrinhPage = () => {
         let color = 'default';
         let label = status;
         if (status === 'Cho duyet') { color = 'orange'; label = 'Chờ duyệt'; }
+        else if (status === 'Can bo da duyet') { color = 'blue'; label = 'Cán bộ đã duyệt'; }
+        else if (status === 'Da nhan tien') { color = 'purple'; label = 'Đã nhận tiền'; }
+        else if (status === 'Da tao hoat dong') { color = 'green'; label = 'Đã tạo hoạt động'; }
         else if (status === 'Da duyet') { color = 'green'; label = 'Đã duyệt'; }
         else if (status === 'Tu choi') { color = 'red'; label = 'Từ chối'; }
         return <Tag color={color}>{label}</Tag>;
@@ -292,45 +274,23 @@ const DeXuatChuongTrinhPage = () => {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 150,
+      width: 190,
       fixed: 'right',
       render: (_, record) => {
         const isPending = record.trang_thai === 'Cho duyet';
-        const isApproved = record.trang_thai === 'Da duyet';
+        const isApproved = record.trang_thai === 'Da tao hoat dong';
 
         return (
           <Space size="middle">
-            {isPending && canApprove && (
-              <>
-                <Popconfirm
-                  title="Duyệt đề xuất chương trình"
-                  description={`Bạn có chắc chắn muốn duyệt đề xuất "${record.ten_chuong_trinh}"? Hệ thống sẽ tạo quỹ cấp 3 mới và phân bổ ngân sách.`}
-                  onConfirm={() => handleApprove(record.de_xuat_id)}
-                  okText="Duyệt"
-                  cancelText="Hủy"
-                >
-                  <Button 
-                    type="primary" 
-                    size="small" 
-                    icon={<HiOutlineCheck />} 
-                    className={styles.approveBtn}
-                  >
-                    Duyệt
-                  </Button>
-                </Popconfirm>
-                <Button 
-                  danger 
-                  size="small" 
-                  icon={<HiOutlineXMark />}
-                  onClick={() => {
-                    setSelectedProposalId(record.de_xuat_id);
-                    setIsRejectModalOpen(true);
-                  }}
-                >
-                  Từ chối
-                </Button>
-              </>
-            )}
+            <button
+              type="button"
+              className={styles.detailBtn}
+              onClick={() => handleViewDetail(record)}
+              title="Xem chi tiết"
+              aria-label="Xem chi tiết"
+            >
+              <HiOutlineEye />
+            </button>
 
             {isApproved && record.ten_quy_ket_qua && (
               <div className={styles.approvedInfo}>
@@ -343,10 +303,11 @@ const DeXuatChuongTrinhPage = () => {
               </div>
             )}
 
-            {isPending && !canApprove && (
-              <span className={styles.onlyView}>Đang chờ duyệt</span>
+            {isPending && <span className={styles.onlyView}>Đang chờ duyệt</span>}
+            {['Da nhan tien', 'Can bo da duyet'].includes(record.trang_thai) && (
+              <span className={styles.noAction}>Đang xử lý</span>
             )}
-            {!isPending && !isApproved && (
+            {!isPending && !isApproved && !['Da nhan tien', 'Can bo da duyet'].includes(record.trang_thai) && (
               <span className={styles.noAction}>N/A</span>
             )}
           </Space>
@@ -356,7 +317,7 @@ const DeXuatChuongTrinhPage = () => {
   ];
 
   return (
-    <div className={styles.container}>
+    <div className={embedded ? styles.embedded : styles.container}>
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Quản lý Đề xuất Chương trình</h1>
@@ -380,7 +341,7 @@ const DeXuatChuongTrinhPage = () => {
         <Col xs={24} sm={8}>
           <Card bordered={false} className={styles.statCard}>
             <Statistic
-              title="Chờ duyệt"
+              title="Chờ cán bộ duyệt"
               value={stats.choDuyet}
               valueStyle={{ color: '#f59e0b' }}
               prefix={<HiOutlineDocumentCheck />}
@@ -390,8 +351,28 @@ const DeXuatChuongTrinhPage = () => {
         <Col xs={24} sm={8}>
           <Card bordered={false} className={styles.statCard}>
             <Statistic
-              title="Đã duyệt"
-              value={stats.daDuyet}
+              title="Chờ kế toán xác nhận"
+              value={stats.canBoPheDuyet}
+              valueStyle={{ color: '#3b82f6' }}
+              prefix={<HiOutlineBanknotes />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card bordered={false} className={styles.statCard}>
+            <Statistic
+              title="Chờ admin tạo hoạt động"
+              value={stats.daNhanTien}
+              valueStyle={{ color: '#8b5cf6' }}
+              prefix={<HiOutlineRocketLaunch />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card bordered={false} className={styles.statCard}>
+            <Statistic
+              title="Đã tạo hoạt động"
+              value={stats.daTaoHoatDong}
               valueStyle={{ color: '#10b981' }}
               prefix={<HiOutlineCheck />}
             />
@@ -422,7 +403,9 @@ const DeXuatChuongTrinhPage = () => {
               options={[
                 { value: '', label: 'Tất cả trạng thái' },
                 { value: 'Cho duyet', label: 'Chờ duyệt' },
-                { value: 'Da duyet', label: 'Đã duyệt' },
+                { value: 'Can bo da duyet', label: 'Cán bộ đã duyệt' },
+                { value: 'Da nhan tien', label: 'Đã nhận tiền' },
+                { value: 'Da tao hoat dong', label: 'Đã tạo hoạt động' },
                 { value: 'Tu choi', label: 'Từ chối' },
               ]}
             />
@@ -554,6 +537,15 @@ const DeXuatChuongTrinhPage = () => {
           </Row>
 
           <Form.Item
+            label="Tổng số tiền tài trợ (đ)"
+            style={{ marginBottom: 24 }}
+          >
+            <div className={styles.totalMoneyBox}>
+              {tongSoTien > 0 ? formatCurrency(tongSoTien) : '0'} đ
+            </div>
+          </Form.Item>
+
+          <Form.Item
             name="loaiHoTro"
             label="Loại hình hỗ trợ"
             rules={[{ required: true, message: 'Vui lòng chọn loại hình hỗ trợ!' }]}
@@ -587,42 +579,12 @@ const DeXuatChuongTrinhPage = () => {
           </div>
         </Form>
       </Modal>
-
-      {/* Modal từ chối đề xuất */}
-      <Modal
-        title="Từ chối đề xuất chương trình"
-        open={isRejectModalOpen}
-        onCancel={() => {
-          setIsRejectModalOpen(false);
-          rejectForm.resetFields();
-        }}
-        footer={null}
-      >
-        <Form
-          form={rejectForm}
-          layout="vertical"
-          onFinish={handleRejectSubmit}
-          style={{ marginTop: '16px' }}
-        >
-          <Form.Item
-            name="lyDoTuChoi"
-            label="Lý do từ chối"
-            rules={[{ required: true, message: 'Vui lòng nhập lý do từ chối!' }]}
-          >
-            <Input.TextArea rows={4} placeholder="Nhập lý do cụ thể..." />
-          </Form.Item>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px' }}>
-            <Button onClick={() => {
-              setIsRejectModalOpen(false);
-              rejectForm.resetFields();
-            }}>Hủy</Button>
-            <Button type="primary" danger htmlType="submit">Xác nhận từ chối</Button>
-          </div>
-        </Form>
-      </Modal>
     </div>
   );
+};
+
+DeXuatChuongTrinhPage.propTypes = {
+  embedded: PropTypes.bool,
 };
 
 export default DeXuatChuongTrinhPage;

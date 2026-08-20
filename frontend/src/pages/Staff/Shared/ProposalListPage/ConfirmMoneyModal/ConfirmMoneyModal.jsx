@@ -21,12 +21,12 @@ const ConfirmMoneyModal = ({ proposal, onClose, onSuccess }) => {
       setConfirmed(false);
       setSubmitting(false);
     }
-  }, [proposal?.dexuatchuongtrinh_id]);
+  }, [proposal?.de_xuat_id]);
 
   if (!proposal) return null;
 
   const soTienDeXuat =
-    (proposal.soluongsuat || 0) * (proposal.sotienmoisuat || 0);
+    (proposal.so_luong_suat || 0) * (proposal.so_tien_moi_suat || 0);
   const soTienThucTeNum = soTienThucTe.trim()
     ? parseFloat(soTienThucTe.replace(/,/g, ''))
     : soTienDeXuat;
@@ -47,7 +47,7 @@ const ConfirmMoneyModal = ({ proposal, onClose, onSuccess }) => {
         payload.soTienThucTe = soTienThucTeNum;
       }
 
-      await confirmMoneyByKeToan(proposal.dexuatchuongtrinh_id, payload);
+      await confirmMoneyByKeToan(proposal.de_xuat_id, payload);
 
       const finalAmount = isDifferent ? soTienThucTeNum : soTienDeXuat;
 
@@ -91,7 +91,7 @@ const ConfirmMoneyModal = ({ proposal, onClose, onSuccess }) => {
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Tên chương trình</span>
               <span className={styles.summaryValue}>
-                {proposal.tenchuongtrinh}
+                {proposal.ten_chuong_trinh}
               </span>
             </div>
             <div className={styles.summaryRow}>
@@ -159,7 +159,7 @@ const ConfirmMoneyModal = ({ proposal, onClose, onSuccess }) => {
               <strong>
                 {formatCurrency(isDifferent ? soTienThucTeNum : soTienDeXuat)}
               </strong>{' '}
-              từ đề xuất chương trình "<strong>{proposal.tenchuongtrinh}</strong>
+              từ đề xuất chương trình "<strong>{proposal.ten_chuong_trinh}</strong>
               " và đồng ý cộng số tiền này vào quỹ thành phần{' '}
               <strong>{proposal.ten_quy_thanh_phan}</strong>.
             </span>

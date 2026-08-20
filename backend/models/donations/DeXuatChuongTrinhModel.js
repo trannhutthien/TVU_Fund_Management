@@ -14,6 +14,8 @@ const createProposal = async (proposalData) => {
     quyThanhPhanId,
     khoanTaiTroId,
     nhaTaiTroId,
+    nguoiTaoId,
+    tuDongDuyetCap1,
     tenChuongTrinh,
     moTa,
     soLuongSuat,
@@ -23,35 +25,74 @@ const createProposal = async (proposalData) => {
     ngayKetThuc
   } = proposalData;
 
-  const [result] = await pool.execute(
-    `INSERT INTO dexuatchuongtrinh (
-      quythanhphan_id,
-      khoantaitro_id,
-      nhataitro_id,
-      tenchuongtrinh,
-      mota,
-      soluongsuat,
-      sotienmoisuat,
-      loaihotro,
-      ngaybatdau,
-      ngayketthuc,
-      trangthai
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
-    [
-      quyThanhPhanId,
-      khoanTaiTroId || null,
-      nhaTaiTroId || null,
-      tenChuongTrinh,
-      moTa || null,
-      soLuongSuat,
-      soTienMoiSuat,
-      loaiHoTro || 'Tai tro khong hoan lai',
-      ngayBatDau || null,
-      ngayKetThuc || null
-    ]
-  );
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  return result;
+    // Nếu do cán bộ tạo: cấp 1 (Cán bộ) tự động duyệt → gửi thẳng cho Kế toán
+    const trangThaiDau = tuDongDuyetCap1 ? 'Can bo da duyet' : 'Cho duyet';
+
+    const [result] = await connection.execute(
+      `INSERT INTO dexuatchuongtrinh (
+        quythanhphan_id,
+        khoantaitro_id,
+        nhataitro_id,
+        tenchuongtrinh,
+        mota,
+        soluongsuat,
+        sotienmoisuat,
+        sotientaitro,
+        loaihotro,
+        ngaybatdau,
+        ngayketthuc,
+        trangthai
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        quyThanhPhanId,
+        khoanTaiTroId || null,
+        nhaTaiTroId || null,
+        tenChuongTrinh,
+        moTa || null,
+        soLuongSuat,
+        soTienMoiSuat,
+        parseFloat(soLuongSuat) * parseFloat(soTienMoiSuat),
+        loaiHoTro || 'Tai tro khong hoan lai',
+        ngayBatDau || null,
+        ngayKetThuc || null,
+        trangThaiDau
+      ]
+    );
+
+    const proposalId = result.insertId;
+
+    // Tạo 3 dòng phê duyệt: Cap 1 = Cán bộ, Cap 2 = Kế toán, Cap 3 = Admin
+    // Nếu do cán bộ tạo, dòng Cap 1 được ghi nhận "Đã duyệt" ngay (người duyệt = cán bộ tạo)
+    for (const cap of [1, 2, 3]) {
+      if (cap === 1 && tuDongDuyetCap1) {
+        await connection.execute(
+          `INSERT INTO pheduyet (
+            dexuatchuongtrinh_id, nguoiduyet_id, capduyet, ketqua, ghichu, ngayduyet
+          ) VALUES (?, ?, ?, 'Da duyet', ?, NOW())`,
+          [proposalId, nguoiTaoId, cap, 'Cán bộ tạo đề xuất - tự động duyệt cấp 1']
+        );
+      } else {
+        await connection.execute(
+          `INSERT INTO pheduyet (
+            dexuatchuongtrinh_id, nguoiduyet_id, capduyet, ketqua
+          ) VALUES (?, NULL, ?, 'Cho duyet')`,
+          [proposalId, cap]
+        );
+      }
+    }
+
+    await connection.commit();
+    return { ...result, trangThai: trangThaiDau };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,15 +126,16 @@ const createPublicProposal = async (proposalData) => {
     const [proposalResult] = await connection.execute(
       `INSERT INTO dexuatchuongtrinh (
         quythanhphan_id, khoantaitro_id, nhataitro_id,
-        tenchuongtrinh, mota, soluongsuat, sotienmoisuat,
+        tenchuongtrinh, mota, soluongsuat, sotienmoisuat, sotientaitro,
         loaihotro, ngaybatdau, ngayketthuc, trangthai
-      ) VALUES (?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
+      ) VALUES (?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
       [
         quyThanhPhanId,
         tenChuongTrinh,
         moTa || null,
         soLuongSuat,
         soTienMoiSuat,
+        parseFloat(soLuongSuat) * parseFloat(soTienMoiSuat),
         loaiHoTro || 'Tai tro khong hoan lai',
         ngayBatDau || null,
         ngayKetThuc || null
@@ -101,6 +143,16 @@ const createPublicProposal = async (proposalData) => {
     );
 
     const proposalId = proposalResult.insertId;
+
+    // Bước 1b: Tạo 3 dòng phê duyệt (Cap 1 = Cán bộ, Cap 2 = Kế toán, Cap 3 = Admin)
+    for (const cap of [1, 2, 3]) {
+      await connection.execute(
+        `INSERT INTO pheduyet (
+          dexuatchuongtrinh_id, nguoiduyet_id, capduyet, ketqua
+        ) VALUES (?, NULL, ?, 'Cho duyet')`,
+        [proposalId, cap]
+      );
+    }
 
     // Bước 2: Tạo guest_tracking link tới proposal
     await connection.execute(
@@ -147,10 +199,11 @@ const getProposalById = async (id) => {
       dx.ngayketthuc,
       dx.trangthai,
       dx.lydotuchoi,
-      dx.nguoiduyet_id,
-      dx.ngayduyet,
       dx.quyketqua_id,
       dx.ngaytao,
+      pd1.nguoiduyet_id AS nguoiduyet_id,
+      pd1.ngayduyet AS ngayduyet,
+      pd1.ketqua AS pheduyet_cap1_ketqua,
       qtp.tenquy AS ten_quy_thanh_phan,
       qtp.sodu AS so_du_quy_thanh_phan,
       qtp.loaiquy_id,
@@ -158,14 +211,19 @@ const getProposalById = async (id) => {
       ntt.loainhataitro,
       nd_ntt.email AS nhataitro_email,
       nd_ntt.sodienthoai AS nhataitro_sodienthoai,
+      nd_ntt.diachi AS nhataitro_diachi,
       nd_duyet.hoten AS nguoi_duyet_ten,
       qkq.tenquy AS ten_quy_ket_qua,
-      kt.sotien AS so_tien_tai_tro
+      kt.sotien AS so_tien_tai_tro,
+      kt.hinhthuc AS hinh_thuc_tai_tro,
+      kt.magiaodich AS ma_giao_dich,
+      kt.ngaytaitro AS ngay_tai_tro
      FROM dexuatchuongtrinh dx
      INNER JOIN quy qtp ON dx.quythanhphan_id = qtp.quy_id
+     LEFT JOIN pheduyet pd1 ON pd1.dexuatchuongtrinh_id = dx.dexuatchuongtrinh_id AND pd1.capduyet = 1
      LEFT JOIN nhataitro ntt ON dx.nhataitro_id = ntt.nhataitro_id
      LEFT JOIN nguoidung nd_ntt ON ntt.nguoidung_id = nd_ntt.nguoidung_id
-     LEFT JOIN nguoidung nd_duyet ON dx.nguoiduyet_id = nd_duyet.nguoidung_id
+     LEFT JOIN nguoidung nd_duyet ON pd1.nguoiduyet_id = nd_duyet.nguoidung_id
      LEFT JOIN quy qkq ON dx.quyketqua_id = qkq.quy_id
      LEFT JOIN khoantaitro kt ON dx.khoantaitro_id = kt.khoantaitro_id
      WHERE dx.dexuatchuongtrinh_id = ?
@@ -228,10 +286,11 @@ const listProposals = async ({
       dx.ngaybatdau,
       dx.ngayketthuc,
       dx.trangthai,
-      dx.nguoiduyet_id,
-      dx.ngayduyet,
+      dx.lydotuchoi,
       dx.quyketqua_id,
       dx.ngaytao,
+      pd1.nguoiduyet_id AS nguoiduyet_id,
+      pd1.ngayduyet AS ngayduyet,
       qtp.tenquy AS ten_quy_thanh_phan,
       ntt.tennhataitro,
       ntt.loainhataitro,
@@ -240,16 +299,20 @@ const listProposals = async ({
       kt.sotien AS so_tien_tai_tro
      FROM dexuatchuongtrinh dx
      INNER JOIN quy qtp ON dx.quythanhphan_id = qtp.quy_id
+     LEFT JOIN pheduyet pd1 ON pd1.dexuatchuongtrinh_id = dx.dexuatchuongtrinh_id AND pd1.capduyet = 1
      LEFT JOIN nhataitro ntt ON dx.nhataitro_id = ntt.nhataitro_id
-     LEFT JOIN nguoidung nd_duyet ON dx.nguoiduyet_id = nd_duyet.nguoidung_id
+     LEFT JOIN nguoidung nd_duyet ON pd1.nguoiduyet_id = nd_duyet.nguoidung_id
      LEFT JOIN quy qkq ON dx.quyketqua_id = qkq.quy_id
      LEFT JOIN khoantaitro kt ON dx.khoantaitro_id = kt.khoantaitro_id
      ${where}
      ORDER BY 
        CASE dx.trangthai
          WHEN 'Cho duyet' THEN 1
-         WHEN 'Da duyet' THEN 2
-         WHEN 'Tu choi' THEN 3
+         WHEN 'Can bo da duyet' THEN 2
+         WHEN 'Da nhan tien' THEN 3
+         WHEN 'Da tao hoat dong' THEN 4
+         WHEN 'Tu choi' THEN 5
+         ELSE 6
        END,
        dx.ngaytao DESC
      LIMIT ? OFFSET ?`,
@@ -259,6 +322,9 @@ const listProposals = async ({
   return { rows, total: Number(total) || 0 };
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: approveByCanBo (BƯỚC 1)
+// MỤC ĐÍCH: Cán bộ duyệt nội dung đề xuất
 // ─────────────────────────────────────────────────────────────────────────────
 // HÀM: approveByCanBo (BƯỚC 1)
 // MỤC ĐÍCH: Cán bộ duyệt nội dung đề xuất
@@ -285,17 +351,40 @@ const approveByCanBo = async (id, canBoDuyetId, ghiChu = null, quyThanhPhanIdMoi
     // 2. Cập nhật quỹ thành phần nếu cán bộ sửa
     const quyThanhPhanId = quyThanhPhanIdMoi || dx.quythanhphan_id;
 
-    // 3. Cập nhật trạng thái: Cán bộ đã duyệt
+    // 3. Ghi nhận phê duyệt cấp 1 (Cán bộ) vào bảng pheduyet
+    await connection.execute(
+      `UPDATE pheduyet 
+       SET nguoiduyet_id = ?,
+           ketqua = 'Da duyet',
+           ghichu = ?,
+           lydo = NULL,
+           ngayduyet = NOW()
+       WHERE dexuatchuongtrinh_id = ? AND capduyet = 1`,
+      [canBoDuyetId, ghiChu, id]
+    );
+
+    // 4. Cập nhật trạng thái: Cán bộ đã duyệt
     await connection.execute(
       `UPDATE dexuatchuongtrinh 
        SET trangthai = 'Can bo da duyet',
-           canbo_duyet_id = ?,
-           ngay_canbo_duyet = CURRENT_TIMESTAMP,
-           ghi_chu_canbo = ?,
            quythanhphan_id = ?
        WHERE dexuatchuongtrinh_id = ?`,
-      [canBoDuyetId, ghiChu, quyThanhPhanId, id]
+      [quyThanhPhanId, id]
     );
+
+    // 5. Nếu đề xuất có khoản tài trợ đi kèm, cập nhật trạng thái khoản tài trợ
+    // Cán bộ đã duyệt nội dung → khoản tài trợ cũng được duyệt nội dung
+    if (dx.khoantaitro_id) {
+      await connection.execute(
+        `UPDATE khoantaitro
+         SET trangthai = 'Da duyet',
+             ghichu = CONCAT(COALESCE(ghichu, ''), ' [Tự động duyệt khi cán bộ duyệt đề xuất chương trình]'),
+             ngaycapnhat = NOW()
+         WHERE khoantaitro_id = ?
+         AND trangthai = 'Cho duyet'`,
+        [dx.khoantaitro_id]
+      );
+    }
 
     await connection.commit();
     return { success: true, proposalId: id };
@@ -312,17 +401,40 @@ const approveByCanBo = async (id, canBoDuyetId, ghiChu = null, quyThanhPhanIdMoi
 // MỤC ĐÍCH: Cán bộ từ chối đề xuất
 // ─────────────────────────────────────────────────────────────────────────────
 const rejectByCanBo = async (id, canBoDuyetId, lyDoTuChoi, ghiChu = null) => {
-  const [result] = await pool.execute(
-    `UPDATE dexuatchuongtrinh 
-     SET trangthai = 'Tu choi',
-         canbo_duyet_id = ?,
-         ngay_canbo_duyet = CURRENT_TIMESTAMP,
-         lydotuchoi = ?,
-         ghi_chu_canbo = ?
-     WHERE dexuatchuongtrinh_id = ? AND trangthai = 'Cho duyet'`,
-    [canBoDuyetId, lyDoTuChoi, ghiChu, id]
-  );
-  return result.affectedRows > 0;
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    // 1. Ghi nhận từ chối cấp 1 (Cán bộ) vào bảng pheduyet
+    await connection.execute(
+      `UPDATE pheduyet 
+       SET nguoiduyet_id = ?,
+           ketqua = 'Tu choi',
+           lydo = ?,
+           ghichu = ?,
+           ngayduyet = NOW()
+       WHERE dexuatchuongtrinh_id = ? AND capduyet = 1`,
+      [canBoDuyetId, lyDoTuChoi, ghiChu, id]
+    );
+
+    // 2. Cập nhật trạng thái đề xuất
+    const [result] = await connection.execute(
+      `UPDATE dexuatchuongtrinh 
+       SET trangthai = 'Tu choi',
+           lydotuchoi = ?
+       WHERE dexuatchuongtrinh_id = ? AND trangthai = 'Cho duyet'`,
+      [lyDoTuChoi, id]
+    );
+
+    await connection.commit();
+    return result.affectedRows > 0;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -391,16 +503,41 @@ const confirmMoneyByKeToan = async (id, keToanId, soTienThucTe = null) => {
       ]
     );
 
-    // 5. Cập nhật trạng thái proposal
+    // 5. Ghi nhận phê duyệt cấp 2 (Kế toán) vào bảng pheduyet
+    await connection.execute(
+      `UPDATE pheduyet 
+       SET nguoiduyet_id = ?,
+           ketqua = 'Da duyet',
+           ghichu = ?,
+           lydo = NULL,
+           ngayduyet = NOW()
+       WHERE dexuatchuongtrinh_id = ? AND capduyet = 2`,
+      [keToanId, `Đã xác nhận nhận tiền: ${tongTien.toLocaleString('vi-VN')} đ`, id]
+    );
+
+    // 6. Cập nhật trạng thái proposal
     await connection.execute(
       `UPDATE dexuatchuongtrinh 
        SET trangthai = 'Da nhan tien',
-           ketoan_xacnhan_id = ?,
-           ngay_ketoan_xacnhan = CURRENT_TIMESTAMP,
            so_tien_thuc_te = ?
        WHERE dexuatchuongtrinh_id = ?`,
-      [keToanId, tongTien, id]
+      [tongTien, id]
     );
+
+    // 7. Nếu đề xuất có khoản tài trợ đi kèm, cập nhật trạng thái khoản tài trợ sang "Đã nhận"
+    if (dx.khoantaitro_id) {
+      await connection.execute(
+        `UPDATE khoantaitro
+         SET trangthai = 'Da nhan',
+             nguoixacnhan_id = ?,
+             ngayxacnhan = NOW(),
+             ghichu = CONCAT(COALESCE(ghichu, ''), ' [Tự động xác nhận khi kế toán xác nhận tiền đề xuất chương trình]'),
+             ngaycapnhat = NOW()
+         WHERE khoantaitro_id = ?
+         AND trangthai = 'Da duyet'`,
+        [keToanId, dx.khoantaitro_id]
+      );
+    }
 
     await connection.commit();
     return { 
@@ -494,7 +631,7 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
         capdo
       ) VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, 
-        0, ?, 'Dang hoat dong', 'Tap trung - Muc chi', ?, ?, 3
+        ?, ?, 'Dang hoat dong', 'Tap trung - Muc chi', ?, ?, 3
       )`,
       [
         tenchuongtrinh,
@@ -505,6 +642,7 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
         soluongsuat,
         ngaybatdau || null,
         ngayketthuc || null,
+        soTienPhanBo,  // Số dư ban đầu = Số tiền được phân bổ
         adminId,
         quythanhphan_id,
         loaihotro
@@ -548,25 +686,25 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
       [soTienPhanBo, quythanhphan_id]
     );
 
-    // 6. Cộng tiền vào quỹ hoạt động vừa tạo
+    // 6. Ghi nhận phê duyệt cấp 3 (Admin) vào bảng pheduyet
     await connection.execute(
-      `UPDATE quy 
-       SET sodu = sodu + ?, 
-           ngaycapnhat = CURRENT_TIMESTAMP 
-       WHERE quy_id = ?`,
-      [soTienPhanBo, quyMoiId]
+      `UPDATE pheduyet 
+       SET nguoiduyet_id = ?,
+           ketqua = 'Da duyet',
+           ghichu = ?,
+           lydo = NULL,
+           ngayduyet = NOW()
+       WHERE dexuatchuongtrinh_id = ? AND capduyet = 3`,
+      [adminId, ghiChu, id]
     );
 
     // 7. Cập nhật trạng thái đề xuất
     await connection.execute(
       `UPDATE dexuatchuongtrinh 
        SET trangthai = 'Da tao hoat dong',
-           admin_duyet_id = ?,
-           ngay_admin_duyet = CURRENT_TIMESTAMP,
-           ghi_chu_admin = ?,
            quyketqua_id = ?
        WHERE dexuatchuongtrinh_id = ?`,
-      [adminId, ghiChu, quyMoiId, id]
+      [quyMoiId, id]
     );
 
     await connection.commit();
@@ -587,23 +725,6 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HÀM: rejectProposal
-// MỤC ĐÍCH: Từ chối đề xuất chương trình (tiền vẫn nằm ở quỹ thành phần)
-// ─────────────────────────────────────────────────────────────────────────────
-const rejectProposal = async (id, nguoiDuyetId, lyDoTuChoi) => {
-  const [result] = await pool.execute(
-    `UPDATE dexuatchuongtrinh 
-     SET trangthai = 'Tu choi',
-         nguoiduyet_id = ?,
-         lydotuchoi = ?,
-         ngayduyet = CURRENT_TIMESTAMP
-     WHERE dexuatchuongtrinh_id = ? AND trangthai = 'Cho duyet'`,
-    [nguoiDuyetId, lyDoTuChoi || null, id]
-  );
-  return result.affectedRows > 0;
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
 // HÀM: getProposalStats
 // MỤC ĐÍCH: Thống kê đề xuất chương trình (cho Dashboard)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -611,15 +732,23 @@ const getProposalStats = async () => {
   const [[{ choDuyet }]] = await pool.query(
     `SELECT COUNT(*) AS choDuyet FROM dexuatchuongtrinh WHERE trangthai = 'Cho duyet'`
   );
-  const [[{ daDuyet }]] = await pool.query(
-    `SELECT COUNT(*) AS daDuyet FROM dexuatchuongtrinh WHERE trangthai = 'Da duyet'`
+  const [[{ canBoPheDuyet }]] = await pool.query(
+    `SELECT COUNT(*) AS canBoPheDuyet FROM dexuatchuongtrinh WHERE trangthai = 'Can bo da duyet'`
+  );
+  const [[{ daNhanTien }]] = await pool.query(
+    `SELECT COUNT(*) AS daNhanTien FROM dexuatchuongtrinh WHERE trangthai = 'Da nhan tien'`
+  );
+  const [[{ daTaoHoatDong }]] = await pool.query(
+    `SELECT COUNT(*) AS daTaoHoatDong FROM dexuatchuongtrinh WHERE trangthai = 'Da tao hoat dong'`
   );
   const [[{ tuChoi }]] = await pool.query(
     `SELECT COUNT(*) AS tuChoi FROM dexuatchuongtrinh WHERE trangthai = 'Tu choi'`
   );
   return {
     choDuyet: Number(choDuyet) || 0,
-    daDuyet: Number(daDuyet) || 0,
+    canBoPheDuyet: Number(canBoPheDuyet) || 0,
+    daNhanTien: Number(daNhanTien) || 0,
+    daTaoHoatDong: Number(daTaoHoatDong) || 0,
     tuChoi: Number(tuChoi) || 0
   };
 };

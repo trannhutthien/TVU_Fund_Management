@@ -26,16 +26,16 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
       setSubmitting(false);
       fetchFundInfo();
     }
-  }, [proposal?.dexuatchuongtrinh_id]);
+  }, [proposal?.de_xuat_id]);
 
   const fetchFundInfo = async () => {
-    if (!proposal?.quythanhphan_id) return;
+    if (!proposal?.quy_thanh_phan_id) return;
     
     setLoadingFund(true);
     try {
-      const res = await getFundById(proposal.quythanhphan_id);
+      const res = await getFundById(proposal.quy_thanh_phan_id);
       if (res?.success) {
-        setFundInfo(res.data);
+        setFundInfo(res.fund);  // Backend trả về res.fund chứ không phải res.data
       }
     } catch (err) {
       console.error('Lỗi tải thông tin quỹ:', err);
@@ -48,8 +48,8 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
   if (!proposal) return null;
 
   const soTienCanTrich = proposal.so_tien_thuc_te || 
-    (proposal.soluongsuat || 0) * (proposal.sotienmoisuat || 0);
-  const soDuQuy = fundInfo?.so_du || 0;
+    (proposal.so_luong_suat || 0) * (proposal.so_tien_moi_suat || 0);
+  const soDuQuy = parseFloat(fundInfo?.soDu) || 0;  // Parse soDu (camelCase) thành number
   const soDuSauKhiTrich = soDuQuy - soTienCanTrich;
   const khongDuSoDu = soDuSauKhiTrich < 0;
 
@@ -58,12 +58,12 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
 
     setSubmitting(true);
     try {
-      await createActivityByAdmin(proposal.dexuatchuongtrinh_id, {
+      await createActivityByAdmin(proposal.de_xuat_id, {
         ghiChu: ghiChu.trim() || null,
       });
 
       toast.success(
-        `Đã tạo hoạt động "${proposal.tenchuongtrinh}" thành công! Quỹ cấp 3 đã được tạo và nhận tiền.`
+        `Đã tạo hoạt động "${proposal.ten_chuong_trinh}" thành công! Quỹ cấp 3 đã được tạo và nhận tiền.`
       );
       onSuccess?.();
     } catch (err) {
@@ -152,7 +152,7 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
               <div className={styles.activityRow}>
                 <span className={styles.activityLabel}>Tên hoạt động</span>
                 <span className={styles.activityValue}>
-                  {proposal.tenchuongtrinh}
+                  {proposal.ten_chuong_trinh}
                 </span>
               </div>
               <div className={styles.activityRow}>
@@ -164,13 +164,13 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
               <div className={styles.activityRow}>
                 <span className={styles.activityLabel}>Số lượng suất</span>
                 <span className={styles.activityValue}>
-                  {proposal.soluongsuat || 0} suất
+                  {proposal.so_luong_suat || 0} suất
                 </span>
               </div>
               <div className={styles.activityRow}>
                 <span className={styles.activityLabel}>Loại hỗ trợ</span>
                 <span className={styles.activityValue}>
-                  {proposal.loaihotro || '—'}
+                  {proposal.loai_ho_tro || '—'}
                 </span>
               </div>
             </div>
@@ -211,7 +211,7 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
                 className={styles.checkbox}
               />
               <span className={styles.checkboxLabel}>
-                Tôi xác nhận tạo hoạt động "<strong>{proposal.tenchuongtrinh}</strong>
+                Tôi xác nhận tạo hoạt động "<strong>{proposal.ten_chuong_trinh}</strong>
                 " với số tiền <strong>{formatCurrency(soTienCanTrich)}</strong> được
                 trích từ quỹ thành phần{' '}
                 <strong>{proposal.ten_quy_thanh_phan}</strong>.

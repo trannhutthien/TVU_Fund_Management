@@ -54,6 +54,16 @@ const markAllAsRead = async (nguoidungId) => {
   return result.affectedRows;
 };
 
+// Xoa 1 thong bao cua user (chi nguoi so huu moi xoa duoc)
+const deleteById = async (thongBaoId, nguoidungId) => {
+  const [result] = await pool.execute(
+    `DELETE FROM thong_bao
+     WHERE thong_bao_id = ? AND nguoidung_id = ?`,
+    [thongBaoId, nguoidungId]
+  );
+  return result.affectedRows > 0;
+};
+
 // Kiem tra da gui thong bao cho 1 ky tra no cu the chua (tranh gui nhieu lan)
 const checkExistsByLichTrano = async (lichtranoId, loai) => {
   const [rows] = await pool.query(
@@ -72,5 +82,6 @@ export default {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+  deleteById,
   checkExistsByLichTrano
 };

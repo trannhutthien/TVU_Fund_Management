@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { HiOutlineXMark } from 'react-icons/hi2';
+import api from '@services/api';
 import chucVuService from '@services/chucVuService';
+import { buildNhomOptions, DEFAULT_NHOM_OPTIONS } from './nhomOptions';
 import styles from './ChucVuModal.module.scss';
-
-const NHOM_OPTIONS = [
-  { id: 'Hoi dong quy', label: 'Hội đồng Quỹ' },
-  { id: 'Ban dieu hanh', label: 'Ban điều hành' },
-  { id: 'Ban kiem soat', label: 'Ban kiểm soát' },
-  { id: 'Van phong thuong truc', label: 'Văn phòng thường trực' },
-];
 
 const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) => {
   const [form, setForm] = useState({
@@ -21,6 +16,24 @@ const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) =
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [nhomOptions, setNhomOptions] = useState(DEFAULT_NHOM_OPTIONS);
+
+  useEffect(() => {
+    // Lấy danh sách vai trò (bảng vaitro) để hiển thị nhãn nhóm theo cột mota
+    let mounted = true;
+    const loadNhomOptions = async () => {
+      try {
+        const response = await api.get('/roles');
+        if (mounted && response.data?.success) {
+          setNhomOptions(buildNhomOptions(response.data.roles || []));
+        }
+      } catch (err) {
+        console.error('Lỗi tải vai trò cho nhóm:', err);
+      }
+    };
+    loadNhomOptions();
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     if (editingItem) {
@@ -101,7 +114,7 @@ const ChucVuModal = ({ isOpen, editingItem, onClose, onSuccess, defaultNhom }) =
           <div className={styles.field}>
             <label>Nhóm <span>*</span></label>
             <select name="nhom" value={form.nhom} onChange={handleChange}>
-              {NHOM_OPTIONS.map(opt => (
+              {nhomOptions.map(opt => (
                 <option key={opt.id} value={opt.id}>{opt.label}</option>
               ))}
             </select>

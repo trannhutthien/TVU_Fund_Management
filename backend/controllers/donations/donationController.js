@@ -6,6 +6,7 @@ import DonorModel from "../../models/donations/DonorModel.js";
 import BankAccountModel from "../../models/funds/BankAccountModel.js";
 import { buildDonorAvatarUrl } from "../../utils/helpers/imageHelper.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
+import { sendSponsorshipReceiptEmail } from "../../services/emailService.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── GET /api/donations/public (PUBLIC — KHÔNG CẦN TOKEN) ──────────────────────
@@ -43,6 +44,7 @@ export const listPublicDonations = async (req, res) => {
       den_ngay: effectiveDenNgay,
       page: pageNum,
       page_size: pageSize * 3, // Lấy nhiều hơn vì sẽ filter further
+      includeProposalLinked: true, // Công khai: hiển thị cả tài trợ cho đề xuất chương trình đã duyệt
     });
 
     // Chỉ giữ khoản đã duyệt/đã nhận
@@ -723,7 +725,37 @@ export const approveDonation = async (req, res) => {
     });
 
     // ─────────────────────────────────────────────────────────────────────────
-    // BƯỚC 5: TRẢ VỀ KẾT QUẢ
+    // BƯỚC 5: GỬI EMAIL BIÊN LAI (fire-and-forget)
+    // ─────────────────────────────────────────────────────────────────────────
+    try {
+      const [keToanRows] = await pool.query(
+        'SELECT hoten FROM nguoidung WHERE nguoidung_id = ?', [nguoiDuyetId]
+      );
+      const tenKeToan = keToanRows[0]?.hoten || 'Kế toán';
+
+      const receiptData = {
+        soBienLai: `TVU-BL-${String(id).padStart(6, '0')}`,
+        ngayXacNhan: new Date(),
+        tenNhaTaiTro: donation.tennhataitro,
+        loaiNhaTaiTro: donation.loainhataitro,
+        email: donation.ntt_email,
+        soDienThoai: donation.ntt_sodienthoai,
+        diaChi: donation.ntt_diachi || null,
+        soTien: donation.sotien,
+        hinhThuc: donation.hinhthuc,
+        maGiaoDich: donation.magiaodich,
+        ngayTaiTro: donation.ngaytaitro,
+        tenQuy: donation.tenquy,
+        tenNguoiXacNhan: tenKeToan,
+      };
+      sendSponsorshipReceiptEmail(donation.ntt_email, receiptData)
+        .catch(err => console.error('[Email] Lỗi gửi biên lai tài trợ:', err.message));
+    } catch (emailErr) {
+      console.error('[Email] Lỗi chuẩn bị dữ liệu biên lai:', emailErr.message);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // BƯỚC 6: TRẢ VỀ KẾT QUẢ
     // ─────────────────────────────────────────────────────────────────────────
     return res.status(200).json({
       success: true,

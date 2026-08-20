@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   HiOutlineListBullet,
   HiOutlineClock,
@@ -33,6 +34,7 @@ const INITIAL_FILTERS = {
  */
 const ProposalListPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const userRole = user?.vaiTro; // 1=Admin, 2=Kế toán, 3=Cán bộ
 
   // Tab: 'can_xu_ly' (Cần xử lý) | 'tat_ca' (Tất cả)
@@ -206,7 +208,15 @@ const ProposalListPage = () => {
   };
 
   const handleViewDetail = (proposal) => {
-    setSelectedProposal(proposal.dexuatchuongtrinh_id);
+    // Navigate to detail page based on user role
+    const roleRoutes = {
+      1: 'admin',
+      2: 'ke-toan',
+      3: 'can-bo',
+    };
+    
+    const roleRoute = roleRoutes[userRole] || 'admin';
+    navigate(`/${roleRoute}/de-xuat/${proposal.de_xuat_id}`);
   };
 
   const handleCloseDetail = () => {

@@ -97,7 +97,7 @@
 }
 
 .heroBtn {
-  box-shadow: 0 4px 12px rgba(240, 165, 0, 0.25) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .heroBtnOutline {
@@ -1155,6 +1155,79 @@
 
   .hinhThucBadge {
     background: rgba(59, 130, 246, 0.15);
+  }
+}
+
+/* ─── CTA Section (Hướng dẫn & Quy định) ─── */
+.ctaSection {
+  margin-top: 48px;
+}
+
+.ctaCard {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: linear-gradient(135deg, #1a2f5e 0%, #2a4a8c 100%);
+  border-radius: 16px;
+  padding: 40px 48px;
+  color: #fff;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 32px 24px;
+    gap: 24px;
+  }
+}
+
+.ctaIcon {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f0a500;
+
+  @media (max-width: 768px) {
+    width: 56px;
+    height: 56px;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+  }
+}
+
+.ctaContent {
+  flex: 1;
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.ctaActions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    justify-content: center;
   }
 }
 

@@ -508,7 +508,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
           {/* Donor encouragement */}
           {isDonor && (
             <div className={styles.donorMessage}>
-              💝 Mọi đóng góp của bạn đều có ý nghĩa và sẽ giúp đỡ những sinh viên có hoàn cảnh khó khăn
+              💝 Mỗi đóng góp của bạn đều đáng quý và sẽ tiếp sức cho sinh viên TVU vươn lên trong học tập
             </div>
           )}
 

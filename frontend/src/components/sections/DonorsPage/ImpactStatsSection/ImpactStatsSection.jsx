@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   HiOutlineAcademicCap,
-  HiOutlineBanknotes,
   HiOutlineBuildingLibrary,
   HiOutlineBuildingOffice2,
   HiOutlineUsers,
@@ -83,13 +82,6 @@ const buildStats = (data = {}) => [
     value: Number(data.totalStudents) || 0,
     suffix: '+',
     label: 'SINH VIÊN ĐƯỢC HỖ TRỢ',
-  },
-  {
-    icon: HiOutlineBanknotes,
-    value: Number(data.totalChildFundReceived) || 0,
-    suffix: '',
-    formatter: formatCompactCurrency,
-    label: 'TÀI TRỢ CHO HOẠT ĐỘNG',
   },
   {
     icon: HiOutlineBuildingLibrary,

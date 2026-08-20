@@ -69,12 +69,12 @@ import CanBoUserManagementPage from './pages/Staff/CanBo/UserManagementPage/User
 import CanBoBaoCaoPage from './pages/Staff/CanBo/BaoCaoPage'
 import PhanBoPage from './pages/Staff/CanBo/PhanBoPage/PhanBoPage'
 import DuToanNamPage from './pages/Staff/CanBo/DuToanNamPage/DuToanNamPage'
-import DeXuatChuongTrinhPage from './pages/Staff/CanBo/DeXuatChuongTrinhPage'
 import TaoTinTucPage from './pages/Admin/TinTuc/TaoTinTucPage'
 import GiamSatNghiemThuCongNoPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/index.jsx'
 import NghiemThuDetailPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/NghiemThuDetailPage/NghiemThuDetailPage'
 import ContractDetailPage from './pages/Staff/Shared/GiamSatNghiemThuCongNoPage/ContractDetailPage/index.jsx'
 import ProposalListPage from './pages/Staff/Shared/ProposalListPage/ProposalListPage'
+import ProposalDetailPage from './pages/Staff/Shared/ProposalListPage/ProposalDetailPage/ProposalDetailPage'
 
 
 // Protected Route: Bảo vệ routes cần đăng nhập
@@ -156,8 +156,9 @@ function App() {
               <Route path="/admin/quy/sua/:id" element={<CanBoTaoQuyPage />} />
               <Route path="/admin/phan-bo" element={<PhanBoPage />} />
               <Route path="/admin/du-toan" element={<DuToanNamPage />} />
-              <Route path="/admin/de-xuat-chuong-trinh" element={<DeXuatChuongTrinhPage />} />
+              <Route path="/admin/de-xuat-chuong-trinh" element={<Navigate to="/admin/quy?tab=de_xuat" replace />} />
               <Route path="/admin/de-xuat" element={<ProposalListPage />} />
+              <Route path="/admin/de-xuat/:id" element={<ProposalDetailPage />} />
               <Route path="/admin/nha-tai-tro" element={<CanBoNhaTaiTroPage isAdmin={true} />} />
               <Route path="/admin/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
               <Route path="/admin/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
@@ -179,6 +180,7 @@ function App() {
               <Route path="/ke-toan/giao-dich" element={<KeToanLichSuGiaoDichPage />} />
               <Route path="/ke-toan/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
               <Route path="/ke-toan/de-xuat" element={<ProposalListPage />} />
+              <Route path="/ke-toan/de-xuat/:id" element={<ProposalDetailPage />} />
               <Route path="/ke-toan/bao-cao" element={<ThongKeThuChiPage />} />
               <Route path="/ke-toan/chung-tu" element={<DoiSoatChungTuPage />} />
               <Route path="/ke-toan/phan-bo" element={<PhanBoPage />} />
@@ -194,8 +196,9 @@ function App() {
               <Route path="/can-bo/quy/sua/:id" element={<CanBoTaoQuyPage />} />
               <Route path="/can-bo/phan-bo" element={<PhanBoPage />} />
               <Route path="/can-bo/du-toan" element={<DuToanNamPage />} />
-              <Route path="/can-bo/de-xuat-chuong-trinh" element={<DeXuatChuongTrinhPage />} />
+              <Route path="/can-bo/de-xuat-chuong-trinh" element={<Navigate to="/can-bo/quy?tab=de_xuat" replace />} />
               <Route path="/can-bo/de-xuat" element={<ProposalListPage />} />
+              <Route path="/can-bo/de-xuat/:id" element={<ProposalDetailPage />} />
               <Route path="/can-bo/nha-tai-tro" element={<CanBoNhaTaiTroPage />} />
               <Route path="/can-bo/users" element={<CanBoUserManagementPage />} />
               {/* <Route path="/can-bo/sinh-vien-noi-bat" element={<StudentShowcasePage />} /> */} {/* REMOVED: Feature không còn sử dụng */}
@@ -215,6 +218,7 @@ function App() {
             <Route element={<RoleBasedRoute allowedRoles={[1, 5]} redirectTo="/" />}>
               <Route path="/kiem-soat/dashboard" element={<AdminDashboard />} />
               <Route path="/kiem-soat/quy" element={<CanBoQuyListPage />} />
+              <Route path="/kiem-soat/de-xuat/:id" element={<ProposalDetailPage />} />
               <Route path="/kiem-soat/phe-duyet" element={<PheDuyetPage />} />
               <Route path="/kiem-soat/khoan-tai-tro" element={<KeToanKhoanTaiTroPage />} />
               <Route path="/kiem-soat/giao-dich" element={<KeToanLichSuGiaoDichPage />} />

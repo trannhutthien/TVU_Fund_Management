@@ -1,5 +1,5 @@
 import express from 'express';
-import { getMyNotifications, getUnreadCount, markAsRead, markAllAsRead } from '../../controllers/common/thongBaoController.js';
+import { getMyNotifications, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } from '../../controllers/common/thongBaoController.js';
 import { protect } from '../../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -15,5 +15,8 @@ router.get('/', protect, getMyNotifications);
 
 // PUT /api/thong-bao/:id/doc — Danh dau da doc
 router.put('/:id/doc', protect, markAsRead);
+
+// DELETE /api/thong-bao/:id — Xoa 1 thong bao
+router.delete('/:id', protect, deleteNotification);
 
 export default router;

@@ -153,6 +153,151 @@ export const sendAccountCreatedEmail = async (toEmail, hoTen, matKhau, trackingU
   await sendMailWrapper(mailOptions);
 };
 
+// 13. Gửi email biên lai xác nhận tài trợ khi kế toán duyệt
+export const sendSponsorshipReceiptEmail = async (toEmail, data) => {
+  const {
+    soBienLai,
+    ngayXacNhan,
+    tenNhaTaiTro,
+    loaiNhaTaiTro,
+    email: donorEmail,
+    soDienThoai,
+    diaChi,
+    soTien,
+    hinhThuc,
+    maGiaoDich,
+    ngayTaiTro,
+    tenQuy,
+    tenNguoiXacNhan,
+  } = data;
+
+  const formatCurrency = (val) =>
+    parseFloat(val).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }).replace(/\s/g, ' ');
+
+  const formatDate = (d) => {
+    if (!d) return 'N/A';
+    const date = new Date(d);
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const loiCamOn = `Quỹ Phát triển Đại học Trà Vinh xin chân thành cảm ơn sự đóng góp quý báu của Quý vị. Đây không chỉ là một khoản hỗ trợ tài chính, mà còn là niềm tin và động lực để nhà trường tiếp tục hành trình ươm mầm tri thức, đồng hành cùng sinh viên trên con đường học tập và nghiên cứu.`;
+
+  const mailOptions = {
+    from: process.env.MAIL_FROM || 'TVU Fund <no-reply@tvufund.com>',
+    to: toEmail,
+    subject: `[TVU Fund] Biên lai xác nhận tài trợ ${soBienLai}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 560px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 0; overflow: hidden;">
+
+        <!-- HEADER -->
+        <div style="background: #1a2f5e; color: #fff; padding: 24px 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 20px; letter-spacing: 1px;">BIÊN LAI XÁC NHẬN TÀI TRỢ</h1>
+          <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.85;">Quỹ Phát triển Đại học Trà Vinh</p>
+        </div>
+
+        <div style="padding: 24px 20px;">
+
+          <!-- SO BIEN LAI & NGAY -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <p style="margin: 0; font-size: 13px; color: #888;">Số biên lai</p>
+            <p style="margin: 4px 0 0; font-size: 20px; font-weight: bold; color: #1a2f5e; letter-spacing: 2px;">${soBienLai}</p>
+            <p style="margin: 8px 0 0; font-size: 13px; color: #555;">Ngày xác nhận: <strong>${formatDate(ngayXacNhan)}</strong></p>
+          </div>
+
+          <hr style="border: 0; border-top: 1px dashed #ccc; margin: 16px 0;" />
+
+          <!-- THONG TIN NHA TAI TRO -->
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #1a2f5e; text-transform: uppercase; letter-spacing: 1px;">Thông tin nhà tài trợ</h3>
+          <table style="width: 100%; font-size: 13px; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 4px 0; color: #666; width: 130px;">Họ tên / Tổ chức</td>
+              <td style="padding: 4px 0; font-weight: bold;">${tenNhaTaiTro || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Loại</td>
+              <td style="padding: 4px 0;">${loaiNhaTaiTro || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Email</td>
+              <td style="padding: 4px 0;">${donorEmail || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">SĐT</td>
+              <td style="padding: 4px 0;">${soDienThoai || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Địa chỉ</td>
+              <td style="padding: 4px 0;">${diaChi || 'N/A'}</td>
+            </tr>
+          </table>
+
+          <hr style="border: 0; border-top: 1px dashed #ccc; margin: 16px 0;" />
+
+          <!-- CHI TIET KHOAN TAI TRO -->
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #1a2f5e; text-transform: uppercase; letter-spacing: 1px;">Chi tiết khoản tài trợ</h3>
+          <table style="width: 100%; font-size: 13px; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 4px 0; color: #666; width: 130px;">Số tiền</td>
+              <td style="padding: 4px 0; font-size: 16px; font-weight: bold; color: #28a745;">${formatCurrency(soTien)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Hình thức</td>
+              <td style="padding: 4px 0;">${hinhThuc || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Mã GD ngân hàng</td>
+              <td style="padding: 4px 0;">${maGiaoDich || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Ngày tài trợ</td>
+              <td style="padding: 4px 0;">${formatDate(ngayTaiTro)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Quỹ nhận</td>
+              <td style="padding: 4px 0; font-weight: bold;">${tenQuy || 'N/A'}</td>
+            </tr>
+          </table>
+
+          <hr style="border: 0; border-top: 1px dashed #ccc; margin: 16px 0;" />
+
+          <!-- LOI CAM ON -->
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #1a2f5e; text-transform: uppercase; letter-spacing: 1px;">Lời cảm ơn</h3>
+          <p style="font-size: 13px; line-height: 1.7; color: #333; font-style: italic; background: #f9f9f9; padding: 14px 16px; border-radius: 6px; border-left: 3px solid #1a2f5e;">
+            ${loiCamOn}
+          </p>
+
+          <hr style="border: 0; border-top: 1px dashed #ccc; margin: 16px 0;" />
+
+          <!-- XAC NHAN -->
+          <h3 style="margin: 0 0 12px; font-size: 14px; color: #1a2f5e; text-transform: uppercase; letter-spacing: 1px;">Xác nhận</h3>
+          <table style="width: 100%; font-size: 13px;">
+            <tr>
+              <td style="padding: 4px 0; color: #666; width: 130px;">Người xác nhận</td>
+              <td style="padding: 4px 0; font-weight: bold;">${tenNguoiXacNhan || 'Kế toán'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #666;">Trạng thái</td>
+              <td style="padding: 4px 0;"><span style="background: #28a745; color: #fff; padding: 2px 10px; border-radius: 4px; font-size: 12px;">Đã duyệt</span></td>
+            </tr>
+          </table>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div style="background: #f5f5f5; padding: 16px 20px; text-align: center; border-top: 1px solid #e0e0e0;">
+          <p style="margin: 0; font-size: 11px; color: #888;">
+            Đây là biên lai điện tử, không cần đóng dấu.<br/>
+            Mọi thắc mắc liên hệ: <a href="mailto:quyphattrien@tvu.edu.vn" style="color: #1a2f5e;">quyphattrien@tvu.edu.vn</a>
+          </p>
+        </div>
+
+      </div>
+    `,
+  };
+
+  await sendMailWrapper(mailOptions);
+};
+
 // 3. Gửi OTP xác minh email cho khách đăng ký đóng góp tài trợ
 export const sendDonationOTPEmail = async (toEmail, hoTen, otpCode, trackingUuid) => {
   const mailOptions = {
@@ -210,6 +355,71 @@ export const sendDonationCreatedEmail = async (toEmail, hoTen, matKhau, soTien, 
         <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
         <p style="color: #888; font-size: 11px; text-align: center;">
           Hội đồng quản lý TVU Fund xin chân thành cảm ơn tấm lòng hảo tâm của quý vị.
+        </p>
+      </div>
+    `,
+  };
+
+  await sendMailWrapper(mailOptions);
+};
+
+// 4b. Gửi OTP xác minh email cho khách đề xuất chương trình
+export const sendProposalOTPEmail = async (toEmail, hoTen, otpCode, trackingUuid) => {
+  const mailOptions = {
+    from: process.env.MAIL_FROM || 'TVU Fund <no-reply@tvufund.com>',
+    to: toEmail,
+    subject: '[TVU Fund] Mã xác thực OTP đề xuất chương trình',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #28a745; text-align: center;">XÁC MINH ĐỀ XUẤT CHƯƠNG TRÌNH</h2>
+        <p>Xin chào <strong>${hoTen}</strong>,</p>
+        <p>Hệ thống Quỹ Phát triển Trà Vinh (TVU Fund) đã nhận được đề xuất chương trình của bạn.</p>
+        <p>Để gửi đề xuất tới hội đồng xét duyệt, vui lòng sử dụng mã xác thực OTP dưới đây:</p>
+        <div style="font-size: 32px; font-weight: bold; color: #28a745; 
+                    letter-spacing: 8px; text-align: center; padding: 16px;
+                    background: #f4faf6; border-radius: 8px; margin: 16px 0; border: 1px dashed #28a745;">
+          ${otpCode}
+        </div>
+        <p>Mã có hiệu lực trong <strong>30 phút</strong>. Tuyệt đối không chia sẻ mã này cho người khác.</p>
+        <p>Mã tra cứu đề xuất của bạn: <strong>${trackingUuid}</strong></p>
+        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
+        <p style="color: #888; font-size: 11px; text-align: center;">
+          Hệ thống TVU Fund chân thành cảm ơn sự đóng góp của quý nhà tài trợ.
+        </p>
+      </div>
+    `,
+  };
+
+  await sendMailWrapper(mailOptions);
+};
+
+// 4c. Gửi thông báo tài khoản sau khi OTP đề xuất xác minh thành công
+export const sendProposalCreatedEmail = async (toEmail, hoTen, matKhau, trackingUuid) => {
+  const mailOptions = {
+    from: process.env.MAIL_FROM || 'TVU Fund <no-reply@tvufund.com>',
+    to: toEmail,
+    subject: '[TVU Fund] Đề xuất chương trình đã được gửi thành công',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #28a745; text-align: center;">ĐỀ XUẤT CỦA BẠN ĐÃ ĐƯỢC TIẾP NHẬN</h2>
+        <p>Xin chào <strong>${hoTen}</strong>,</p>
+        <p>Đề xuất chương trình của bạn đã được xác minh email và chuyển tới Hội đồng xét duyệt ở trạng thái <strong>Chờ duyệt</strong>.</p>
+        <p>Hệ thống đã tự động tạo cho bạn tài khoản để theo dõi đề xuất:</p>
+        <table style="width:100%; background:#f4faf6; border-radius:8px; padding:16px; margin: 20px 0;">
+          <tr>
+            <td><strong>Email đăng nhập:</strong></td>
+            <td>${toEmail}</td>
+          </tr>
+          <tr>
+            <td><strong>Mật khẩu tạm:</strong></td>
+            <td style="font-size:18px; color:#d9534f;"><strong>${matKhau}</strong></td>
+          </tr>
+        </table>
+        <p style="color: #d9534f; font-size: 13px;">* Lưu ý: Vui lòng đăng nhập và đổi mật khẩu trong lần đầu tiên truy cập.</p>
+        <p>Mã tra cứu của bạn: <strong>${trackingUuid}</strong></p>
+        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
+        <p style="color: #888; font-size: 11px; text-align: center;">
+          Hệ thống TVU Fund chân thành cảm ơn sự đóng góp của quý nhà tài trợ.
         </p>
       </div>
     `,

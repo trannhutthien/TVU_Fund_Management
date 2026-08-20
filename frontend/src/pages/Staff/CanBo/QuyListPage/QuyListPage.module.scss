@@ -37,6 +37,56 @@
   color: #cbd5e1;
 }
 
+// ── Tab Bar ────────────────────────────────
+.tabBar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 6px;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.04);
+}
+
+.tabButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--color-primary, #3b6ff5);
+    background: #eef2ff;
+  }
+}
+
+.tabButtonActive {
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary, #3b6ff5), #5b8def);
+
+  &:hover {
+    color: #fff;
+    background: linear-gradient(135deg, var(--color-primary, #3b6ff5), #5b8def);
+  }
+}
+
+.tabIcon {
+  font-size: 18px;
+}
+
 // ── Page header ─────────────────────────────
 .header {
   display: flex;

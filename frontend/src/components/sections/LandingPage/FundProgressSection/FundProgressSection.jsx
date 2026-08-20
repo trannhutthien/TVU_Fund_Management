@@ -136,7 +136,7 @@ const FundProgressSection = () => {
               category: typeCode || 'Khác',
               typeName,
               typeCode,
-              description: fund.moTa || 'Quỹ hỗ trợ sinh viên Trường Đại học Trà Vinh gặp khó khăn.',
+              description: fund.moTa || 'Quỹ đồng hành cùng sinh viên Trường Đại học Trà Vinh vươn lên trong học tập và phát triển bản thân.',
               balance: currentBalance,
               goal: goalAmount,
               progress: progressPercent,

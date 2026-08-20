@@ -71,7 +71,6 @@ const NAV_CONFIG = [
       { label: 'Danh sách Quỹ', path: '/admin/quy', icon: HiOutlineBuildingLibrary, roles: [1] },
       { label: 'Trích lập Ngân sách', path: '/admin/phan-bo', icon: HiOutlineBanknotes, roles: [1] },
       { label: 'Dự toán hàng năm', path: '/admin/du-toan', icon: HiOutlineBanknotes, roles: [1] },
-      { label: 'Đề xuất chương trình', path: '/admin/de-xuat-chuong-trinh', icon: HiOutlineLightBulb, roles: [1] },
       { label: 'Duyệt đề xuất', path: '/admin/de-xuat', icon: HiOutlineClipboardDocumentList, roles: [1], badgeKey: 'duyetDeXuat' },
       { label: 'Nhà tài trợ', path: '/admin/nha-tai-tro', icon: HiOutlineHandRaised, roles: [1] },
       { label: 'Khoản tài trợ', path: '/admin/khoan-tai-tro', icon: HiOutlineCurrencyDollar, roles: [1], badgeKey: 'khoanTaiTro' },
@@ -156,7 +155,6 @@ const NAV_CONFIG = [
       { label: 'Danh sách Quỹ', path: '/can-bo/quy', icon: HiOutlineBuildingLibrary, roles: [3] },
       { label: 'Trích lập Ngân sách', path: '/can-bo/phan-bo', icon: HiOutlineBanknotes, roles: [3] },
       { label: 'Dự toán hàng năm', path: '/can-bo/du-toan', icon: HiOutlineBanknotes, roles: [3] },
-      { label: 'Đề xuất chương trình', path: '/can-bo/de-xuat-chuong-trinh', icon: HiOutlineLightBulb, roles: [3] },
       { label: 'Duyệt đề xuất', path: '/can-bo/de-xuat', icon: HiOutlineClipboardDocumentList, roles: [3], badgeKey: 'duyetDeXuat' },
       { label: 'Nhà tài trợ', path: '/can-bo/nha-tai-tro', icon: HiOutlineHandRaised, roles: [3] },
     ]

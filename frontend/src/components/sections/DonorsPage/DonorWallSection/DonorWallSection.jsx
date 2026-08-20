@@ -86,7 +86,7 @@ const DonorCard = ({ donor, onClick }) => {
  * Dữ liệu lấy từ API backend (flat list, sắp xếp theo tổng đóng góp)
  */
 const DonorWallSection = ({ donorsData = { donors: [] }, loading = true }) => {
-  const [activeTab, setActiveTab] = useState('doi-tac');
+  const [activeTab, setActiveTab] = useState('nha-tai-tro');
   const [selectedSponsor, setSelectedSponsor] = useState(null);
 
   if (loading) {

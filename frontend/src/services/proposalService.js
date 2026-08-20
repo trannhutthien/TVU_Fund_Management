@@ -16,7 +16,7 @@ import api from './api';
  * @returns {Promise<Object>} { success, data, pagination }
  */
 export const getProposals = async (params) => {
-  const res = await api.get('/api/donations/propose-program', { params });
+  const res = await api.get('/donations/propose-program', { params });
   return res.data;
 };
 
@@ -26,7 +26,7 @@ export const getProposals = async (params) => {
  * @returns {Promise<Object>} { success, data }
  */
 export const getProposalById = async (id) => {
-  const res = await api.get(`/api/donations/propose-program/${id}`);
+  const res = await api.get(`/donations/propose-program/${id}`);
   return res.data;
 };
 
@@ -36,7 +36,7 @@ export const getProposalById = async (id) => {
  * @returns {Promise<Object>} { success, data: { proposalId, currentStatus, timeline, proposal } }
  */
 export const getProposalStatus = async (id) => {
-  const res = await api.get(`/api/donations/propose-program/${id}/status`);
+  const res = await api.get(`/donations/propose-program/${id}/status`);
   return res.data;
 };
 
@@ -50,7 +50,7 @@ export const getProposalStatus = async (id) => {
  */
 export const approveByCanBo = async (id, data) => {
   const res = await api.post(
-    `/api/donations/propose-program/${id}/approve-by-canbo`,
+    `/donations/propose-program/${id}/approve-by-canbo`,
     data
   );
   return res.data;
@@ -66,7 +66,7 @@ export const approveByCanBo = async (id, data) => {
  */
 export const rejectByCanBo = async (id, data) => {
   const res = await api.post(
-    `/api/donations/propose-program/${id}/reject-by-canbo`,
+    `/donations/propose-program/${id}/reject-by-canbo`,
     data
   );
   return res.data;
@@ -81,7 +81,7 @@ export const rejectByCanBo = async (id, data) => {
  */
 export const confirmMoneyByKeToan = async (id, data) => {
   const res = await api.post(
-    `/api/donations/propose-program/${id}/confirm-money`,
+    `/donations/propose-program/${id}/confirm-money`,
     data
   );
   return res.data;
@@ -96,7 +96,7 @@ export const confirmMoneyByKeToan = async (id, data) => {
  */
 export const createActivityByAdmin = async (id, data) => {
   const res = await api.post(
-    `/api/donations/propose-program/${id}/create-activity`,
+    `/donations/propose-program/${id}/create-activity`,
     data
   );
   return res.data;
@@ -107,7 +107,7 @@ export const createActivityByAdmin = async (id, data) => {
  * @returns {Promise<Object>} { success, data: { choDuyet, daDuyet, tuChoi } }
  */
 export const getProposalStats = async () => {
-  const res = await api.get('/api/donations/propose-program/stats');
+  const res = await api.get('/donations/propose-program/stats');
   return res.data;
 };
 
@@ -117,7 +117,7 @@ export const getProposalStats = async () => {
  * @returns {Promise<Object>} { success, data }
  */
 export const createProposal = async (data) => {
-  const res = await api.post('/api/donations/propose-program', data);
+  const res = await api.post('/donations/propose-program', data);
   return res.data;
 };
 
@@ -127,7 +127,7 @@ export const createProposal = async (data) => {
  * @returns {Promise<Object>} { success, data }
  */
 export const createPublicProposal = async (data) => {
-  const res = await api.post('/api/donations/public/propose-program', data);
+  const res = await api.post('/donations/public/propose-program', data);
   return res.data;
 };
 

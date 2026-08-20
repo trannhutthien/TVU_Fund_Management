@@ -13,21 +13,22 @@ router.get("/count-by-group", getFundCountByGroup);
 // GET /api/funds/public — Lấy danh sách quỹ công khai
 router.get("/public", getPublicFunds);
 
-// GET /api/funds/:id/bank-accounts — Lấy tài khoản ngân hàng của quỹ
-router.get("/:id/bank-accounts", getFundBankAccounts);
+// ─── PROTECTED ROUTES (cần authentication + authorization) ───────────────────
 
-// ─── PROTECTED ROUTES — đặt TRƯỚC /:id để tránh conflict ────────────────────
+// GET /api/funds — Lấy tất cả quỹ (admin/giáo vụ/kế toán/cán bộ)
+// PHẢI ĐẶT TRƯỚC /:id để tránh conflict
+router.get("/", protect, authorizeRoles(1, 2, 3, 5), getFunds);
+
+// ─── PROTECTED ROUTES — đặt SAU / để tránh conflict ────────────────────
 
 // GET /api/funds/:id/available-balance — Kiểm tra hạn mức và số dư quỹ
 router.get("/:id/available-balance", protect, authorizeRoles(1, 2, 3), getAvailableBalance);
 
+// GET /api/funds/:id/bank-accounts — Lấy tài khoản ngân hàng của quỹ
+router.get("/:id/bank-accounts", getFundBankAccounts);
+
 // GET /api/funds/:id — Lấy chi tiết một quỹ (PUBLIC - không cần token)
 router.get("/:id", getFundDetail);
-
-// ─── PROTECTED ROUTES (cần authentication + authorization) ───────────────────
-
-// GET /api/funds — Lấy tất cả quỹ (admin/giáo vụ/kế toán)
-router.get("/", protect, authorizeRoles(1, 2, 3, 5), getFunds);
 
 // POST /api/funds — Tạo quỹ mới (admin/giáo vụ)
 router.post("/", protect, authorizeRoles(1, 3), createFund);

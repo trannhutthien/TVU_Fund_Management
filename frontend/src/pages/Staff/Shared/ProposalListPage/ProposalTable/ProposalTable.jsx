@@ -58,12 +58,20 @@ const ProposalTable = ({
 
   // Render action buttons dựa trên role và status
   const renderActions = (proposal) => {
-    const { dexuatchuongtrinh_id: id, trangthai } = proposal;
+    const { de_xuat_id: id, trang_thai: trangThai } = proposal;
 
     // Cán bộ (role 3) + status "Cho duyet"
-    if (userRole === 3 && trangthai === 'Cho duyet') {
+    if (userRole === 3 && trangThai === 'Cho duyet') {
       return (
         <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${styles.viewIcon}`}
+            onClick={() => onViewDetail?.(proposal)}
+            title="Xem chi tiết"
+          >
+            <HiOutlineEye />
+          </button>
           <button
             type="button"
             className={`${styles.actionBtn} ${styles.approve}`}
@@ -87,9 +95,17 @@ const ProposalTable = ({
     }
 
     // Kế toán (role 2) + status "Can bo da duyet"
-    if (userRole === 2 && trangthai === 'Can bo da duyet') {
+    if (userRole === 2 && trangThai === 'Can bo da duyet') {
       return (
         <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${styles.viewIcon}`}
+            onClick={() => onViewDetail?.(proposal)}
+            title="Xem chi tiết"
+          >
+            <HiOutlineEye />
+          </button>
           <button
             type="button"
             className={`${styles.actionBtn} ${styles.confirm}`}
@@ -104,9 +120,17 @@ const ProposalTable = ({
     }
 
     // Admin (role 1) + status "Da nhan tien"
-    if (userRole === 1 && trangthai === 'Da nhan tien') {
+    if (userRole === 1 && trangThai === 'Da nhan tien') {
       return (
         <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${styles.viewIcon}`}
+            onClick={() => onViewDetail?.(proposal)}
+            title="Xem chi tiết"
+          >
+            <HiOutlineEye />
+          </button>
           <button
             type="button"
             className={`${styles.actionBtn} ${styles.create}`}
@@ -155,22 +179,22 @@ const ProposalTable = ({
           <tbody>
             {data.map((proposal) => {
               const tongSoTien =
-                proposal.soluongsuat * proposal.sotienmoisuat;
+                proposal.so_luong_suat * proposal.so_tien_moi_suat;
 
               return (
-                <tr key={proposal.dexuatchuongtrinh_id}>
+                <tr key={proposal.de_xuat_id}>
                   <td className={styles.cellId}>
-                    #{proposal.dexuatchuongtrinh_id}
+                    #{proposal.de_xuat_id}
                   </td>
                   <td className={styles.cellName}>
                     <div className={styles.nameWrapper}>
                       <span className={styles.name}>
-                        {proposal.tenchuongtrinh}
+                        {proposal.ten_chuong_trinh}
                       </span>
-                      {proposal.mota && (
+                      {proposal.mo_ta && (
                         <span className={styles.desc}>
-                          {proposal.mota.substring(0, 60)}
-                          {proposal.mota.length > 60 ? '...' : ''}
+                          {proposal.mo_ta.substring(0, 60)}
+                          {proposal.mo_ta.length > 60 ? '...' : ''}
                         </span>
                       )}
                     </div>
@@ -181,17 +205,17 @@ const ProposalTable = ({
                   <td className={styles.cellAmount}>
                     {formatCurrency(tongSoTien)}
                     <span className={styles.amountDetail}>
-                      {proposal.soluongsuat} suất
+                      {proposal.so_luong_suat} suất
                     </span>
                   </td>
                   <td className={styles.cellStatus}>
                     <ProposalStatusBadge
-                      status={proposal.trangthai}
+                      status={proposal.trang_thai}
                       size="sm"
                     />
                   </td>
                   <td className={styles.cellDate}>
-                    {formatDate(proposal.ngaytao)}
+                    {formatDate(proposal.ngay_tao)}
                   </td>
                   <td className={styles.cellActions}>
                     {renderActions(proposal)}
@@ -206,32 +230,32 @@ const ProposalTable = ({
       {/* Mobile Cards */}
       <div className={styles.mobileCards}>
         {data.map((proposal) => {
-          const tongSoTien = proposal.soluongsuat * proposal.sotienmoisuat;
+          const tongSoTien = proposal.so_luong_suat * proposal.so_tien_moi_suat;
 
           return (
             <div
-              key={proposal.dexuatchuongtrinh_id}
+              key={proposal.de_xuat_id}
               className={styles.card}
               onClick={() => onViewDetail?.(proposal)}
             >
               <div className={styles.cardHeader}>
                 <span className={styles.cardId}>
-                  #{proposal.dexuatchuongtrinh_id}
+                  #{proposal.de_xuat_id}
                 </span>
                 <ProposalStatusBadge
-                  status={proposal.trangthai}
+                  status={proposal.trang_thai}
                   size="sm"
                 />
               </div>
 
               <h3 className={styles.cardTitle}>
-                {proposal.tenchuongtrinh}
+                {proposal.ten_chuong_trinh}
               </h3>
 
-              {proposal.mota && (
+              {proposal.mo_ta && (
                 <p className={styles.cardDesc}>
-                  {proposal.mota.substring(0, 80)}
-                  {proposal.mota.length > 80 ? '...' : ''}
+                  {proposal.mo_ta.substring(0, 80)}
+                  {proposal.mo_ta.length > 80 ? '...' : ''}
                 </p>
               )}
 
@@ -251,7 +275,7 @@ const ProposalTable = ({
                 <div className={styles.cardInfoItem}>
                   <span className={styles.cardInfoLabel}>Ngày tạo:</span>
                   <span className={styles.cardInfoValue}>
-                    {formatDate(proposal.ngaytao)}
+                    {formatDate(proposal.ngay_tao)}
                   </span>
                 </div>
               </div>
@@ -270,14 +294,14 @@ const ProposalTable = ({
 ProposalTable.propTypes = {
   data: PropTypes.arrayOf(
     PropTypes.shape({
-      dexuatchuongtrinh_id: PropTypes.number.isRequired,
-      tenchuongtrinh: PropTypes.string.isRequired,
-      mota: PropTypes.string,
+      de_xuat_id: PropTypes.number.isRequired,
+      ten_chuong_trinh: PropTypes.string.isRequired,
+      mo_ta: PropTypes.string,
       ten_quy_thanh_phan: PropTypes.string,
-      soluongsuat: PropTypes.number.isRequired,
-      sotienmoisuat: PropTypes.number.isRequired,
-      trangthai: PropTypes.string.isRequired,
-      ngaytao: PropTypes.string.isRequired,
+      so_luong_suat: PropTypes.number.isRequired,
+      so_tien_moi_suat: PropTypes.number.isRequired,
+      trang_thai: PropTypes.string.isRequired,
+      ngay_tao: PropTypes.string.isRequired,
     })
   ),
   loading: PropTypes.bool,

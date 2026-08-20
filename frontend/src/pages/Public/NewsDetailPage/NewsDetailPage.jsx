@@ -301,6 +301,12 @@ const NewsDetailPage = () => {
                             src={news.avatar} 
                             alt={news.title} 
                             className={styles.articleImage} 
+                            onLoad={(e) => {
+                              const img = e.target;
+                              if (img.naturalWidth > 0 && img.naturalWidth < img.offsetWidth) {
+                                img.style.width = img.naturalWidth + 'px';
+                              }
+                            }}
                             onError={(e) => { e.target.style.display = 'none'; }}
                           />
                         </div>

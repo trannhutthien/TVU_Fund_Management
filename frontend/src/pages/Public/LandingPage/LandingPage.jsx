@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PublicHeader from '@components/layout/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter';
 import HeroBanner from '@components/sections/LandingPage/HeroBanner';
+import StatsCTASection from '@components/sections/LandingPage/StatsCTASection';
 import NewsSection from '@components/sections/LandingPage/NewsSection';
 import FeaturedNewsSection from '@components/sections/LandingPage/FeaturedNewsSection';
 import FundProgressSection from '@components/sections/LandingPage/FundProgressSection';
@@ -10,6 +11,8 @@ import FundBreakdownSection from '@components/sections/LandingPage/FundBreakdown
 import CombinedProcessSection from '@components/sections/LandingPage/CombinedProcessSection';
 import TestimonialsSection from '@components/sections/LandingPage/TestimonialsSection';
 import DonorWallSection from '@components/sections/LandingPage/DonorWallSection';
+import TransactionHistorySection from '@components/sections/LandingPage/TransactionHistorySection';
+import ThongKeThuChiSection from '@components/sections/LandingPage/ThongKeThuChiSection';
 import LoginForm from '@components/forms/LoginForm';
 import RegisterForm from '@components/forms/RegisterForm';
 import newsService from '@services/newsService';
@@ -103,7 +106,9 @@ const LandingPage = () => {
         <HeroBanner 
           onLoginClick={openLoginModal}
           onRegisterClick={openRegisterModal}
+          showStats={false}
         />
+        <StatsCTASection onLoginClick={openLoginModal} />
         <NewsSection 
           title="TIN MỚI" 
           subtitle="Cập nhật những hoạt động mới nhất về quỹ hỗ trợ và học bổng tại Trường Đại học Trà Vinh"
@@ -121,6 +126,8 @@ const LandingPage = () => {
         <FundBreakdownSection />
         <CombinedProcessSection onLoginClick={openLoginModal} />
         <TestimonialsSection />
+        <ThongKeThuChiSection />
+        <TransactionHistorySection />
         <DonorWallSection onRegisterClick={openRegisterModal} />
       </main>
       

@@ -96,7 +96,7 @@ const ReviewStep = memo(({ formData, destinationType, selectedFund, bankAccounts
               </div>
               <div className={styles.reviewItem}>
                 <span className={styles.reviewLabel}>Loại hình hỗ trợ:</span>
-                <span className={styles.reviewValue}>{formData.loaiHoTro || 'Trao tang'}</span>
+                <span className={styles.reviewValue}>{formData.loaiHoTro || 'Tai tro khong hoan lai'}</span>
               </div>
               {formData.ngayBatDau && (
                 <div className={styles.reviewItem}>

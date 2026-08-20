@@ -20,13 +20,13 @@ const suggestTitle = (fund) => {
   const hocKy = new Date().getMonth() < 6 ? 'I' : 'II';
   const namHoc = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
   const fundName = fund?.tenQuy || fund?.ten_quy || 'hỗ trợ';
-  return `Đơn xin ${fundName} học kỳ ${hocKy} năm học ${namHoc}`;
+  return `Đề nghị hỗ trợ ${fundName} học kỳ ${hocKy} năm học ${namHoc}`;
 };
 
-const getQuality = (length) => {
-  if (length < 100) return { label: 'Yếu', percent: 25, color: '#ef4444' };
-  if (length <= 300) return { label: 'Trung bình', percent: 60, color: '#f59e0b' };
-  return { label: 'Tốt', percent: 100, color: '#10b981' };
+const getDetailLevel = (length) => {
+  if (length < 100) return { label: 'Cần bổ sung thêm thông tin', percent: 25, color: '#f59e0b', hint: 'Thêm vài dòng chia sẻ giúp Hội đồng hiểu rõ hơn về nhu cầu của bạn' };
+  if (length <= 300) return { label: 'Khá đầy đủ', percent: 60, color: '#3b82f6', hint: 'Chia sẻ thêm chi tiết để câu chuyện của bạn được thấu hiểu đầy đủ hơn' };
+  return { label: 'Đầy đủ & rõ ràng', percent: 100, color: '#10b981', hint: 'Phần chia sẻ của bạn đã đầy đủ và dễ hiểu' };
 };
 
 const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextButton, isGuest }) => {
@@ -131,7 +131,7 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
   const charCountColor =
     mo_taLength > 1000 ? '#ef4444' : mo_taLength > 800 ? '#f59e0b' : '#94a3b8';
 
-  const quality = mo_taLength > 0 ? getQuality(mo_taLength) : null;
+  const detailLevel = mo_taLength > 0 ? getDetailLevel(mo_taLength) : null;
 
   return (
     <div className={styles.card}>
@@ -145,7 +145,7 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
         <input
           type="text"
           className={`${styles.textInput} ${tieu_deError || tieu_deRequired ? styles.inputError : ''}`}
-          placeholder="Ví dụ: Đơn xin hỗ trợ học phí học kỳ II năm học 2023-2024"
+          placeholder="Ví dụ: Đề nghị hỗ trợ học phí học kỳ II năm học 2023-2024"
           value={tieu_de}
           maxLength={200}
           onChange={(e) => handleChange('tieu_de', e.target.value)}
@@ -371,7 +371,7 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
       <div className={styles.fieldGroup}>
         <div className={styles.fieldLabelRow}>
           <div className={styles.fieldLabelLeft}>
-            <span className={styles.fieldLabel}>Lý do & Hoàn cảnh</span>
+            <span className={styles.fieldLabel}>Chia sẻ về bản thân & điều bạn mong đợi</span>
             <span className={styles.requiredBadge}>*Bắt buộc</span>
           </div>
           <span className={styles.charCount} style={{ color: charCountColor }}>
@@ -381,7 +381,7 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
         <div className={styles.textareaWrapper}>
           <textarea
             className={`${styles.textarea} ${mo_taError || mo_taRequired ? styles.inputError : ''}`}
-            placeholder="Trình bày chi tiết hoàn cảnh cá nhân và lý do bạn cần sự hỗ trợ này..."
+            placeholder="Hãy an tâm chia sẻ về bản thân và điều bạn mong đợi từ sự đồng hành của Quỹ. Mỗi câu chuyện đều xứng đáng được lắng nghe..."
             value={mo_ta}
             maxLength={1000}
             onChange={(e) => handleChange('mo_ta', e.target.value)}
@@ -396,31 +396,34 @@ const RequestContentSection = ({ onChange, values, selectedFund, onOpenAI, nextB
           </button>
         </div>
         {mo_taRequired && (
-          <div className={styles.errorText}>Vui lòng nhập lý do & hoàn cảnh</div>
+          <div className={styles.errorText}>Vui lòng chia sẻ một chút về bản thân và nhu cầu của bạn</div>
         )}
         {mo_taError && (
           <div className={styles.errorText}>
-            Lý do phải có ít nhất 50 ký tự
+            Hãy chia sẻ ít nhất 50 ký tự để Hội đồng hiểu rõ hơn về bạn
           </div>
         )}
 
-        {quality && (
+        {detailLevel && (
           <div className={styles.qualityBar}>
-            <span className={styles.qualityLabel}>Chất lượng nội dung:</span>
+            <span className={styles.qualityLabel}>Độ chi tiết của phần chia sẻ:</span>
             <div className={styles.qualityTrack}>
               <div
                 className={styles.qualityFill}
                 style={{
-                  width: `${quality.percent}%`,
-                  backgroundColor: quality.color,
+                  width: `${detailLevel.percent}%`,
+                  backgroundColor: detailLevel.color,
                 }}
               />
             </div>
             <span
               className={styles.qualityStatus}
-              style={{ color: quality.color }}
+              style={{ color: detailLevel.color }}
             >
-              {quality.label}
+              {detailLevel.label}
+            </span>
+            <span className={styles.qualityHint}>
+              💡 {detailLevel.hint}
             </span>
           </div>
         )}

@@ -102,13 +102,13 @@
   border-radius: 28px;
   padding: 8px 18px;
   transition: all 0.3s ease;
-  min-width: 340px;
+  min-width: 300px;
 
   &:focus-within {
     background: rgba(255, 255, 255, 0.15);
     border-color: var(--color-gold);
     box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.12);
-    min-width: 420px;
+    min-width: 360px;
   }
 }
 
@@ -125,7 +125,7 @@
   color: var(--color-white);
   font-size: 14px;
   font-weight: 400;
-  width: 280px;
+  width: 240px;
   transition: width 0.3s ease;
 
   &::placeholder {
@@ -133,7 +133,7 @@
   }
 
   &:focus {
-    width: 360px;
+    width: 300px;
   }
 }
 
@@ -214,7 +214,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 24px;
   flex: 1;
   justify-content: center;
 
@@ -226,7 +226,7 @@
   color: var(--color-white);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
   padding: 10px 4px;
@@ -644,7 +644,7 @@
   color: var(--color-white);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 8px 4px;
   border: 0;
@@ -751,11 +751,30 @@
 }
 
 // ============================================
+// RESPONSIVE - Mid Desktop
+// ============================================
+@media (max-width: 1360px) {
+  .gridContainer { padding: 0 24px; }
+  .logoSection { padding-right: 18px; }
+  .nav { gap: 16px; }
+  .searchRow { padding: 14px 32px 0; }
+  .searchBox { min-width: 260px; }
+  .searchInput { width: 200px; }
+  .searchBox:focus-within { min-width: 320px; }
+  .searchInput:focus { width: 260px; }
+}
+
+// ============================================
 // RESPONSIVE - Tablet
 // ============================================
 @media (max-width: 1024px) {
-  .nav { gap: 24px; }
+  .nav { gap: 14px; }
   .navLink { font-size: 12px; }
+  .searchRow { padding: 12px 24px 0; }
+  .searchBox { min-width: 220px; }
+  .searchInput { width: 170px; }
+  .searchBox:focus-within { min-width: 280px; }
+  .searchInput:focus { width: 220px; }
 }
 
 // ============================================

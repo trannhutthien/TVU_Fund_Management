@@ -190,7 +190,7 @@ export const getImpactStats = async (req, res) => {
     const [receivedByFundTypeResult] = await pool.query(
       `SELECT
         COALESCE(SUM(CASE WHEN q.loaidieuhanh = 'Tap trung - Muc chi' THEN kt.sotien ELSE 0 END), 0) AS childFundReceived,
-        COALESCE(SUM(CASE WHEN q.loaidieuhanh = 'Tap trung - Be chung' THEN kt.sotien ELSE 0 END), 0) AS parentFundReceived,
+        COALESCE(SUM(CASE WHEN q.loaidieuhanh IN ('Tap trung - Be chung', 'Tap trung - Thanh phan') THEN kt.sotien ELSE 0 END), 0) AS parentFundReceived,
         COALESCE(SUM(kt.sotien), 0) AS total
        FROM khoantaitro kt
        INNER JOIN quy q ON kt.quy_id = q.quy_id

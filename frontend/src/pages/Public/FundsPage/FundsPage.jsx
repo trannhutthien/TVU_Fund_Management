@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PublicHeader from '@components/layout/PublicHeader/PublicHeader';
 import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
 import HeroBanner from '@components/sections/LandingPage/HeroBanner';
@@ -18,6 +19,7 @@ const createCategoryState = (valueFactory) => ({});
 
 const FundsPage = () => {
   const { settings } = useSystemSettings();
+  const navigate = useNavigate();
   // Filter states
   const [activeCapDo, setActiveCapDo] = useState(null);
   const [activeTrangThai, setActiveTrangThai] = useState(null);
@@ -400,6 +402,19 @@ const FundsPage = () => {
         showStats={true}
         showLoginPrompt={false}
       />
+
+      <div className={styles.ctaBanner}>
+        <div className={styles.ctaContent}>
+          <h3>Bạn muốn đồng hành cùng các quỹ?</h3>
+          <p>Mỗi đóng góp của bạn là nguồn động viên lớn lao cho sự phát triển của trường.</p>
+        </div>
+        <button
+          className={styles.ctaButton}
+          onClick={() => navigate('/dong-gop')}
+        >
+          Tài trợ ngay
+        </button>
+      </div>
 
       <main className={styles.mainContent}>
         {/* Search and Filters Section */}

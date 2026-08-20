@@ -105,11 +105,12 @@ const createProposalWithDonation = async (data) => {
         mota,
         soluongsuat,
         sotienmoisuat,
+        sotientaitro,
         loaihotro,
         ngaybatdau,
         ngayketthuc,
         trangthai
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
       [
         nhaTaiTroId,
         proposalInfo.quyThanhPhanId,
@@ -117,7 +118,8 @@ const createProposalWithDonation = async (data) => {
         proposalInfo.moTa || null,
         proposalInfo.soLuongSuat || null,
         proposalInfo.soTienMoiSuat || null,
-        proposalInfo.loaiHinh || 'Trao tang',
+        parseFloat(proposalInfo.soLuongSuat || 0) * parseFloat(proposalInfo.soTienMoiSuat || 0),
+        proposalInfo.loaiHinh || 'Tai tro khong hoan lai',
         proposalInfo.thoiGianBatDau || null,
         proposalInfo.thoiGianKetThuc || null
       ]
@@ -199,8 +201,6 @@ const getProposalById = async (id) => {
       dx.ngayketthuc,
       dx.trangthai,
       dx.lydotuchoi,
-      dx.nguoiduyet_id,
-      dx.ngayduyet,
       dx.quyketqua_id,
       dx.ngaytao,
       qtp.tenquy AS ten_quy_thanh_phan,
