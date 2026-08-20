@@ -16,7 +16,7 @@ import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './HeroBanner.module.scss';
 
 const apiOrigin = () => {
-  const base = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5001/api';
+  const base = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5001/api').trim();
   return base.replace(/\/api\/?$/, '');
 };
 
