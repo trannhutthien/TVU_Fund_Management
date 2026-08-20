@@ -29,7 +29,7 @@ import styles from './CaiDatSection.module.scss';
 const FILE_FORMATS = ['PDF', 'JPG', 'PNG', 'DOC'];
 
 const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'
+  (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api').trim()
 ).replace(/\/api\/?$/, '');
 
 const buildImageUrl = (path) => {
