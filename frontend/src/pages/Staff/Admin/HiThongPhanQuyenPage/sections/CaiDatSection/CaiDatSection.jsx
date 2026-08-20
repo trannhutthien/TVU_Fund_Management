@@ -28,6 +28,16 @@ import styles from './CaiDatSection.module.scss';
 
 const FILE_FORMATS = ['PDF', 'JPG', 'PNG', 'DOC'];
 
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'
+).replace(/\/api\/?$/, '');
+
+const buildImageUrl = (path) => {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_BASE}/${path.replace(/^\//, '')}`;
+};
+
 const CaiDatSection = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -846,7 +856,7 @@ const CaiDatSection = () => {
                     {bannerImages.map((img, idx) => (
                       <div key={idx} className={styles.bannerImageCard}>
                         <div className={styles.bannerImagePreview}>
-                          <img src={img.url} alt={img.alt || `Banner ${idx + 1}`} />
+                          <img src={buildImageUrl(img.url)} alt={img.alt || `Banner ${idx + 1}`} />
                           <span className={styles.bannerImageIndex}>{idx + 1}</span>
                         </div>
                         <div className={styles.bannerImageActions}>
@@ -930,7 +940,7 @@ const CaiDatSection = () => {
                     {fundsBannerImages.map((img, idx) => (
                       <div key={idx} className={styles.bannerImageCard}>
                         <div className={styles.bannerImagePreview}>
-                          <img src={img.url} alt={img.alt || `Banner ${idx + 1}`} />
+                          <img src={buildImageUrl(img.url)} alt={img.alt || `Banner ${idx + 1}`} />
                           <span className={styles.bannerImageIndex}>{idx + 1}</span>
                         </div>
                         <div className={styles.bannerImageActions}>
