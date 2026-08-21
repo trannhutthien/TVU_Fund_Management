@@ -6,6 +6,7 @@ const TransferContentSection = ({
   hoTen = '',
   soDienThoai = '',
   email = '',
+  tenQuy = '',
   bankAccount,
   chungTuFile,
   onChungTuChange,
@@ -16,7 +17,7 @@ const TransferContentSection = ({
     hoTen.trim(),
     soDienThoai.trim(),
     email.trim(),
-    '(ma giao dich)',
+    tenQuy.trim(),
   ].filter(Boolean).join(' ');
 
   const handleCopy = useCallback(() => {
@@ -101,7 +102,7 @@ const TransferContentSection = ({
           <line x1="12" y1="16" x2="12" y2="12" />
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
-        <p>Vui lòng chuyển khoản đúng nội dung để hệ thống tự động đối soát. Nhập mã giao dịch từ ngân hàng thay cho <strong>(ma giao dich)</strong>.</p>
+        <p>Vui lòng ghi đúng nội dung chuyển khoản trên để hệ thống tự động đối soát với khoản đóng góp của bạn.</p>
       </div>
 
       <div className={styles.uploadSection}>
@@ -154,6 +155,7 @@ TransferContentSection.propTypes = {
   hoTen: PropTypes.string,
   soDienThoai: PropTypes.string,
   email: PropTypes.string,
+  tenQuy: PropTypes.string,
   bankAccount: PropTypes.shape({
     tenNganHang: PropTypes.string,
     soTaiKhoan: PropTypes.string,

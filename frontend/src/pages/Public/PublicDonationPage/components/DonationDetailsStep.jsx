@@ -77,6 +77,11 @@ const DonationDetailsStep = memo(({
     return bankAccounts.find(a => a.taiKhoanId === formData.taiKhoanNganHangId) || null;
   }, [bankAccounts, formData.taiKhoanNganHangId]);
 
+  const selectedFund = useMemo(() => {
+    if (!formData.quyId) return null;
+    return funds.find(f => f.quyId === formData.quyId) || null;
+  }, [funds, formData.quyId]);
+
   return (
     <div className={styles.stepContent}>
       <div className={styles.sectionTitle}>
@@ -449,6 +454,7 @@ const DonationDetailsStep = memo(({
           hoTen={formData.hoTen}
           soDienThoai={formData.soDienThoai}
           email={formData.email}
+          tenQuy={selectedFund?.tenQuy}
           bankAccount={selectedBankAccount}
           chungTuFile={chungTuFile}
           onChungTuChange={onChungTuChange}
@@ -504,6 +510,7 @@ const DonationDetailsStep = memo(({
           hoTen={formData.hoTen}
           soDienThoai={formData.soDienThoai}
           email={formData.email}
+          tenQuy={formData.tenChuongTrinh || selectedFund?.tenQuy}
           bankAccount={selectedBankAccount}
           chungTuFile={chungTuFile}
           onChungTuChange={onChungTuChange}

@@ -141,7 +141,7 @@ const PaymentMethodSection = ({
                 )}
                 <div className={styles.bankRow}>
                   <span className={styles.bankLabel}>Nội dung CK:</span>
-                  <span className={styles.bankValue}>(tên nhà tài trợ) (số điện thoại) (email) (mã giao dịch)</span>
+                  <span className={styles.bankValue}>(tên nhà tài trợ) (số điện thoại) (email) (tên quỹ)</span>
                 </div>
               </div>
             </div>

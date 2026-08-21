@@ -24,7 +24,7 @@ const SuccessStep = memo(({ donationResult, bankAccounts, onNewDonation }) => {
     nhaTaiTro.ten || '',
     nhaTaiTro.soDienThoai || '',
     nhaTaiTro.email || '',
-    `#${donationResult?.khoanTaiTroId || ''}`,
+    donationResult?.quy?.tenQuy || '',
   ].filter(Boolean).join(' ');
 
   return (
