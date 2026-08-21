@@ -168,7 +168,6 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
         nd.email,
         nd.sodienthoai,
         nd.diachi,
-        nd.mota,
         nt.trangthai,
         nt.nguoidung_id,
         nt.ngaytao,
@@ -182,7 +181,7 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
      LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
      ${whereClause}
      GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo,
-              nd.email, nd.sodienthoai, nd.diachi, nd.mota, nt.trangthai,
+              nd.email, nd.sodienthoai, nd.diachi, nt.trangthai,
               nt.nguoidung_id, nt.ngaytao, nd.hoten, nd.avatar
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`,
