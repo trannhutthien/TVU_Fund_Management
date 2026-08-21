@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   HiOutlineXMark,
   HiOutlinePlusCircle,
   HiOutlinePaperClip,
   HiOutlineHandRaised,
+  HiOutlineCamera,
 } from 'react-icons/hi2';
+import { toast } from 'react-toastify';
 import Button from '@components/common/Button/Button';
 import StatusBadge from '@components/common/StatusBadge/StatusBadge';
-import { getDonorDetail, getPublicDonorDetail } from '@services/donorService';
+import { getDonorDetail, getPublicDonorDetail, updateDonorLogo } from '@services/donorService';
+import { uploadService } from '@services/uploadService';
 import { formatCurrency, getInitial } from '@utils/formatters';
 import styles from './NhaTaiTroDetailDrawer.module.scss';
 
@@ -47,6 +50,7 @@ const apiOrigin = () => {
 const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro, isPublic = false }) => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
+  const logoInputRef = useRef(null);
 
   useEffect(() => {
     if (!sponsor?.nha_tai_tro_id) return;
@@ -60,6 +64,27 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro, isPublic = false
       .catch(() => setDetail(null))
       .finally(() => setLoading(false));
   }, [sponsor?.nha_tai_tro_id, isPublic]);
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('File vuot qua 5MB'); return; }
+    if (!file.type.startsWith('image/')) { toast.error('Chi chap nhan file anh'); return; }
+
+    try {
+      const upRes = await uploadService.uploadDonorLogo(file);
+      const logoPath = upRes?.data?.filePath;
+      if (!logoPath) { toast.error('Upload that bai'); return; }
+
+      await updateDonorLogo(sponsor.nha_tai_tro_id, logoPath);
+      toast.success('Cap nhat logo thanh cong');
+      setDetail((prev) => prev ? { ...prev, logo: logoPath } : prev);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Loi upload logo');
+    } finally {
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
 
   if (!sponsor) return null;
 
@@ -98,11 +123,30 @@ const NhaTaiTroDetailDrawer = ({ sponsor, onClose, onGhiTaiTro, isPublic = false
 
         {/* Profile */}
         <section className={styles.profile}>
-          <div className={styles.avatar}>
+          <div className={styles.avatar} style={{ position: 'relative' }}>
             {data.logo || data.avatar ? (
               <img src={data.logo || data.avatar} alt={data.ten_nha_tai_tro} />
             ) : (
               <span>{getInitial(data.ten_nha_tai_tro)}</span>
+            )}
+            {!isPublic && (
+              <>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  className={styles.logoUploadBtn}
+                  onClick={() => logoInputRef.current?.click()}
+                  title="Cap nhat logo"
+                >
+                  <HiOutlineCamera />
+                </button>
+              </>
             )}
           </div>
           <div className={styles.profileText}>

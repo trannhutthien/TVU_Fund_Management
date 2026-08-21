@@ -68,6 +68,12 @@ export const getDonorDetail = async (id) => {
   return response.data;
 };
 
+// Cán bộ Quỹ: cập nhật logo nhà tài trợ
+export const updateDonorLogo = async (id, logoPath) => {
+  const response = await api.patch(`/donors/${id}/logo`, { logo: logoPath });
+  return response.data;
+};
+
 export default {
   // Public
   getDonorWall,
