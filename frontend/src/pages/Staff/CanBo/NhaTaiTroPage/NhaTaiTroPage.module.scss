@@ -423,3 +423,116 @@
     min-width: 100%;
   }
 }
+
+// ── Tab Navigation ──────────────────────────
+.tabContainer {
+  margin-bottom: 16px;
+}
+
+.tabNavigation {
+  display: flex;
+  gap: 4px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.navTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #334155;
+  }
+}
+
+.navTabActive {
+  background: var(--color-navy-blue, #1a2f5e);
+  color: #fff;
+
+  &:hover {
+    background: #154360;
+    color: #fff;
+  }
+}
+
+.tabIcon {
+  width: 18px;
+  height: 18px;
+}
+
+// ── Partners Grid ───────────────────────────
+.partnersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.partnerCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.partnerLogoWrap {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #e2e8f0;
+}
+
+.partnerLogoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.partnerLogoPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-navy-blue, #1a2f5e);
+  background: rgba(26, 47, 94, 0.08);
+}
+
+.partnerName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  margin: 0;
+  line-height: 1.3;
+}

@@ -14,6 +14,8 @@ import {
   HiOutlineMapPin,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
+  HiOutlineBuildingOffice2,
+  HiOutlineUser,
 } from 'react-icons/hi2';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
@@ -59,6 +61,7 @@ const formatDate = (value) => {
 const NhaTaiTroPage = () => {
   const [sponsors, setSponsors] = useState([]);
   const [stats, setStats] = useState(null);
+  const [activeTab, setActiveTab] = useState('nha-tai-tro');
   const [filters, setFilters] = useState({
     keyword: '',
     loai: '',
@@ -82,9 +85,10 @@ const NhaTaiTroPage = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      const effectiveLoai = activeTab === 'doi-tac' ? 'Doi tac' : filters.loai;
       const res = await getStaffDonors({
         keyword: debouncedKeyword,
-        loai: filters.loai,
+        loai: effectiveLoai,
         sort_by: filters.sort_by,
         page,
         page_size: PAGE_SIZE,
@@ -98,7 +102,7 @@ const NhaTaiTroPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedKeyword, filters.loai, filters.sort_by, page]);
+  }, [debouncedKeyword, filters.loai, filters.sort_by, page, activeTab]);
 
   useEffect(() => {
     fetchData();
@@ -223,6 +227,26 @@ const NhaTaiTroPage = () => {
           })}
         </div>
 
+        {/* ── Tab Navigation ───────────────────── */}
+        <div className={styles.tabContainer}>
+          <div className={styles.tabNavigation}>
+            <button
+              className={`${styles.navTab} ${activeTab === 'nha-tai-tro' ? styles.navTabActive : ''}`}
+              onClick={() => { setActiveTab('nha-tai-tro'); setPage(1); }}
+            >
+              <HiOutlineUser className={styles.tabIcon} />
+              Nhà tài trợ
+            </button>
+            <button
+              className={`${styles.navTab} ${activeTab === 'doi-tac' ? styles.navTabActive : ''}`}
+              onClick={() => { setActiveTab('doi-tac'); setPage(1); }}
+            >
+              <HiOutlineBuildingOffice2 className={styles.tabIcon} />
+              Đối tác
+            </button>
+          </div>
+        </div>
+
         {/* ── Filter bar ───────────────────────── */}
         <div className={styles.filterBar}>
           <div className={styles.searchWrap}>
@@ -236,19 +260,21 @@ const NhaTaiTroPage = () => {
             />
           </div>
 
-          <select
-            className={styles.select}
-            value={filters.loai}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, loai: e.target.value }))
-            }
-          >
-            {LOAI_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          {activeTab !== 'doi-tac' && (
+            <select
+              className={styles.select}
+              value={filters.loai}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, loai: e.target.value }))
+              }
+            >
+              {LOAI_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          )}
 
           <select
             className={styles.select}
@@ -285,7 +311,24 @@ const NhaTaiTroPage = () => {
         ) : sponsors.length === 0 ? (
           <div className={styles.empty}>
             <HiOutlineHandRaised className={styles.emptyIcon} />
-            <p>Chưa có nhà tài trợ nào</p>
+            <p>Chưa có {activeTab === 'doi-tac' ? 'đối tác' : 'nhà tài trợ'} nào</p>
+          </div>
+        ) : activeTab === 'doi-tac' ? (
+          <div className={styles.partnersGrid}>
+            {sponsors.map((sp) => (
+              <div key={sp.nha_tai_tro_id} className={styles.partnerCard} onClick={() => setSelectedSponsor(sp)}>
+                <div className={styles.partnerLogoWrap}>
+                  {sp.logo || sp.avatar ? (
+                    <img src={sp.logo || sp.avatar} alt={sp.ten_nha_tai_tro} className={styles.partnerLogoImg} />
+                  ) : (
+                    <div className={styles.partnerLogoPlaceholder}>
+                      {getInitial(sp.ten_nha_tai_tro)}
+                    </div>
+                  )}
+                </div>
+                <h3 className={styles.partnerName}>{sp.ten_nha_tai_tro}</h3>
+              </div>
+            ))}
           </div>
         ) : (
           <>
