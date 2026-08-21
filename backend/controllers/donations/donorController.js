@@ -35,8 +35,7 @@ export const getDonorWall = async (req, res) => {
        LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
        WHERE nt.trangthai = 'Hoat dong'
        GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo, nd.avatar, nd.email, nd.sodienthoai
-       HAVING tong_dong_gop > 0
-       ORDER BY tong_dong_gop DESC`
+       ORDER BY (nt.loainhataitro = 'Doi tac') DESC, tong_dong_gop DESC`
     );
 
     // Lấy thông tin tên quỹ đã hỗ trợ cho từng nhà tài trợ
