@@ -5,6 +5,7 @@ import {
   getDonorDetail,
   getDonorStats,
   createDonorForStaff,
+  updateDonorLogo,
   getMyDonorStats,
   getMyDonations,
   getPublicDonorDetail,
@@ -49,5 +50,8 @@ router.post('/', protect, authorizeRoles(1, 3), createDonorForStaff);
 
 // GET /api/donors/:id - Cán bộ Quỹ/Admin: chi tiết + lịch sử khoản tài trợ
 router.get('/:id', protect, authorizeRoles(1, 3), getDonorDetail);
+
+// PATCH /api/donors/:id/logo - Cán bộ Quỹ/Admin: cập nhật logo
+router.patch('/:id/logo', protect, authorizeRoles(1, 3), updateDonorLogo);
 
 export default router;

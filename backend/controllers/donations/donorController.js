@@ -462,6 +462,38 @@ export const getMyDonations = async (req, res) => {
   }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PATCH /api/donors/:id/logo ─────────────────────────────────────────────────
+// CÔNG DỤNG: Cập nhật logo nhà tài trợ
+// ═══════════════════════════════════════════════════════════════════════════════
+export const updateDonorLogo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ success: false, message: "ID khong hop le" });
+    }
+
+    const { logo } = req.body || {};
+    const logoPath = logo ? String(logo).trim() : null;
+
+    const donor = await DonorModel.getDonorById(id);
+    if (!donor) {
+      return res.status(404).json({ success: false, message: "Khong tim thay nha tai tro" });
+    }
+
+    await pool.execute("UPDATE nhataitro SET logo = ? WHERE nhataitro_id = ?", [logoPath, id]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Cap nhat logo thanh cong",
+      data: { nha_tai_tro_id: Number(id), logo: buildDonorAvatarUrl(logoPath) },
+    });
+  } catch (error) {
+    console.error("Loi updateDonorLogo:", error);
+    return res.status(500).json({ success: false, message: "Loi server khi cap nhat logo" });
+  }
+};
+
 export default {
   getDonorWall,
   getStaffDonors,
