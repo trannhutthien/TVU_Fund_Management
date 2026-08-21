@@ -823,7 +823,7 @@ const PublicDonationPage = () => {
             />
           </div>
 
-          {formData.hinhThuc === 'Truc tuyen' && (
+          {true && (
             <>
               {isAuthenticated && user && (
                 <div className={styles.autoFillNotice}>
