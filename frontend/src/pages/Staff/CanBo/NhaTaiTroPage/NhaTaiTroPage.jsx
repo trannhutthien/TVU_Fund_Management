@@ -225,19 +225,19 @@ const NhaTaiTroPage = () => {
             </p>
           </div>
           <Button
-            variant="secondary"
-            leftIcon={<HiOutlineUserPlus />}
-            onClick={() => setShowCreateModal(true)}
-            className={styles.headerBtn}
-          >
-            Tạo nhà tài trợ
-          </Button>
-          <Button
             variant="primary"
             leftIcon={<HiOutlinePlusCircle />}
             onClick={() => handleOpenCreateModal(null)}
           >
             Tạo khoản tài trợ
+          </Button>
+          <Button
+            variant="secondary"
+            leftIcon={<HiOutlineUserPlus />}
+            onClick={() => setShowCreateModal(true)}
+            className={styles.headerBtn}
+          >
+            Tạo đối tác
           </Button>
         </header>
 
