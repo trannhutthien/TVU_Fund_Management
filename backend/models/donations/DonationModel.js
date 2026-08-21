@@ -103,7 +103,7 @@ const createPublicDonation = async (donationData) => {
   try {
     await connection.beginTransaction();
 
-    const { ten, email, soDienThoai, soTien, quyId, ghiChu, hinhThuc, loaiNhaTaiTro, toChuc, diaChi, taiKhoanNganHangId } = donationData;
+    const { ten, email, soDienThoai, soTien, quyId, ghiChu, hinhThuc, loaiNhaTaiTro, toChuc, diaChi, taiKhoanNganHangId, chungTu } = donationData;
 
     // Tạo hoặc lấy nhà tài trợ
     const { nhaTaiTroId } = await createOrGetDonor(connection, { ten, email, soDienThoai, loaiNhaTaiTro, toChuc, diaChi });
@@ -122,7 +122,7 @@ const createPublicDonation = async (donationData) => {
         chungtu,
         taikhoannganhang_id
       ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?, ?)`,
-      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Chuyen khoan', null, ghiChu, null, taiKhoanNganHangId || null]
+      [nhaTaiTroId, quyId, soTien, hinhThuc || 'Chuyen khoan', null, ghiChu, chungTu || null, taiKhoanNganHangId || null]
     );
 
     const khoanTaiTroId = insertDonationResult.insertId;

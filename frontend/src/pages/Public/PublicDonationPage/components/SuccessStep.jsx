@@ -19,6 +19,14 @@ const SuccessStep = memo(({ donationResult, bankAccounts, onNewDonation }) => {
     });
   };
 
+  const nhaTaiTro = donationResult?.nhaTaiTro || {};
+  const transferContent = [
+    nhaTaiTro.ten || '',
+    nhaTaiTro.soDienThoai || '',
+    nhaTaiTro.email || '',
+    `#${donationResult?.khoanTaiTroId || ''}`,
+  ].filter(Boolean).join(' ');
+
   return (
     <div className={styles.stepContent}>
       <div className={styles.successHeader}>
@@ -50,6 +58,25 @@ const SuccessStep = memo(({ donationResult, bankAccounts, onNewDonation }) => {
             <span>Trạng thái:</span>
             <span className={styles.pendingBadge}>Chờ duyệt</span>
           </div>
+        </div>
+      )}
+
+      {transferContent && (
+        <div className={styles.transferContentBox}>
+          <h4>Nội dung chuyển khoản</h4>
+          <div className={styles.transferRow}>
+            <code className={styles.transferCode}>{transferContent}</code>
+            <button
+              type="button"
+              className={styles.copyBtn}
+              onClick={() => handleCopy(transferContent, 'transferContent')}
+            >
+              {copied === 'transferContent' ? 'Đã copy' : 'Copy'}
+            </button>
+          </div>
+          <p className={styles.transferNote}>
+            Vui lòng chuyển khoản đúng nội dung để hệ thống tự động đối soát
+          </p>
         </div>
       )}
 

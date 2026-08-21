@@ -489,7 +489,8 @@ export const createPublicDonation = async (req, res) => {
       loaiNhaTaiTro,
       toChuc,
       diaChi,
-      taiKhoanNganHangId
+      taiKhoanNganHangId,
+      chungTu,
     } = req.body;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -582,7 +583,8 @@ export const createPublicDonation = async (req, res) => {
       loaiNhaTaiTro: loaiNhaTaiTro || 'Ca nhan',
       toChuc: toChuc ? toChuc.trim() : null,
       diaChi: diaChi ? diaChi.trim() : null,
-      taiKhoanNganHangId: taiKhoanNganHangId || null
+      taiKhoanNganHangId: taiKhoanNganHangId || null,
+      chungTu: chungTu ? chungTu.trim() : null,
     };
 
     // 3.2. Gọi Model để xử lý transaction

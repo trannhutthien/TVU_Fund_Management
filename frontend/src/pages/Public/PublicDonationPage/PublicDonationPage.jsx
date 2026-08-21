@@ -6,6 +6,7 @@ import AppliSectionLayout from '@components/sections/AppliPage/AppliSectionLayou
 import NewsSidebar from '@components/sections/AppliPage/AppliSectionLayout/NewsSidebar/NewsSidebar';
 import { createPublicDonation, createPublicProposal, verifyProposalOtp as apiVerifyProposalOtp, resendProposalOtp as apiResendProposalOtp } from '@services/donationService';
 import { guestService } from '@services/guestService';
+import { uploadService } from '@services/uploadService';
 import fundService from '@services/fundService';
 import { bankAccountService } from '@services/bankAccountService';
 import { systemSettingsService, DEFAULT_PUBLIC_SETTINGS, toFundBankAccount } from '@services/systemSettingsService';
@@ -86,6 +87,7 @@ const PublicDonationPage = () => {
     taiKhoanNganHangId: null,
     proposalFiles: [],
   });
+  const [chungTuFile, setChungTuFile] = useState(null);
 
   // Auto-fill user data when authenticated
   useEffect(() => {
@@ -195,6 +197,17 @@ const PublicDonationPage = () => {
     try {
       const isPropose = destinationType === 'proposeProgram';
 
+      // Upload minh chung file neu co
+      let chungTuPath = null;
+      if (chungTuFile) {
+        try {
+          const upRes = await uploadService.uploadFilePublic(chungTuFile);
+          chungTuPath = upRes?.data?.filePath || null;
+        } catch {
+          // Neu upload that bai van tiep tuc gui
+        }
+      }
+
       if (isPropose) {
         const proposalPayload = {
           guest_ho_ten: formData.hoTen.trim(),
@@ -209,6 +222,8 @@ const PublicDonationPage = () => {
           loai_ho_tro: formData.loaiHoTro || 'Tai tro khong hoan lai',
           ngay_bat_dau: formData.ngayBatDau || null,
           ngay_ket_thuc: formData.ngayKetThuc || null,
+          chungTu: chungTuPath,
+          taiKhoanNganHangId: formData.taiKhoanNganHangId || null,
           formTimestamp,
         };
         const result = await createPublicProposal(proposalPayload);
@@ -237,6 +252,7 @@ const PublicDonationPage = () => {
           toChuc: formData.toChuc,
           diaChi: formData.diaChi,
           taiKhoanNganHangId: formData.taiKhoanNganHangId,
+          chungTu: chungTuPath,
           ghiChu: formData.ghiChu?.trim() || null,
         };
         const result = await createPublicDonation(payload);
@@ -253,6 +269,7 @@ const PublicDonationPage = () => {
           soTien: parseFloat(formData.soTien),
           hinhThuc: formData.hinhThuc,
           loaiNhaTaiTro: formData.loaiNhaTaiTro,
+          chungTu: chungTuPath,
           ghiChu: formData.ghiChu?.trim() || null,
           taiKhoannganhangId: formData.taiKhoanNganHangId || null,
           formTimestamp,
@@ -841,6 +858,8 @@ const PublicDonationPage = () => {
                   funds={funds}
                   fundsLoading={fundsLoading}
                   bankAccounts={bankAccounts}
+                  chungTuFile={chungTuFile}
+                  onChungTuChange={setChungTuFile}
                 />
               </div>
 

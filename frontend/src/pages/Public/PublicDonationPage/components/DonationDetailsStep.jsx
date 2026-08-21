@@ -2,6 +2,7 @@ import { memo, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import Input from '@components/common/Input/Input';
 import CurrencyInput from '@components/common/CurrencyInput';
+import TransferContentSection from './TransferContentSection';
 import { DESTINATION_TYPES, LOAI_HO_TRO } from '../constants';
 import { formatCurrency } from '../formatters';
 import styles from './DonationDetailsStep.module.scss';
@@ -12,6 +13,8 @@ const DonationDetailsStep = memo(({
   formData, errors, touched, onFieldChange, onFieldBlur,
   destinationType, onDestinationChange, funds, fundsLoading,
   bankAccounts = [],
+  chungTuFile,
+  onChungTuChange,
 }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedFundCategory, setSelectedFundCategory] = useState(ALL_VALUE);
@@ -68,6 +71,11 @@ const DonationDetailsStep = memo(({
     if (count <= 0) return null;
     return { count, remainder, total, perSlot };
   }, [formData.soTien, formData.soTienMoiSuat]);
+
+  const selectedBankAccount = useMemo(() => {
+    if (!formData.taiKhoanNganHangId) return null;
+    return bankAccounts.find(a => a.taiKhoanId === formData.taiKhoanNganHangId) || null;
+  }, [bankAccounts, formData.taiKhoanNganHangId]);
 
   return (
     <div className={styles.stepContent}>
@@ -434,6 +442,73 @@ const DonationDetailsStep = memo(({
           )}
         </div>
       )}
+
+      {/* HIỂN THỊ NỘI DUNG CHUYỂN KHOAN + MINH CHỨNG - EXISTING FUND */}
+      {destinationType === DESTINATION_TYPES.EXISTING_FUND && formData.taiKhoanNganHangId && (
+        <TransferContentSection
+          hoTen={formData.hoTen}
+          soDienThoai={formData.soDienThoai}
+          email={formData.email}
+          bankAccount={selectedBankAccount}
+          chungTuFile={chungTuFile}
+          onChungTuChange={onChungTuChange}
+        />
+      )}
+
+      {/* ĐỀ XUẤT CHƯƠNG TRÌNH - THÊM CHỌN NGÂN HÀNG + NỘI DUNG CK */}
+      {destinationType === DESTINATION_TYPES.PROPOSE_PROGRAM && bankAccounts.length > 0 && (
+        <div className={styles.bankAccountSection}>
+          <label className={styles.label}>Tài khoản nhận chuyển khoản <span className={styles.required}>*</span></label>
+          <div className={styles.bankAccountList}>
+            {bankAccounts.map((account) => (
+              <div
+                key={account.taiKhoanId}
+                className={`${styles.bankAccountCard} ${formData.taiKhoanNganHangId === account.taiKhoanId ? styles.selectedBank : ''}`}
+                onClick={() => onFieldChange('taiKhoanNganHangId', account.taiKhoanId)}
+              >
+                <div className={styles.bankIcon}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 21h18" />
+                    <path d="M3 10h18" />
+                    <path d="M5 6l7-3 7 3" />
+                    <path d="M4 10v11" />
+                    <path d="M20 10v11" />
+                    <path d="M8 10v11" />
+                    <path d="M12 10v11" />
+                    <path d="M16 10v11" />
+                  </svg>
+                </div>
+                <div className={styles.bankInfo}>
+                  <span className={styles.bankName}>{account.tenNganHang}</span>
+                  <span className={styles.accountNumber}>{account.soTaiKhoan}</span>
+                  <span className={styles.accountHolder}>{account.chuTaiKhoan}</span>
+                  {account.chiNhanh && <span className={styles.branch}>{account.chiNhanh}</span>}
+                </div>
+                {formData.taiKhoanNganHangId === account.taiKhoanId && (
+                  <svg className={styles.bankCheckIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+            ))}
+          </div>
+          {touched.taiKhoanNganHangId && errors.taiKhoanNganHangId && (
+            <span className={styles.errorText}>{errors.taiKhoanNganHangId}</span>
+          )}
+        </div>
+      )}
+
+      {/* HIỂN THỊ NỘI DUNG CHUYỂN KHOAN + MINH CHỨNG - ĐỀ XUẤT */}
+      {destinationType === DESTINATION_TYPES.PROPOSE_PROGRAM && formData.taiKhoanNganHangId && (
+        <TransferContentSection
+          hoTen={formData.hoTen}
+          soDienThoai={formData.soDienThoai}
+          email={formData.email}
+          bankAccount={selectedBankAccount}
+          chungTuFile={chungTuFile}
+          onChungTuChange={onChungTuChange}
+        />
+      )}
     </div>
   );
 });
@@ -450,6 +525,8 @@ DonationDetailsStep.propTypes = {
   funds: PropTypes.array,
   fundsLoading: PropTypes.bool,
   bankAccounts: PropTypes.array,
+  chungTuFile: PropTypes.object,
+  onChungTuChange: PropTypes.func,
 };
 
 export default DonationDetailsStep;
