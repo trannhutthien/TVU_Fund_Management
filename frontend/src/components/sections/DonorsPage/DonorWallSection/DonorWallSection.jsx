@@ -76,6 +76,27 @@ const DonorCard = ({ donor, onClick }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// PARTNER CARD - Card logo to + tên cho tab Đối tác
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PartnerCard = ({ donor, onClick }) => {
+  return (
+    <div className={styles.partnerCard} onClick={onClick} style={{ cursor: 'pointer' }}>
+      <div className={styles.partnerLogoWrap}>
+        {donor.logo ? (
+          <img src={donor.logo} alt={donor.ten} className={styles.partnerLogoImg} />
+        ) : (
+          <div className={styles.partnerLogoPlaceholder}>
+            {donor.ten?.charAt(0)?.toUpperCase() || '?'}
+          </div>
+        )}
+      </div>
+      <h3 className={styles.partnerName}>{donor.ten}</h3>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -160,13 +181,21 @@ const DonorWallSection = ({ donorsData = { donors: [] }, loading = true }) => {
             <p>Chưa có dữ liệu {activeTab === 'doi-tac' ? 'đối tác' : 'nhà tài trợ'}</p>
           </div>
         ) : (
-          <div className={styles.donorsGrid}>
+          <div className={`${styles.donorsGrid} ${activeTab === 'doi-tac' ? styles.partnersGrid : ''}`}>
             {filteredDonors.map((donor) => (
-              <DonorCard 
-                key={donor.id} 
-                donor={donor} 
-                onClick={() => setSelectedSponsor(donor)} 
-              />
+              activeTab === 'doi-tac' ? (
+                <PartnerCard
+                  key={donor.id}
+                  donor={donor}
+                  onClick={() => setSelectedSponsor(donor)}
+                />
+              ) : (
+                <DonorCard
+                  key={donor.id}
+                  donor={donor}
+                  onClick={() => setSelectedSponsor(donor)}
+                />
+              )
             ))}
           </div>
         )}
