@@ -110,7 +110,7 @@ const getAllDonors = async () => {
 // HÀM: getStaffList
 // MỤC ĐÍCH: Lấy danh sách nhà tài trợ cho trang Quản lý (Cán bộ Quỹ)
 // ─────────────────────────────────────────────────────────────────────────────
-const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_desc', page = 1, pageSize = 12 }) => {
+const getStaffList = async ({ keyword = '', loai = '', excludeLoai = '', sortBy = 'tong_tai_tro_desc', page = 1, pageSize = 12 }) => {
   const conditions = [];
   const params = [];
 
@@ -124,6 +124,10 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
   if (loai) {
     conditions.push(`nt.loainhataitro = ?`);
     params.push(loai);
+  }
+  if (excludeLoai) {
+    conditions.push(`nt.loainhataitro != ?`);
+    params.push(excludeLoai);
   }
   
   // Chỉ lấy nhà tài trợ đang hoạt động

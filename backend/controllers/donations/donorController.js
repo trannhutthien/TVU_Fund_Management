@@ -102,6 +102,7 @@ export const getStaffDonors = async (req, res) => {
     const {
       keyword = '',
       loai = '',
+      exclude_loai = '',
       sort_by = 'tong_tai_tro_desc',
       page = 1,
       page_size = 12,
@@ -113,6 +114,7 @@ export const getStaffDonors = async (req, res) => {
     const { rows, total } = await DonorModel.getStaffList({
       keyword: String(keyword).trim(),
       loai: String(loai).trim(),
+      excludeLoai: String(exclude_loai).trim(),
       sortBy: String(sort_by).trim(),
       page: pageNum,
       pageSize,
