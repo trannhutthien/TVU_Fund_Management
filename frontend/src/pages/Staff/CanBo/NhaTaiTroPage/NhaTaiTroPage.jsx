@@ -224,21 +224,22 @@ const NhaTaiTroPage = () => {
               Theo dõi và ghi nhận đóng góp từ các nhà tài trợ
             </p>
           </div>
-          <Button
-            variant="primary"
-            leftIcon={<HiOutlinePlusCircle />}
-            onClick={() => handleOpenCreateModal(null)}
-          >
-            Tạo khoản tài trợ
-          </Button>
-          <Button
-            variant="secondary"
-            leftIcon={<HiOutlineUserPlus />}
-            onClick={() => setShowCreateModal(true)}
-            className={styles.headerBtn}
-          >
-            Tạo đối tác
-          </Button>
+          <div className={styles.headerActions}>
+            <Button
+              variant="primary"
+              leftIcon={<HiOutlinePlusCircle />}
+              onClick={() => handleOpenCreateModal(null)}
+            >
+              Tạo khoản tài trợ
+            </Button>
+            <Button
+              variant="secondary"
+              leftIcon={<HiOutlineUserPlus />}
+              onClick={() => setShowCreateModal(true)}
+            >
+              Tạo đối tác
+            </Button>
+          </div>
         </header>
 
         {/* ── Stat cards ───────────────────────── */}

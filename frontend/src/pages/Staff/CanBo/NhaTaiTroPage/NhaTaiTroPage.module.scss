@@ -53,6 +53,12 @@
   margin-right: 10px;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 // ── Stat cards ──────────────────────────────
 .statsRow {
   display: grid;
