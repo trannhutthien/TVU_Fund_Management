@@ -137,7 +137,7 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
       orderBy = 'nt.ngaytao DESC';
       break;
     case 'gan_nhat_desc':
-      orderBy = 'lan_cuoi DESC';
+      orderBy = 'MAX(CASE WHEN kt.trangthai IN ("Da nhan", "Da duyet") THEN kt.ngaytaitro END) DESC';
       break;
     case 'ten_asc':
       orderBy = 'nt.tennhataitro ASC';
@@ -150,14 +150,9 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
   // Đếm tổng
   const [countRows] = await pool.query(
     `SELECT COUNT(*) as total
-     FROM (
-       SELECT nt.nhataitro_id
-       FROM nhataitro nt
-       LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
-       LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
-       ${whereClause}
-       GROUP BY nt.nhataitro_id
-     ) AS sub`,
+     FROM nhataitro nt
+     LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
+     ${whereClause}`,
     params
   );
   const total = countRows[0]?.total || 0;
@@ -186,7 +181,9 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
      LEFT JOIN nguoidung nd ON nt.nguoidung_id = nd.nguoidung_id
      LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
      ${whereClause}
-     GROUP BY nt.nhataitro_id
+     GROUP BY nt.nhataitro_id, nt.tennhataitro, nt.loainhataitro, nt.logo,
+              nd.email, nd.sodienthoai, nd.diachi, nd.mota, nt.trangthai,
+              nt.nguoidung_id, nt.ngaytao, nd.hoten, nd.avatar
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`,
     [...params, pageSize, offset]
