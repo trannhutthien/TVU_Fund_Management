@@ -147,7 +147,7 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
       orderBy = 'tong_da_dong_gop DESC';
   }
 
-  // Đếm tổng (chỉ tính nhà tài trợ có ít nhất 1 khoản Da nhan / Da duyet)
+  // Đếm tổng
   const [countRows] = await pool.query(
     `SELECT COUNT(*) as total
      FROM (
@@ -157,7 +157,6 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
        LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
        ${whereClause}
        GROUP BY nt.nhataitro_id
-       HAVING COUNT(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN 1 END) > 0
      ) AS sub`,
     params
   );
@@ -188,7 +187,6 @@ const getStaffList = async ({ keyword = '', loai = '', sortBy = 'tong_tai_tro_de
      LEFT JOIN khoantaitro kt ON nt.nhataitro_id = kt.nhataitro_id
      ${whereClause}
      GROUP BY nt.nhataitro_id
-     HAVING COUNT(CASE WHEN kt.trangthai IN ('Da nhan', 'Da duyet') THEN 1 END) > 0
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`,
     [...params, pageSize, offset]
