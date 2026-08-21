@@ -481,22 +481,29 @@ Khi một khoản tài trợ được duyệt, hệ thống sẽ tự động c�
 
 **Cách 1 — Khách công khai (chưa đăng nhập):**
 
-Nhà tài trợ truy cập trang tài trợ công khai, điền thông tin: họ tên, email, số điện thoại, số tiền, chọn quỹ. Hệ thống sẽ:
-1. Kiểm tra email trùng lặp trong `nguoidung`
-2. Tạo hoặc liên kết bản ghi `nhataitro`
-3. Tạo `khoantaitro` với trạng thái `Cho duyet`
-4. Lưu thông tin chuyển khoản nếu có
+Nhà tài trợ truy cập trang `/dong-gop`, điền thông tin: họ tên, email, số điện thoại, số tiền, chọn quỹ. Hệ thống hỗ trợ **tất cả phương thức thanh toán** (Chuyển khoản, Trực tuyến, Tiền mặt):
+
+- **Chọn ngân hàng:** Sau khi chọn phương thức, hệ thống hiển thị `TransferContentSection` với thông tin tài khoản ngân hàng trường và nội dung chuyển khoản cố định: `(tên nhà tài trợ) (số điện thoại) (email) (mã giao dịch) (quỹ muốn tài trợ)`. Có nút copy nội dung CK.
+- **Upload minh chứng:** Nhà tài trợ có thể upload file minh chứng chuyển khoản (PDF/JPG/PNG, max 5MB) qua endpoint công khai `POST /api/upload/public`. File được lưu vào `khoantaitro.chungtu`.
+- **Mã giao dịch:** Nhập mã giao dịch ngân hàng để đối soát sau này.
+- **Tab "Đề xuất chương trình mới":** Nhà tài trợ có thể đề xuất chương trình/hoạt động mới với nguồn tài trợ kèm theo, cũng hỗ trợ chọn ngân hàng và upload minh chứng.
+
+Hệ thống sẽ:
+1. Upload minh chứng trước khi submit (nếu có)
+2. Kiểm tra email trùng lặp trong `nguoidung`
+3. Tạo hoặc liên kết bản ghi `nhataitro`
+4. Tạo `khoantaitro` với trạng thái `Cho duyet`, lưu `chungtu` và `magiaodich`
 
 **Cách 2 — Đã đăng nhập (role 4):**
 
-Nhà tài trợ đã có tài khoản có thể tài trợ trực tiếp qua `/apply` với 3 hình thức thanh toán:
-- **Chuyển khoản:** Hiển thị thông tin tài khoản ngân hàng trường
+Nhà tài trợ đã có tài khoản có thể tài trợ trực tiếp qua `/dong-gop` với 3 hình thức thanh toán:
+- **Chuyển khoản:** Hiển thị `TransferContentSection` với thông tin tài khoản ngân hàng trường, nội dung CK cố định, upload minh chứng
 - **Trực tuyến (VNPay):** Tích hợp cổng thanh toán (chưa triển khai)
 - **Tiền mặt:** Hiển thị địa chỉ văn phòng
 
 **Cách 3 — Cán bộ ghi nhận:**
 
-Cán bộ Quỹ hoặc Admin có thể ghi nhận khoản tài trợ từ nhà tài trợ đã có trong hệ thống hoặc tạo mới, qua `POST /api/donations`.
+Cán bộ Quỹ hoặc Admin có thể ghi nhận khoản tài trợ từ nhà tài trợ đã có trong hệ thống hoặc tạo mới, qua `POST /api/donors` (tạo NTT mới) hoặc `POST /api/donations` (ghi nhận khoản TT).
 
 #### Bước 2: Duyệt Khoản Tài Trợ
 
@@ -1203,6 +1210,7 @@ backend/uploads/
 | Ảnh quỹ | `POST /api/upload/fund` | JPG/PNG, ≤5MB | `avatars/fund/` | Có |
 | Ảnh SV | `POST /api/upload/student` | JPG/PNG, ≤5MB | `avatars/students/` | Có |
 | Ảnh tin | `POST /api/upload/news` | JPG/PNG, ≤5MB | `tintuc/` | Có |
+| Logo NTT | `POST /api/upload/donor` | JPG/PNG, ≤5MB | `avatars/donor/` | Có |
 
 **Avatar folder phân loại theo role:**
 - Role 1, 2, 3 → `avatars/staffs/`
@@ -1682,17 +1690,19 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 9 | PUT | `/api/donations/:id/confirm` | Protect (1) | Xác nhận tài trợ |
 | 10 | PUT | `/api/donations/:id/reject` | Protect (1,2) | Từ chối tài trợ |
 
-### 7.13 Donors — `/api/donors` (7 endpoints)
+### 7.13 Donors — `/api/donors` (9 endpoints)
 
 | # | Method | Path | Middleware (Roles) | Mô tả |
 |---|--------|------|-------------------|-------|
-| 1 | GET | `/api/donors/wall` | Public | Bảng vinh danh |
+| 1 | GET | `/api/donors/wall` | Public | Bảng vinh danh (bao gồm logo, filter theo loainhataitro) |
 | 2 | GET | `/api/donors/public/:id` | Public | Hồ sơ nhà tài trợ |
 | 3 | GET | `/api/donors/my-stats` | Protect (4) | Thống kê của tôi |
 | 4 | GET | `/api/donors/my-donations` | Protect (4) | Danh sách tài trợ của tôi |
 | 5 | GET | `/api/donors/stats` | Protect (1,3) | Thống kê nhà tài trợ |
-| 6 | GET | `/api/donors/` | Protect (1,3) | Danh sách nhà tài trợ |
-| 7 | GET | `/api/donors/:id` | Protect (1,3) | Chi tiết nhà tài trợ |
+| 6 | GET | `/api/donors/` | Protect (1,3) | Danh sách nhà tài trợ (bao gồm logo) |
+| 7 | GET | `/api/donors/:id` | Protect (1,3) | Chi tiết nhà tài trợ (bao gồm logo) |
+| 8 | POST | `/api/donors/` | Protect (1,3) | Tạo nhà tài trợ mới (tên, loại, logo) |
+| 9 | PATCH | `/api/donors/:id/logo` | Protect (1,3) | Cập nhật logo nhà tài trợ |
 
 ### 7.14 Transactions — `/api/transactions` (12 endpoints)
 
@@ -1824,18 +1834,19 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 4 | POST | `/api/guest/resend-otp` | Public | Gửi lại OTP |
 | 5 | GET | `/api/guest/track/:uuid` | Public | Theo dõi đơn |
 
-### 7.24 Upload — `/api/upload` (8 endpoints)
+### 7.24 Upload — `/api/upload` (9 endpoints)
 
 | # | Method | Path | Middleware | Mô tả |
 |---|--------|------|-----------|-------|
 | 1 | POST | `/api/upload/` | Protect + Upload | Upload 1 file |
-| 2 | POST | `/api/upload/public` | Upload | Upload công khai |
+| 2 | POST | `/api/upload/public` | Upload | Upload công khai (minh chứng CK, không cần auth) |
 | 3 | POST | `/api/upload/multiple` | Protect + UploadMulti | Upload nhiều file (max 5) |
 | 4 | POST | `/api/upload/avatar` | Protect + UploadAvatar | Upload avatar |
 | 5 | POST | `/api/upload/fund` | Protect + UploadFund | Upload ảnh quỹ |
 | 6 | POST | `/api/upload/student` | Protect + UploadStudent | Upload ảnh SV |
 | 7 | POST | `/api/upload/news` | Protect + UploadNews | Upload ảnh tin |
-| 8 | DELETE | `/api/upload/:filename` | Protect | Xóa file |
+| 8 | POST | `/api/upload/donor` | Protect + UploadDonor | Upload logo nhà tài trợ |
+| 9 | DELETE | `/api/upload/:filename` | Protect | Xóa file |
 
 ### 7.25 Thong Bao — `/api/thong-bao` (4 endpoints)
 
@@ -1897,7 +1908,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | Phan Bo Ngan Sach | 6 |
 | Bank Accounts | 9 |
 | Donations | 10 |
-| Donors | 7 |
+| Donors | 9 |
 | Transactions | 12 |
 | Bao Cao | 1 |
 | Statistics | 16 |
@@ -1912,8 +1923,8 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | Student Showcase | 7 |
 | Danh Gia | 6 |
 | Guest | 5 |
-| Upload | 8 |
-| **TỔNG** | **204** |
+| Upload | 9 |
+| **TỔNG** | **207** |
 
 ---
 
@@ -1978,7 +1989,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 31 | `/admin/quy/sua/:id` | CanBoTaoQuyPage | (sub-route) |
 | 32 | `/admin/phan-bo` | PhanBoPage | Trích lập Ngân sách |
 | 33 | `/admin/du-toan` | DuToanNamPage | Dự toán hàng năm |
-| 34 | `/admin/nha-tai-tro` | CanBoNhaTaiTroPage(isAdmin) | Nhà tài trợ |
+| 34 | `/admin/nha-tai-tro` | CanBoNhaTaiTroPage(isAdmin) | Nhà tài trợ (tab "Nhà tài trợ" / "Đối tác") |
 | 35 | `/admin/khoan-tai-tro` | KeToanKhoanTaiTroPage | Khoản tài trợ |
 | 36 | `/admin/giao-dich` | KeToanLichSuGiaoDichPage | Lịch sử giao dịch |
 | 37 | `/admin/chung-tu` | DoiSoatChungTuPage | Đối soát chứng từ |
@@ -2015,7 +2026,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 58 | `/can-bo/quy/sua/:id` | CanBoTaoQuyPage | (sub-route) |
 | 59 | `/can-bo/phan-bo` | PhanBoPage | Trích lập Ngân sách |
 | 60 | `/can-bo/du-toan` | DuToanNamPage | Dự toán hàng năm |
-| 61 | `/can-bo/nha-tai-tro` | CanBoNhaTaiTroPage | Nhà tài trợ |
+| 61 | `/can-bo/nha-tai-tro` | CanBoNhaTaiTroPage | Nhà tài trợ (tab "Nhà tài trợ" / "Đối tác") |
 | 62 | `/can-bo/users` | CanBoUserManagementPage | Quản lý người dùng |
 | 63 | `/can-bo/sinh-vien-noi-bat` | StudentShowcasePage | Sinh viên nổi bật |
 | 64 | `/can-bo/danhgia` | DanhGiaPage | Cảm nhận sinh viên |
@@ -2646,4 +2657,4 @@ cd frontend && npm run build
 
 ---
 
-*Cập nhật lần cuối: 2026-08-02*
+*Cập nhật lần cuối: 2026-08-21*

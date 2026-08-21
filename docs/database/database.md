@@ -1,7 +1,7 @@
 # TVU Fund Management — Database Schema Reference
 
 > **Database:** `tvu_fund_management` · **Charset:** utf8mb4 · **Engine:** InnoDB
-> **Cập nhật:** 2026-08-17 · **Source:** Aiven Cloud production + migrations
+> **Cập nhật:** 2026-08-21 · **Source:** Aiven Cloud production + migrations
 
 ---
 
@@ -728,7 +728,10 @@ Nhà Tài Trợ → (Bước 2: Kế toán xác nhận) → Quỹ Thành Phần 
 - **`chitiet_dutoan`**: Chi tiet tung khoan chi trong de xuat du toan. Moi de xuat co nhieu chi tiet.
 - **`thong_bao`**: Thong bao trong he thong (bell notification). `daDoc=0` la chua doc, `daDoc=1` la da doc.
 - **`lichtrano.sotienlaiphat`**: Tinh theo cong thuc: `GocConLai x LaiSuatPhat x SoNgayQH / 365`. LaiSuatPhat = LaiSuatThamChieu x HeSoPhat (he so mac dinh = 2).
-- **`guest_tracking`**: Thay the 2 bang cu `guest_khoantaitro` + `guest_yeucauhotro`. Du lieu form luu trong JWT token (stateless), bang nay chi track minimal info (uuid, ten, email, loai, quy, sotien, otp_hash). Luong: Submit → INSERT (CHO_XAC_MINH) → Verify OTP → create main records + UPDATE (DA_CHUYEN).
+- **`nhataitro.logo`**: Đường dẫn file logo nhà tài trợ (upload qua `POST /api/upload/donor`, lưu tại `uploads/avatars/donor/`). Được hiển thị trên trang vinh danh (donor wall) và trang đối tác staff. Camera button trong drawer cho phép cập nhật logo trực tiếp.
+- **`khoantaitro.chungtu`**: File minh chứng chuyển khoản (upload qua `POST /api/upload/public` bởi khách, hoặc `POST /api/upload` bởi user đã đăng nhập). Được sử dụng trong quy trình đóng góp `/dong-gop`: nhà tài trợ upload ảnh minh chứng CK, lưu vào trường này để kế toán đối soát.
+- **`nhataitro.loainhataitro`**: Giá trị `Doi tac` được dùng cho tab "Đối tác" trên trang staff — hiển thị nhà tài trợ dạng card logo + tên (đơn giản, không stats).
+- **`guest_tracking`**: Thay thế 2 bang cu `guest_khoantaitro` + `guest_yeucauhotro`. Du lieu form luu trong JWT token (stateless), bang nay chi track minimal info (uuid, ten, email, loai, quy, sotien, otp_hash). Luong: Submit → INSERT (CHO_XAC_MINH) → Verify OTP → create main records + UPDATE (DA_CHUYEN).
 - **`hopdongvayvon` 2 giai doan**: `sotien_dot1` = 50% so tien vay, `sotien_dot2` = 50% con lai. `lan_nghiem_thu_dat` dem so lan nghiem thu cuoi cung dat. Can 2/3 lan dat de chuyen dot 2.
 - **`nghiemthu.dotgiaingan`**: Phan biet nghiem thu dot 1 (1) va dot 2 (2). Chi dem ket qua `'Nghiem thu cuoi cung'` khi tinh 2/3 threshold.
 - **`yeucauhotro.trangthai` 2 giai doan**: Them cac trang thai: `Cho giai ngan dot 1`, `Da giai ngan dot 1`, `Cho nghiem thu dot 1`, `Da nghiem thu dot 1`, `Cho giai ngan dot 2`, `Dang thu hoi no`, `Hoan thanh`.
