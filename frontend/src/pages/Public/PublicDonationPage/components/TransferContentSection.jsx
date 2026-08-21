@@ -3,22 +3,13 @@ import PropTypes from 'prop-types';
 import styles from './TransferContentSection.module.scss';
 
 const TransferContentSection = ({
-  hoTen = '',
-  soDienThoai = '',
-  email = '',
-  tenQuy = '',
   bankAccount,
   chungTuFile,
   onChungTuChange,
 }) => {
   const [copied, setCopied] = useState(false);
 
-  const transferContent = [
-    hoTen.trim(),
-    soDienThoai.trim(),
-    email.trim(),
-    tenQuy.trim(),
-  ].filter(Boolean).join(' ');
+  const transferContent = '(tên nhà tài trợ) (số điện thoại) (email) (mã giao dịch) (quỹ muốn tài trợ)';
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(transferContent).then(() => {
@@ -102,7 +93,7 @@ const TransferContentSection = ({
           <line x1="12" y1="16" x2="12" y2="12" />
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
-        <p>Vui lòng ghi đúng nội dung chuyển khoản trên để hệ thống tự động đối soát với khoản đóng góp của bạn.</p>
+        <p>Vui lòng chuyển khoản đúng nội dung để hệ thống tự động đối soát.</p>
       </div>
 
       <div className={styles.uploadSection}>
@@ -152,10 +143,6 @@ const TransferContentSection = ({
 
 TransferContentSection.displayName = 'TransferContentSection';
 TransferContentSection.propTypes = {
-  hoTen: PropTypes.string,
-  soDienThoai: PropTypes.string,
-  email: PropTypes.string,
-  tenQuy: PropTypes.string,
   bankAccount: PropTypes.shape({
     tenNganHang: PropTypes.string,
     soTaiKhoan: PropTypes.string,

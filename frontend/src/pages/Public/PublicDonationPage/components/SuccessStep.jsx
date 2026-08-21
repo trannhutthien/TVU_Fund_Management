@@ -19,13 +19,7 @@ const SuccessStep = memo(({ donationResult, bankAccounts, onNewDonation }) => {
     });
   };
 
-  const nhaTaiTro = donationResult?.nhaTaiTro || {};
-  const transferContent = [
-    nhaTaiTro.ten || '',
-    nhaTaiTro.soDienThoai || '',
-    nhaTaiTro.email || '',
-    donationResult?.quy?.tenQuy || '',
-  ].filter(Boolean).join(' ');
+  const transferContent = '(tên nhà tài trợ) (số điện thoại) (email) (mã giao dịch) (quỹ muốn tài trợ)';
 
   return (
     <div className={styles.stepContent}>

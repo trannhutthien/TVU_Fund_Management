@@ -451,10 +451,6 @@ const DonationDetailsStep = memo(({
       {/* HIỂN THỊ NỘI DUNG CHUYỂN KHOAN + MINH CHỨNG - EXISTING FUND */}
       {destinationType === DESTINATION_TYPES.EXISTING_FUND && formData.taiKhoanNganHangId && (
         <TransferContentSection
-          hoTen={formData.hoTen}
-          soDienThoai={formData.soDienThoai}
-          email={formData.email}
-          tenQuy={selectedFund?.tenQuy}
           bankAccount={selectedBankAccount}
           chungTuFile={chungTuFile}
           onChungTuChange={onChungTuChange}
@@ -507,10 +503,6 @@ const DonationDetailsStep = memo(({
       {/* HIỂN THỊ NỘI DUNG CHUYỂN KHOAN + MINH CHỨNG - ĐỀ XUẤT */}
       {destinationType === DESTINATION_TYPES.PROPOSE_PROGRAM && formData.taiKhoanNganHangId && (
         <TransferContentSection
-          hoTen={formData.hoTen}
-          soDienThoai={formData.soDienThoai}
-          email={formData.email}
-          tenQuy={formData.tenChuongTrinh || selectedFund?.tenQuy}
           bankAccount={selectedBankAccount}
           chungTuFile={chungTuFile}
           onChungTuChange={onChungTuChange}
