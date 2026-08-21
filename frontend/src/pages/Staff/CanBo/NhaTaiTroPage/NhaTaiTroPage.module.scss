@@ -508,6 +508,39 @@
   align-items: center;
   justify-content: center;
   border: 3px solid #e2e8f0;
+  position: relative;
+}
+
+.partnerLogoUploadBtn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-navy-blue, #1a2f5e);
+  color: #fff;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    background: #2d4a7a;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.partnerCard:hover .partnerLogoUploadBtn {
+  opacity: 1;
 }
 
 .partnerLogoImg {

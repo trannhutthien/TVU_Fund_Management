@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   HiOutlinePlusCircle,
   HiOutlineUserPlus,
@@ -16,11 +16,14 @@ import {
   HiOutlineChevronRight,
   HiOutlineBuildingOffice2,
   HiOutlineUser,
+  HiOutlineCamera,
 } from 'react-icons/hi2';
+import { toast } from 'react-toastify';
 import Button from '@components/common/Button/Button';
 import Input from '@components/common/Input/Input';
 import { StatCard } from '@components/common/Card';
-import { getStaffDonors, getDonorStats } from '@services/donorService';
+import { getStaffDonors, getDonorStats, updateDonorLogo } from '@services/donorService';
+import { uploadService } from '@services/uploadService';
 import { formatCurrency, getInitial } from '@utils/formatters';
 import NhaTaiTroDetailDrawer from './NhaTaiTroDetailDrawer/NhaTaiTroDetailDrawer';
 import KhoanTaiTroModal from './KhoanTaiTroModal/KhoanTaiTroModal';
@@ -76,6 +79,9 @@ const NhaTaiTroPage = () => {
   const [showKhoanModal, setShowKhoanModal] = useState(false);
   const [preselectedSponsor, setPreselectedSponsor] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const logoInputRef = useRef(null);
+  const [uploadingLogoId, setUploadingLogoId] = useState(null);
+  const uploadingLogoRef = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedKeyword(filters.keyword), 500);
@@ -86,9 +92,11 @@ const NhaTaiTroPage = () => {
     setLoading(true);
     try {
       const effectiveLoai = activeTab === 'doi-tac' ? 'Doi tac' : filters.loai;
+      const excludeLoai = activeTab === 'nha-tai-tro' && !filters.loai ? 'Doi tac' : '';
       const res = await getStaffDonors({
         keyword: debouncedKeyword,
         loai: effectiveLoai,
+        exclude_loai: excludeLoai,
         sort_by: filters.sort_by,
         page,
         page_size: PAGE_SIZE,
@@ -173,6 +181,30 @@ const NhaTaiTroPage = () => {
     getDonorStats()
       .then((res) => setStats(res?.data || null))
       .catch(() => {});
+  };
+
+  const handlePartnerLogoUpload = async (e, sponsorItem) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('File vượt quá 5MB'); return; }
+    if (!file.type.startsWith('image/')) { toast.error('Chỉ chấp nhận file ảnh'); return; }
+
+    setUploadingLogoId(sponsorItem.nha_tai_tro_id);
+    try {
+      const upRes = await uploadService.uploadDonorLogo(file);
+      const logoPath = upRes?.data?.filePath;
+      if (!logoPath) { toast.error('Upload thất bại'); return; }
+
+      await updateDonorLogo(sponsorItem.nha_tai_tro_id, logoPath);
+      toast.success('Cập nhật logo thành công');
+      fetchData();
+    } catch (err) {
+      console.error('Lỗi upload logo:', err);
+      toast.error('Lỗi khi cập nhật logo');
+    } finally {
+      setUploadingLogoId(null);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
   };
 
   return (
@@ -268,7 +300,7 @@ const NhaTaiTroPage = () => {
                 setFilters((f) => ({ ...f, loai: e.target.value }))
               }
             >
-              {LOAI_OPTIONS.map((o) => (
+              {LOAI_OPTIONS.filter((o) => o.value !== 'Doi tac').map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
                 </option>
@@ -315,6 +347,15 @@ const NhaTaiTroPage = () => {
           </div>
         ) : activeTab === 'doi-tac' ? (
           <div className={styles.partnersGrid}>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                if (uploadingLogoRef.current) handlePartnerLogoUpload(e, uploadingLogoRef.current);
+              }}
+            />
             {sponsors.map((sp) => (
               <div key={sp.nha_tai_tro_id} className={styles.partnerCard} onClick={() => setSelectedSponsor(sp)}>
                 <div className={styles.partnerLogoWrap}>
@@ -325,6 +366,19 @@ const NhaTaiTroPage = () => {
                       {getInitial(sp.ten_nha_tai_tro)}
                     </div>
                   )}
+                  <button
+                    type="button"
+                    className={styles.partnerLogoUploadBtn}
+                    title="Cập nhật logo"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      uploadingLogoRef.current = sp;
+                      logoInputRef.current?.click();
+                    }}
+                    disabled={uploadingLogoId === sp.nha_tai_tro_id}
+                  >
+                    <HiOutlineCamera size={14} />
+                  </button>
                 </div>
                 <h3 className={styles.partnerName}>{sp.ten_nha_tai_tro}</h3>
               </div>
