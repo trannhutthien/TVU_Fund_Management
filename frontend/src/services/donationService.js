@@ -37,6 +37,22 @@ export const createPublicProposal = async (proposalData) => {
 };
 
 /**
+ * Tạo đề xuất chương trình cho nha tai tro da dang nhap (BO QUA OTP)
+ * @param {Object} proposalData - Thông tin đề xuất (khong can guest info)
+ * @returns {Promise} Response từ server
+ */
+export const createAuthenticatedProposal = async (proposalData) => {
+  try {
+    const response = await api.post('/donations/authenticated/propose-program', proposalData);
+    return response.data;
+  } catch (error) {
+    const serverMsg = error.response?.data?.message || error.message;
+    console.error('Error creating authenticated proposal:', serverMsg, proposalData);
+    throw error.response?.data || { message: 'Lỗi khi gửi đề xuất chương trình' };
+  }
+};
+
+/**
  * Xác thực OTP cho đề xuất chương trình
  * @param {Object} data - { email, otpCode, type: 'proposal', otpToken }
  * @returns {Promise} Response từ server

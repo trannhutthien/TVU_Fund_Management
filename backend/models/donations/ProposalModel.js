@@ -107,10 +107,12 @@ const createProposalWithDonation = async (data) => {
         sotienmoisuat,
         sotientaitro,
         loaihotro,
+        tilethuhoi,
         ngaybatdau,
         ngayketthuc,
+        mucthuhoi,
         trangthai
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
       [
         nhaTaiTroId,
         proposalInfo.quyThanhPhanId,
@@ -120,8 +122,10 @@ const createProposalWithDonation = async (data) => {
         proposalInfo.soTienMoiSuat || null,
         parseFloat(proposalInfo.soLuongSuat || 0) * parseFloat(proposalInfo.soTienMoiSuat || 0),
         proposalInfo.loaiHinh || 'Tai tro khong hoan lai',
+        proposalInfo.tileThuHoi || null,
         proposalInfo.thoiGianBatDau || null,
-        proposalInfo.thoiGianKetThuc || null
+        proposalInfo.thoiGianKetThuc || null,
+        proposalInfo.mucThuHoi || null
       ]
     );
     

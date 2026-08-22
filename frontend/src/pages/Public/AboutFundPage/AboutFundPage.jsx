@@ -461,12 +461,12 @@ const AboutFundPage = () => {
                     <div className={styles.hinhThucGrid}>
                       <div className={`${styles.hinhThucItem} ${styles.hinhThucKhongHoan}`}>
                         <div className={styles.hinhThucBadge}>🎁</div>
-                        <h5>Tài trợ không hoàn lại</h5>
+                        <h5>Tài trợ không thu hồi</h5>
                         <p>Áp dụng đối với các hoạt động giáo dục, đào tạo, nghiên cứu khoa học, phát triển cơ sở vật chất, tổ chức hội nghị, hội thảo và các nhiệm vụ phục vụ sự phát triển của Đại học Trà Vinh.</p>
                       </div>
                       <div className={`${styles.hinhThucItem} ${styles.hinhThucCoThuHoi}`}>
                         <div className={styles.hinhThucBadge}>🔄</div>
-                        <h5>Tài trợ có thu hồi một phần</h5>
+                        <h5>Tài trợ thu hồi một phần</h5>
                         <p>Áp dụng đối với các dự án nghiên cứu, chuyển giao công nghệ, thương mại hóa kết quả nghiên cứu và các dự án có khả năng tạo nguồn thu để hoàn trả một phần kinh phí.</p>
                       </div>
                       <div className={`${styles.hinhThucItem} ${styles.hinhThucChoVay}`}>

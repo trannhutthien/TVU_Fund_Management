@@ -15,6 +15,7 @@ import ProposalDetailDrawer from './ProposalDetailDrawer/ProposalDetailDrawer';
 import ApproveByCanBoModal from './ApproveByCanBoModal/ApproveByCanBoModal';
 import RejectByCanBoModal from './RejectByCanBoModal/RejectByCanBoModal';
 import ConfirmMoneyModal from './ConfirmMoneyModal/ConfirmMoneyModal';
+import ApproveLoanContractModal from './ApproveLoanContractModal/ApproveLoanContractModal';
 import CreateActivityModal from './CreateActivityModal/CreateActivityModal';
 import styles from './ProposalListPage.module.scss';
 
@@ -61,6 +62,7 @@ const ProposalListPage = () => {
   const [approveModal, setApproveModal] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [confirmMoneyModal, setConfirmMoneyModal] = useState(null);
+  const [approveLoanModal, setApproveLoanModal] = useState(null);
   const [createActivityModal, setCreateActivityModal] = useState(null);
 
   // Pending count dựa trên role
@@ -84,7 +86,7 @@ const ProposalListPage = () => {
   const getPendingTabLabel = () => {
     if (userRole === 3) return 'Chờ duyệt';
     if (userRole === 2) return 'Chờ xác nhận';
-    if (userRole === 1) return 'Chờ tạo hoạt động';
+    if (userRole === 1) return 'Chờ xử lý';
     return 'Cần xử lý';
   };
 
@@ -139,8 +141,8 @@ const ProposalListPage = () => {
           // Kế toán: Lấy "Can bo da duyet"
           trangThaiQuery = 'Can bo da duyet';
         } else if (userRole === 1) {
-          // Admin: Lấy "Da nhan tien"
-          trangThaiQuery = 'Da nhan tien';
+          // Admin: Lấy cả "Da nhan tien" (cần duyệt hợp đồng) + "Duyet hop dong vay" (cần tạo hoạt động)
+          trangThaiQuery = 'Da nhan tien,Duyet hop dong vay';
         }
       }
 
@@ -203,6 +205,10 @@ const ProposalListPage = () => {
     setConfirmMoneyModal(proposal);
   };
 
+  const handleApproveLoanContract = (proposal) => {
+    setApproveLoanModal(proposal);
+  };
+
   const handleCreateActivity = (proposal) => {
     setCreateActivityModal(proposal);
   };
@@ -228,6 +234,7 @@ const ProposalListPage = () => {
     setApproveModal(null);
     setRejectModal(null);
     setConfirmMoneyModal(null);
+    setApproveLoanModal(null);
     setCreateActivityModal(null);
     setSelectedProposal(null);
     
@@ -314,6 +321,7 @@ const ProposalListPage = () => {
           onApprove={handleApprove}
           onReject={handleReject}
           onConfirmMoney={handleConfirmMoney}
+          onApproveLoanContract={handleApproveLoanContract}
           onCreateActivity={handleCreateActivity}
         />
 
@@ -378,6 +386,14 @@ const ProposalListPage = () => {
         <ConfirmMoneyModal
           proposal={confirmMoneyModal}
           onClose={() => setConfirmMoneyModal(null)}
+          onSuccess={handleModalSuccess}
+        />
+      )}
+
+      {approveLoanModal && (
+        <ApproveLoanContractModal
+          proposal={approveLoanModal}
+          onClose={() => setApproveLoanModal(null)}
           onSuccess={handleModalSuccess}
         />
       )}

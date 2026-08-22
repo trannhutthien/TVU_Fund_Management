@@ -2,6 +2,7 @@ import { memo, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS } from '../constants';
 import { toFundBankAccount } from '@services/systemSettingsService';
+import khuonVienImage from '@assets/images/khuonVienTruong.png';
 import styles from './PaymentMethodSection.module.scss';
 
 const PaymentMethodSection = ({
@@ -168,26 +169,17 @@ const PaymentMethodSection = ({
           <div className={styles.cashInfo}>
             <h4>Địa điểm tiếp nhận</h4>
             <ul className={styles.cashList}>
-              <li>
-                <span className={styles.cashDot} />
-                <div><strong>Địa chỉ:</strong> {publicSettings?.dia_chi_lien_he || '126 Nguyễn Thiện Thành, Phường 5, TP. Trà Vinh'}</div>
-              </li>
-              <li>
-                <span className={styles.cashDot} />
-                <div><strong>Thời gian:</strong> {publicSettings?.gio_lam_viec || 'Thứ 2 - Thứ 6: 7:30 - 17:00'}</div>
-              </li>
-              <li>
-                <span className={styles.cashDot} />
-                <div><strong>Hotline:</strong> {publicSettings?.so_dien_thoai || '0294.3855246'}</div>
-              </li>
-              <li>
-                <span className={styles.cashDot} />
-                <div><strong>Email:</strong> {contactEmail || 'TVU@tvu.edu.vn'}</div>
-              </li>
+              <li><strong>Địa chỉ:</strong> {publicSettings?.dia_chi_lien_he || '126 Nguyễn Thiện Thành, Phường 5, TP. Trà Vinh'}</li>
+              <li><strong>Thời gian:</strong> {publicSettings?.gio_lam_viec || 'Thứ 2 - Thứ 6: 7:30 - 17:00'}</li>
+              <li><strong>Hotline:</strong> {publicSettings?.so_dien_thoai || '0294.3855246'}</li>
+              <li><strong>Email:</strong> {contactEmail || 'TVU@tvu.edu.vn'}</li>
             </ul>
           </div>
+
+          <img src={khuonVienImage} alt="Khuôn viên Đại học Trà Vinh" className={styles.cashImage} />
         </div>
       )}
+
     </div>
   );
 };

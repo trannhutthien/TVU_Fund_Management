@@ -1,6 +1,7 @@
 import ProposalModel from "../../models/donations/ProposalModel.js";
 import FundModel from "../../models/funds/FundModel.js";
 import GuestModel from "../../models/guest/GuestModel.js";
+import pool from "../../config/db.js";
 import {
   sendProposalOTPEmail,
   sendProposalCreatedEmail
@@ -41,6 +42,7 @@ export const createProposal = async (req, res) => {
       tenChuongTrinh,
       moTa,
       loaiHinh,
+      tilethuhoi,
       thoiGianBatDau,
       thoiGianKetThuc,
       soLuongSuat,
@@ -162,6 +164,18 @@ export const createProposal = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     // 3. CREATE PROPOSAL WITH DONATION
     // ─────────────────────────────────────────────────────────────────────────
+    // Tính mucthuhoi từ tilethuhoi do nhà tài trợ nhập
+    const soTienTaiTro = soTien || (parseFloat(soLuongSuat || 0) * parseFloat(soTienMoiSuat || 0));
+    const finalLoaiHinh = loaiHinh || 'Tai tro khong hoan lai';
+    let mucThuHoi = null;
+    let tileThuHoiNum = null;
+    if (finalLoaiHinh === 'Tai tro co thu hoi' && tilethuhoi) {
+      tileThuHoiNum = parseFloat(tilethuhoi);
+      if (!isNaN(tileThuHoiNum) && tileThuHoiNum > 0 && tileThuHoiNum <= 100) {
+        mucThuHoi = Math.min(soTienTaiTro * tileThuHoiNum / 100, soTienTaiTro);
+      }
+    }
+
     const result = await ProposalModel.createProposalWithDonation({
       donorInfo: {
         ten: ten.trim(),
@@ -172,11 +186,13 @@ export const createProposal = async (req, res) => {
         quyThanhPhanId,
         tenChuongTrinh: tenChuongTrinh.trim(),
         moTa: moTa?.trim(),
-        loaiHinh: loaiHinh || 'Tai tro khong hoan lai',
+        loaiHinh: finalLoaiHinh,
+        tileThuHoi: tileThuHoiNum,
         thoiGianBatDau,
         thoiGianKetThuc,
         soLuongSuat,
         soTienMoiSuat,
+        mucThuHoi,
         doiTuongNhan: doiTuongNhan?.trim(),
         yeuCauHocLuc: yeuCauHocLuc?.trim(),
         dieuKienHoanTra: dieuKienHoanTra?.trim(),
@@ -304,6 +320,8 @@ export const submitPublicProposal = async (req, res) => {
       so_luong_suat,
       so_tien_moi_suat,
       loai_ho_tro,
+      tilethuhoi,
+      kyhantrano,
       ngay_bat_dau,
       ngay_ket_thuc,
       formTimestamp,
@@ -398,14 +416,25 @@ export const submitPublicProposal = async (req, res) => {
       });
     }
 
+    // Validate kyhantrano cho "Cho vay"
+    const resolvedLoaiHoTro = loai_ho_tro || "Tai tro khong hoan lai";
+    let kyHanTraNoNum = null;
+    if (resolvedLoaiHoTro === "Cho vay") {
+      kyHanTraNoNum = parseInt(kyhantrano);
+      if (isNaN(kyHanTraNoNum) || kyHanTraNoNum <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Khi de xuat cho vay, vui long nhap ky han tra no (thang) lon hon 0",
+        });
+      }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 4. GENERATE OTP AND TRACKING UUID (Requirements 1.1-1.4)
     // ─────────────────────────────────────────────────────────────────────────
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // Requirement 1.1
     const otpExpiresAt = createGuestOtpExpiresAt(); // Requirement 1.2 (30 minutes)
     const trackingUuid = crypto.randomUUID(); // Requirement 1.3
-
-    const resolvedLoaiHoTro = loai_ho_tro || "Tai tro khong hoan lai";
 
     // Requirement 1.4: Compute OTP hash
     const otpHash = hashGuestOtp(normalizedEmail, trackingUuid, otpCode);
@@ -424,6 +453,8 @@ export const submitPublicProposal = async (req, res) => {
       soLuongSuat,
       soTienMoiSuat,
       loaiHoTro: resolvedLoaiHoTro,
+      tileThuHoi: tilethuhoi ? parseFloat(tilethuhoi) : null,
+      kyHanTraNo: kyHanTraNoNum,
       ngayBatDau: ngay_bat_dau || null,
       ngayKetThuc: ngay_ket_thuc || null,
       trackingUuid,
@@ -708,6 +739,243 @@ export const resendProposalOtp = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Loi he thong khi gui lai ma OTP",
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// POST /api/donations/authenticated/propose-program — Nha tai tro da dang nhap tao de xuat (BO QUA OTP)
+// ═══════════════════════════════════════════════════════════════════════════════
+export const submitAuthenticatedProposal = async (req, res) => {
+  try {
+    const {
+      quy_thanh_phan_id,
+      ten_chuong_trinh,
+      mo_ta,
+      so_luong_suat,
+      so_tien_moi_suat,
+      loai_ho_tro,
+      tilethuhoi,
+      kyhantrano,
+      ngay_bat_dau,
+      ngay_ket_thuc,
+      chungTu,
+      taiKhoanNganHangId,
+      formTimestamp,
+    } = req.body;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 1. ANTI-BOT PROTECTION
+    // ─────────────────────────────────────────────────────────────────────────
+    if (formTimestamp) {
+      const elapsed = Date.now() - new Date(formTimestamp).getTime();
+      if (elapsed < 3000) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui long doi it nhat 3 giay truoc khi gui form",
+        });
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 2. VALIDATE REQUIRED FIELDS
+    // ─────────────────────────────────────────────────────────────────────────
+    if (!quy_thanh_phan_id || !ten_chuong_trinh || !so_luong_suat || !so_tien_moi_suat) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui long nhap day du thong tin bat buoc",
+      });
+    }
+
+    const soLuongSuat = parseInt(so_luong_suat);
+    const soTienMoiSuat = parseFloat(so_tien_moi_suat);
+
+    if (isNaN(soLuongSuat) || soLuongSuat <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "So luong suat phai lon hon 0",
+      });
+    }
+
+    if (isNaN(soTienMoiSuat) || soTienMoiSuat <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "So tien moi suat phai lon hon 0",
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 3. VERIFY FUND
+    // ─────────────────────────────────────────────────────────────────────────
+    const fund = await FundModel.getFundById(quy_thanh_phan_id);
+
+    if (!fund) {
+      return res.status(404).json({
+        success: false,
+        message: "Khong tim thay quy thanh phan nay",
+      });
+    }
+
+    if (fund.capdo !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Chi co the de xuat chuong trinh cho Quy Thanh phan (cap 2)",
+        error_code: "FUND_WRONG_LEVEL",
+      });
+    }
+
+    if (fund.trang_thai !== "Dang hoat dong") {
+      return res.status(400).json({
+        success: false,
+        message: `Quy "${fund.ten_quy}" hien khong hoat dong`,
+        error_code: "FUND_INACTIVE",
+      });
+    }
+
+    // Validate kyhantrano cho "Cho vay"
+    const resolvedLoaiHoTro = loai_ho_tro || "Tai tro khong hoan lai";
+    let kyHanTraNoNum = null;
+    if (resolvedLoaiHoTro === "Cho vay") {
+      kyHanTraNoNum = parseInt(kyhantrano);
+      if (isNaN(kyHanTraNoNum) || kyHanTraNoNum <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Khi de xuat cho vay, vui long nhap ky han tra no (thang) lon hon 0",
+        });
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 4. RESOLVE NHATAITRO FROM JWT
+    // ─────────────────────────────────────────────────────────────────────────
+    const nguoidungId = req.user.id;
+
+    // Tim nha tai tro linked voi nguoidung nay
+    const [existingDonor] = await pool.query(
+      "SELECT nhataitro_id FROM nhataitro WHERE nguoidung_id = ? LIMIT 1",
+      [nguoidungId]
+    );
+
+    let nhaTaiTroId = null;
+    if (existingDonor.length > 0) {
+      nhaTaiTroId = existingDonor[0].nhataitro_id;
+    } else {
+      // Tao nha tai tro moi neu chua co
+      const [userRows] = await pool.query(
+        "SELECT hoten FROM nguoidung WHERE nguoidung_id = ? LIMIT 1",
+        [nguoidungId]
+      );
+      const hoTen = userRows.length > 0 ? userRows[0].hoten : "Nha tai tro";
+      const [donorInsert] = await pool.query(
+        `INSERT INTO nhataitro (nguoidung_id, tennhataitro, loainhataitro, trangthai)
+         VALUES (?, ?, 'Ca nhan', 'Hoat dong')`,
+        [nguoidungId, hoTen]
+      );
+      nhaTaiTroId = donorInsert.insertId;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 5. CREATE PROPOSAL + DONATION DIRECTLY (NO OTP)
+    // ─────────────────────────────────────────────────────────────────────────
+    const soTienTaiTro = soLuongSuat * soTienMoiSuat;
+
+    let tileThuHoiNum = null;
+    let mucThuHoi = null;
+    if (resolvedLoaiHoTro === "Tai tro co thu hoi" && tilethuhoi) {
+      tileThuHoiNum = parseFloat(tilethuhoi);
+      if (!isNaN(tileThuHoiNum) && tileThuHoiNum > 0 && tileThuHoiNum <= 100) {
+        mucThuHoi = Math.min(soTienTaiTro * tileThuHoiNum / 100, soTienTaiTro);
+      }
+    }
+
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Tao de xuat chuong trinh
+      const [proposalInsert] = await connection.query(
+        `INSERT INTO dexuatchuongtrinh (
+          quythanhphan_id, nhataitro_id, khoantaitro_id,
+          tenchuongtrinh, mota, soluongsuat, sotienmoisuat, sotientaitro,
+          loaihotro, tilethuhoi, kyhantrano, ngaybatdau, ngayketthuc, mucthuhoi, trangthai
+        ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
+        [
+          quy_thanh_phan_id,
+          nhaTaiTroId,
+          ten_chuong_trinh.trim(),
+          mo_ta ? mo_ta.trim() : null,
+          soLuongSuat,
+          soTienMoiSuat,
+          soTienTaiTro,
+          resolvedLoaiHoTro,
+          tileThuHoiNum,
+          kyHanTraNoNum,
+          ngay_bat_dau || null,
+          ngay_ket_thuc || null,
+          mucThuHoi,
+        ]
+      );
+      const proposalId = proposalInsert.insertId;
+
+      // Tao khoan tai tro lien ket
+      const [donationInsert] = await connection.query(
+        `INSERT INTO khoantaitro (
+          nhataitro_id, quy_id, dexuat_id, sotien,
+          hinhthuc, ngaytaitro, chungtu, trangthai, ghichu
+        ) VALUES (?, ?, ?, ?, 'Chuyen khoan', CURRENT_DATE, ?, 'Cho duyet', ?)`,
+        [
+          nhaTaiTroId,
+          quy_thanh_phan_id,
+          proposalId,
+          soTienTaiTro,
+          chungTu || null,
+          `Tai tro cho de xuat chuong trinh: ${ten_chuong_trinh.trim()}`
+        ]
+      );
+      const khoanTaiTroId = donationInsert.insertId;
+
+      // Link khoantaitro vao de xuat
+      await connection.query(
+        `UPDATE dexuatchuongtrinh SET khoantaitro_id = ? WHERE dexuatchuongtrinh_id = ?`,
+        [khoanTaiTroId, proposalId]
+      );
+
+      // Tao 3 dong phe duyet
+      for (const cap of [1, 2, 3]) {
+        await connection.query(
+          `INSERT INTO pheduyet (dexuatchuongtrinh_id, nguoiduyet_id, capduyet, ketqua)
+           VALUES (?, NULL, ?, 'Cho duyet')`,
+          [proposalId, cap]
+        );
+      }
+
+      await connection.commit();
+
+      return res.status(201).json({
+        success: true,
+        message: "De xuat chuong trinh da duoc gui thanh cong. Chờ duyet.",
+        data: {
+          de_xuat_id: proposalId,
+          quy_thanh_phan_id,
+          ten_chuong_trinh: ten_chuong_trinh.trim(),
+          so_luong_suat: soLuongSuat,
+          so_tien_moi_suat: soTienMoiSuat,
+          tong_so_tien: soTienTaiTro,
+          trang_thai: "Cho duyet",
+          nha_tai_tro_id: nhaTaiTroId,
+        },
+      });
+    } catch (txError) {
+      await connection.rollback();
+      throw txError;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error("Loi submitAuthenticatedProposal:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Loi server, vui long thu lai sau",
     });
   }
 };

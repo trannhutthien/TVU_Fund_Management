@@ -58,9 +58,9 @@ const FundInfoSection = ({ fund }) => {
   // Format label nhóm quỹ
   const formatNhomQuy = (nhom) => {
     const mapping = {
-      'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
-      'Tai tro co thu hoi': 'Tài trợ có thu hồi',
-      'Cho vay': 'Cho vay'
+      'Tai tro khong hoan lai': 'Tài trợ không thu hồi',
+      'Tai tro co thu hoi': 'Tài trợ thu hồi một phần',
+      'Cho vay': 'Tài trợ thu hồi toàn phần'
     };
     return mapping[nhom] || nhom;
   };

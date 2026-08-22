@@ -32,7 +32,7 @@ const kiemTraRangBuocLaiSuat = (laisuat) => {
     return { hopLe: false, loi: 'CHUA_CAU_HINH' };
   }
 
-  const mucToiDa = parseFloat(laisuatThamChieu) * 0.7;
+  const mucToiDa = Math.round(parseFloat(laisuatThamChieu) * 0.7 * 100) / 100;
 
   return {
     hopLe: parseFloat(laisuat) <= mucToiDa,

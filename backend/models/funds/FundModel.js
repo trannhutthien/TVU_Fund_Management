@@ -29,7 +29,8 @@ const createFund = async (fundData) => {
     quyChaId,
     soDotGiaiNgan,
     dotGiaiNgan,
-    loaiHoTro
+    loaiHoTro,
+    tileThuHoi
   } = fundData;
 
   const connection = await pool.getConnection();
@@ -98,11 +99,12 @@ const createFund = async (fundData) => {
         trangthai,
         loaidieuhanh,
         quy_cha_id,
-        loaihotro
+        loaihotro,
+        tilethuhoi
       ) VALUES (
         ?,
         (SELECT loaiquy_id FROM loaiquy WHERE maloai = ? LIMIT 1),
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )`,
       [
         tenQuy,
@@ -120,7 +122,8 @@ const createFund = async (fundData) => {
         trangThai || 'Dang hoat dong',
         loaiDieuHanh || 'Tap trung - Be chung',
         quyChaId || null,
-        loaiHoTro || 'Tai tro khong hoan lai'
+        loaiHoTro || 'Tai tro khong hoan lai',
+        tileThuHoi || null
       ]
     );
 
@@ -239,6 +242,7 @@ const getFundById = async (quyId) => {
       q.capdo,
       q.quy_cha_id,
       q.loaihotro,
+      q.tilethuhoi,
       qp.tenquy AS ten_quy_cha
      FROM quy q
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
@@ -275,7 +279,8 @@ const updateFund = async (quyId, fundData) => {
     trangThai,
     loaiDieuHanh,
     quyChaId,
-    loaiHoTro
+    loaiHoTro,
+    tileThuHoi
   } = fundData;
 
   const [result] = await pool.execute(
@@ -294,6 +299,7 @@ const updateFund = async (quyId, fundData) => {
          loaidieuhanh = ?,
          quy_cha_id = ?,
          loaihotro = ?,
+         tilethuhoi = ?,
          ngaycapnhat = CURRENT_TIMESTAMP
      WHERE quy_id = ?`,
     [
@@ -311,6 +317,7 @@ const updateFund = async (quyId, fundData) => {
       loaiDieuHanh || 'Tap trung - Be chung',
       quyChaId || null,
       loaiHoTro || 'Tai tro khong hoan lai',
+      tileThuHoi || null,
       quyId
     ]
   );
@@ -345,6 +352,7 @@ const getAllFunds = async () => {
       q.capdo,
       q.quy_cha_id,
       q.loaihotro,
+      q.tilethuhoi,
       qp.tenquy AS ten_quy_cha,
       COUNT(CASE WHEN yc.trangthai IN ('Da duyet cap 3', 'Cho giai ngan', 'Da giai ngan') THEN 1 END) as so_don_da_nop,
       CASE 
@@ -356,7 +364,7 @@ const getAllFunds = async () => {
      LEFT JOIN loaiquy lq ON q.loaiquy_id = lq.loaiquy_id
      LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
      LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
-     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, q.loaihotro, qp.tenquy
+     GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, q.loaihotro, q.tilethuhoi, qp.tenquy
      ORDER BY q.ngaytao DESC`
   );
   return rows;
@@ -388,6 +396,7 @@ const getPublicFunds = async () => {
         q.capdo,
         q.quy_cha_id,
         q.loaihotro,
+        q.tilethuhoi,
         qp.tenquy AS ten_quy_cha,
         -- Tính số dư thực tế (trừ đi các khoản đang chờ giải ngân)
         (q.sodu - COALESCE(SUM(CASE WHEN yc.trangthai = 'Cho giai ngan' THEN yc.sotiendenghi ELSE 0 END), 0)) as so_du_thuc_te,
@@ -414,7 +423,7 @@ const getPublicFunds = async () => {
        LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
        LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
        WHERE q.trangthai IN ('Dang hoat dong', 'Tam dung')
-       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, q.loaihotro, qp.tenquy
+       GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, q.loaihotro, q.tilethuhoi, qp.tenquy
        ORDER BY q.ngaytao DESC`
     );
     return rows;
@@ -452,6 +461,7 @@ const getPublicFundsByLevel = async (capDo = null, trangThai = 'Dang hoat dong')
         q.sodu,
         q.trangthai,
         q.loaihotro,
+        q.tilethuhoi,
         lq.loaiquy_id,
         lq.maloai,
         lq.tenloai,

@@ -21,9 +21,9 @@ const TRANG_THAI_MAP = {
 };
 
 const LOAI_HO_TRO_MAP = {
-  'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
-  'Tai tro co thu hoi': 'Tài trợ có thu hồi',
-  'Cho vay': 'Cho vay',
+  'Tai tro khong hoan lai': 'Tài trợ không thu hồi',
+  'Tai tro co thu hoi': 'Tài trợ thu hồi một phần',
+  'Cho vay': 'Tài trợ thu hồi toàn phần',
 };
 
 const formatDate = (v) => {

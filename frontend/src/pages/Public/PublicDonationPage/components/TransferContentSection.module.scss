@@ -154,6 +154,25 @@
   margin: 0 0 10px;
 }
 
+.textInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #212529;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: #1a5276;
+  }
+
+  &::placeholder {
+    color: #adb5bd;
+  }
+}
+
 .uploadArea {
   position: relative;
   border: 2px dashed #d0d5dd;

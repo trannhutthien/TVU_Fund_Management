@@ -251,6 +251,7 @@ export const createStaffDonation = async (req, res) => {
       ghi_chu,
       hinh_anh_minh_chung,
       hinh_thuc,
+      ma_giao_dich,
       taikhoannganhang_id,
     } = req.body;
 
@@ -405,9 +406,9 @@ export const createStaffDonation = async (req, res) => {
 
     const [insertRes] = await connection.execute(
       `INSERT INTO khoantaitro (
-         nhataitro_id, quy_id, sotien, hinhthuc, ngaytaitro, trangthai, ghichu, chungtu, taikhoannganhang_id
-       ) VALUES (?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?, ?)`,
-      [resolvedNhaTaiTroId, quy_id, amount, finalMethod, ghi_chu ? String(ghi_chu).trim() : null, proofDoc, taikhoannganhang_id || null]
+         nhataitro_id, quy_id, sotien, hinhthuc, magiaodich, ngaytaitro, trangthai, ghichu, chungtu, taikhoannganhang_id
+       ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, 'Cho duyet', ?, ?, ?)`,
+      [resolvedNhaTaiTroId, quy_id, amount, finalMethod, ma_giao_dich || null, ghi_chu ? String(ghi_chu).trim() : null, proofDoc, taikhoannganhang_id || null]
     );
     const newDonationId = insertRes.insertId;
 
@@ -491,6 +492,7 @@ export const createPublicDonation = async (req, res) => {
       diaChi,
       taiKhoanNganHangId,
       chungTu,
+      ma_giao_dich,
     } = req.body;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -585,6 +587,7 @@ export const createPublicDonation = async (req, res) => {
       diaChi: diaChi ? diaChi.trim() : null,
       taiKhoanNganHangId: taiKhoanNganHangId || null,
       chungTu: chungTu ? chungTu.trim() : null,
+      maGiaoDich: ma_giao_dich ? ma_giao_dich.trim() : null,
     };
 
     // 3.2. Gọi Model để xử lý transaction

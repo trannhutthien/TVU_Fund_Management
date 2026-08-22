@@ -51,6 +51,7 @@ const TRANG_THAI_OPTIONS = [
     quy_cha_id: '',
     so_dot_giai_ngan: '',
     loai_hotro: 'Tai tro khong hoan lai',
+    tile_thu_hoi: '',
   };
 
 const buildImageUrl = (path) => {
@@ -149,6 +150,7 @@ const TaoQuyPage = () => {
               : 'Tap trung - Be chung',
             quy_cha_id: fund.quyChaId !== null ? String(fund.quyChaId) : '',
             loai_hotro: fund.loaiHoTro || 'Tai tro khong hoan lai',
+            tile_thu_hoi: fund.tilethuhoi !== null && fund.tilethuhoi !== undefined ? String(fund.tilethuhoi) : '',
           });
         }
       } catch (err) {
@@ -347,6 +349,7 @@ const TaoQuyPage = () => {
       soDotGiaiNgan: form.so_dot_giai_ngan ? Number(form.so_dot_giai_ngan) : 0,
       dotGiaiNgan: dotGiaiNgan,
       loaiHoTro: form.loai_hotro || 'Tai tro khong hoan lai',
+      tileThuHoi: form.tile_thu_hoi ? parseFloat(form.tile_thu_hoi) : null,
     };
 
     try {
@@ -529,6 +532,27 @@ const TaoQuyPage = () => {
                   ))}
                 </select>
               </div>
+
+              {(form.loai_hotro === 'Tai tro co thu hoi' || form.loai_hotro === 'Cho vay') && (
+                <div className={styles.col}>
+                  <label className={styles.label}>
+                    Tỷ lệ thu hồi (%)
+                  </label>
+                  <input
+                    type="number"
+                    className={styles.input}
+                    placeholder="VD: 30 (tức 30%)"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={form.tile_thu_hoi}
+                    onChange={handleChange('tile_thu_hoi')}
+                  />
+                  <small style={{ color: '#64748b', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    Số tiền thu hồi = Số tiền tài trợ × Tỷ lệ / 100
+                  </small>
+                </div>
+              )}
 
               {form.loai_dieuhanh === 'Tap trung - Muc chi' && (
                 <div className={styles.col}>

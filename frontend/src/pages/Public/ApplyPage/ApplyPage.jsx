@@ -18,7 +18,7 @@ import ApplicationFooter from '@components/sections/AppliPage/AppliSectionLayout
 import NewsSidebar from '@components/sections/AppliPage/AppliSectionLayout/NewsSidebar/NewsSidebar';
 import AppliSectionLayout from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionLayout';
 import useAuthStore from '@stores/authStore';
-import { LOAI_HO_TRO } from '@constants/loaiHoTro';
+import { LOAI_HO_TRO, LOAI_HO_TRO_LABELS } from '@constants/loaiHoTro';
 
 import { applicationService } from '@services/applicationService';
 import { bankAccountService } from '@services/bankAccountService';
@@ -32,6 +32,12 @@ import Input from '@components/common/Input/Input';
 import { 
   HiOutlineClipboardDocumentCheck,
   HiOutlineCheck,
+  HiOutlineCheckCircle,
+  HiOutlineUser,
+  HiOutlineAcademicCap,
+  HiOutlineBriefcase,
+  HiOutlineUserGroup,
+  HiOutlineBeaker,
 } from 'react-icons/hi2';
 import styles from './ApplyPage.module.scss';
 
@@ -268,11 +274,8 @@ const ApplyPage = () => {
 
   // Tính toán tính hợp lệ của toàn bộ form dựa trên các bước
   const isFormValid = useMemo(() => {
-    if (isAuthenticated) {
-      return isStep1Valid && isStep2Valid && isStep3Valid && isStep4Valid;
-    }
     return isStep1Valid && isStep2Valid && isStep3Valid && isStep4Valid && captchaVerified;
-  }, [isAuthenticated, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid, captchaVerified]);
+  }, [isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid, captchaVerified]);
 
   const handleReset = () => {
     // Reset tất cả state về giá trị ban đầu
@@ -765,6 +768,40 @@ const ApplyPage = () => {
             <AppliSectionLayout
               leftContent={
                 <>
+                  {/* PHẦN 1A1: Chọn vai trò */}
+                  <div className={styles.stepSectionWrapper}>
+                    <div className={styles.roleCard}>
+                      <div className={styles.roleTitle}>
+                        <span>Chọn vai trò của bạn</span>
+                      </div>
+                      <p className={styles.roleSubtitle}>Bạn là ai? Chọn nhóm người dùng phù hợp để hệ thống hiển thị form phù hợp.</p>
+                      <div className={styles.roleGrid}>
+                        {[
+                          { key: 'sinh_vien', label: 'Sinh viên', desc: 'Đang học tại trường', IconComponent: HiOutlineAcademicCap },
+                          { key: 'can_bo_truong', label: 'Viên chức tại trường', desc: 'Đang công tác', IconComponent: HiOutlineBriefcase },
+                          { key: 'can_bo_nghi_huu', label: 'Viên chức về hưu', desc: 'Đã nghỉ hưu', IconComponent: HiOutlineUserGroup },
+                          { key: 'nha_khoa_hoc', label: 'Nhà khoa học', desc: 'Nghiên cứu viên', IconComponent: HiOutlineBeaker },
+                        ].map(({ key, label, desc, IconComponent }) => (
+                          <button
+                            key={key}
+                            type="button"
+                            className={`${styles.roleOption} ${userRole === key ? styles.roleOptionActive : ''}`}
+                            onClick={() => {
+                              setUserRole(key);
+                              setUserFields({});
+                            }}
+                          >
+                            <div className={`${styles.roleOptionIconBox} ${userRole === key ? styles.roleOptionIconBoxActive : ''}`}>
+                              <IconComponent className={styles.roleOptionIcon} />
+                            </div>
+                            <span className={styles.roleOptionLabel}>{label}</span>
+                            <span className={styles.roleOptionDesc}>{desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* PHẦN 1A2: Thông tin cá nhân theo vai trò */}
                   {userRole && (
                     <div className={styles.stepSectionWrapper}>
@@ -853,11 +890,214 @@ const ApplyPage = () => {
                     />
                   </div>
 
-                  {/* Xác nhận thông tin cho khách vãng lai */}
-                  {!isAuthenticated && (
+                  {/* XÁC NHẬN THÔNG TIN — Tóm tắt toàn bộ thông tin trước khi gửi */}
+                  {(selectedFund || contentValues.tieu_de) && (
                     <div className={styles.stepSectionWrapper}>
-                      <div className={styles.guestFormCard}>
-                        <h3>Xác nhận thông tin</h3>
+                      <div className={styles.confirmBox}>
+                        <div className={styles.confirmTitle}>
+                          <HiOutlineCheckCircle className={styles.confirmIcon} />
+                          Xác nhận thông tin
+                        </div>
+
+                        <div className={styles.confirmInfo}>
+                          {/* Quỹ */}
+                          {selectedFund && (
+                            <div className={styles.confirmRow}>
+                              <span className={styles.confirmLabel}>Quỹ nhận tài trợ:</span>
+                              <span className={styles.confirmValue}>
+                                {selectedFund.tenQuy || selectedFund.ten_quy || `Quỹ #${selectedFund.quyId}`}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Loại hình hỗ trợ */}
+                          {contentValues.loai_hotro && (
+                            <div className={styles.confirmRow}>
+                              <span className={styles.confirmLabel}>Loại hình hỗ trợ:</span>
+                              <span className={styles.confirmValue}>
+                                {LOAI_HO_TRO_LABELS[contentValues.loai_hotro] || contentValues.loai_hotro}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Số tiền yêu cầu */}
+                          {contentValues.so_tien_yeu_cau && (
+                            <div className={styles.confirmRow}>
+                              <span className={styles.confirmLabel}>Số tiền yêu cầu:</span>
+                              <span className={styles.confirmValue}>
+                                {parseFloat(contentValues.so_tien_yeu_cau).toLocaleString('vi-VN')}đ
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Tổng kinh phí dự án — chỉ cho tài trợ có thu hồi */}
+                          {contentValues.loai_hotro === LOAI_HO_TRO.TAI_TRO_CO_THU_HOI && contentValues.tong_kinh_phi_du_an && (
+                            <div className={styles.confirmRow}>
+                              <span className={styles.confirmLabel}>Tổng kinh phí dự án:</span>
+                              <span className={styles.confirmValue}>
+                                {parseFloat(contentValues.tong_kinh_phi_du_an).toLocaleString('vi-VN')}đ
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Người nộp đơn */}
+                          <div className={styles.confirmDivider} />
+                          <div className={styles.confirmSectionLabel}>Thông tin người nộp đơn</div>
+
+                          {isAuthenticated ? (
+                            <>
+                              <div className={styles.confirmRow}>
+                                <span className={styles.confirmLabel}>Họ tên:</span>
+                                <span className={styles.confirmValue}>{user?.hoTen || '—'}</span>
+                              </div>
+                              <div className={styles.confirmRow}>
+                                <span className={styles.confirmLabel}>Email:</span>
+                                <span className={styles.confirmValue}>{user?.email || '—'}</span>
+                              </div>
+                              {user?.soDienThoai && (
+                                <div className={styles.confirmRow}>
+                                  <span className={styles.confirmLabel}>Số điện thoại:</span>
+                                  <span className={styles.confirmValue}>{user.soDienThoai}</span>
+                                </div>
+                              )}
+                              {userRole === 'sinh_vien' && (
+                                <>
+                                  {user?.khoaPhong && (
+                                    <div className={styles.confirmRow}>
+                                      <span className={styles.confirmLabel}>Khoa:</span>
+                                      <span className={styles.confirmValue}>{user.khoaPhong}</span>
+                                    </div>
+                                  )}
+                                  {user?.lop && (
+                                    <div className={styles.confirmRow}>
+                                      <span className={styles.confirmLabel}>Lớp:</span>
+                                      <span className={styles.confirmValue}>{user.lop}</span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {(userRole === 'can_bo_truong' || userRole === 'can_bo_nghi_huu' || userRole === 'nha_khoa_hoc') && (
+                                <div className={styles.confirmRow}>
+                                  <span className={styles.confirmLabel}>Đơn vị công tác:</span>
+                                  <span className={styles.confirmValue}>
+                                    {userFields.donViCongTac || user?.donViCongTac || user?.donvicongtac || '—'}
+                                  </span>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {(userFields.hoTen || guestFields.guestHoTen) && (
+                                <div className={styles.confirmRow}>
+                                  <span className={styles.confirmLabel}>Họ tên:</span>
+                                  <span className={styles.confirmValue}>{userFields.hoTen || guestFields.guestHoTen}</span>
+                                </div>
+                              )}
+                              {(userFields.email || guestFields.guestEmail) && (
+                                <div className={styles.confirmRow}>
+                                  <span className={styles.confirmLabel}>Email:</span>
+                                  <span className={styles.confirmValue}>{userFields.email || guestFields.guestEmail}</span>
+                                </div>
+                              )}
+                              {(userFields.soDienThoai || guestFields.guestSoDienThoai) && (
+                                <div className={styles.confirmRow}>
+                                  <span className={styles.confirmLabel}>Số điện thoại:</span>
+                                  <span className={styles.confirmValue}>{userFields.soDienThoai || guestFields.guestSoDienThoai}</span>
+                                </div>
+                              )}
+                              {userRole === 'sinh_vien' && (
+                                <>
+                                  {(userFields.khoa || guestFields.guestKhoa) && (
+                                    <div className={styles.confirmRow}>
+                                      <span className={styles.confirmLabel}>Khoa:</span>
+                                      <span className={styles.confirmValue}>{userFields.khoa || guestFields.guestKhoa}</span>
+                                    </div>
+                                  )}
+                                  {(userFields.lop || guestFields.guestLop) && (
+                                    <div className={styles.confirmRow}>
+                                      <span className={styles.confirmLabel}>Lớp:</span>
+                                      <span className={styles.confirmValue}>{userFields.lop || guestFields.guestLop}</span>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {(userFields.maSoDinhDanh || guestFields.guestMssv) && (
+                                <div className={styles.confirmRow}>
+                                  <span className={styles.confirmLabel}>MSSV / Mã số:</span>
+                                  <span className={styles.confirmValue}>{userFields.maSoDinhDanh || guestFields.guestMssv}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* Thông tin ngân hàng */}
+                          <div className={styles.confirmDivider} />
+                          <div className={styles.confirmSectionLabel}>Thông tin nhận giải ngân</div>
+
+                          {isAuthenticated ? (
+                            <>
+                              {bankValues.selectedBankId && (() => {
+                                const selectedAccount = bankAccounts.find(
+                                  (a) => a.tai_khoan_id === bankValues.selectedBankId
+                                );
+                                if (!selectedAccount) return null;
+                                return (
+                                  <>
+                                    <div className={styles.confirmRow}>
+                                      <span className={styles.confirmLabel}>Ngân hàng:</span>
+                                      <span className={styles.confirmValue}>{selectedAccount.ten_ngan_hang}</span>
+                                    </div>
+                                    <div className={styles.confirmRow}>
+                                      <span className={styles.confirmLabel}>Số tài khoản:</span>
+                                      <span className={styles.confirmValue}>{selectedAccount.so_tai_khoan}</span>
+                                    </div>
+                                    <div className={styles.confirmRow}>
+                                      <span className={styles.confirmLabel}>Chủ tài khoản:</span>
+                                      <span className={styles.confirmValue}>{selectedAccount.chu_tai_khoan}</span>
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </>
+                          ) : (
+                            <>
+                              {(guestFields.guestNganHang || guestFields.guestSoTaiKhoan || guestFields.guestChuTaiKhoan) && (
+                                <>
+                                  <div className={styles.confirmRow}>
+                                    <span className={styles.confirmLabel}>Ngân hàng:</span>
+                                    <span className={styles.confirmValue}>{guestFields.guestNganHang || '—'}</span>
+                                  </div>
+                                  <div className={styles.confirmRow}>
+                                    <span className={styles.confirmLabel}>Số tài khoản:</span>
+                                    <span className={styles.confirmValue}>{guestFields.guestSoTaiKhoan || '—'}</span>
+                                  </div>
+                                  <div className={styles.confirmRow}>
+                                    <span className={styles.confirmLabel}>Chủ tài khoản:</span>
+                                    <span className={styles.confirmValue}>{guestFields.guestChuTaiKhoan || '—'}</span>
+                                  </div>
+                                </>
+                              )}
+                            </>
+                          )}
+
+                          {/* File đính kèm */}
+                          {hasUploadedProof && (
+                            <>
+                              <div className={styles.confirmDivider} />
+                              <div className={styles.confirmSectionLabel}>Tài liệu đính kèm</div>
+                              <div className={styles.confirmRow}>
+                                <span className={styles.confirmLabel}>File:</span>
+                                <span className={styles.confirmValue}>
+                                  {uploadedFiles[0]?.file?.name || 'Đã tải lên'}
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Checkbox xác nhận */}
+                      <div className={styles.confirmCheckbox}>
                         <label className={styles.checkboxLabel}>
                           <input
                             type="checkbox"
@@ -865,7 +1105,7 @@ const ApplyPage = () => {
                             onChange={(e) => setCaptchaVerified(e.target.checked)}
                             className={styles.checkboxInput}
                           />
-                          <span>Tôi xác nhận thông tin cung cấp chính xác và đồng ý gửi yêu cầu.</span>
+                          <span>Tôi xác nhận thông tin trên là chính xác và đồng ý gửi yêu cầu hỗ trợ.</span>
                         </label>
                       </div>
                     </div>

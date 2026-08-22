@@ -31,7 +31,7 @@ const getFileName = (url) => {
 const LOAI_HO_TRO_STYLES = {
   'Tai tro khong hoan lai': { className: styles.badgeGreen, label: 'Không hoàn lại', color: '#16a34a' },
   'Tai tro co thu hoi': { className: styles.badgeOrange, label: 'Có thu hồi', color: '#d97706' },
-  'Cho vay': { className: styles.badgeRed, label: 'Cho vay', color: '#dc2626' },
+  'Cho vay': { className: styles.badgeRed, label: 'Tài trợ thu hồi toàn phần', color: '#dc2626' },
 };
 
 const RequestInfoCard = ({

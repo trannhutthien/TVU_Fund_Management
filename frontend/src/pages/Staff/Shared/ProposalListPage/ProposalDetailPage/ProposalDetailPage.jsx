@@ -19,6 +19,7 @@ import { formatCurrency, formatDate } from '@utils/formatters';
 import ApproveByCanBoModal from '../ApproveByCanBoModal/ApproveByCanBoModal';
 import RejectByCanBoModal from '../RejectByCanBoModal/RejectByCanBoModal';
 import ConfirmMoneyModal from '../ConfirmMoneyModal/ConfirmMoneyModal';
+import ApproveLoanContractModal from '../ApproveLoanContractModal/ApproveLoanContractModal';
 import CreateActivityModal from '../CreateActivityModal/CreateActivityModal';
 import styles from './ProposalDetailPage.module.scss';
 
@@ -39,6 +40,7 @@ const ProposalDetailPage = () => {
   const [approveModal, setApproveModal] = useState(null);
   const [rejectModal, setRejectModal] = useState(null);
   const [confirmMoneyModal, setConfirmMoneyModal] = useState(null);
+  const [approveLoanModal, setApproveLoanModal] = useState(null);
   const [createActivityModal, setCreateActivityModal] = useState(null);
 
   useEffect(() => {
@@ -75,6 +77,7 @@ const ProposalDetailPage = () => {
     setApproveModal(null);
     setRejectModal(null);
     setConfirmMoneyModal(null);
+    setApproveLoanModal(null);
     setCreateActivityModal(null);
     
     // Refresh data
@@ -126,8 +129,24 @@ const ProposalDetailPage = () => {
       );
     }
 
-    // Admin (role 1) + status "Da nhan tien"
+    // Admin (role 1) + status "Da nhan tien" → Duyệt hợp đồng vay
     if (userRole === 1 && trangThai === 'Da nhan tien') {
+      return (
+        <div className={styles.actionButtons}>
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${styles.confirm}`}
+            onClick={() => setApproveLoanModal(proposal)}
+          >
+            <HiOutlineBanknotes />
+            <span>Duyệt hợp đồng vay</span>
+          </button>
+        </div>
+      );
+    }
+
+    // Admin (role 1) + status "Duyet hop dong vay" → Tạo hoạt động
+    if (userRole === 1 && trangThai === 'Duyet hop dong vay') {
       return (
         <div className={styles.actionButtons}>
           <button
@@ -318,9 +337,38 @@ const ProposalDetailPage = () => {
                 <div className={styles.infoItem}>
                   <span className={styles.infoLabel}>Loại hỗ trợ</span>
                   <span className={styles.infoValue}>
-                    {proposal.loai_ho_tro || '—'}
+                    {proposal.loai_ho_tro === 'Tai tro khong hoan lai' && 'Tài trợ không thu hồi'}
+                    {proposal.loai_ho_tro === 'Tai tro co thu hoi' && 'Tài trợ thu hồi một phần'}
+                    {proposal.loai_ho_tro === 'Cho vay' && 'Tài trợ thu hồi toàn phần'}
+                    {!proposal.loai_ho_tro && '—'}
                   </span>
                 </div>
+                {proposal.loai_ho_tro === 'Tai tro co thu hoi' && proposal.tilethuhoi && (
+                  <>
+                    <div className={styles.infoItem}>
+                      <span className={styles.infoLabel}>Tỷ lệ thu hồi</span>
+                      <span className={styles.infoValue}>
+                        {proposal.tilethuhoi}%
+                      </span>
+                    </div>
+                    {proposal.mucthuhoi && (
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Số tiền thu hồi</span>
+                        <span className={`${styles.infoValue} ${styles.highlight}`}>
+                          {formatCurrency(proposal.mucthuhoi)}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+                {proposal.loai_ho_tro === 'Cho vay' && proposal.kyhantrano && (
+                  <div className={styles.infoItem}>
+                    <span className={styles.infoLabel}>Kỳ hạn trả nợ</span>
+                    <span className={styles.infoValue}>
+                      {proposal.kyhantrano} tháng
+                    </span>
+                  </div>
+                )}
                 {proposal.so_tien_thuc_te && (
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>
@@ -422,6 +470,14 @@ const ProposalDetailPage = () => {
         <ConfirmMoneyModal
           proposal={confirmMoneyModal}
           onClose={() => setConfirmMoneyModal(null)}
+          onSuccess={handleModalSuccess}
+        />
+      )}
+
+      {approveLoanModal && (
+        <ApproveLoanContractModal
+          proposal={approveLoanModal}
+          onClose={() => setApproveLoanModal(null)}
           onSuccess={handleModalSuccess}
         />
       )}

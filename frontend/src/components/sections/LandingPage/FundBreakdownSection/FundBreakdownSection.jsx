@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { HiArrowRight } from 'react-icons/hi2';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { HiArrowRight, HiChevronDown } from 'react-icons/hi2';
 import statisticsService from '@services/statisticsService';
 import { formatCurrencyShort } from '@utils/formatters';
 import styles from './FundBreakdownSection.module.scss';
@@ -56,14 +56,23 @@ const getFundColor = (loaiQuy, index) => {
  * Hiển thị progress bars và donut chart với Recharts
  * Dữ liệu lấy từ API backend
  */
+const VISIBLE_COUNT = 3;
+
 const FundBreakdownSection = () => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
-  const [shouldAnimate, setShouldAnimate] = useState(false); // ← State riêng cho animation
+  const [shouldAnimate, setShouldAnimate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fundData, setFundData] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [showAll, setShowAll] = useState(false);
   const sectionRef = useRef(null);
+
+  const visibleFunds = useMemo(() => {
+    return showAll ? fundData : fundData.slice(0, VISIBLE_COUNT);
+  }, [fundData, showAll]);
+
+  const hasMore = fundData.length > VISIBLE_COUNT;
 
   // Fetch fund breakdown data từ API
   useEffect(() => {
@@ -174,24 +183,6 @@ const FundBreakdownSection = () => {
     return null;
   };
 
-  // Custom legend
-  const renderLegend = (props) => {
-    const { payload } = props;
-    return (
-      <div className={styles.customLegend}>
-        {payload.map((entry, index) => (
-          <div key={`legend-${index}`} className={styles.legendItem}>
-            <span
-              className={styles.legendDot}
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className={styles.legendText}>{entry.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   // Loading state
   if (loading) {
     return (
@@ -239,41 +230,53 @@ const FundBreakdownSection = () => {
 
           {/* Content Grid */}
           <div className={styles.contentGrid}>
-            {/* Left Column - Progress Bars */}
+            {/* Left Column - Fund Cards */}
             <div className={styles.progressColumn}>
-              {fundData.map((item, index) => {
+              {visibleFunds.map((item, index) => {
                 const barColor = item.color || DEFAULT_COLOR;
                 const barWidth = item.value || 0;
                 
                 return (
-                  <div key={`fund-${index}`} className={styles.progressItem}>
-                    {/* Label Row */}
-                    <div className={styles.progressHeader}>
-                      <span className={styles.progressLabel}>{item.name}</span>
-                      <span className={styles.progressPercent}>{barWidth}% ({formatCurrencyShort(item.amount)})</span>
+                  <div
+                    key={`fund-${index}`}
+                    className={styles.fundCard}
+                    style={{ animationDelay: `${index * 0.08}s` }}
+                  >
+                    <div className={styles.fundCardHeader}>
+                      <span className={styles.fundDot} style={{ backgroundColor: barColor }} />
+                      <span className={styles.fundName}>{item.name}</span>
+                      <span className={styles.fundPercent}>{barWidth}%</span>
                     </div>
-
-                    {/* Progress Bar - Dùng shouldAnimate thay vì isVisible */}
-                    <div style={{
-                      height: '8px',
-                      background: '#e2e8f0',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      marginBottom: '16px'
-                    }}>
-                      <div style={{
-                        height: '100%',
-                        width: shouldAnimate ? `${barWidth}%` : '0%',
-                        backgroundColor: barColor,
-                        borderRadius: '4px',
-                        transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transitionDelay: `${index * 0.1}s`,
-                      }} />
+                    <div className={styles.fundCardBody}>
+                      <span className={styles.fundAmount}>{formatCurrencyShort(item.amount)}</span>
+                      {item.soLuongQuy > 1 && (
+                        <span className={styles.fundCount}>{item.soLuongQuy} quỹ</span>
+                      )}
+                    </div>
+                    <div className={styles.fundBarTrack}>
+                      <div
+                        className={styles.fundBarFill}
+                        style={{
+                          width: shouldAnimate ? `${barWidth}%` : '0%',
+                          backgroundColor: barColor,
+                          transitionDelay: `${index * 0.1}s`,
+                        }}
+                      />
                     </div>
                   </div>
                 );
               })}
+
+              {hasMore && (
+                <button
+                  type="button"
+                  className={styles.showMoreBtn}
+                  onClick={() => setShowAll(!showAll)}
+                >
+                  {showAll ? 'Thu gọn' : `Xem thêm ${fundData.length - VISIBLE_COUNT} quỹ`}
+                  <HiChevronDown className={`${styles.showMoreIcon} ${showAll ? styles.rotated : ''}`} />
+                </button>
+              )}
             </div>
 
             {/* Right Column - Donut Chart */}
@@ -298,7 +301,6 @@ const FundBreakdownSection = () => {
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend content={renderLegend} />
                   {renderCenterLabel()}
                 </PieChart>
               </ResponsiveContainer>

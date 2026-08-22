@@ -6,6 +6,8 @@ const TransferContentSection = ({
   bankAccount,
   chungTuFile,
   onChungTuChange,
+  maGiaoDich,
+  onMaGiaoDichChange,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -97,6 +99,17 @@ const TransferContentSection = ({
       </div>
 
       <div className={styles.uploadSection}>
+        <label className={styles.uploadLabel}>Mã giao dịch ngân hàng</label>
+        <input
+          type="text"
+          className={styles.textInput}
+          placeholder="Nhập mã giao dịch / mã GD trên ủy nhiệm chi..."
+          value={maGiaoDich || ''}
+          onChange={(e) => onMaGiaoDichChange?.(e.target.value)}
+        />
+      </div>
+
+      <div className={styles.uploadSection}>
         <label className={styles.uploadLabel}>Ảnh minh chứng chuyển khoản (tùy chọn)</label>
         <p className={styles.uploadHint}>Chụp lại màn hình xác nhận chuyển khoản từ ngân hàng</p>
         <div className={styles.uploadArea}>
@@ -150,6 +163,8 @@ TransferContentSection.propTypes = {
   }),
   chungTuFile: PropTypes.object,
   onChungTuChange: PropTypes.func,
+  maGiaoDich: PropTypes.string,
+  onMaGiaoDichChange: PropTypes.func,
 };
 
 export default TransferContentSection;

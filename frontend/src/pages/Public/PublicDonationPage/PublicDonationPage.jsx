@@ -4,7 +4,7 @@ import PublicFooter from '@components/layout/PublicFooter/PublicFooter';
 import BackgroundImage from '@components/common/BackgroundImage/BackgroundImage';
 import AppliSectionLayout from '@components/sections/AppliPage/AppliSectionLayout/AppliSectionLayout';
 import NewsSidebar from '@components/sections/AppliPage/AppliSectionLayout/NewsSidebar/NewsSidebar';
-import { createPublicDonation, createPublicProposal, verifyProposalOtp as apiVerifyProposalOtp, resendProposalOtp as apiResendProposalOtp } from '@services/donationService';
+import { createPublicDonation, createPublicProposal, createAuthenticatedProposal, verifyProposalOtp as apiVerifyProposalOtp, resendProposalOtp as apiResendProposalOtp } from '@services/donationService';
 import { guestService } from '@services/guestService';
 import { uploadService } from '@services/uploadService';
 import fundService from '@services/fundService';
@@ -16,7 +16,7 @@ import DonationDetailsStep from './components/DonationDetailsStep';
 import PaymentMethodSection from './components/PaymentMethodSection';
 import ReviewStep from './components/ReviewStep';
 import SuccessStep from './components/SuccessStep';
-import { DESTINATION_TYPES } from './constants';
+import { DESTINATION_TYPES, PAYMENT_METHODS } from './constants';
 import { validateDonorInfo, validateDonationDetails } from './validation';
 import styles from './PublicDonationPage.module.scss';
 
@@ -79,8 +79,10 @@ const PublicDonationPage = () => {
     moTa: '',
     soLuongSuat: 0,
     soTienMoiSuat: 0,
-    loaiHoTro: 'Tai tro khong hoan lai',
-    ngayBatDau: '',
+      loaiHoTro: 'Tai tro khong hoan lai',
+      tileThuHoi: '',
+      kyHanTraNo: '',
+      ngayBatDau: '',
     ngayKetThuc: '',
     soTien: 0,
     hinhThuc: 'Truc tuyen',
@@ -88,6 +90,7 @@ const PublicDonationPage = () => {
     proposalFiles: [],
   });
   const [chungTuFile, setChungTuFile] = useState(null);
+  const [maGiaoDich, setMaGiaoDich] = useState('');
 
   // Auto-fill user data when authenticated
   useEffect(() => {
@@ -208,7 +211,36 @@ const PublicDonationPage = () => {
         }
       }
 
-      if (isPropose) {
+      if (isPropose && isAuthenticated) {
+        const proposalPayload = {
+          quy_thanh_phan_id: parseInt(formData.quythanhPhanId),
+          ten_chuong_trinh: formData.tenChuongTrinh?.trim(),
+          mo_ta: formData.moTa?.trim() || null,
+          so_luong_suat: parseInt(formData.soLuongSuat) || 0,
+          so_tien_moi_suat: parseFloat(formData.soTienMoiSuat) || 0,
+          loai_ho_tro: formData.loaiHoTro || 'Tai tro khong hoan lai',
+          tilethuhoi: formData.tileThuHoi ? parseFloat(formData.tileThuHoi) : null,
+          kyhantrano: formData.kyHanTraNo ? parseInt(formData.kyHanTraNo) : null,
+          ngay_bat_dau: formData.ngayBatDau || null,
+          ngay_ket_thuc: formData.ngayKetThuc || null,
+          chungTu: chungTuPath,
+          taiKhoanNganHangId: formData.taiKhoanNganHangId || null,
+          formTimestamp,
+        };
+        const result = await createAuthenticatedProposal(proposalPayload);
+        if (result.success) {
+          setSuccessResult({
+            de_xuat_id: result.data.de_xuat_id,
+            ten_chuong_trinh: result.data.ten_chuong_trinh,
+            tong_so_tien: result.data.tong_so_tien,
+            trang_thai: result.data.trang_thai,
+            message: result.message,
+          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          setErrors({ submit: result.message || 'Gửi đề xuất thất bại' });
+        }
+      } else if (isPropose) {
         const proposalPayload = {
           guest_ho_ten: formData.hoTen.trim(),
           guest_email: formData.email.trim().toLowerCase(),
@@ -220,6 +252,8 @@ const PublicDonationPage = () => {
           so_luong_suat: parseInt(formData.soLuongSuat) || 0,
           so_tien_moi_suat: parseFloat(formData.soTienMoiSuat) || 0,
           loai_ho_tro: formData.loaiHoTro || 'Tai tro khong hoan lai',
+          tilethuhoi: formData.tileThuHoi ? parseFloat(formData.tileThuHoi) : null,
+          kyhantrano: formData.kyHanTraNo ? parseInt(formData.kyHanTraNo) : null,
           ngay_bat_dau: formData.ngayBatDau || null,
           ngay_ket_thuc: formData.ngayKetThuc || null,
           chungTu: chungTuPath,
@@ -253,6 +287,7 @@ const PublicDonationPage = () => {
           diaChi: formData.diaChi,
           taiKhoanNganHangId: formData.taiKhoanNganHangId,
           chungTu: chungTuPath,
+          ma_giao_dich: maGiaoDich?.trim() || null,
           ghiChu: formData.ghiChu?.trim() || null,
         };
         const result = await createPublicDonation(payload);
@@ -270,6 +305,7 @@ const PublicDonationPage = () => {
           hinhThuc: formData.hinhThuc,
           loaiNhaTaiTro: formData.loaiNhaTaiTro,
           chungTu: chungTuPath,
+          maGiaoDich: maGiaoDich?.trim() || null,
           ghiChu: formData.ghiChu?.trim() || null,
           taiKhoannganhangId: formData.taiKhoanNganHangId || null,
           formTimestamp,
@@ -295,7 +331,7 @@ const PublicDonationPage = () => {
     } finally {
       setSubmitting(false);
     }
-  }, [formData, submitting, destinationType, isAuthenticated]);
+  }, [formData, submitting, destinationType, isAuthenticated, maGiaoDich, chungTuFile]);
 
   const handleVerifyGuestOtp = useCallback(async () => {
     if (!guestOtpCode || guestOtpCode.trim().length !== 6 || isNaN(guestOtpCode)) {
@@ -377,11 +413,14 @@ const PublicDonationPage = () => {
     setProposalOtpCode('');
     setErrors({});
     setTouched({});
+    setChungTuFile(null);
+    setMaGiaoDich('');
     setFormData({
       hoTen: '', email: '', soDienThoai: '',
       loaiNhaTaiTro: 'Ca nhan', toChuc: '', diaChi: '', ghiChu: '',
       quyId: null, quythanhPhanId: null, tenChuongTrinh: '', moTa: '',
       soLuongSuat: 0, soTienMoiSuat: 0, loaiHoTro: 'Tai tro khong hoan lai',
+      tileThuHoi: '',
       ngayBatDau: '', ngayKetThuc: '',
       soTien: 0, hinhThuc: 'Truc tuyen', taiKhoanNganHangId: null, proposalFiles: [],
     });
@@ -823,7 +862,7 @@ const PublicDonationPage = () => {
             />
           </div>
 
-          {true && (
+          {formData.hinhThuc !== PAYMENT_METHODS.TIEN_MAT && (
             <>
               {isAuthenticated && user && (
                 <div className={styles.autoFillNotice}>
@@ -860,6 +899,8 @@ const PublicDonationPage = () => {
                   bankAccounts={bankAccounts}
                   chungTuFile={chungTuFile}
                   onChungTuChange={setChungTuFile}
+                  maGiaoDich={maGiaoDich}
+                  onMaGiaoDichChange={setMaGiaoDich}
                 />
               </div>
 

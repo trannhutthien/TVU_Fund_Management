@@ -35,6 +35,8 @@ export const createProposal = async (req, res) => {
       so_luong_suat,
       so_tien_moi_suat,
       loai_ho_tro,
+      tilethuhoi,
+      kyhantrano,
       ngay_bat_dau,
       ngay_ket_thuc
     } = req.body;
@@ -130,6 +132,17 @@ export const createProposal = async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     // BƯỚC 4: TẠO ĐỀ XUẤT
     // ─────────────────────────────────────────────────────────────────────────
+    const soTienTaiTro = soLuong * soTien;
+    const finalLoaiHoTro = loai_ho_tro || 'Tai tro khong hoan lai';
+    let mucThuHoi = null;
+    let tileThuHoiNum = null;
+    if (finalLoaiHoTro === 'Tai tro co thu hoi' && tilethuhoi) {
+      tileThuHoiNum = parseFloat(tilethuhoi);
+      if (!isNaN(tileThuHoiNum) && tileThuHoiNum > 0 && tileThuHoiNum <= 100) {
+        mucThuHoi = Math.min(soTienTaiTro * tileThuHoiNum / 100, soTienTaiTro);
+      }
+    }
+
     const proposalData = {
       quyThanhPhanId: quy_thanh_phan_id,
       khoanTaiTroId: khoan_tai_tro_id || null,
@@ -140,9 +153,12 @@ export const createProposal = async (req, res) => {
       moTa: mo_ta ? mo_ta.trim() : null,
       soLuongSuat: soLuong,
       soTienMoiSuat: soTien,
-      loaiHoTro: loai_ho_tro || 'Tai tro khong hoan lai',
+      loaiHoTro: finalLoaiHoTro,
+      tileThuHoi: tileThuHoiNum,
+      kyHanTraNo: kyhantrano ? parseInt(kyhantrano) : null,
       ngayBatDau: ngay_bat_dau || null,
-      ngayKetThuc: ngay_ket_thuc || null
+      ngayKetThuc: ngay_ket_thuc || null,
+      mucThuHoi
     };
 
     const result = await DeXuatChuongTrinhModel.createProposal(proposalData);
@@ -198,6 +214,7 @@ export const createPublicProposal = async (req, res) => {
       so_luong_suat,
       so_tien_moi_suat,
       loai_ho_tro,
+      tilethuhoi,
       ngay_bat_dau,
       ngay_ket_thuc,
       formTimestamp
@@ -292,6 +309,18 @@ export const createPublicProposal = async (req, res) => {
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = createGuestOtpExpiresAt();
 
+    // Tính mucthuhoi từ tilethuhoi do nhà tài trợ nhập
+    const soTienTaiTro = soLuong * soTien;
+    const finalLoaiHoTro = loai_ho_tro || 'Tai tro khong hoan lai';
+    let mucThuHoi = null;
+    let tileThuHoiNum = null;
+    if (finalLoaiHoTro === 'Tai tro co thu hoi' && tilethuhoi) {
+      tileThuHoiNum = parseFloat(tilethuhoi);
+      if (!isNaN(tileThuHoiNum) && tileThuHoiNum > 0 && tileThuHoiNum <= 100) {
+        mucThuHoi = Math.min(soTienTaiTro * tileThuHoiNum / 100, soTienTaiTro);
+      }
+    }
+
     const pendingProposal = {
       guestHoTen: guest_ho_ten.trim(),
       guestEmail: normalizedEmail,
@@ -302,9 +331,11 @@ export const createPublicProposal = async (req, res) => {
       moTa: mo_ta ? mo_ta.trim() : null,
       soLuongSuat: soLuong,
       soTienMoiSuat: soTien,
-      loaiHoTro: loai_ho_tro || 'Tai tro khong hoan lai',
+      loaiHoTro: finalLoaiHoTro,
+      tileThuHoi: tileThuHoiNum,
       ngayBatDau: ngay_bat_dau || null,
       ngayKetThuc: ngay_ket_thuc || null,
+      mucThuHoi,
       trackingUuid
     };
 
@@ -533,6 +564,9 @@ export const getProposalDetail = async (req, res) => {
         so_tien_moi_suat: parseFloat(proposal.sotienmoisuat) || 0,
         tong_so_tien: parseFloat(proposal.soluongsuat) * parseFloat(proposal.sotienmoisuat),
         loai_ho_tro: proposal.loaihotro,
+        tilethuhoi: proposal.tilethuhoi ? parseFloat(proposal.tilethuhoi) : null,
+        kyhantrano: proposal.kyhantrano ? parseInt(proposal.kyhantrano) : null,
+        mucthuhoi: proposal.mucthuhoi ? parseFloat(proposal.mucthuhoi) : null,
         ngay_bat_dau: proposal.ngaybatdau,
         ngay_ket_thuc: proposal.ngayketthuc,
         trang_thai: proposal.trangthai,

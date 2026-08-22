@@ -15,6 +15,8 @@ const DonationDetailsStep = memo(({
   bankAccounts = [],
   chungTuFile,
   onChungTuChange,
+  maGiaoDich,
+  onMaGiaoDichChange,
 }) => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedFundCategory, setSelectedFundCategory] = useState(ALL_VALUE);
@@ -276,6 +278,124 @@ const DonationDetailsStep = memo(({
             )}
           </div>
 
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>Loại hình hỗ trợ</label>
+            <select
+              className={styles.select}
+              value={formData.loaiHoTro || 'Tai tro khong hoan lai'}
+              onChange={(e) => onFieldChange('loaiHoTro', e.target.value)}
+            >
+              {LOAI_HO_TRO.map((item) => (
+                <option key={item.value} value={item.value}>{item.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {formData.loaiHoTro === 'Tai tro co thu hoi' && (
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Tỷ lệ thu hồi (%) <span className={styles.required}>*</span></label>
+              <input
+                type="number"
+                className={styles.input}
+                placeholder="VD: 30 (tức thu hồi 30% số tiền tài trợ)"
+                min="0.01"
+                max="100"
+                step="0.01"
+                value={formData.tileThuHoi || ''}
+                onChange={(e) => onFieldChange('tileThuHoi', e.target.value)}
+              />
+              <small style={{ color: '#64748b', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                Nhập % số tiền tài trợ mà nhà tài trợ đề xuất thu hồi sau khi kết thúc chương trình
+              </small>
+              {formData.tileThuHoi && parseFloat(formData.tileThuHoi) > 0 && (() => {
+                const tile = parseFloat(formData.tileThuHoi);
+                const soTienTaitro = parseFloat(formData.soLuongSuat || 0) * parseFloat(formData.soTienMoiSuat || 0);
+                const mucThuHoi = Math.min(soTienTaitro * tile / 100, soTienTaitro);
+                return soTienTaitro > 0 ? (
+                  <div style={{ background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: '8px', padding: '10px 14px', marginTop: '8px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#92400e' }}>
+                      Số tiền thu hồi dự kiến: <strong>{formatCurrency(mucThuHoi)}</strong>
+                      {tile > 30 && (
+                        <span style={{ marginLeft: 8, color: '#dc2626', fontSize: '12px' }}>
+                          (vượt 30% — cần Admin duyệt)
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          )}
+
+          {formData.loaiHoTro === 'Cho vay' && (
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Kỳ hạn trả nợ (tháng) <span className={styles.required}>*</span></label>
+              <input
+                type="number"
+                className={styles.input}
+                placeholder="VD: 12 (trả trong 12 tháng)"
+                min="1"
+                step="1"
+                value={formData.kyHanTraNo || ''}
+                onChange={(e) => onFieldChange('kyHanTraNo', e.target.value)}
+              />
+              <small style={{ color: '#64748b', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                Lãi suất theo cài đặt hệ thống (≤ 70% lãi suất ngân hàng tham chiếu). Quỹ sẽ trả toàn bộ gốc + lãi khi đến hạn.
+              </small>
+              {formData.kyHanTraNo && parseInt(formData.kyHanTraNo) > 0 && (() => {
+                const kyHan = parseInt(formData.kyHanTraNo);
+                const soTienVay = parseFloat(formData.soLuongSuat || 0) * parseFloat(formData.soTienMoiSuat || 0);
+                if (soTienVay <= 0) return null;
+                const laisuatNam = 2.3 * 0.7;
+                const tongLai = Math.round(soTienVay * (laisuatNam / 100) * (kyHan / 12) * 100) / 100;
+                const tongTra = soTienVay + tongLai;
+                return (
+                  <div style={{ background: '#dbeafe', border: '1px solid #60a5fa', borderRadius: '8px', padding: '10px 14px', marginTop: '8px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#1e40af' }}>
+                      Kỳ hạn: <strong>{kyHan} tháng</strong> — Trả toàn bộ gốc + lãi vào cuối kỳ: <strong>{formatCurrency(tongTra)}</strong>
+                    </p>
+                    <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#3b82f6' }}>
+                      (Gốc: {formatCurrency(soTienVay)} + Lãi: {formatCurrency(tongLai)}@ {laisuatNam}%/năm)
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          <div className={styles.formGrid}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Ngày bắt đầu</label>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={formData.ngayBatDau || ''}
+                onChange={(e) => onFieldChange('ngayBatDau', e.target.value)}
+              />
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Ngày kết thúc</label>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={formData.ngayKetThuc || ''}
+                onChange={(e) => onFieldChange('ngayKetThuc', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}>Tài liệu đính kèm</label>
+            <p className={styles.helperText}>Đính kèm đề xuất chương trình (PDF, DOC, JPG - tối đa 5MB, tối đa 3 file)</p>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              onChange={(e) => onFieldChange('proposalFiles', Array.from(e.target.files))}
+              className={styles.fileInput}
+            />
+          </div>
+
           <div className={styles.formGrid}>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Số lượng suất <span className={styles.required}>*</span></label>
@@ -327,52 +447,6 @@ const DonationDetailsStep = memo(({
               </span>
             </div>
           )}
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Loại hình hỗ trợ</label>
-            <select
-              className={styles.select}
-              value={formData.loaiHoTro || 'Tai tro khong hoan lai'}
-              onChange={(e) => onFieldChange('loaiHoTro', e.target.value)}
-            >
-              {LOAI_HO_TRO.map((item) => (
-                <option key={item.value} value={item.value}>{item.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGrid}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Ngày bắt đầu</label>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={formData.ngayBatDau || ''}
-                onChange={(e) => onFieldChange('ngayBatDau', e.target.value)}
-              />
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>Ngày kết thúc</label>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={formData.ngayKetThuc || ''}
-                onChange={(e) => onFieldChange('ngayKetThuc', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Tài liệu đính kèm</label>
-            <p className={styles.helperText}>Đính kèm đề xuất chương trình (PDF, DOC, JPG - tối đa 5MB, tối đa 3 file)</p>
-            <input
-              type="file"
-              multiple
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              onChange={(e) => onFieldChange('proposalFiles', Array.from(e.target.files))}
-              className={styles.fileInput}
-            />
-          </div>
         </div>
       )}
 
@@ -454,6 +528,8 @@ const DonationDetailsStep = memo(({
           bankAccount={selectedBankAccount}
           chungTuFile={chungTuFile}
           onChungTuChange={onChungTuChange}
+          maGiaoDich={maGiaoDich}
+          onMaGiaoDichChange={onMaGiaoDichChange}
         />
       )}
 
@@ -506,6 +582,8 @@ const DonationDetailsStep = memo(({
           bankAccount={selectedBankAccount}
           chungTuFile={chungTuFile}
           onChungTuChange={onChungTuChange}
+          maGiaoDich={maGiaoDich}
+          onMaGiaoDichChange={onMaGiaoDichChange}
         />
       )}
     </div>
@@ -526,6 +604,8 @@ DonationDetailsStep.propTypes = {
   bankAccounts: PropTypes.array,
   chungTuFile: PropTypes.object,
   onChungTuChange: PropTypes.func,
+  maGiaoDich: PropTypes.string,
+  onMaGiaoDichChange: PropTypes.func,
 };
 
 export default DonationDetailsStep;

@@ -777,7 +777,7 @@ Admin xem danh sách đề xuất đã xác nhận tiền tại `/admin/de-xuat`
 INSERT INTO quy (
   tenquy, loaiquy_id, mota, sotienmuctieu, sotienhotrotoida, 
   soluonghotrotoida, ngaybatdau, ngayketthuc, sodu, nguoitao_id, 
-  trangthai, loaidieuhanh, quy_cha_id, loaihotro, capdo
+  trangthai, loaidieuhanh, quy_cha_id, loaihotro, tilethuhoi, capdo
 ) VALUES (...);  -- sodu = 0 ban đầu
 
 -- 2. Tạo bản ghi phân bổ ngân sách
@@ -2270,7 +2270,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | Field | Rules |
 |-------|-------|
 | `trangthai` | Must be `Cho duyet cap 2` |
-| `loaihotro` | If `Tai tro co thu hoi`: required `mucthuhoi > 0`, `thoiHanHoanTra`, `soQuyetDinh` |
+| `loaihotro` | If `Tai tro co thu hoi`: `mucthuhoi` tự tính từ đề xuất (min(sotientaitro × tilethuhoi/100, sotientaitro)), cần `thoiHanHoanTra`, `soQuyetDinh` |
 | `loaihotro` | If `Cho vay`: required `laisuat > 0`, `laisuat <= 70%`, `thoiHanVay`, `mucLaiVay`, `tyLeLaiVay` |
 
 ### 10.7 Giải ngân (Ke Toan)

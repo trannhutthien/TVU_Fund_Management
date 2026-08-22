@@ -456,11 +456,16 @@ Khi kế toán nhấn "Giải ngân", hệ thống sẽ kiểm tra số dư qu�
 
 #### 3 Loại Hình Hỗ Trợ
 
-| Loại | Mã | Đặc Điểm | Nghiem Thu |
-|------|-----|---------|------------|
-| **Tài trợ không hoàn lại** | `Tai tro khong hoan lai` | Không cần thu hồi, giải ngân xong là hoàn tất. Phù hợp cho học bổng, trợ cấp khó khăn. | Chỉ cần nếu đơn là đề tài/dự án (cờ `laidetac = 1`) |
-| **Tài trợ có thu hồi** | `Tai tro co thu hoi` | Cần tạo `dieukhoanthuhoi` với mức thu hồi (≤ 30% kinh phí), thời hạn hoàn trả. Không tính lãi theo Điều lệ. Phù hợp cho quỹ quay vòng. | Cần nghiệm thu sau giải ngân |
-| **Cho vay** | `Cho vay` | Tạo `hopdongvayvon` + `lichtrano`, có lịch trả nợ cụ thể. | Luôn cần nghiệm thu sau giải ngân |
+> **Lưu ý hiển thị UI:** Giá trị lưu trong DB không đổi (`Tai tro khong hoan lai`, `Tai tro co thu hoi`, `Cho vay`), nhưng giao diện hiển thị nhãn mới:
+> - `Tai tro khong hoan lai` → **Tài trợ không thu hồi**
+> - `Tai tro co thu hoi` → **Tài trợ thu hồi một phần**
+> - `Cho vay` → **Tài trợ thu hồi toàn phần**
+
+| Loại | Mã DB | Nhãn Hiển Thị | Đặc Điểm | Nghiem Thu |
+|------|-------|---------------|---------|------------|
+| **Tài trợ không thu hồi** | `Tai tro khong hoan lai` | Tài trợ không thu hồi | Không cần thu hồi, giải ngân xong là hoàn tất. Phù hợp cho học bổng, trợ cấp khó khăn. | Chỉ cần nếu đơn là đề tài/dự án (cờ `laidetac = 1`) |
+| **Tài trợ thu hồi một phần** | `Tai tro co thu hoi` | Tài trợ thu hồi một phần | Cần tạo `dieukhoanthuhoi` với mức thu hồi (≤ 30% kinh phí), thời hạn hoàn trả. Không tính lãi theo Điều lệ. Phù hợp cho quỹ quay vòng. | Cần nghiệm thu sau giải ngân |
+| **Tài trợ thu hồi toàn phần** | `Cho vay` | Tài trợ thu hồi toàn phần | Tạo `hopdongvayvon` + `lichtrano`, có lịch trả nợ cụ thể. | Luôn cần nghiệm thu sau giải ngân |
 
 > **Quy tắc bật nghiệm thu (`canghiemthu`):**
 > - Đơn là đề tài/dự án nghiên cứu (`laidetac = 1`) → **luôn** cần nghiệm thu, bất kể loại hình
@@ -481,12 +486,10 @@ Khi một khoản tài trợ được duyệt, hệ thống sẽ tự động c�
 
 **Cách 1 — Khách công khai (chưa đăng nhập):**
 
-Nhà tài trợ truy cập trang `/dong-gop`, điền thông tin: họ tên, email, số điện thoại, số tiền, chọn quỹ. Hệ thống hỗ trợ **tất cả phương thức thanh toán** (Chuyển khoản, Trực tuyến, Tiền mặt):
+Nhà tài trợ truy cập trang `/dong-gop`, điền thông tin: họ tên, email, số điện thoại, số tiền, chọn quỹ. Hệ thống hỗ trợ **2 phương thức thanh toán** (Trực tuyến, Tiền mặt):
 
-- **Chọn ngân hàng:** Sau khi chọn phương thức, hệ thống hiển thị `TransferContentSection` với thông tin tài khoản ngân hàng trường và nội dung chuyển khoản cố định: `(tên nhà tài trợ) (số điện thoại) (email) (mã giao dịch) (quỹ muốn tài trợ)`. Có nút copy nội dung CK.
-- **Upload minh chứng:** Nhà tài trợ có thể upload file minh chứng chuyển khoản (PDF/JPG/PNG, max 5MB) qua endpoint công khai `POST /api/upload/public`. File được lưu vào `khoantaitro.chungtu`.
-- **Mã giao dịch:** Nhập mã giao dịch ngân hàng để đối soát sau này.
-- **Tab "Đề xuất chương trình mới":** Nhà tài trợ có thể đề xuất chương trình/hoạt động mới với nguồn tài trợ kèm theo, cũng hỗ trợ chọn ngân hàng và upload minh chứng.
+- **Trực tuyến (VNPay):** Tích hợp cổng thanh toán (chưa triển khai)
+- **Tiền mặt:** Hiển thị thông tin địa chỉ văn phòng trường. Khi chọn "Bằng tiền mặt", phần thông tin nhà tài trợ, ô review và nút submit sẽ được ẩn đi — nhà tài trợ chỉ cần điền số tiền và chọn quỹ.
 
 Hệ thống sẽ:
 1. Upload minh chứng trước khi submit (nếu có)
@@ -496,10 +499,9 @@ Hệ thống sẽ:
 
 **Cách 2 — Đã đăng nhập (role 4):**
 
-Nhà tài trợ đã có tài khoản có thể tài trợ trực tiếp qua `/dong-gop` với 3 hình thức thanh toán:
-- **Chuyển khoản:** Hiển thị `TransferContentSection` với thông tin tài khoản ngân hàng trường, nội dung CK cố định, upload minh chứng
+Nhà tài trợ đã có tài khoản có thể tài trợ trực tiếp qua `/dong-gop` với 2 hình thức thanh toán:
 - **Trực tuyến (VNPay):** Tích hợp cổng thanh toán (chưa triển khai)
-- **Tiền mặt:** Hiển thị địa chỉ văn phòng
+- **Tiền mặt:** Hiển thị thông tin địa chỉ văn phòng
 
 **Cách 3 — Cán bộ ghi nhận:**
 
@@ -784,7 +786,7 @@ Admin xem danh sách đề xuất đã xác nhận tiền tại `/admin/de-xuat`
 INSERT INTO quy (
   tenquy, loaiquy_id, mota, sotienmuctieu, sotienhotrotoida, 
   soluonghotrotoida, ngaybatdau, ngayketthuc, sodu, nguoitao_id, 
-  trangthai, loaidieuhanh, quy_cha_id, loaihotro, capdo
+  trangthai, loaidieuhanh, quy_cha_id, loaihotro, tilethuhoi, capdo
 ) VALUES (...);  -- sodu = 0 ban đầu
 
 -- 2. Tạo bản ghi phân bổ ngân sách
@@ -2072,10 +2074,10 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 
 ### 9.1 yeucauhotro
 
-| Cột | Giá trị cho phép |
-|-----|-----------------|
-| `trangthai` | `Cho duyet cap 1` (DEFAULT), `Da duyet cap 1`, `Tu choi cap 1`, `Cho duyet cap 2`, `Da duyet cap 2`, `Tu choi cap 2`, `Cho duyet cap 3`, `Da duyet cap 3`, `Tu choi cap 3`, `Cho giai ngan`, `Da giai ngan`, `Tu choi`, `Dang xu ly`, `Cho nghiem thu`, `Da nghiem thu`, `Nghiem thu khong dat`, `Cho giai ngan dot 1`, `Da giai ngan dot 1`, `Cho nghiem thu dot 1`, `Da nghiem thu dot 1`, `Cho giai ngan dot 2`, `Dang thu hoi no`, `Hoan thanh` |
-| `loaihotro` | `Tai tro khong hoan lai` (DEFAULT), `Tai tro co thu hoi`, `Cho vay` |
+| Cột | Giá trị cho phép (DB) | Nhãn hiển thị UI |
+|-----|----------------------|------------------|
+| `trangthai` | `Cho duyet cap 1` (DEFAULT), `Da duyet cap 1`, `Tu choi cap 1`, `Cho duyet cap 2`, `Da duyet cap 2`, `Tu choi cap 2`, `Cho duyet cap 3`, `Da duyet cap 3`, `Tu choi cap 3`, `Cho giai ngan`, `Da giai ngan`, `Tu choi`, `Dang xu ly`, `Cho nghiem thu`, `Da nghiem thu`, `Nghiem thu khong dat`, `Cho giai ngan dot 1`, `Da giai ngan dot 1`, `Cho nghiem thu dot 1`, `Da nghiem thu dot 1`, `Cho giai ngan dot 2`, `Dang thu hoi no`, `Hoan thanh` | — |
+| `loaihotro` | `Tai tro khong hoan lai` (DEFAULT), `Tai tro co thu hoi`, `Cho vay` | Tài trợ không thu hồi, Tài trợ thu hồi một phần, Tài trợ thu hồi toàn phần |
 
 ### 9.2 nguoidung
 
@@ -2281,7 +2283,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | Field | Rules |
 |-------|-------|
 | `trangthai` | Must be `Cho duyet cap 2` |
-| `loaihotro` | If `Tai tro co thu hoi`: required `mucthuhoi > 0`, `thoiHanHoanTra`, `soQuyetDinh` |
+| `loaihotro` | If `Tai tro co thu hoi`: `mucthuhoi` tự tính từ đề xuất (min(sotientaitro × tilethuhoi/100, sotientaitro)), cần `thoiHanHoanTra`, `soQuyetDinh` |
 | `loaihotro` | If `Cho vay`: required `laisuat > 0`, `laisuat <= 70%`, `thoiHanVay`, `mucLaiVay`, `tyLeLaiVay` |
 
 ### 10.7 Giải ngân (Ke Toan)
@@ -2526,7 +2528,7 @@ nhataitro → khoantaitro.nhataitro_id       (1:N)
 | 13 | **Nhật Ký Hệ Thống** | Ghi log tự động các API tác động dữ liệu trong database. Lưu người thực hiện, hành động, đối tượng, thời gian, IP, dữ liệu cũ/mới. Filter linh hoạt. |
 | 14 | **Đối Soát Chứng Từ Tài Trợ** | Upload file sao kê ngân hàng (CSV/Excel/TXT). Tự động parse và so khớp với dữ liệu trong hệ thống. Highlight các khoản: Đã khớp / Chưa khớp / Sai lệch. |
 | 15 | **Quản Lý Đợt Giải Ngân (Disbursement Rounds)** | Mỗi quỹ có thể chia thành nhiều đợt giải ngân (1-4 đợt). Hệ thống tự động cập nhật trạng thái đợt theo ngày. Khi tất cả đợt hoàn thành → trạng thái quỹ tự chuyển sang "Đã đóng". |
-| 16 | **Tiến Trình Gây Quỹ & Giải Ngân (Landing Page)** | Tách thành 2 khối rõ ràng: Tiến độ quyên góp (thanh progress bar) và Tiến độ giải ngân (timeline 4 dots với ngày thật/ngày dự kiến). |
+| 16 | **Tiến Trình Gây Quỹ & Giải Ngân (Landing Page)** | Tách thành 2 khối rõ ràng: Tiến độ quyên góp (thanh progress bar) và Tiến độ giải ngân (timeline 4 dots với ngày thật/ngày dự kiến). Phân bổ quỹ (FundBreakdownSection) hiển thị dạng card với dot màu, tên quỹ, phần trăm, số tiền, progress bar — chỉ hiển thị 3 quỹ đầu, bấm "Xem thêm" để mở rộng. |
 | 17 | **Định Dạng Số Dư Compact** | Card thống kê trên trang danh sách quỹ hiển thị số dư dạng compact: `2,000,000,000đ` → `2 tỷ`, `280,000,000đ` → `280 triệu`. |
 | 18 | **Đối Soát Chứng Từ Chi** | Kế toán upload file sao kê ngân hàng, hệ thống tự động parse và so khớp với dữ liệu trong bảng `giaodich`. Highlight các khoản: Đã khớp / Chưa khớp / Sai lệch. |
 
@@ -2657,4 +2659,4 @@ cd frontend && npm run build
 
 ---
 
-*Cập nhật lần cuối: 2026-08-21*
+*Cập nhật lần cuối: 2026-08-23*

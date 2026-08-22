@@ -1,4 +1,5 @@
 import pool from "../../config/db.js";
+import LaiSuatHelper from "../applications/LaiSuatHelper.js";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── ĐỀ XUẤT CHƯƠNG TRÌNH MODEL ───────────────────────────────────────────────
@@ -21,8 +22,11 @@ const createProposal = async (proposalData) => {
     soLuongSuat,
     soTienMoiSuat,
     loaiHoTro,
+    tileThuHoi,
+    kyHanTraNo,
     ngayBatDau,
-    ngayKetThuc
+    ngayKetThuc,
+    mucThuHoi
   } = proposalData;
 
   const connection = await pool.getConnection();
@@ -43,10 +47,13 @@ const createProposal = async (proposalData) => {
         sotienmoisuat,
         sotientaitro,
         loaihotro,
+        tilethuhoi,
+        kyhantrano,
         ngaybatdau,
         ngayketthuc,
+        mucthuhoi,
         trangthai
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         quyThanhPhanId,
         khoanTaiTroId || null,
@@ -57,8 +64,11 @@ const createProposal = async (proposalData) => {
         soTienMoiSuat,
         parseFloat(soLuongSuat) * parseFloat(soTienMoiSuat),
         loaiHoTro || 'Tai tro khong hoan lai',
+        tileThuHoi || null,
+        kyHanTraNo || null,
         ngayBatDau || null,
         ngayKetThuc || null,
+        mucThuHoi || null,
         trangThaiDau
       ]
     );
@@ -119,7 +129,9 @@ const createPublicProposal = async (proposalData) => {
       guestEmail,
       guestSoDienThoai,
       trackingUuid,
-      otpHash
+      otpHash,
+      tileThuHoi,
+      mucThuHoi
     } = proposalData;
 
     // Bước 1: Tạo proposal
@@ -127,8 +139,8 @@ const createPublicProposal = async (proposalData) => {
       `INSERT INTO dexuatchuongtrinh (
         quythanhphan_id, khoantaitro_id, nhataitro_id,
         tenchuongtrinh, mota, soluongsuat, sotienmoisuat, sotientaitro,
-        loaihotro, ngaybatdau, ngayketthuc, trangthai
-      ) VALUES (?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
+        loaihotro, tilethuhoi, ngaybatdau, ngayketthuc, mucthuhoi, trangthai
+      ) VALUES (?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
       [
         quyThanhPhanId,
         tenChuongTrinh,
@@ -137,8 +149,10 @@ const createPublicProposal = async (proposalData) => {
         soTienMoiSuat,
         parseFloat(soLuongSuat) * parseFloat(soTienMoiSuat),
         loaiHoTro || 'Tai tro khong hoan lai',
+        tileThuHoi || null,
         ngayBatDau || null,
-        ngayKetThuc || null
+        ngayKetThuc || null,
+        mucThuHoi || null
       ]
     );
 
@@ -195,6 +209,9 @@ const getProposalById = async (id) => {
       dx.soluongsuat,
       dx.sotienmoisuat,
       dx.loaihotro,
+      dx.tilethuhoi,
+      dx.kyhantrano,
+      dx.mucthuhoi,
       dx.ngaybatdau,
       dx.ngayketthuc,
       dx.trangthai,
@@ -252,8 +269,16 @@ const listProposals = async ({
     params.push(quy_thanh_phan_id);
   }
   if (trang_thai) {
-    conds.push(`dx.trangthai = ?`);
-    params.push(trang_thai);
+    // Hỗ trợ nhiều trạng thái phân cách bằng dấu phẩy (VD: "Da nhan tien,Duyet hop dong vay")
+    const statuses = trang_thai.split(',').map(s => s.trim()).filter(Boolean);
+    if (statuses.length === 1) {
+      conds.push(`dx.trangthai = ?`);
+      params.push(statuses[0]);
+    } else if (statuses.length > 1) {
+      const placeholders = statuses.map(() => '?').join(', ');
+      conds.push(`dx.trangthai IN (${placeholders})`);
+      params.push(...statuses);
+    }
   }
   if (keyword) {
     conds.push(`(dx.tenchuongtrinh LIKE ? OR dx.mota LIKE ? OR ntt.tennhataitro LIKE ?)`);
@@ -283,6 +308,8 @@ const listProposals = async ({
       dx.soluongsuat,
       dx.sotienmoisuat,
       dx.loaihotro,
+      dx.tilethuhoi,
+      dx.mucthuhoi,
       dx.ngaybatdau,
       dx.ngayketthuc,
       dx.trangthai,
@@ -305,15 +332,16 @@ const listProposals = async ({
      LEFT JOIN quy qkq ON dx.quyketqua_id = qkq.quy_id
      LEFT JOIN khoantaitro kt ON dx.khoantaitro_id = kt.khoantaitro_id
      ${where}
-     ORDER BY 
-       CASE dx.trangthai
-         WHEN 'Cho duyet' THEN 1
-         WHEN 'Can bo da duyet' THEN 2
-         WHEN 'Da nhan tien' THEN 3
-         WHEN 'Da tao hoat dong' THEN 4
-         WHEN 'Tu choi' THEN 5
-         ELSE 6
-       END,
+      ORDER BY 
+        CASE dx.trangthai
+          WHEN 'Cho duyet' THEN 1
+          WHEN 'Can bo da duyet' THEN 2
+          WHEN 'Da nhan tien' THEN 3
+          WHEN 'Duyet hop dong vay' THEN 4
+          WHEN 'Da tao hoat dong' THEN 5
+          WHEN 'Tu choi' THEN 6
+          ELSE 7
+        END,
        dx.ngaytao DESC
      LIMIT ? OFFSET ?`,
     [...params, Number(page_size), offset]
@@ -555,9 +583,93 @@ const confirmMoneyByKeToan = async (id, keToanId, soTienThucTe = null) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HÀM: createActivityByAdmin (BƯỚC 3)
+// HÀM: approveLoanContract (BƯỚC 3b — CHỈ CHO "CHO VAY")
+// MỤC ĐÍCH: Admin duyệt hợp đồng vay (xác nhận lãi suất + ngày ký)
+//           Sau bước Kế toán xác nhận tiền, trước khi tạo hoạt động
+// ─────────────────────────────────────────────────────────────────────────────
+const approveLoanContract = async (id, adminId, ghiChu = null) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    // 1. Kiểm tra proposal
+    const [dxRows] = await connection.query(
+      `SELECT * FROM dexuatchuongtrinh WHERE dexuatchuongtrinh_id = ? FOR UPDATE`,
+      [id]
+    );
+    const dx = dxRows[0];
+    if (!dx) {
+      throw new Error('PROPOSAL_NOT_FOUND');
+    }
+    if (dx.trangthai !== 'Da nhan tien') {
+      throw new Error('PROPOSAL_MUST_BE_MONEY_CONFIRMED');
+    }
+    if (dx.loaihotro !== 'Cho vay') {
+      throw new Error('ONLY_LOAN_REQUIRES_CONTRACT_APPROVAL');
+    }
+
+    // 2. Validate lãi suất qua LaiSuatHelper
+    const laisuatThamChieu = LaiSuatHelper.getLaiSuatNganHangThamChieu();
+    if (laisuatThamChieu === null) {
+      throw new Error('INTEREST_RATE_NOT_CONFIGURED');
+    }
+    const laisuatChoVay = Math.round(parseFloat(laisuatThamChieu) * 0.7 * 100) / 100;
+    const validation = LaiSuatHelper.kiemTraRangBuocLaiSuat(laisuatChoVay);
+    if (!validation.hopLe) {
+      throw new Error('INTEREST_RATE_EXCEEDS_LIMIT');
+    }
+
+    // 3. Lưu thông tin hợp đồng vào pheduyet cap 3 (ghichu)
+    const hopDongInfo = JSON.stringify({
+      laisuatphantram: laisuatChoVay,
+      ngaykyhopdong: new Date().toISOString().split('T')[0],
+      ghichuAdmin: ghiChu || null
+    });
+
+    await connection.execute(
+      `UPDATE pheduyet
+       SET nguoiduyet_id = ?,
+           ketqua = 'Da duyet',
+           ghichu = ?,
+           lydo = NULL,
+           ngayduyet = NOW()
+       WHERE dexuatchuongtrinh_id = ? AND capduyet = 3`,
+      [adminId, hopDongInfo, id]
+    );
+
+    // 4. Cập nhật trạng thái đề xuất
+    await connection.execute(
+      `UPDATE dexuatchuongtrinh
+       SET trangthai = 'Duyet hop dong vay'
+       WHERE dexuatchuongtrinh_id = ?`,
+      [id]
+    );
+
+    await connection.commit();
+
+    return {
+      success: true,
+      proposalId: id,
+      trangthai: 'Duyet hop dong vay',
+      laisuatphantram: laisuatChoVay,
+      laisuatThamChieu: parseFloat(laisuatThamChieu),
+      mucToiDa: validation.mucToiDa
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HÀM: createActivityByAdmin (BƯỚC 3c)
 // MỤC ĐÍCH: Admin duyệt và tạo hoạt động/chương trình (Quỹ Cấp 3)
 //           Trích tiền từ Quỹ Thành Phần → Hoạt động mới
+//           Với "Cho vay": chỉ chạy sau khi đã duyệt hợp đồng (trangthai='Duyet hop dong vay')
+//           Với loại khác: chạy sau khi Kế toán xác nhận tiền (trangthai='Da nhan tien')
 // ─────────────────────────────────────────────────────────────────────────────
 const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
   const connection = await pool.getConnection();
@@ -574,8 +686,17 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
     if (!dx) {
       throw new Error('PROPOSAL_NOT_FOUND');
     }
-    if (dx.trangthai !== 'Da nhan tien') {
-      throw new Error('PROPOSAL_MONEY_NOT_CONFIRMED');
+    // Cho vay: phải qua bước duyệt hợp đồng trước
+    // Loại khác: chạy ngay sau khi Kế toán xác nhận tiền
+    const isLoan = dx.loaihotro === 'Cho vay';
+    if (isLoan) {
+      if (dx.trangthai !== 'Duyet hop dong vay') {
+        throw new Error('PROPOSAL_LOAN_NOT_APPROVED_CONTRACT');
+      }
+    } else {
+      if (dx.trangthai !== 'Da nhan tien') {
+        throw new Error('PROPOSAL_MONEY_NOT_CONFIRMED');
+      }
     }
     if (dx.quyketqua_id) {
       throw new Error('ACTIVITY_ALREADY_CREATED');
@@ -588,6 +709,8 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
       soluongsuat,
       sotienmoisuat,
       loaihotro,
+      tilethuhoi,
+      kyhantrano,
       ngaybatdau,
       ngayketthuc,
       so_tien_thuc_te
@@ -617,6 +740,7 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
         tenquy,
         loaiquy_id,
         mota,
+        dieukienhotro,
         sotienmuctieu,
         sotienhotrotoida,
         soluonghotrotoida,
@@ -628,24 +752,27 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
         loaidieuhanh,
         quy_cha_id,
         loaihotro,
+        tilethuhoi,
         capdo
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, 
-        ?, ?, 'Dang hoat dong', 'Tap trung - Muc chi', ?, ?, 3
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+        ?, ?, 'Dang hoat dong', 'Tap trung - Muc chi', ?, ?, ?, 3
       )`,
       [
         tenchuongtrinh,
         quyThanhPhan.loaiquy_id,
+        mota || null,
         mota || null,
         soTienPhanBo,
         sotienmoisuat,
         soluongsuat,
         ngaybatdau || null,
         ngayketthuc || null,
-        soTienPhanBo,  // Số dư ban đầu = Số tiền được phân bổ
+        soTienPhanBo,
         adminId,
         quythanhphan_id,
-        loaihotro
+        loaihotro,
+        tilethuhoi || null
       ]
     );
 
@@ -686,6 +813,69 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
       [soTienPhanBo, quythanhphan_id]
     );
 
+    // 5b. Nếu "Cho vay": tạo hopdongvayvon + lichtrano (1 kỳ)
+    let hopDongVayVonId = null;
+    if (isLoan && kyhantrano) {
+      // Đọc thông tin hợp đồng từ pheduyet cap 3 (đã lưu ở bước duyệt hợp đồng)
+      let laisuatChoVay = 0;
+      let ngayKyHopDong = new Date();
+      try {
+        const [pheduyetRows] = await connection.query(
+          `SELECT ghichu FROM pheduyet WHERE dexuatchuongtrinh_id = ? AND capduyet = 3`,
+          [id]
+        );
+        if (pheduyetRows[0]?.ghichu) {
+          const hopDongInfo = JSON.parse(pheduyetRows[0].ghichu);
+          laisuatChoVay = parseFloat(hopDongInfo.laisuatphantram) || 0;
+          if (hopDongInfo.ngaykyhopdong) {
+            ngayKyHopDong = new Date(hopDongInfo.ngaykyhopdong);
+          }
+        }
+      } catch { /* fallback to default */ }
+
+      // Nếu không đọc được từ pheduyet, tính fallback từ settings
+      if (laisuatChoVay === 0) {
+        const laisuatThamChieu = LaiSuatHelper.getLaiSuatNganHangThamChieu() || 0;
+        laisuatChoVay = Math.round(laisuatThamChieu * 0.7 * 100) / 100;
+      }
+
+      const kyHanThang = parseInt(kyhantrano);
+
+      // Tính ngày đáo hạn
+      const ngayDaoHan = new Date(ngayKyHopDong);
+      ngayDaoHan.setMonth(ngayDaoHan.getMonth() + kyHanThang);
+
+      // Tạo hợp đồng vay vốn
+      const [hdResult] = await connection.execute(
+        `INSERT INTO hopdongvayvon (
+          dexuatchuongtrinh_id, sotienvon, laisuatphantram, ngaykyhopdong, kyhandothang, ngaydaohan,
+          trangthai, nguoiduyet_id, ghichu
+        ) VALUES (?, ?, ?, ?, ?, ?, 'Dang thuc hien', ?, ?)`,
+        [
+          id,
+          soTienPhanBo,
+          laisuatChoVay,
+          ngayKyHopDong,
+          kyHanThang,
+          ngayDaoHan,
+          adminId,
+          `Tu dong tao tu de xuat chuong trinh "${tenchuongtrinh}"`,
+        ]
+      );
+      hopDongVayVonId = hdResult.insertId;
+
+      // Tạo lịch trả nợ 1 kỳ: toàn bộ gốc + lãi, đến hạn = kỳ hạn tháng
+      // (Quỹ trả cho Nhà tài trợ —不同于 sinh viên trả cho quỹ)
+      const tongLai = Math.round(soTienPhanBo * (laisuatChoVay / 100) * (kyHanThang / 12) * 100) / 100;
+
+      await connection.execute(
+        `INSERT INTO lichtrano (
+          hopdongvayvon_id, kythu, ngaydenhan, sotiengocphaitra, sotienlaiphaitra, trangthai
+        ) VALUES (?, 1, ?, ?, ?, 'Chua den han')`,
+        [hopDongVayVonId, ngayDaoHan, soTienPhanBo, tongLai]
+      );
+    }
+
     // 6. Ghi nhận phê duyệt cấp 3 (Admin) vào bảng pheduyet
     await connection.execute(
       `UPDATE pheduyet 
@@ -714,7 +904,8 @@ const createActivityByAdmin = async (id, adminId, ghiChu = null) => {
       proposalId: id,
       activityId: quyMoiId,
       phanBoId: insertPhanBoResult.insertId,
-      soTienPhanBo
+      soTienPhanBo,
+      hopDongVayVonId,
     };
   } catch (error) {
     await connection.rollback();
@@ -735,8 +926,9 @@ const getProposalStats = async () => {
   const [[{ canBoPheDuyet }]] = await pool.query(
     `SELECT COUNT(*) AS canBoPheDuyet FROM dexuatchuongtrinh WHERE trangthai = 'Can bo da duyet'`
   );
+  // Admin pending: đếm cả "Da nhan tien" (loại khác) + "Duyet hop dong vay" (cho vay)
   const [[{ daNhanTien }]] = await pool.query(
-    `SELECT COUNT(*) AS daNhanTien FROM dexuatchuongtrinh WHERE trangthai = 'Da nhan tien'`
+    `SELECT COUNT(*) AS daNhanTien FROM dexuatchuongtrinh WHERE trangthai IN ('Da nhan tien', 'Duyet hop dong vay')`
   );
   const [[{ daTaoHoatDong }]] = await pool.query(
     `SELECT COUNT(*) AS daTaoHoatDong FROM dexuatchuongtrinh WHERE trangthai = 'Da tao hoat dong'`
@@ -763,5 +955,6 @@ export default {
   approveByCanBo,
   rejectByCanBo,
   confirmMoneyByKeToan,
+  approveLoanContract,
   createActivityByAdmin
 };

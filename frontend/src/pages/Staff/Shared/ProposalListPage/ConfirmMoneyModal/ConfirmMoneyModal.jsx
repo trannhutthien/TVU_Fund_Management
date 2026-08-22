@@ -106,6 +106,24 @@ const ConfirmMoneyModal = ({ proposal, onClose, onSuccess }) => {
                 {formatCurrency(soTienDeXuat)}
               </span>
             </div>
+            {proposal.loai_ho_tro === 'Tai tro co thu hoi' && proposal.tilethuhoi && (
+              <>
+                <div className={styles.summaryRow}>
+                  <span className={styles.summaryLabel}>Tỷ lệ thu hồi</span>
+                  <span className={styles.summaryValue}>
+                    {proposal.tilethuhoi}%
+                  </span>
+                </div>
+                {proposal.mucthuhoi && (
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Số tiền thu hồi</span>
+                    <span className={styles.summaryAmount}>
+                      {formatCurrency(proposal.mucthuhoi)}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Nhập số tiền thực tế (optional) */}

@@ -132,7 +132,8 @@ export const createFund = async (req, res) => {
       nguoiTao,
       soDotGiaiNgan,
       dotGiaiNgan,
-      loaiHoTro
+      loaiHoTro,
+      tileThuHoi
     } = req.body;
     const normalizedFundData = normalizeFundOperationData(req.body);
 
@@ -150,21 +151,15 @@ export const createFund = async (req, res) => {
       });
     }
 
-    // 2. Validate loại quỹ
-    const loaiQuyExists = await LoaiQuyModel.checkMaLoaiExists(loaiQuy);
-    if (!loaiQuyExists) {
-      return res.status(400).json({
-        success: false,
-        message: "Loại quỹ không hợp lệ hoặc không tồn tại trong hệ thống",
-      });
-    }
-
-    // 3. Validate số dư (nếu có)
-    if (soDu !== undefined && (isNaN(soDu) || soDu < 0)) {
-      return res.status(400).json({
-        success: false,
-        message: "Số dư phải là số và lớn hơn hoặc bằng 0",
-      });
+    // 5c. Validate tỷ lệ thu hồi (nếu có)
+    if (tileThuHoi !== undefined && tileThuHoi !== null) {
+      const tile = parseFloat(tileThuHoi);
+      if (isNaN(tile) || tile < 0 || tile > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Tỷ lệ thu hồi phải từ 0 đến 100 (%)",
+        });
+      }
     }
 
     const fundingPlanError = validateFundingPlan({
@@ -214,6 +209,17 @@ export const createFund = async (req, res) => {
       });
     }
 
+    // 4c. Validate tỷ lệ thu hồi (nếu có)
+    if (tileThuHoi !== undefined && tileThuHoi !== null) {
+      const tile = parseFloat(tileThuHoi);
+      if (isNaN(tile) || tile < 0 || tile > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Tỷ lệ thu hồi phải từ 0 đến 100 (%)",
+        });
+      }
+    }
+
     // 5. Validate độ dài tên quỹ
     if (tenQuy.trim().length > 150) {
       return res.status(400).json({
@@ -259,7 +265,8 @@ export const createFund = async (req, res) => {
       quyChaId: normalizedFundData.quyChaId,
       soDotGiaiNgan: soDotGiaiNgan ? parseInt(soDotGiaiNgan) : 0,
       dotGiaiNgan: dotGiaiNgan || [],
-      loaiHoTro: finalLoaiHoTro
+      loaiHoTro: finalLoaiHoTro,
+      tileThuHoi: tileThuHoi ? parseFloat(tileThuHoi) : null
     };
 
     const result = await FundModel.createFund(fundData);
@@ -406,6 +413,7 @@ export const getFunds = async (req, res) => {
         capDo: fund.capdo,
         quyChaId: fund.quy_cha_id,
         loaiHoTro: fund.loaihotro,
+        tilethuhoi: fund.tilethuhoi,
         tenQuyCha: fund.ten_quy_cha,
         soDonDaNop: fund.so_don_da_nop,
         phanTramDaNhan: fund.phan_tram_da_nhan,
@@ -566,6 +574,8 @@ export const getPublicFunds = async (req, res) => {
         q.loaidieuhanh AS loai_dieu_hanh,
         q.capdo,
         q.quy_cha_id,
+        q.loaihotro,
+        q.tilethuhoi,
         qp.tenquy AS ten_quy_cha,
         (q.sodu - COALESCE(SUM(CASE WHEN yc.trangthai = 'Cho giai ngan' THEN yc.sotiendenghi ELSE 0 END), 0)) AS so_du_thuc_te,
         q.nguoitao_id,
@@ -587,7 +597,7 @@ export const getPublicFunds = async (req, res) => {
       LEFT JOIN quy qp ON q.quy_cha_id = qp.quy_id
       LEFT JOIN yeucauhotro yc ON q.quy_id = yc.quy_id
       WHERE ${whereClause}
-      GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, qp.tenquy
+      GROUP BY q.quy_id, lq.loaiquy_id, lq.maloai, lq.tenloai, q.ngaytao, q.loaidieuhanh, q.capdo, q.quy_cha_id, q.loaihotro, q.tilethuhoi, qp.tenquy
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `;
@@ -632,7 +642,9 @@ export const getPublicFunds = async (req, res) => {
         loaiDieuHanh: fund.loai_dieu_hanh,
         capDo: fund.capdo,
         quyChaId: fund.quy_cha_id,
-        tenQuyCha: fund.ten_quy_cha
+        tenQuyCha: fund.ten_quy_cha,
+        loaiHoTro: fund.loaihotro,
+        tilethuhoi: fund.tilethuhoi
       }))
     });
   } catch (error) {
@@ -778,6 +790,8 @@ export const getFundDetail = async (req, res) => {
         loaiDieuHanh: fund.loai_dieu_hanh,
         quyChaId: fund.quy_cha_id,
         tenQuyCha: fund.ten_quy_cha,
+        loaiHoTro: fund.loaihotro,
+        tilethuhoi: fund.tilethuhoi,
         // Thêm thống kê
         soKhoanTaiTro: stats.soKhoanTaiTro || 0,
         soDonDaHoTro: stats.soDonDaHoTro || 0,
@@ -832,7 +846,8 @@ export const updateFund = async (req, res) => {
       dieuKienTomTat,
       soDu,
       trangThai,
-      loaiHoTro
+      loaiHoTro,
+      tileThuHoi
     } = req.body;
 
     // 1. Validate ID
@@ -944,7 +959,8 @@ export const updateFund = async (req, res) => {
       trangThai: trangThai || fund.trang_thai,
       loaiDieuHanh: normalizedFundData.loaiDieuHanh,
       quyChaId: normalizedFundData.quyChaId,
-      loaiHoTro: finalLoaiHoTro
+      loaiHoTro: finalLoaiHoTro,
+      tileThuHoi: tileThuHoi !== undefined ? parseFloat(tileThuHoi) : fund.tilethuhoi
     };
 
     await FundModel.updateFund(id, fundData);

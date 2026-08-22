@@ -223,6 +223,15 @@
 // ============================================
 // CASH INFO
 // ============================================
+
+.cashImage {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 12px;
+  object-fit: cover;
+  max-height: 200px;
+}
+
 .cashInfo {
   padding: 14px;
   background: #f8f9ff;

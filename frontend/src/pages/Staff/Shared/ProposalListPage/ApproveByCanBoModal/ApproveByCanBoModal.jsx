@@ -47,7 +47,7 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
     try {
       const res = await getFunds({ cap: 2 });
       if (res?.success) {
-        setFunds(res.data || []);
+        setFunds(res.funds || []);
       }
     } catch (err) {
       console.error('Lỗi tải danh sách quỹ:', err);
@@ -147,9 +147,38 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Loại hỗ trợ</span>
               <span className={styles.summaryValue}>
-                {proposal.loai_ho_tro || '—'}
+                {proposal.loai_ho_tro === 'Tai tro khong hoan lai' && 'Tài trợ không thu hồi'}
+                {proposal.loai_ho_tro === 'Tai tro co thu hoi' && 'Tài trợ thu hồi một phần'}
+                {proposal.loai_ho_tro === 'Cho vay' && 'Tài trợ thu hồi toàn phần'}
+                {!proposal.loai_ho_tro && '—'}
               </span>
             </div>
+            {proposal.loai_ho_tro === 'Tai tro co thu hoi' && proposal.tilethuhoi && (
+              <>
+                <div className={styles.summaryRow}>
+                  <span className={styles.summaryLabel}>Tỷ lệ thu hồi</span>
+                  <span className={styles.summaryValue}>
+                    {proposal.tilethuhoi}%
+                  </span>
+                </div>
+                {proposal.mucthuhoi && (
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Số tiền thu hồi</span>
+                    <span className={styles.summaryAmount}>
+                      {formatCurrency(proposal.mucthuhoi)}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+            {proposal.loai_ho_tro === 'Cho vay' && proposal.kyhantrano && (
+              <div className={styles.summaryRow}>
+                <span className={styles.summaryLabel}>Kỳ hạn trả nợ</span>
+                <span className={styles.summaryValue}>
+                  {proposal.kyhantrano} tháng
+                </span>
+              </div>
+            )}
             <div className={styles.summaryRow}>
               <span className={styles.summaryLabel}>Thời gian</span>
               <span className={styles.summaryValue}>
@@ -177,9 +206,9 @@ const ApproveByCanBoModal = ({ proposal, onClose, onSuccess }) => {
               >
                 <option value="">-- Chọn quỹ thành phần --</option>
                 {funds.map((fund) => (
-                  <option key={fund.quy_id} value={fund.quy_id}>
-                    {fund.ten_quy}
-                    {fund.quy_id === proposal.quy_thanh_phan_id && ' (Hiện tại)'}
+                  <option key={fund.quyId} value={fund.quyId}>
+                    {fund.tenQuy}
+                    {fund.quyId === proposal.quy_thanh_phan_id && ' (Hiện tại)'}
                   </option>
                 ))}
               </select>

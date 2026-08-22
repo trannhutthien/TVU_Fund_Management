@@ -14,7 +14,7 @@ import styles from './index.module.scss';
 
 const LOAI_HOTRO_OPTIONS = [
   { value: '', label: 'Tat ca' },
-  { value: 'Cho vay', label: 'Cho vay' },
+  { value: 'Cho vay', label: 'Tài trợ thu hồi toàn phần' },
   { value: 'Tai tro co thu hoi', label: 'Co thu hoi' },
 ];
 

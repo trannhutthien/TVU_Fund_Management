@@ -98,6 +98,27 @@ const ReviewStep = memo(({ formData, destinationType, selectedFund, bankAccounts
                 <span className={styles.reviewLabel}>Loại hình hỗ trợ:</span>
                 <span className={styles.reviewValue}>{formData.loaiHoTro || 'Tai tro khong hoan lai'}</span>
               </div>
+              {formData.loaiHoTro === 'Tai tro co thu hoi' && formData.tileThuHoi && parseFloat(formData.tileThuHoi) > 0 && (
+                <div className={styles.reviewItem}>
+                  <span className={styles.reviewLabel}>Tỷ lệ thu hồi:</span>
+                  <span className={styles.reviewValue}>
+                    {formData.tileThuHoi}% — Số tiền thu hồi: {formatCurrency(
+                      Math.min(
+                        (parseFloat(formData.soLuongSuat || 0) * parseFloat(formData.soTienMoiSuat || 0)) * parseFloat(formData.tileThuHoi) / 100,
+                        parseFloat(formData.soLuongSuat || 0) * parseFloat(formData.soTienMoiSuat || 0)
+                      )
+                    )}
+                  </span>
+                </div>
+              )}
+              {formData.loaiHoTro === 'Cho vay' && formData.kyHanTraNo && parseInt(formData.kyHanTraNo) > 0 && (
+                <div className={styles.reviewItem}>
+                  <span className={styles.reviewLabel}>Kỳ hạn trả nợ:</span>
+                  <span className={styles.reviewValue}>
+                    {formData.kyHanTraNo} tháng — Quỹ sẽ trả toàn bộ gốc + lãi khi đến hạn
+                  </span>
+                </div>
+              )}
               {formData.ngayBatDau && (
                 <div className={styles.reviewItem}>
                   <span className={styles.reviewLabel}>Ngày bắt đầu:</span>

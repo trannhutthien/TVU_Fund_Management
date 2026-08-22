@@ -8,19 +8,19 @@ export const LOAI_HO_TRO = {
 export const LOAI_HO_TRO_OPTIONS = [
   {
     value: LOAI_HO_TRO.TAI_TRO_KHONG_HOAN_LAI,
-    label: 'Tài trợ không hoàn lại',
+    label: 'Tài trợ không thu hồi',
     description: 'Hỗ trợ tài chính, không cần hoàn trả',
     canGhiTongKinhPhi: false,
   },
   {
     value: LOAI_HO_TRO.TAI_TRO_CO_THU_HOI,
-    label: 'Tài trợ có thu hồi một phần',
+    label: 'Tài trợ thu hồi một phần',
     description: 'Áp dụng cho dự án/đề tài có thể phát triển thành sáng chế hoặc chuyển giao công nghệ — thu hồi tối đa 30% tổng kinh phí dự án',
     canGhiTongKinhPhi: true,
   },
   {
     value: LOAI_HO_TRO.CHO_VAY,
-    label: 'Vay vốn',
+    label: 'Tài trợ thu hồi toàn phần',
     description: 'Vay có hoặc không tính lãi (tối đa 70% lãi suất ngân hàng), có lịch trả góp theo kỳ hạn',
     canGhiTongKinhPhi: false,
   },

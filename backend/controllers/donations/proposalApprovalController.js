@@ -1,14 +1,16 @@
 /**
- * Proposal Approval Controller - Luồng duyệt đề xuất chương trình 3 cấp
+ * Proposal Approval Controller - Luồng duyệt đề xuất chương trình 3 cấp (+ bước duyệt hợp đồng vay)
  * 
  * Luồng:
  * 1. Cán bộ duyệt nội dung
  * 2. Kế toán xác nhận tiền + cộng vào Quỹ Thành Phần
+ * 2b. (Cho vay) Admin duyệt hợp đồng vay
  * 3. Admin duyệt tạo hoạt động (auto-tạo quỹ cấp 3)
  */
 
 import DeXuatChuongTrinhModel from '../../models/donations/DeXuatChuongTrinhModel.js';
 import PheDuyetModel from '../../models/applications/PheDuyetModel.js';
+import LaiSuatHelper from '../../models/applications/LaiSuatHelper.js';
 import pool from '../../config/db.js';
 import { sendSponsorshipReceiptEmail } from '../../services/emailService.js';
 
@@ -245,6 +247,73 @@ export const confirmMoneyByKeToan = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Lỗi khi xác nhận tiền',
+      error: error.message
+    });
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BƯỚC 2b: ADMIN DUYỆT HỢP ĐỒNG VAY (CHỈ CHO "CHO VAY")
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/proposals/:id/approve-loan-contract
+ * Admin duyệt hợp đồng vay — xác nhận lãi suất + ngày ký
+ * Chỉ dành cho đề xuất loại "Cho vay", sau bước Kế toán xác nhận tiền
+ * 
+ * Body: {
+ *   ghiChu?: string
+ * }
+ */
+export const approveLoanContractController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ghiChu } = req.body;
+    const adminId = req.user.id;
+
+    if (req.user.vai_tro !== 1) {
+      return res.status(403).json({
+        success: false,
+        message: 'Chỉ Admin mới có quyền duyệt hợp đồng vay'
+      });
+    }
+
+    const result = await DeXuatChuongTrinhModel.approveLoanContract(
+      parseInt(id),
+      adminId,
+      ghiChu || null
+    );
+
+    res.json({
+      success: true,
+      message: 'Duyệt hợp đồng vay thành công',
+      data: {
+        de_xuat_id: result.proposalId,
+        trang_thai: result.trangthai,
+        laisuatphantram: result.laisuatphantram,
+        laisuat_tham_chieu: result.laisuatThamChieu,
+        muc_toi_da: result.mucToiDa
+      }
+    });
+  } catch (error) {
+    console.error('Lỗi approveLoanContractController:', error);
+
+    if (error.message === 'PROPOSAL_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đề xuất' });
+    }
+    if (error.message === 'PROPOSAL_MUST_BE_MONEY_CONFIRMED') {
+      return res.status(400).json({ success: false, message: 'Đề xuất chưa được Kế toán xác nhận tiền' });
+    }
+    if (error.message === 'ONLY_LOAN_REQUIRES_CONTRACT_APPROVAL') {
+      return res.status(400).json({ success: false, message: 'Chỉ đề xuất "Cho vay" cần duyệt hợp đồng' });
+    }
+    if (error.message === 'INTEREST_RATE_NOT_CONFIGURED') {
+      return res.status(500).json({ success: false, message: 'Chưa cấu hình lãi suất tham chiếu' });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi khi duyệt hợp đồng vay',
       error: error.message
     });
   }

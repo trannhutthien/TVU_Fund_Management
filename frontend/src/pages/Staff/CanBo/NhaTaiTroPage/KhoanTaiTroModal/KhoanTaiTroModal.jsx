@@ -213,6 +213,7 @@ const KhoanTaiTroModal = ({
         ghi_chu: form.ghi_chu?.trim() || null,
         hinh_thuc: form.hinh_thuc,
         hinh_anh_minh_chung: urlMinhChung,
+        ma_giao_dich: form.hinh_thuc === 'Chuyen khoan' ? transactionId.trim() || null : null,
         taikhoannganhang_id: selectedBankAccountId || null,
       });
 
@@ -450,6 +451,20 @@ const KhoanTaiTroModal = ({
               <option value="Khac">Khác</option>
             </select>
           </div>
+
+          {/* Section: Mã giao dịch (chỉ hiện khi chuyển khoản) */}
+          {form.hinh_thuc === 'Chuyen khoan' && (
+            <div className={styles.field}>
+              <label className={styles.label}>Mã giao dịch ngân hàng</label>
+              <input
+                className={styles.input}
+                type="text"
+                placeholder="Nhập mã giao dịch / mã GD trên ủy nhiệm chi..."
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+              />
+            </div>
+          )}
 
           {/* Section: Ghi chú */}
           <div className={styles.field}>

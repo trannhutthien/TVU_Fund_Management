@@ -6,7 +6,7 @@ import { LOAI_HO_TRO } from './loaiHoTro';
  */
 export const LOAI_HO_TRO_INFO = {
   [LOAI_HO_TRO.TAI_TRO_KHONG_HOAN_LAI]: {
-    label: 'Tài trợ không hoàn lại',
+    label: 'Tài trợ không thu hồi',
     shortDesc: 'Hỗ trợ tài chính, không cần hoàn trả',
     legalRef: 'Điều 15.1',
     color: '#10b981',
@@ -26,7 +26,7 @@ export const LOAI_HO_TRO_INFO = {
   },
 
   [LOAI_HO_TRO.TAI_TRO_CO_THU_HOI]: {
-    label: 'Tài trợ có thu hồi',
+    label: 'Tài trợ thu hồi một phần',
     shortDesc: 'Thu hồi tối đa 30% khi dự án phát triển thành sáng chế/chuyển giao',
     legalRef: 'Điều 15.2',
     color: '#f59e0b',
@@ -46,7 +46,7 @@ export const LOAI_HO_TRO_INFO = {
   },
 
   [LOAI_HO_TRO.CHO_VAY]: {
-    label: 'Vay vốn',
+    label: 'Tài trợ thu hồi toàn phần',
     shortDesc: 'Vay có/không lãi, trả góp theo kỳ hạn',
     legalRef: 'Điều 18',
     color: '#3b6ff5',

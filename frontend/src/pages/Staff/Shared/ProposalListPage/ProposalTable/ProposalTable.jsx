@@ -6,6 +6,7 @@ import {
   HiOutlineBanknotes,
   HiOutlineRocketLaunch,
   HiOutlineInboxStack,
+  HiOutlineDocumentCheck,
 } from 'react-icons/hi2';
 import ProposalStatusBadge from '@components/proposal/ProposalStatusBadge';
 import { formatCurrency, formatDate } from '@utils/formatters';
@@ -23,6 +24,7 @@ const ProposalTable = ({
   onApprove,
   onReject,
   onConfirmMoney,
+  onApproveLoanContract,
   onCreateActivity,
 }) => {
   // Loading skeleton
@@ -119,8 +121,33 @@ const ProposalTable = ({
       );
     }
 
-    // Admin (role 1) + status "Da nhan tien"
+    // Admin (role 1) + status "Da nhan tien" → Duyệt hợp đồng vay
     if (userRole === 1 && trangThai === 'Da nhan tien') {
+      return (
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${styles.viewIcon}`}
+            onClick={() => onViewDetail?.(proposal)}
+            title="Xem chi tiết"
+          >
+            <HiOutlineEye />
+          </button>
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${styles.confirm}`}
+            onClick={() => onApproveLoanContract?.(proposal)}
+            title="Duyệt hợp đồng vay"
+          >
+            <HiOutlineDocumentCheck />
+            <span>Duyệt hợp đồng</span>
+          </button>
+        </div>
+      );
+    }
+
+    // Admin (role 1) + status "Duyet hop dong vay" → Tạo hoạt động
+    if (userRole === 1 && trangThai === 'Duyet hop dong vay') {
       return (
         <div className={styles.actions}>
           <button

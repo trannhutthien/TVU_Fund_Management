@@ -1,7 +1,7 @@
 # TVU Fund Management — Database Schema Reference
 
 > **Database:** `tvu_fund_management` · **Charset:** utf8mb4 · **Engine:** InnoDB
-> **Cập nhật:** 2026-08-21 · **Source:** Aiven Cloud production + migrations
+> **Cập nhật:** 2026-08-23 · **Source:** Aiven Cloud production + migrations
 
 ---
 
@@ -145,6 +145,8 @@
 | `ngaycapnhat` | timestamp | NO | CURRENT_TIMESTAMP | ON UPDATE |
 | `loaidieuhanh` | enum | NO | `'Tap trung - Be chung'` | `Tap trung - Be chung` · `Tap trung - Muc chi` |
 | `quy_cha_id` | int(11) | YES | NULL | FK → `quy` (self-ref, Bể tiền lớn) |
+| `loaihotro` | enum | YES | `'Tai tro khong hoan lai'` | `Tai tro khong hoan lai` · `Tai tro co thu hoi` · `Cho vay` |
+| `tilethuhoi` | decimal(5,2) | YES | NULL | Tỷ lệ thu hồi (%). VD: 30 = 30%. Chỉ dùng cho `loaihotro` có thu hồi/cho vay |
 
 ---
 
@@ -211,6 +213,11 @@
 | `tongkinhphidudan` | decimal(15,2) | YES | NULL | Tổng kinh phí dự kiến |
 | `tieu_de` | varchar(200) | YES | NULL | Tiêu đề đơn |
 | `ladetai` | tinyint(1) | YES | 0 | 1 = đề tài/dự án nghiên cứu (cần nghiệm thu theo Điều 15b,c) |
+
+> **UI Label Mapping (2026-08-23):** Giá trị enum DB giữ nguyên, chỉ thay nhãn hiển thị trên giao diện:
+> - `Tai tro khong hoan lai` → **Tài trợ không thu hồi**
+> - `Tai tro co thu hoi` → **Tài trợ thu hồi một phần**
+> - `Cho vay` → **Tài trợ thu hồi toàn phần**
 
 **Enum `trangthai` (23 giá trị):**
 `Cho duyet cap 1` · `Da duyet cap 1` · `Tu choi cap 1` · `Cho duyet cap 2` · `Da duyet cap 2` · `Tu choi cap 2` · `Cho duyet cap 3` · `Da duyet cap 3` · `Tu choi cap 3` · `Cho giai ngan` · `Da giai ngan` · `Cho nghiem thu` · `Da nghiem thu` · `Nghiem thu khong dat` · `Tu choi` · `Cho giai ngan dot 1` · `Da giai ngan dot 1` · `Cho nghiem thu dot 1` · `Da nghiem thu dot 1` · `Cho giai ngan dot 2` · `Da giai ngan dot 2` · `Dang thu hoi no` · `Hoan thanh`
@@ -567,6 +574,9 @@
 | `mota` | text | YES | NULL | Mô tả chi tiết chương trình |
 | `soluongsuat` | int(11) | NO | | Số lượng suất hỗ trợ |
 | `sotienmoisuat` | decimal(15,2) | NO | | Số tiền mỗi suất |
+| `sotientaitro` | decimal(15,2) | YES | NULL | Tổng số tiền tài trợ (= soluongsuat × sotienmoisuat) |
+| `mucthuhoi` | decimal(15,2) | YES | NULL | Số tiền thu hồi (VNĐ). Tính = sotientaitro × tilethuhoi / 100 |
+| `tilethuhoi` | decimal(5,2) | YES | NULL | Tỷ lệ thu hồi (%) do nhà tài trợ đề xuất |
 | `loaihotro` | enum | YES | `'Tien mat'` | `Tien mat` · `Hoc phi` · `Sinh hoat phi` · `Tai lieu` · `Khac` |
 | `ngaybatdau` | date | YES | NULL | Ngày bắt đầu chương trình |
 | `ngayketthuc` | date | YES | NULL | Ngày kết thúc chương trình |
@@ -679,11 +689,12 @@ Nhà Tài Trợ → (Bước 2: Kế toán xác nhận) → Quỹ Thành Phần 
 | `chucvuquy` | `trangthai` | `Dang nhiem`, `Het nhiem ky` |
 | `quy` | `trangthai` | `Dang hoat dong`, `Tam dung`, `Da dong` |
 | `quy` | `loaidieuhanh` | `Tap trung - Be chung`, `Tap trung - Muc chi` |
+| `quy` | `loaihotro` | `Tai tro khong hoan lai`, `Tai tro co thu hoi`, `Cho vay` (UI: Tài trợ không thu hồi, Tài trợ thu hồi một phần, Tài trợ thu hồi toàn phần) |
 | `nhataitro` | `loainhataitro` | `Ca nhan`, `To chuc`, `Doanh nghiep`, `Doi tac` |
 | `nhataitro` | `trangthai` | `Hoat dong`, `Ngung hoat dong` |
 | `khoantaitro` | `hinhthuc` | `Tien mat`, `Chuyen khoan`, `Khac` |
 | `khoantaitro` | `trangthai` | `Cho duyet`, `Da duyet`, `Da nhan`, `Tu choi` |
-| `yeucauhotro` | `loaihotro` | `Tai tro khong hoan lai`, `Tai tro co thu hoi`, `Cho vay` |
+| `yeucauhotro` | `loaihotro` | `Tai tro khong hoan lai`, `Tai tro co thu hoi`, `Cho vay` (UI: Tài trợ không thu hồi, Tài trợ thu hồi một phần, Tài trợ thu hồi toàn phần) |
 | `yeucauhotro` | `trangthai` | `Cho duyet cap 1`, `Da duyet cap 1`, `Tu choi cap 1`, `Cho duyet cap 2`, `Da duyet cap 2`, `Tu choi cap 2`, `Cho duyet cap 3`, `Da duyet cap 3`, `Tu choi cap 3`, `Cho giai ngan`, `Da giai ngan`, `Cho nghiem thu`, `Da nghiem thu`, `Nghiem thu khong dat`, `Tu choi`, `Cho giai ngan dot 1`, `Da giai ngan dot 1`, `Cho nghiem thu dot 1`, `Da nghiem thu dot 1`, `Cho giai ngan dot 2`, `Da giai ngan dot 2`, `Dang thu hoi no`, `Hoan thanh` |
 | `dotgiaingan` | `trangthai` | `chuatoi`, `dangchodutien`, `hoanthanh` |
 | `pheduyet` | `ketqua` | `Cho duyet`, `Duyet`, `Da duyet`, `Tu choi` |

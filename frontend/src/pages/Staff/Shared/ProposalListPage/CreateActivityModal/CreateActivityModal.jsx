@@ -170,9 +170,42 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
               <div className={styles.activityRow}>
                 <span className={styles.activityLabel}>Loại hỗ trợ</span>
                 <span className={styles.activityValue}>
-                  {proposal.loai_ho_tro || '—'}
+                  {proposal.loai_ho_tro === 'Tai tro khong hoan lai' && 'Tài trợ không thu hồi'}
+                  {proposal.loai_ho_tro === 'Tai tro co thu hoi' && 'Tài trợ thu hồi một phần'}
+                  {proposal.loai_ho_tro === 'Cho vay' && 'Tài trợ thu hồi toàn phần'}
+                  {!proposal.loai_ho_tro && '—'}
                 </span>
               </div>
+              {proposal.loai_ho_tro === 'Cho vay' && proposal.kyhantrano && (
+                <>
+                  <div className={styles.activityRow}>
+                    <span className={styles.activityLabel}>Kỳ hạn trả nợ</span>
+                    <span className={styles.activityValue}>
+                      {proposal.kyhantrano} tháng
+                    </span>
+                  </div>
+                  <div className={styles.activityRow}>
+                    <span className={styles.activityLabel}>Hợp đồng vay</span>
+                    <span className={styles.activityValue} style={{ color: '#2563eb', fontWeight: 600 }}>
+                      Tự động tạo khi duyệt
+                    </span>
+                  </div>
+                  <div className={styles.activityRow}>
+                    <span className={styles.activityLabel}>Lịch trả nợ</span>
+                    <span className={styles.activityValue} style={{ color: '#2563eb', fontWeight: 600 }}>
+                      2 kỳ (50% + 50%), lãi kỳ 1
+                    </span>
+                  </div>
+                </>
+              )}
+              {proposal.loai_ho_tro === 'Tai tro co thu hoi' && proposal.tilethuhoi && (
+                <div className={styles.activityRow}>
+                  <span className={styles.activityLabel}>Tỷ lệ thu hồi</span>
+                  <span className={styles.activityValue}>
+                    {proposal.tilethuhoi}% — {formatCurrency(proposal.mucthuhoi || 0)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

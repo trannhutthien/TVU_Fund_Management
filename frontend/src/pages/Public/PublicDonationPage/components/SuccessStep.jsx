@@ -30,28 +30,54 @@ const SuccessStep = memo(({ donationResult, bankAccounts, onNewDonation }) => {
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
         </div>
-        <h3>Đăng ký đóng góp thành công!</h3>
-        <p>Cảm ơn bạn đã ủng hộ quỹ. Vui lòng chuyển khoản theo thông tin bên dưới.</p>
+        <h3>{donationResult?.de_xuat_id ? 'Gửi đề xuất chương trình thành công!' : 'Đăng ký đóng góp thành công!'}</h3>
+        <p>{donationResult?.de_xuat_id
+          ? (donationResult.message || 'Đề xuất của bạn đã được gửi thành công. Vui lòng chờ bộ phận phê duyệt.')
+          : 'Cảm ơn bạn đã ủng hộ quỹ. Vui lòng chuyển khoản theo thông tin bên dưới.'
+        }</p>
       </div>
 
       {donationResult && (
         <div className={styles.resultInfo}>
-          <div className={styles.resultItem}>
-            <span>Mã khoản đóng góp:</span>
-            <strong>#{donationResult.khoanTaiTroId}</strong>
-          </div>
-          <div className={styles.resultItem}>
-            <span>Quỹ:</span>
-            <strong>{donationResult.quy?.tenQuy}</strong>
-          </div>
-          <div className={styles.resultItem}>
-            <span>Số tiền:</span>
-            <strong className={styles.amount}>{formatCurrency(donationResult.soTien)}</strong>
-          </div>
-          <div className={styles.resultItem}>
-            <span>Trạng thái:</span>
-            <span className={styles.pendingBadge}>Chờ duyệt</span>
-          </div>
+          {donationResult.de_xuat_id ? (
+            <>
+              <div className={styles.resultItem}>
+                <span>Mã đề xuất:</span>
+                <strong>#{donationResult.de_xuat_id}</strong>
+              </div>
+              <div className={styles.resultItem}>
+                <span>Chương trình:</span>
+                <strong>{donationResult.ten_chuong_trinh}</strong>
+              </div>
+              <div className={styles.resultItem}>
+                <span>Tổng số tiền:</span>
+                <strong className={styles.amount}>{formatCurrency(donationResult.tong_so_tien)}</strong>
+              </div>
+              <div className={styles.resultItem}>
+                <span>Trạng thái:</span>
+                <span className={styles.pendingBadge}>{donationResult.trang_thai || 'Chờ duyệt'}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.resultItem}>
+                <span>Mã khoản đóng góp:</span>
+                <strong>#{donationResult.khoanTaiTroId}</strong>
+              </div>
+              <div className={styles.resultItem}>
+                <span>Quỹ:</span>
+                <strong>{donationResult.quy?.tenQuy}</strong>
+              </div>
+              <div className={styles.resultItem}>
+                <span>Số tiền:</span>
+                <strong className={styles.amount}>{formatCurrency(donationResult.soTien)}</strong>
+              </div>
+              <div className={styles.resultItem}>
+                <span>Trạng thái:</span>
+                <span className={styles.pendingBadge}>Chờ duyệt</span>
+              </div>
+            </>
+          )}
         </div>
       )}
 

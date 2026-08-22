@@ -419,8 +419,8 @@ const verifyAndMigrateProposal = async (proposalData, plainPassword) => {
       `INSERT INTO dexuatchuongtrinh (
         quythanhphan_id, nhataitro_id, khoantaitro_id,
         tenchuongtrinh, mota, soluongsuat, sotienmoisuat, sotientaitro,
-        loaihotro, ngaybatdau, ngayketthuc, trangthai
-      ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
+        loaihotro, tilethuhoi, kyhantrano, ngaybatdau, ngayketthuc, mucthuhoi, trangthai
+      ) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Cho duyet')`,
       [
         data.quyThanhPhanId,
         nhaTaiTroId,
@@ -430,8 +430,11 @@ const verifyAndMigrateProposal = async (proposalData, plainPassword) => {
         data.soTienMoiSuat,
         soTienTaitro,
         data.loaiHoTro || 'Tai tro khong hoan lai',
+        data.tileThuHoi || null,
+        data.kyHanTraNo || null,
         data.ngayBatDau || null,
-        data.ngayKetThuc || null
+        data.ngayKetThuc || null,
+        data.mucThuHoi || null
       ]
     );
     const proposalId = proposalInsert.insertId;

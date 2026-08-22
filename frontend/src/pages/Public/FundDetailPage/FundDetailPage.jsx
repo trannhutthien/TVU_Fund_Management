@@ -296,6 +296,8 @@ const FundDetailPage = () => {
       progressPercent,
       maxSupportAmount: fund.soTienHoTroToiDa ?? fund.sotienhotrotoida,
       maxSupportCount: fund.soLuongChiTieu ?? fund.soluonghotrotoida,
+      loaiHoTro: fund.loaiHoTro ?? fund.loaihotro ?? 'Tai tro khong hoan lai',
+      tileThuHoi: fund.tileThuHoi ?? fund.tilethuhoi ?? null,
       startDate: fund.ngayBatDau ?? fund.ngaybatdau,
       endDate: fund.ngayKetThuc ?? fund.ngayketthuc ?? fund.hanNopDon,
       donations,
@@ -532,6 +534,12 @@ const FundDetailPage = () => {
                     {normalized.maxSupportCount ? `${normalized.maxSupportCount} suất` : 'Không giới hạn'}
                   </strong>
                 </div>
+                {(normalized.loaiHoTro === 'Tai tro co thu hoi' || normalized.loaiHoTro === 'Cho vay') && normalized.tileThuHoi && (
+                  <div>
+                    <span>Tỷ lệ thu hồi</span>
+                    <strong>{normalized.tileThuHoi}%</strong>
+                  </div>
+                )}
               </div>
             </SectionCard>
 

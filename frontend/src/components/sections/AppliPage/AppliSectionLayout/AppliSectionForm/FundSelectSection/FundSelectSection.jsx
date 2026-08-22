@@ -64,7 +64,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
   // Filter states
   const [searchKeyword, setSearchKeyword] = useState('');
   const [activeLoaiQuy, setActiveLoaiQuy] = useState(null);
-  const [activeTrangThai, setActiveTrangThai] = useState(null);
+  const [activeLoaiHoTro, setActiveLoaiHoTro] = useState(null);
   const [sortValue, setSortValue] = useState('newest');
 
   const selectedFundKey = selectedFund?.quyId ?? selectedFund?.quy_id ?? selectedFund?.id ?? null;
@@ -99,6 +99,11 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
       result = result.filter((fund) => fund.loaiQuy === activeLoaiQuy);
     }
 
+    // Filter by loại hỗ trợ (chỉ quỹ cấp 3)
+    if (activeLoaiHoTro) {
+      result = result.filter((fund) => fund.loaiHoTro === activeLoaiHoTro);
+    }
+
     // Filter by search keyword
     if (searchKeyword.trim()) {
       const keyword = searchKeyword.toLowerCase().trim();
@@ -119,7 +124,7 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     });
 
     return result;
-  }, [allFunds, activeLoaiQuy, searchKeyword, sortValue, isDonor]);
+  }, [allFunds, activeLoaiQuy, activeLoaiHoTro, searchKeyword, sortValue, isDonor]);
 
   // Fetch all funds and types
   useEffect(() => {
@@ -187,11 +192,22 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
     })),
   ], [loaiQuyData]);
 
-  const trangThaiOptions = [
-    { value: ALL_VALUE, label: 'Tất cả trạng thái' },
-    { value: 'Dang hoat dong', label: 'Đang hoạt động' },
-    { value: 'Tam dung', label: 'Tạm dừng' },
-  ];
+  const loaiHoTroOptions = useMemo(() => {
+    const level3Funds = allFunds.filter((f) => f.capDo === 3);
+    const uniqueLoaiHoTro = [...new Set(level3Funds.map((f) => f.loaiHoTro).filter(Boolean))];
+    const mapping = {
+      'Tai tro khong hoan lai': 'Tài trợ không thu hồi',
+      'Tai tro co thu hoi': 'Tài trợ thu hồi một phần',
+      'Cho vay': 'Tài trợ thu hồi toàn phần',
+    };
+    return [
+      { value: ALL_VALUE, label: 'Tất cả loại hỗ trợ' },
+      ...uniqueLoaiHoTro.map((val) => ({
+        value: val,
+        label: mapping[val] || val,
+      })),
+    ];
+  }, [allFunds]);
 
   const sortOptions = [
     { value: 'newest', label: 'Mới nhất' },
@@ -229,9 +245,9 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
 
   const formatNhomQuy = (nhom) => {
     const mapping = {
-      'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
-      'Tai tro co thu hoi': 'Tài trợ có thu hồi',
-      'Cho vay': 'Cho vay'
+      'Tai tro khong hoan lai': 'Tài trợ không thu hồi',
+      'Tai tro co thu hoi': 'Tài trợ thu hồi một phần',
+      'Cho vay': 'Tài trợ thu hồi toàn phần'
     };
     return mapping[nhom] || nhom;
   };
@@ -293,12 +309,12 @@ const FundSelectSection = ({ onFundSelect, selectedFund, isDonor = false, nextBu
           </div>
 
           <div className={styles.filterItem}>
-            <label className={styles.filterLabel}>Trạng thái</label>
+            <label className={styles.filterLabel}>Loại hỗ trợ</label>
             <Dropdown
-              options={trangThaiOptions}
-              value={activeTrangThai || ALL_VALUE}
-              onChange={(val) => setActiveTrangThai(val === ALL_VALUE ? null : val)}
-              placeholder="Tất cả trạng thái"
+              options={loaiHoTroOptions}
+              value={activeLoaiHoTro || ALL_VALUE}
+              onChange={(val) => setActiveLoaiHoTro(val === ALL_VALUE ? null : val)}
+              placeholder="Tất cả loại hỗ trợ"
               size="medium"
               className={styles.filterDropdown}
             />

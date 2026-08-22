@@ -202,13 +202,13 @@ const DeXuatChuongTrinhPage = ({ embedded = false }) => {
         let label = loai;
         if (loai === 'Tai tro khong hoan lai') {
           color = 'green';
-          label = 'Tài trợ không hoàn lại';
+          label = 'Tài trợ không thu hồi';
         } else if (loai === 'Tai tro co thu hoi') {
           color = 'orange';
-          label = 'Tài trợ có thu hồi';
+          label = 'Tài trợ thu hồi một phần';
         } else if (loai === 'Cho vay') {
           color = 'purple';
-          label = 'Cho vay';
+          label = 'Tài trợ thu hồi toàn phần';
         }
         return <Tag color={color}>{label}</Tag>;
       }
@@ -552,9 +552,9 @@ const DeXuatChuongTrinhPage = ({ embedded = false }) => {
           >
             <Select
               options={[
-                { value: 'Tai tro khong hoan lai', label: 'Tài trợ không hoàn lại' },
-                { value: 'Tai tro co thu hoi', label: 'Tài trợ có thu hồi' },
-                { value: 'Cho vay', label: 'Cho vay' },
+                { value: 'Tai tro khong hoan lai', label: 'Tài trợ không thu hồi' },
+                { value: 'Tai tro co thu hoi', label: 'Tài trợ thu hồi một phần' },
+                { value: 'Cho vay', label: 'Tài trợ thu hồi toàn phần' },
               ]}
             />
           </Form.Item>

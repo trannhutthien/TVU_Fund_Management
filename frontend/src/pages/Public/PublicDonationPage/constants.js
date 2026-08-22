@@ -17,14 +17,13 @@ export const PAYMENT_METHODS = {
 
 export const PAYMENT_METHOD_LABELS = {
   [PAYMENT_METHODS.TRUC_TUYEN]: 'Trực tuyến',
-  [PAYMENT_METHODS.CHUYEN_KHOAN]: 'Qua ngân hàng',
   [PAYMENT_METHODS.TIEN_MAT]: 'Bằng tiền mặt',
 };
 
 export const LOAI_HO_TRO = [
-  { value: 'Tai tro khong hoan lai', label: 'Tài trợ không hoàn lại' },
-  { value: 'Tai tro co thu hoi', label: 'Tài trợ có thu hồi' },
-  { value: 'Cho vay', label: 'Cho vay (hoàn lại)' },
+  { value: 'Tai tro khong hoan lai', label: 'Tài trợ không thu hồi' },
+  { value: 'Tai tro co thu hoi', label: 'Tài trợ thu hồi một phần' },
+  { value: 'Cho vay', label: 'Tài trợ thu hồi toàn phần' },
 ];
 
 export const DONATION_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000, 5000000];

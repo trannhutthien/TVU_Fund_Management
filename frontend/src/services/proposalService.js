@@ -88,6 +88,21 @@ export const confirmMoneyByKeToan = async (id, data) => {
 };
 
 /**
+ * BƯỚC 2b: Admin duyệt hợp đồng vay (CHỈ CHO "CHO VAY")
+ * @param {number} id - ID đề xuất
+ * @param {Object} data
+ * @param {string} data.ghiChu - Ghi chú (optional)
+ * @returns {Promise<Object>} { success, message, data }
+ */
+export const approveLoanContract = async (id, data) => {
+  const res = await api.post(
+    `/donations/propose-program/${id}/approve-loan-contract`,
+    data
+  );
+  return res.data;
+};
+
+/**
  * BƯỚC 3: Admin tạo hoạt động/chương trình (quỹ cấp 3)
  * @param {number} id - ID đề xuất
  * @param {Object} data
@@ -138,6 +153,7 @@ export default {
   approveByCanBo,
   rejectByCanBo,
   confirmMoneyByKeToan,
+  approveLoanContract,
   createActivityByAdmin,
   getProposalStats,
   createProposal,

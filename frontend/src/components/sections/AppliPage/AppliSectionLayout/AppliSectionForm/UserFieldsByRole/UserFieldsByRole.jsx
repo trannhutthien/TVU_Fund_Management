@@ -68,7 +68,6 @@ const UserFieldsByRole = ({ role, values, onChange, isGuest = false }) => {
   return (
     <div className={styles.card}>
       <div className={styles.sectionTitle}>
-        <span className={styles.sectionBadge}>Phần 1C</span>
         <span>Thông tin cá nhân — {ROLE_LABELS[role]}</span>
       </div>
 

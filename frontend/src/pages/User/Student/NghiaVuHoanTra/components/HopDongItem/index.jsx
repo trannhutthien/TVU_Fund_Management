@@ -8,7 +8,7 @@ import NopTienThuHoiModal from '../NopTienThuHoiModal';
 import styles from './index.module.scss';
 
 const LOAI_HO_TRO_LABELS = {
-  'Cho vay': { label: 'Cho vay', color: '#1d4ed8', bg: '#eff6ff' },
+  'Cho vay': { label: 'Tài trợ thu hồi toàn phần', color: '#1d4ed8', bg: '#eff6ff' },
   'Tai tro co thu hoi': { label: 'Tài trợ thu hồi', color: '#c2410c', bg: '#fff7ed' },
 };
 

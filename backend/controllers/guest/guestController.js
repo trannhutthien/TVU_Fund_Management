@@ -305,6 +305,7 @@ export const resendGuestOtp = async (req, res) => {
 export const verifyOtp = async (req, res) => {
   try {
     const { email, otpCode, type, otpToken, trackingUuid } = req.body;
+    console.log("[verifyOtp] body:", { email, otpCode: otpCode ? "***" : null, type, hasToken: !!otpToken, trackingUuid });
     if (!email || !otpCode || !type)
       return res.status(400).json({ success: false, message: "Vui long cung cap day du: Email, ma OTP, loai don" });
     if (type !== "application" && type !== "donation")
@@ -316,11 +317,19 @@ export const verifyOtp = async (req, res) => {
 
     // ── Luong 1: Token-based (tu ApplyPage, co otpToken) ──────────────────────
     if (otpToken) {
-      const pending = readGuestOtpPayload(otpToken);
+      let pending;
+      try {
+        pending = readGuestOtpPayload(otpToken);
+      } catch (tokenErr) {
+        console.error("[verifyOtp] readGuestOtpPayload error:", tokenErr.message);
+        throw tokenErr;
+      }
+      console.log("[verifyOtp] pending.type:", pending.type, "pending.email:", pending.email);
       if (pending.type !== type || pending.email !== normalizedEmail)
         return res.status(400).json({ success: false, message: "Ma xac thuc OTP khong dung hoac email khong khop" });
 
       const expectedHash = hashGuestOtp(normalizedEmail, pending.trackingUuid, normalizedOtp);
+      console.log("[verifyOtp] hash match:", timingSafeStringEqual(pending.otpHash, expectedHash));
       if (!timingSafeStringEqual(pending.otpHash, expectedHash))
         return res.status(400).json({ success: false, message: "Ma OTP khong dung hoac da het hieu luc" });
 
@@ -371,7 +380,7 @@ export const verifyOtp = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Loi verifyOtp:", error);
+    console.error("[verifyOtp] Loi verifyOtp:", error.message, error.stack);
     if (error.message === "OTP_EXPIRED")
       return res.status(400).json({ success: false, message: "Ma OTP da het hieu luc" });
     if (error.message === "OTP_ALREADY_VERIFIED")

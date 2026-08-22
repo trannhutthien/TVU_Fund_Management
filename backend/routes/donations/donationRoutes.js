@@ -18,6 +18,7 @@ import {
   submitPublicProposal,
   verifyProposalOtp,
   resendProposalOtp,
+  submitAuthenticatedProposal,
 } from "../../controllers/donations/proposalController.js";
 import {
   createProposal as createStaffProposal,
@@ -31,6 +32,7 @@ import {
   approveByCanBo,
   rejectByCanBo,
   confirmMoneyByKeToan,
+  approveLoanContractController,
   createActivityByAdmin,
   getProposalStatus,
 } from "../../controllers/donations/proposalApprovalController.js";
@@ -52,6 +54,9 @@ router.post("/public/propose-program/verify-otp", verifyProposalOtp);
 
 // POST /api/donations/public/propose-program/resend-otp — Gửi lại OTP đề xuất chương trình (KHÔNG CẦN TOKEN)
 router.post("/public/propose-program/resend-otp", resendProposalOtp);
+
+// POST /api/donations/authenticated/propose-program — Nha tai tro da dang nhap tao de xuat (BO QUA OTP, CAN TOKEN)
+router.post("/authenticated/propose-program", protect, submitAuthenticatedProposal);
 
 // GET /api/donations/propose-program — Danh sách đề xuất chờ duyệt (Admin/Kế toán/Cán bộ)
 router.get("/propose-program", protect, authorizeRoles(1, 2, 3), listProposals);
@@ -80,6 +85,9 @@ router.post("/propose-program/:id/reject-by-canbo", protect, authorizeRoles(3), 
 
 // POST /api/donations/propose-program/:id/confirm-money — Bước 2: Kế toán xác nhận tiền
 router.post("/propose-program/:id/confirm-money", protect, authorizeRoles(2), confirmMoneyByKeToan);
+
+// POST /api/donations/propose-program/:id/approve-loan-contract — Bước 2b: Admin duyệt hợp đồng vay (CHỈ CHO VAY)
+router.post("/propose-program/:id/approve-loan-contract", protect, authorizeRoles(1), approveLoanContractController);
 
 // POST /api/donations/propose-program/:id/create-activity — Bước 3: Admin tạo hoạt động
 router.post("/propose-program/:id/create-activity", protect, authorizeRoles(1), createActivityByAdmin);
