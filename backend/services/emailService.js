@@ -182,9 +182,6 @@ export const sendNewFundNotificationEmail = async (toEmail, hoTen, fundData) => 
   await sendMailWrapper(mailOptions);
 };
 
-  await sendMailWrapper(mailOptions);
-};
-
 // 13. Gửi email biên lai xác nhận tài trợ khi kế toán duyệt
 export const sendSponsorshipReceiptEmail = async (toEmail, data) => {
   const {
