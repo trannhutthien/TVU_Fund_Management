@@ -6,7 +6,7 @@ import NguoiDungModel from "../../models/auth/NguoiDungModel.js";
 import DonorModel from "../../models/donations/DonorModel.js";
 import { buildUserAvatarUrl } from "../../utils/helpers/imageHelper.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
-import { sendPasswordResetEmail } from "../../services/emailService.js";
+import { sendPasswordResetEmail, isEmailConfigured } from "../../services/emailService.js";
 
 const getMaintenanceMode = () => {
   try {
@@ -550,6 +550,15 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
+    // Kiểm tra cấu hình email trước
+    if (!isEmailConfigured()) {
+      console.error("[ForgotPassword] Email service chưa được cấu hình. Thiếu MAIL_USER hoặc MAIL_PASS.");
+      return res.status(503).json({
+        success: false,
+        message: "Dịch vụ email chưa được cấu hình. Vui lòng liên hệ quản trị viên để được hỗ trợ.",
+      });
+    }
+
     // 1. Tìm user theo email
     const user = await NguoiDungModel.getUserByEmail(email);
     if (!user) {
@@ -584,15 +593,20 @@ export const forgotPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     await NguoiDungModel.updatePassword(user.nguoidung_id, hashedPassword);
 
-    // 5. Gửi email nền trước, rồi trả kết quả (fire-and-forget)
-    sendPasswordResetEmail(email, user.hoten, newPassword).catch((err) => {
-      console.error("[ForgotPassword] Gửi email thất bại:", err.message);
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Mật khẩu mới đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.",
-    });
+    // 5. Gửi email và chờ kết quả
+    try {
+      await sendPasswordResetEmail(email, user.hoten, newPassword);
+      return res.status(200).json({
+        success: true,
+        message: "Mật khẩu mới đã được gửi về email của bạn. Vui lòng kiểm tra hộp thư.",
+      });
+    } catch (emailErr) {
+      console.error("[ForgotPassword] Gửi email thất bại:", emailErr.message);
+      return res.status(500).json({
+        success: false,
+        message: "Không thể gửi email. Mật khẩu đã được đổi nhưng email không gửi được. Vui lòng liên hệ quản trị viên.",
+      });
+    }
   } catch (error) {
     console.error("Lỗi forgotPassword:", error);
     return res.status(500).json({

@@ -15,6 +15,8 @@ const isConfigured = () => {
   );
 };
 
+export const isEmailConfigured = isConfigured;
+
 const createEmailError = (code, message, cause = null) => {
   const error = new Error(message);
   error.code = code;
