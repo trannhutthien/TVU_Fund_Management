@@ -310,6 +310,7 @@ const listProposals = async ({
       dx.loaihotro,
       dx.tilethuhoi,
       dx.mucthuhoi,
+      dx.kyhantrano,
       dx.ngaybatdau,
       dx.ngayketthuc,
       dx.trangthai,

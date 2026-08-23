@@ -30,7 +30,7 @@ const ApproveLoanContractModal = ({ proposal, onClose, onSuccess }) => {
   if (!proposal) return null;
 
   const tongSoTien = (proposal.so_luong_suat || 0) * (proposal.so_tien_moi_suat || 0);
-  const kyHan = proposal.kyhantrano || 0;
+  const kyHan = proposal.kyhantrano ? parseInt(proposal.kyhantrano) : 0;
 
   // Tính thông tin trả nợ (1 kỳ)
   const tongLai = Math.round(tongSoTien * (LAI_SUAT_CHI_VAY / 100) * (kyHan / 12) * 100) / 100;
@@ -101,7 +101,7 @@ const ApproveLoanContractModal = ({ proposal, onClose, onSuccess }) => {
               </div>
               <div className={styles.interestRow}>
                 <span>Tỷ lệ áp dụng:</span>
-                <span className={styles.interestValue}>{TY_LE_CHO_VAY}%</span>
+                <span className={styles.interestValue}>{TY_LE_CHO_VAY}% trên lãi suất tham chiếu</span>
               </div>
               <div className={`${styles.interestRow} ${styles.interestTotal}`}>
                 <span>Lãi suất thực tế:</span>
