@@ -14,6 +14,9 @@ import fundBanner1 from '@assets/images/banner_danhmucquy/HB-2025_1781675740918_
 import fundBanner2 from '@assets/images/banner_danhmucquy/HB-tieuso_1781675430227_969890714.jpg';
 import fundBanner3 from '@assets/images/banner_danhmucquy/HB6_1781667620646_597845464_1783492674677_423877885.jpg';
 import fundBanner4 from '@assets/images/banner_danhmucquy/HB7_1781675589859_499560317.jpg';
+import fundBanner5 from '@assets/images/banner_danhmucquy/hocbong.jpg';
+import fundBanner6 from '@assets/images/banner_danhmucquy/hocbong2.jpg';
+import fundBanner7 from '@assets/images/banner_danhmucquy/hocbong3.jpg';
 import styles from './FundsPage.module.scss';
 
 const DEFAULT_FUND_SLIDES = [
@@ -21,6 +24,9 @@ const DEFAULT_FUND_SLIDES = [
   { url: fundBanner2, alt: 'Quỹ phát triển 2' },
   { url: fundBanner3, alt: 'Quỹ phát triển 3' },
   { url: fundBanner4, alt: 'Quỹ phát triển 4' },
+  { url: fundBanner5, alt: 'Quỹ phát triển 5' },
+  { url: fundBanner6, alt: 'Quỹ phát triển 6' },
+  { url: fundBanner7, alt: 'Quỹ phát triển 7' },
 ];
 
 const ITEMS_PER_PAGE = 6;
