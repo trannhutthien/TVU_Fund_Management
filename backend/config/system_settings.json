@@ -39,16 +39,7 @@
   "hero_stat_nhahaotam_sub": "Đối tác đồng hành",
   "hero_stat_quy": "Quỹ đang hoạt động",
   "hero_stat_quy_sub": "Đa dạng hình thức",
-  "hero_banner_images": [
-    {
-      "url": "uploads/documents/triannhataitro_1786868178072_790872084.jpg",
-      "alt": "triannhataitro"
-    },
-    {
-      "url": "uploads/documents/Khu-1_1786868188736_40204503.jpg",
-      "alt": "Khu-1"
-    }
-  ],
+  "hero_banner_images": [],
   "process_label": "QUY TRÌNH ĐƠN GIẢN",
   "process_title": "Hai hành trình, một sứ mệnh chung",
   "process_subtitle": "Dù bạn là sinh viên cần hỗ trợ hay nhà tài trợ muốn đóng góp, chúng tôi đều có quy trình rõ ràng và minh bạch",
@@ -121,8 +112,8 @@
       "description": "Theo dõi tiến độ duyệt hồ sơ minh bạch từng bước. Bạn sẽ luôn biết hồ sơ của mình đang ở giai đoạn nào trong quy trình."
     }
   ],
-  "testimonials_title": "SINH VIÊN NÓI GÌ VỀ TVU FUND",
-  "testimonials_subtitle": "Những chia sẻ chân thành từ sinh viên đã nhận được sự đồng hành của TVU Fund",
+  "testimonials_title": "CẢM NHẬN VỀ QUỸ PHÁT TRIỂN ĐẠI HỌC TRÀ VINH",
+  "testimonials_subtitle": "Những chia sẻ chân thành từ người đã nhận được sự đồng hành của Quỹ phát triển Đại học Trà Vinh",
   "progress_title": "TIẾN TRÌNH GÂY QUỸ",
   "progress_subtitle": "Theo dõi thời gian thực dòng tiền đóng góp từ các nhà hảo tâm và tiến độ giải ngân hỗ trợ sinh viên TVU.",
   "footer_about_title": "VỀ CHÚNG TÔI",

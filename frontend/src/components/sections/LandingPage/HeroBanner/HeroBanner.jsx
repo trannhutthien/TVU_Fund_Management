@@ -13,6 +13,10 @@ import useAuthStore from '@stores/authStore';
 import { useSystemSettings } from '@hooks/useSystemSettings';
 import { formatCurrencyShort } from '@utils/formatters';
 import khuonVienImage from '@assets/images/khuonVienTruong.png';
+import banner1 from '@assets/images/banner_landingpage/11.jpg';
+import banner2 from '@assets/images/banner_landingpage/250_1781674629998_996093529.jpg';
+import banner3 from '@assets/images/banner_landingpage/DHTVHTGDVN_1781674481108_234934273.jpg';
+import banner4 from '@assets/images/banner_landingpage/HB-vuotkho_1781667063892_236824022.jpg';
 import styles from './HeroBanner.module.scss';
 
 const apiOrigin = () => {
@@ -25,6 +29,13 @@ const resolveImageUrl = (src) => {
   if (src.startsWith('http') || src.startsWith('blob:')) return src;
   return `${apiOrigin()}/${src}`;
 };
+
+const DEFAULT_LANDING_SLIDES = [
+  { src: banner1, alt: 'Banner 1' },
+  { src: banner2, alt: 'Banner 2' },
+  { src: banner3, alt: 'Banner 3' },
+  { src: banner4, alt: 'Banner 4' },
+];
 
 const FALLBACK_SLIDE = { src: khuonVienImage, alt: 'Khuôn viên Đại học Trà Vinh' };
 
@@ -41,15 +52,17 @@ const HeroBanner = ({
   const { isAuthenticated } = useAuthStore();
 
   const slides = useMemo(() => {
-    const source = images || settings?.hero_banner_images;
-    if (Array.isArray(source) && source.length > 0) {
-      return source.map((img) => ({
+    if (variant === 'compact' && Array.isArray(images) && images.length > 0) {
+      return images.map((img) => ({
         src: resolveImageUrl(img.url || img.src),
         alt: img.alt || 'Banner',
       }));
     }
+    if (variant === 'default') {
+      return DEFAULT_LANDING_SLIDES;
+    }
     return [FALLBACK_SLIDE];
-  }, [images, settings?.hero_banner_images]);
+  }, [variant, images]);
 
   const [stats, setStats] = useState({
     supportedRequests: 0,

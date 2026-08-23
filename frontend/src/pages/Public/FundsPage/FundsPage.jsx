@@ -10,7 +10,18 @@ import { getAllLoaiQuy, getPublicFunds, getFundCountByGroup } from '@services/fu
 import statisticsService from '@services/statisticsService';
 import { useSystemSettings } from '@hooks/useSystemSettings';
 import { HiMagnifyingGlass, HiChevronRight, HiOutlineBuildingLibrary, HiOutlineSquare3Stack3D, HiOutlineRocketLaunch } from 'react-icons/hi2';
+import fundBanner1 from '@assets/images/banner_danhmucquy/HB-2025_1781675740918_210848626.jpg';
+import fundBanner2 from '@assets/images/banner_danhmucquy/HB-tieuso_1781675430227_969890714.jpg';
+import fundBanner3 from '@assets/images/banner_danhmucquy/HB6_1781667620646_597845464_1783492674677_423877885.jpg';
+import fundBanner4 from '@assets/images/banner_danhmucquy/HB7_1781675589859_499560317.jpg';
 import styles from './FundsPage.module.scss';
+
+const DEFAULT_FUND_SLIDES = [
+  { url: fundBanner1, alt: 'Quỹ phát triển 1' },
+  { url: fundBanner2, alt: 'Quỹ phát triển 2' },
+  { url: fundBanner3, alt: 'Quỹ phát triển 3' },
+  { url: fundBanner4, alt: 'Quỹ phát triển 4' },
+];
 
 const ITEMS_PER_PAGE = 6;
 
@@ -398,7 +409,7 @@ const FundsPage = () => {
       
       <HeroBanner
         variant="compact"
-        images={settings?.funds_banner_images}
+        images={DEFAULT_FUND_SLIDES}
         showStats={true}
         showLoginPrompt={false}
       />
