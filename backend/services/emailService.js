@@ -1,10 +1,11 @@
 import nodemailer from 'nodemailer';
+import { isResendConfigured, sendViaResend } from './resendEmailService.js';
 
 const EMAIL_NOT_CONFIGURED = "EMAIL_NOT_CONFIGURED";
 const EMAIL_SEND_FAILED = "EMAIL_SEND_FAILED";
 
 // Helper to check if SMTP settings are valid and not placeholders
-const isConfigured = () => {
+const isSmtpConfigured = () => {
   const user = process.env.MAIL_USER?.trim();
   const pass = process.env.MAIL_PASS?.trim();
   return (
@@ -15,7 +16,7 @@ const isConfigured = () => {
   );
 };
 
-export const isEmailConfigured = isConfigured;
+export const isEmailConfigured = () => isResendConfigured() || isSmtpConfigured();
 
 const createEmailError = (code, message, cause = null) => {
   const error = new Error(message);
@@ -29,7 +30,7 @@ const createEmailError = (code, message, cause = null) => {
 let cachedTransporter = null;
 
 const createTransportConfig = () => {
-  if (!isConfigured()) {
+  if (!isSmtpConfigured()) {
     throw createEmailError(
       EMAIL_NOT_CONFIGURED,
       "SMTP email is not configured. Please set MAIL_USER and MAIL_PASS."
@@ -72,6 +73,26 @@ const getTransporter = () => {
 };
 
 const sendMailWrapper = async (mailOptions) => {
+  // Ưu tiên Resend API (HTTPS, không bị block port SMTP)
+  if (isResendConfigured()) {
+    try {
+      await sendViaResend({
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+      });
+      return true;
+    } catch (err) {
+      console.error("[Email Service] Resend API error:", err.message);
+      throw createEmailError(
+        EMAIL_SEND_FAILED,
+        "Could not send email through Resend API.",
+        err
+      );
+    }
+  }
+
+  // Fallback: SMTP (chỉ dùng được ở local/dev)
   try {
     const transporter = getTransporter();
     await transporter.sendMail(mailOptions);
