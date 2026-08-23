@@ -120,6 +120,41 @@ export const sendOTPEmail = async (toEmail, hoTen, otpCode, trackingUuid) => {
   await sendMailWrapper(mailOptions);
 };
 
+// 2. Gửi email thông báo tài khoản đã được tạo khi đơn được duyệt
+export const sendAccountCreatedEmail = async (toEmail, hoTen, matKhau, trackingUuid) => {
+  const mailOptions = {
+    from: process.env.MAIL_FROM || 'TVU Fund <no-reply@tvufund.com>',
+    to: toEmail,
+    subject: '[TVU Fund] Đơn yêu cầu hỗ trợ đã được gửi thành công',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #1a2f5e; text-align: center;">ĐƠN CỦA BẠN ĐÃ ĐƯỢC TIẾP NHẬN</h2>
+        <p>Xin chào <strong>${hoTen}</strong>,</p>
+        <p>Đơn yêu cầu hỗ trợ của bạn đã được chuyển tới Hội đồng xét duyệt ở trạng thái <strong>Chờ duyệt cấp 1</strong>.</p>
+        <p>Để giúp bạn dễ dàng theo dõi tiến độ xét duyệt và bổ sung thông tin khi được yêu cầu, hệ thống đã tự động tạo cho bạn một tài khoản thành viên:</p>
+        <table style="width:100%; background:#f0f4ff; border-radius:8px; padding:16px; margin: 20px 0;">
+          <tr>
+            <td><strong>Email đăng nhập:</strong></td>
+            <td>${toEmail}</td>
+          </tr>
+          <tr>
+            <td><strong>Mật khẩu tạm:</strong></td>
+            <td style="font-size:18px; color:#d9534f;"><strong>${matKhau}</strong></td>
+          </tr>
+        </table>
+        <p style="color: #d9534f; font-size: 13px;">* Lưu ý: Vui lòng đăng nhập và tiến hành thay đổi mật khẩu ngay trong lần đầu tiên để bảo mật tài khoản.</p>
+        <p>Mã tra cứu đơn của bạn: <strong>${trackingUuid}</strong></p>
+        <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
+        <p style="color: #888; font-size: 11px; text-align: center;">
+          Hệ thống TVU Fund chân thành cảm ơn bạn.
+        </p>
+      </div>
+    `,
+  };
+
+  await sendMailWrapper(mailOptions);
+};
+
 // 16. Thông báo quỹ mới cho tất cả người dùng vai trò 4
 export const sendNewFundNotificationEmail = async (toEmail, hoTen, fundData) => {
   const { tenQuy, moTa, soTienMucTieu, loaiHoTro, hanNopDon, dieuKienTomTat } = fundData;
