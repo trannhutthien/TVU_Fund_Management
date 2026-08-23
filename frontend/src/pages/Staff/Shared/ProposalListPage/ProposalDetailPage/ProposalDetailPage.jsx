@@ -369,6 +369,52 @@ const ProposalDetailPage = () => {
                     </span>
                   </div>
                 )}
+                {proposal.loai_ho_tro === 'Cho vay' && proposal.kyhantrano && (() => {
+                  const soTienVay = parseFloat(proposal.tong_so_tien) || 0;
+                  const kyHanThang = parseInt(proposal.kyhantrano) || 0;
+                  const laiSuatNam = 1.61;
+                  const tienLai = soTienVay * (laiSuatNam / 100) * (kyHanThang / 12);
+                  const tongPhaiTra = soTienVay + tienLai;
+                  return (
+                    <>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Lãi suấtahun</span>
+                        <span className={styles.infoValue}>{laiSuatNam}%/năm (70% lãi suất tham chiếu)</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Tiền lãi phải trả</span>
+                        <span className={styles.infoValue}>{formatCurrency(tienLai)}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Tổng tiền phải trả cho nhà tài trợ</span>
+                        <span className={`${styles.infoValue} ${styles.highlight}`}>
+                          {formatCurrency(tongPhaiTra)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+                {proposal.loai_ho_tro === 'Tai tro co thu hoi' && proposal.tilethuhoi && (() => {
+                  const tongTien = parseFloat(proposal.tong_so_tien) || 0;
+                  const tileThuHoi = parseFloat(proposal.tilethuhoi) || 0;
+                  const soTienThuHoi = proposal.mucthuhoi || (tongTien * tileThuHoi / 100);
+                  return (
+                    <>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Số tiền nhà tài trợ nhận lại</span>
+                        <span className={`${styles.infoValue} ${styles.highlight}`}>
+                          {formatCurrency(soTienThuHoi)}
+                        </span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Quỹ giữ lại</span>
+                        <span className={styles.infoValue}>
+                          {formatCurrency(tongTien - soTienThuHoi)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
                 {proposal.so_tien_thuc_te && (
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>

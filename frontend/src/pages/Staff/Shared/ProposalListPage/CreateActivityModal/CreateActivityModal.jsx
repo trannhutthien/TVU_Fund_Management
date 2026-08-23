@@ -176,36 +176,68 @@ const CreateActivityModal = ({ proposal, onClose, onSuccess }) => {
                   {!proposal.loai_ho_tro && '—'}
                 </span>
               </div>
-              {proposal.loai_ho_tro === 'Cho vay' && proposal.kyhantrano && (
-                <>
-                  <div className={styles.activityRow}>
-                    <span className={styles.activityLabel}>Kỳ hạn trả nợ</span>
-                    <span className={styles.activityValue}>
-                      {proposal.kyhantrano} tháng
-                    </span>
-                  </div>
-                  <div className={styles.activityRow}>
-                    <span className={styles.activityLabel}>Hợp đồng vay</span>
-                    <span className={styles.activityValue} style={{ color: '#2563eb', fontWeight: 600 }}>
-                      Tự động tạo khi duyệt
-                    </span>
-                  </div>
-                  <div className={styles.activityRow}>
-                    <span className={styles.activityLabel}>Lịch trả nợ</span>
-                    <span className={styles.activityValue} style={{ color: '#2563eb', fontWeight: 600 }}>
-                      2 kỳ (50% + 50%), lãi kỳ 1
-                    </span>
-                  </div>
-                </>
-              )}
-              {proposal.loai_ho_tro === 'Tai tro co thu hoi' && proposal.tilethuhoi && (
-                <div className={styles.activityRow}>
-                  <span className={styles.activityLabel}>Tỷ lệ thu hồi</span>
-                  <span className={styles.activityValue}>
-                    {proposal.tilethuhoi}% — {formatCurrency(proposal.mucthuhoi || 0)}
-                  </span>
-                </div>
-              )}
+              {proposal.loai_ho_tro === 'Cho vay' && proposal.kyhantrano && (() => {
+                const kyHanThang = parseInt(proposal.kyhantrano) || 0;
+                const laiSuatNam = 1.61;
+                const tienLai = soTienCanTrich * (laiSuatNam / 100) * (kyHanThang / 12);
+                const tongPhaiTra = soTienCanTrich + tienLai;
+                return (
+                  <>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Kỳ hạn trả nợ</span>
+                      <span className={styles.activityValue}>{kyHanThang} tháng</span>
+                    </div>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Lãi suất</span>
+                      <span className={styles.activityValue}>{laiSuatNam}%/năm (70% lãi suất tham chiếu)</span>
+                    </div>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Tiền lãi</span>
+                      <span className={styles.activityValue}>{formatCurrency(tienLai)}</span>
+                    </div>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Tổng tiền nhà tài trợ nhận lại</span>
+                      <span className={styles.activityAmount} style={{ color: '#dc2626' }}>
+                        {formatCurrency(tongPhaiTra)}
+                      </span>
+                    </div>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Lịch trả nợ</span>
+                      <span className={styles.activityValue} style={{ color: '#2563eb', fontWeight: 600 }}>
+                        1 kỳ — trả toàn bộ gốc + lãi cuối kỳ
+                      </span>
+                    </div>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Hợp đồng vay</span>
+                      <span className={styles.activityValue} style={{ color: '#2563eb', fontWeight: 600 }}>
+                        Tự động tạo khi duyệt
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
+              {proposal.loai_ho_tro === 'Tai tro co thu hoi' && proposal.tilethuhoi && (() => {
+                const tileThuHoi = parseFloat(proposal.tilethuhoi) || 0;
+                const soTienThuHoi = proposal.mucthuhoi || (soTienCanTrich * tileThuHoi / 100);
+                return (
+                  <>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Tỷ lệ thu hồi</span>
+                      <span className={styles.activityValue}>{tileThuHoi}%</span>
+                    </div>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Số tiền thu hồi</span>
+                      <span className={styles.activityAmount} style={{ color: '#dc2626' }}>
+                        {formatCurrency(soTienThuHoi)}
+                      </span>
+                    </div>
+                    <div className={styles.activityRow}>
+                      <span className={styles.activityLabel}>Quỹ giữ lại</span>
+                      <span className={styles.activityValue}>{formatCurrency(soTienCanTrich - soTienThuHoi)}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
