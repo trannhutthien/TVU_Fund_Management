@@ -128,12 +128,11 @@ const HeroBanner = ({
       {/* Slideshow Background */}
       <div className={styles.slidesContainer}>
         {slides.map((slide, i) => (
-          <div
+          <img
             key={i}
+            src={slide.src}
+            alt={slide.alt}
             className={`${styles.slide} ${i === currentSlide ? styles.slideActive : ''}`}
-            style={{ backgroundImage: `url(${slide.src})` }}
-            role="img"
-            aria-label={slide.alt}
           />
         ))}
         <div className={styles.overlay} />
