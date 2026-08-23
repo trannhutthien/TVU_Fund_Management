@@ -120,37 +120,67 @@ export const sendOTPEmail = async (toEmail, hoTen, otpCode, trackingUuid) => {
   await sendMailWrapper(mailOptions);
 };
 
-// 2. Gửi thông báo tài khoản sau khi OTP đơn xin hỗ trợ xác minh thành công
-export const sendAccountCreatedEmail = async (toEmail, hoTen, matKhau, trackingUuid) => {
+// 16. Thông báo quỹ mới cho tất cả người dùng vai trò 4
+export const sendNewFundNotificationEmail = async (toEmail, hoTen, fundData) => {
+  const { tenQuy, moTa, soTienMucTieu, loaiHoTro, hanNopDon, dieuKienTomTat } = fundData;
+
+  const formatMoney = (val) => {
+    if (!val) return 'Chưa xác định';
+    return parseFloat(val).toLocaleString('vi-VN') + ' VNĐ';
+  };
+
+  const loaiHoTroLabels = {
+    'Tai tro khong hoan lai': 'Tài trợ không hoàn lại',
+    'Tai tro co thu hoi': 'Tài trợ có thu hồi',
+    'Cho vay': 'Cho vay',
+  };
+
   const mailOptions = {
     from: process.env.MAIL_FROM || 'TVU Fund <no-reply@tvufund.com>',
     to: toEmail,
-    subject: '[TVU Fund] Đơn yêu cầu hỗ trợ đã được gửi thành công',
+    subject: `[TVU Fund] Quỹ mới "${tenQuy}" vừa được khởi tạo`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
-        <h2 style="color: #1a2f5e; text-align: center;">ĐƠN CỦA BẠN ĐÃ ĐƯỢC TIẾP NHẬN</h2>
+      <div style="font-family: Arial, sans-serif; max-width: 550px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #1a5276; text-align: center;">QUỸ MỚI ĐƯỢC KHỞI TẠO</h2>
         <p>Xin chào <strong>${hoTen}</strong>,</p>
-        <p>Đơn yêu cầu hỗ trợ của bạn đã được chuyển tới Hội đồng xét duyệt ở trạng thái <strong>Chờ duyệt cấp 1</strong>.</p>
-        <p>Để giúp bạn dễ dàng theo dõi tiến độ xét duyệt và bổ sung thông tin khi được yêu cầu, hệ thống đã tự động tạo cho bạn một tài khoản thành viên:</p>
-        <table style="width:100%; background:#f0f4ff; border-radius:8px; padding:16px; margin: 20px 0;">
+        <p>Hệ thống vừa tiếp nhận một quỹ hỗ trợ mới. Dưới đây là thông tin chi tiết:</p>
+        <table style="width:100%; background:#eaf2f8; border-radius:8px; padding:16px; margin: 20px 0; border-collapse: collapse;">
           <tr>
-            <td><strong>Email đăng nhập:</strong></td>
-            <td>${toEmail}</td>
+            <td style="padding: 6px 8px;"><strong>Tên quỹ:</strong></td>
+            <td style="padding: 6px 8px; color: #1a5276; font-weight: bold;">${tenQuy}</td>
+          </tr>
+          ${moTa ? `<tr>
+            <td style="padding: 6px 8px;"><strong>Mô tả:</strong></td>
+            <td style="padding: 6px 8px;">${moTa}</td>
+          </tr>` : ''}
+          <tr>
+            <td style="padding: 6px 8px;"><strong>Mục tiêu:</strong></td>
+            <td style="padding: 6px 8px; color: #27ae60; font-weight: bold;">${formatMoney(soTienMucTieu)}</td>
           </tr>
           <tr>
-            <td><strong>Mật khẩu tạm:</strong></td>
-            <td style="font-size:18px; color:#d9534f;"><strong>${matKhau}</strong></td>
+            <td style="padding: 6px 8px;"><strong>Hình thức hỗ trợ:</strong></td>
+            <td style="padding: 6px 8px;">${loaiHoTroLabels[loaiHoTro] || loaiHoTro || 'Chưa xác định'}</td>
           </tr>
+          ${hanNopDon ? `<tr>
+            <td style="padding: 6px 8px;"><strong>Hạn nộp đơn:</strong></td>
+            <td style="padding: 6px 8px;">${hanNopDon}</td>
+          </tr>` : ''}
+          ${dieuKienTomTat ? `<tr>
+            <td style="padding: 6px 8px;"><strong>Điều kiện:</strong></td>
+            <td style="padding: 6px 8px;">${dieuKienTomTat}</td>
+          </tr>` : ''}
         </table>
-        <p style="color: #d9534f; font-size: 13px;">* Lưu ý: Vui lòng đăng nhập và tiến hành thay đổi mật khẩu ngay trong lần đầu tiên để bảo mật tài khoản.</p>
-        <p>Mã tra cứu đơn của bạn: <strong>${trackingUuid}</strong></p>
+        <p>Bạn có thể truy cập hệ thống để xem chi tiết và nộp đơn đăng ký hỗ trợ.</p>
         <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
         <p style="color: #888; font-size: 11px; text-align: center;">
-          Hệ thống TVU Fund chân thành cảm ơn bạn.
+          Đây là email tự động từ hệ thống TVU Fund, vui lòng không phản hồi email này.
         </p>
       </div>
     `,
   };
+
+  await sendMailWrapper(mailOptions);
+};
 
   await sendMailWrapper(mailOptions);
 };

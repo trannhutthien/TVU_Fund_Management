@@ -4,6 +4,7 @@ import LoaiQuyModel from "../../models/funds/LoaiQuyModel.js";
 import BankAccountModel from "../../models/funds/BankAccountModel.js";
 import { buildFundImageUrl } from "../../utils/helpers/imageHelper.js";
 import { logSystemActivity } from "../../utils/helpers/loggerHelper.js";
+import { sendNewFundNotificationEmail } from "../../services/emailService.js";
 
 const DEFAULT_LOAI_DIEU_HANH = 'Tap trung - Be chung';
 const VALID_LOAI_DIEU_HANH = [DEFAULT_LOAI_DIEU_HANH, 'Tap trung - Muc chi'];
@@ -279,6 +280,29 @@ export const createFund = async (req, res) => {
       mota: `Thêm mới quỹ hỗ trợ: ${fundData.tenQuy}`,
       dulieumoi: fundData
     });
+
+    // Gửi email thông báo cho tất cả người dùng vai trò 4 (fire-and-forget)
+    pool.query(
+      `SELECT hoten, email FROM nguoidung WHERE vaitro_id = 4 AND trangthai = 'HOAT_DONG' AND email IS NOT NULL`
+    ).then(([users]) => {
+      if (users.length === 0) return;
+      console.log(`[NewFund]_gui email thong bao qu moi cho ${users.length} nguoi dung`);
+      const fundInfo = {
+        tenQuy: fundData.tenQuy,
+        moTa: fundData.moTa,
+        soTienMucTieu: fundData.soTienMucTieu,
+        loaiHoTro: fundData.loaiHoTro,
+        hanNopDon: fundData.hanNopDon,
+        dieuKienTomTat: fundData.dieuKienTomTat,
+      };
+      Promise.all(
+        users.map((u) =>
+          sendNewFundNotificationEmail(u.email, u.hoten, fundInfo).catch((err) =>
+            console.error(`[NewFund] gui email that bai cho ${u.email}:`, err.message)
+          )
+        )
+      );
+    }).catch((err) => console.error("[NewFund] loi lay danh sach nguoi dung:", err.message));
 
     // 9. Lấy thông tin quỹ vừa tạo
     const newFund = await FundModel.getFundById(result.insertId);
