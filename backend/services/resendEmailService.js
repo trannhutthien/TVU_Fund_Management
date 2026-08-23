@@ -19,7 +19,7 @@ export const isResendConfigured = () => {
 
 export const sendViaResend = async ({ to, subject, html }) => {
   const client = getResendClient();
-  const from = process.env.MAIL_FROM || 'TVU Fund <no-reply@tvufunds.io.vn>';
+  const from = 'TVU Fund <onboarding@resend.dev>';
 
   await client.emails.send({
     from,
