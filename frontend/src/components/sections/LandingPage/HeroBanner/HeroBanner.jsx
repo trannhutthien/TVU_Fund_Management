@@ -13,13 +13,11 @@ import useAuthStore from '@stores/authStore';
 import { useSystemSettings } from '@hooks/useSystemSettings';
 import { formatCurrencyShort } from '@utils/formatters';
 import khuonVienImage from '@assets/images/khuonVienTruong.png';
-import banner1 from '@assets/images/banner_landingpage/11.jpg';
-import banner2 from '@assets/images/banner_landingpage/250_1781674629998_996093529.jpg';
-import banner3 from '@assets/images/banner_landingpage/DHTVHTGDVN_1781674481108_234934273.jpg';
-import banner4 from '@assets/images/banner_landingpage/HB-vuotkho_1781667063892_236824022.jpg';
-import banner5 from '@assets/images/banner_landingpage/HB-hk1-2025_1781666997793_934943067.png';
-import banner6 from '@assets/images/banner_landingpage/HB4_1781667769658_17740821.jpg';
-import banner7 from '@assets/images/banner_landingpage/HB9.png';
+import banner1 from '@assets/images/banner/DHTVHTGDVN_1781674481108_234934273.jpg';
+import banner2 from '@assets/images/banner/HB-2025_1781675740918_210848626.jpg';
+import banner3 from '@assets/images/banner/HB-tieuso_1781675430227_969890714.jpg';
+import banner4 from '@assets/images/banner/HB4_1781667769658_17740821.jpg';
+import banner5 from '@assets/images/banner/HB6_1781667620646_597845464_1783492674677_423877885.jpg';
 import styles from './HeroBanner.module.scss';
 
 const apiOrigin = () => {
@@ -39,8 +37,6 @@ const DEFAULT_LANDING_SLIDES = [
   { src: banner3, alt: 'Banner 3' },
   { src: banner4, alt: 'Banner 4' },
   { src: banner5, alt: 'Banner 5' },
-  { src: banner6, alt: 'Banner 6' },
-  { src: banner7, alt: 'Banner 7' },
 ];
 
 const FALLBACK_SLIDE = { src: khuonVienImage, alt: 'Khuôn viên Đại học Trà Vinh' };
