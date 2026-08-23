@@ -54,7 +54,7 @@ const HeroBanner = ({
   const slides = useMemo(() => {
     if (variant === 'compact' && Array.isArray(images) && images.length > 0) {
       return images.map((img) => ({
-        src: resolveImageUrl(img.url || img.src),
+        src: img.url || img.src,
         alt: img.alt || 'Banner',
       }));
     }
