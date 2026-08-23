@@ -17,7 +17,7 @@ const SEARCHABLE_ITEMS = [
   { label: 'Tin tức & Sự kiện', path: '/news' },
   { label: 'Hướng dẫn & Quy định', path: '/guidelines' },
   { label: 'Cựu sinh viên', path: '/alumni' },
-  { label: 'Sinh viên nói gì', path: '/testimonials' },
+  { label: 'Cảm nhận', path: '/testimonials' },
   { label: 'Danh mục quỹ', path: '/funds' },
   { label: 'Lịch sử giao dịch', path: '/lich-su-giao-dich' },
   { label: 'Thống kê thu chi', path: '/thong-ke-cong-khai' },

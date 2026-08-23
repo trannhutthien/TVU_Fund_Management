@@ -542,7 +542,7 @@ const AboutFundPage = () => {
                       size="md"
                       onClick={() => navigate('/testimonials')}
                     >
-                      Sinh viên nói gì về TVU Fund
+                      Cảm nhận về Quỹ phát triển Đại học Trà Vinh
                     </Button>
                   </div>
                 </div>

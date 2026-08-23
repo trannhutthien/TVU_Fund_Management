@@ -66,10 +66,10 @@ const TestimonialsSection = () => {
         <div className={styles.header}>
           <div className={styles.titleContainer}>
             <span className={styles.decoratorLine} />
-            <h2 className={styles.title}>{settings?.testimonials_title || 'SINH VIÊN NÓI GÌ VỀ TVU FUND'}</h2>
+            <h2 className={styles.title}>{settings?.testimonials_title || 'CẢM NHẬN VỀ QUỸ PHÁT TRIỂN ĐẠI HỌC TRÀ VINH'}</h2>
           </div>
           <p className={styles.subtitle}>
-            {settings?.testimonials_subtitle || 'Những chia sẻ chân thành từ sinh viên đã nhận được sự đồng hành của TVU Fund'}
+            {settings?.testimonials_subtitle || 'Những chia sẻ chân thành từ người đã nhận được sự đồng hành của Quỹ phát triển Đại học Trà Vinh'}
           </p>
         </div>
 
